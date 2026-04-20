@@ -1,6 +1,8 @@
 # l402-kit
 
-**Monetize qualquer API com Bitcoin Lightning em 3 linhas de código.**
+**Charge for your API in Bitcoin Lightning. 3 lines of code.**
+**Monetize sua API com Bitcoin Lightning. 3 linhas de código.**
+**Monetiza tu API con Bitcoin Lightning. 3 líneas de código.**
 
 [![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
 [![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
@@ -12,57 +14,40 @@ npm install l402-kit    # TypeScript / Node.js / Express
 pip install l402kit     # Python / FastAPI / Flask
 ```
 
-> **Docs:** [shinydapps.mintlify.app](https://shinydapps.mintlify.app) · **npm:** [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) · **PyPI:** [pypi.org/project/l402kit](https://pypi.org/project/l402kit)
+📖 **Docs / Documentação:**
+[🇺🇸 English](https://shinydapps.mintlify.app) ·
+[🇧🇷 Português](https://shinydapps.mintlify.app/pt/introduction) ·
+[🇪🇸 Español](https://shinydapps.mintlify.app/es/introduction) ·
+[🇨🇳 中文](https://shinydapps.mintlify.app/zh/introduction) ·
+[🇮🇳 हिंदी](https://shinydapps.mintlify.app/hi/introduction) ·
+[🇸🇦 العربية](https://shinydapps.mintlify.app/ar/introduction) ·
+[🇫🇷 Français](https://shinydapps.mintlify.app/fr/introduction) ·
+[🇩🇪 Deutsch](https://shinydapps.mintlify.app/de/introduction) ·
+[🇷🇺 Русский](https://shinydapps.mintlify.app/ru/introduction) ·
+[🇯🇵 日本語](https://shinydapps.mintlify.app/ja/introduction)
 
 ---
 
-## O que é isso?
+## English
 
-l402-kit é um middleware open-source que implementa o protocolo **L402** — um padrão aberto para pagamentos por chamada de API usando Bitcoin Lightning Network.
+Add pay-per-call Bitcoin Lightning payments to any API. No account. No bank. No chargebacks. Settles in under 1 second, anywhere on Earth.
 
-Você adiciona 3 linhas de código. Quem chama sua API paga em sats. Você recebe em segundos. Sem banco. Sem intermediário. Sem chargeback.
-
-**Funciona em qualquer país. Funciona para humanos e para agentes de IA.**
-
----
-
-## Como funciona — o fluxo completo
+### How it works
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     MODO GERENCIADO (recomendado)               │
-│                                                                 │
-│  Cliente / Agente IA                                            │
-│         │                                                       │
-│         │ 1. GET /sua-api                                       │
-│         ▼                                                       │
-│  Sua API (l402-kit)  ──── 2. Cria invoice ───► ShinyDapps API  │
-│         │                                       (Blink wallet)  │
-│         │ 3. Retorna: 402 + invoice BOLT11                      │
-│         ▼                                                       │
-│  Cliente paga ──────────────────────────────► Lightning Network │
-│         │                    (< 1 segundo)                      │
-│         │ 4. Envia preimage como prova                          │
-│         ▼                                                       │
-│  Sua API verifica: SHA256(preimage) == hash ✓                   │
-│         │                                                       │
-│         │ 5. Split automático via ShinyDapps:                   │
-│         │    → 99.7% ──────────────────────► Seu Lightning Addr │
-│         │    → 0.3%  ──────────────────────► ShinyDapps (taxa)  │
-│         │                                                       │
-│         │ 6. Sua API responde: 200 OK + dados                   │
-│         ▼                                                       │
-│  Cliente recebe o conteúdo                                      │
-└─────────────────────────────────────────────────────────────────┘
+Client calls your API
+  → Your API returns 402 + Lightning invoice
+  → Client pays (< 1 second)
+  → Client sends cryptographic proof
+  → SHA256(preimage) == paymentHash ✓
+  → Your API responds 200 + data
+
+Money flow (managed mode):
+  Payment → ShinyDapps → 99.7% to your Lightning Address
+                       → 0.3% fee to ShinyDapps
 ```
 
-**Transparência total:** ShinyDapps recebe o pagamento, envia **99.7%** para seu Lightning Address imediatamente. A taxa de **0.3%** mantém o projeto vivo. Você pode auditar cada linha em `src/split.ts` e `backend/api/split.ts`.
-
----
-
-## Quickstart — TypeScript (modo gerenciado)
-
-### Sem conta Lightning. Sem configuração. Funciona.
+### TypeScript quickstart
 
 ```typescript
 import express from "express";
@@ -70,27 +55,17 @@ import { l402 } from "l402-kit";
 
 const app = express();
 
-// Rota gratuita
-app.get("/", (_req, res) => {
-  res.json({ message: "Olá! Tente GET /premium" });
-});
-
-// Custa 100 sats (~R$ 0,05) por chamada
 app.get("/premium", l402({
-  priceSats: 100,
-  ownerLightningAddress: "você@blink.sv", // seu endereço Lightning — recebe 99.7%
+  priceSats: 100,                           // ~$0.10 per call
+  ownerLightningAddress: "you@blink.sv",    // your Lightning Address — receives 99.7%
 }), (_req, res) => {
-  res.json({ data: "Pagamento confirmado. Aqui está seu conteúdo exclusivo." });
+  res.json({ data: "Payment confirmed. Here is your data." });
 });
 
 app.listen(3000);
 ```
 
-Isso é tudo. Não precisa de conta Blink, não precisa de carteira — só um Lightning Address.
-
----
-
-## Quickstart — Python (modo gerenciado)
+### Python quickstart
 
 ```python
 from fastapi import FastAPI, Request
@@ -98,24 +73,128 @@ from l402kit import l402_required
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message": "Tente GET /premium"}
+@app.get("/premium")
+@l402_required(price_sats=100, owner_lightning_address="you@blink.sv")
+async def premium(request: Request):
+    return {"data": "Payment confirmed."}
+```
+
+### Test it
+
+```bash
+# First call — returns payment challenge
+curl http://localhost:3000/premium
+# → { "error": "Payment Required", "invoice": "lnbc1u...", "macaroon": "eyJ..." }
+
+# Pay the invoice with any Lightning wallet, then:
+curl http://localhost:3000/premium \
+  -H "Authorization: L402 <macaroon>:<preimage>"
+# → { "data": "Payment confirmed. Here is your data." }
+```
+
+### Why not Stripe?
+
+| | Stripe | l402-kit |
+|---|---|---|
+| Minimum fee | $0.30 | < 1 sat (~$0.001) |
+| Settlement | 2–7 days | **< 1 second** |
+| Chargebacks | Yes | **Impossible** |
+| Requires account | Yes | **No** |
+| AI agent support | No | **Yes — native** |
+| Countries blocked | ~50 | **0 — global** |
+| Auditable | No | **Yes — open source** |
+
+---
+
+## Português
+
+Adicione pagamentos por chamada via Bitcoin Lightning em qualquer API. Sem conta. Sem banco. Sem chargeback. Liquida em menos de 1 segundo, em qualquer lugar do mundo.
+
+### Como funciona
+
+```
+Cliente chama sua API
+  → Sua API retorna 402 + invoice Lightning
+  → Cliente paga (< 1 segundo)
+  → Cliente envia prova criptográfica
+  → SHA256(preimage) == paymentHash ✓
+  → Sua API responde 200 + dados
+
+Fluxo do dinheiro (modo gerenciado):
+  Pagamento → ShinyDapps → 99.7% pro seu Lightning Address
+                         → 0.3% de taxa para o ShinyDapps
+```
+
+### TypeScript — início rápido
+
+```typescript
+import express from "express";
+import { l402 } from "l402-kit";
+
+const app = express();
+
+app.get("/premium", l402({
+  priceSats: 100,                              // ~R$0,05 por chamada
+  ownerLightningAddress: "você@blink.sv",      // seu endereço — recebe 99.7%
+}), (_req, res) => {
+  res.json({ data: "Pagamento confirmado." });
+});
+
+app.listen(3000);
+```
+
+### Python — início rápido
+
+```python
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+
+app = FastAPI()
 
 @app.get("/premium")
-@l402_required(
-    price_sats=100,
-    owner_lightning_address="você@blink.sv",
-)
+@l402_required(price_sats=100, owner_lightning_address="você@blink.sv")
 async def premium(request: Request):
     return {"data": "Pagamento confirmado."}
 ```
 
+### Por que não Pix / Stripe?
+
+| | Stripe | Pix | l402-kit |
+|---|---|---|---|
+| Taxa mínima | R$1,50 | R$0,01 | **< 1 sat** |
+| Liquidação | 2–7 dias | Instante | **< 1 segundo** |
+| Chargeback | Sim | Não | **Impossível** |
+| Funciona pra IA | Não | Não | **Sim** |
+| Global | Não | Só Brasil | **Sim — 0 fronteiras** |
+| Auditável | Não | Não | **Sim — open source** |
+
 ---
 
-## Modo avançado — traga sua própria carteira
+## Español
 
-Se você quiser controle total e gerenciar seus próprios nós Lightning:
+Agrega pagos por llamada en Bitcoin Lightning a cualquier API. Sin cuenta. Sin banco. Sin contracargos. Liquida en menos de 1 segundo, en cualquier lugar del mundo.
+
+### TypeScript — inicio rápido
+
+```typescript
+import express from "express";
+import { l402 } from "l402-kit";
+
+const app = express();
+
+app.get("/premium", l402({
+  priceSats: 100,
+  ownerLightningAddress: "tu@blink.sv",
+}), (_req, res) => {
+  res.json({ data: "Pago confirmado." });
+});
+
+app.listen(3000);
+```
+
+---
+
+## Advanced mode — bring your own Lightning wallet
 
 ```typescript
 import { l402, BlinkProvider } from "l402-kit";
@@ -128,14 +207,14 @@ const lightning = new BlinkProvider(
 app.get("/premium", l402({ priceSats: 100, lightning }), handler);
 ```
 
-Providers disponíveis: `BlinkProvider`, `OpenNodeProvider`, `LNbitsProvider`
+Providers: `BlinkProvider`, `OpenNodeProvider`, `LNbitsProvider`
 
-Ou implemente a interface `LightningProvider` para qualquer backend:
+Implement `LightningProvider` to plug in any backend:
 
 ```typescript
 import type { LightningProvider } from "l402-kit";
 
-class MeuProvider implements LightningProvider {
+class MyProvider implements LightningProvider {
   async createInvoice(amountSats: number) { /* ... */ }
   async checkPayment(paymentHash: string) { /* ... */ }
 }
@@ -143,72 +222,33 @@ class MeuProvider implements LightningProvider {
 
 ---
 
-## Fluxo de pagamento (sequência técnica)
+## Security
+
+Every payment is cryptographically verified:
 
 ```
-Cliente                  Sua API               Lightning Network
-   │                        │                         │
-   │── GET /premium ────────►│                         │
-   │                        │── cria invoice ─────────►│
-   │◄── 402 + invoice ──────│◄── BOLT11 ──────────────│
-   │                        │                         │
-   │── paga invoice ──────────────────────────────────►│
-   │◄── preimage ────────────────────────────────────── │
-   │                        │                         │
-   │── GET /premium ────────►│                         │
-   │   Authorization:        │── SHA256(preimage)       │
-   │   L402 <mac>:<pre>      │   == paymentHash ✓       │
-   │                        │                         │
-   │◄── 200 OK + dados ─────│                         │
+1. API creates invoice: paymentHash = SHA256(preimage)
+2. Client pays — Lightning Network releases preimage
+3. API verifies: SHA256(preimage) == paymentHash ✓
+4. Preimage marked used — impossible to reuse
 ```
+
+- SHA256 — unforgeable mathematical proof
+- Anti-replay — each preimage works exactly once
+- Expiry — tokens expire after 1 hour
+- Open source — audit everything at [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
-## Por que não Stripe / PayPal / Pix?
+## Get a free Lightning Address
 
-| | Stripe | PayPal | Pix | **l402-kit** |
-|---|---|---|---|---|
-| Taxa mínima | **$0,30** | **$0,30** | R$ 0,01 | **< 1 sat** |
-| Liquidação | 2–7 dias | 3–5 dias | Instante | **< 1 segundo** |
-| Chargeback | Sim | Sim | Não | **Impossível** |
-| Requer conta | Sim | Sim | Sim | **Não** |
-| Funciona pra IA | Não | Não | Não | **Sim, nativamente** |
-| Países bloqueados | ~50 | ~60 | Só Brasil | **0 — global** |
-| Código auditável | Não | Não | Não | **Sim, open source** |
-| Censurável | Sim | Sim | Sim | **Não** |
+You need a Lightning Address (e.g. `you@blink.sv`) to receive payments.
 
-Bitcoin não pede permissão.
+**Blink (recommended — free):**
+1. Sign up at [dashboard.blink.sv](https://dashboard.blink.sv)
+2. Your address will be `yourname@blink.sv`
 
----
-
-## Segurança
-
-Cada pagamento é verificado criptograficamente:
-
-```
-1. Sua API cria invoice com paymentHash = SHA256(preimage)
-2. Cliente paga — Lightning Network libera o preimage
-3. Sua API verifica: SHA256(preimage) == paymentHash
-4. Preimage marcado como usado — impossível reutilizar
-```
-
-- **SHA256** — prova matemática impossível de forjar
-- **Anti-replay** — cada preimage só vale uma vez
-- **Expiração** — tokens expiram em 1 hora
-- **Open source** — audite tudo em `src/verify.ts` e `src/replay.ts`
-
----
-
-## Obter um Lightning Address gratuito
-
-Você precisa de um Lightning Address (ex: `você@blink.sv`) para receber.
-
-**Blink (recomendado — gratuito):**
-1. Baixe o app Blink ou acesse [dashboard.blink.sv](https://dashboard.blink.sv)
-2. Crie conta com email
-3. Seu endereço será `seunome@blink.sv`
-
-**Outras opções:** Wallet of Satoshi, Phoenix, Zeus, Alby
+**Other options:** Wallet of Satoshi, Phoenix, Zeus, Alby
 
 ---
 
@@ -216,30 +256,21 @@ Você precisa de um Lightning Address (ex: `você@blink.sv`) para receber.
 
 | | |
 |---|---|
-| Docs completa | [shinydapps.mintlify.app](https://shinydapps.mintlify.app) |
+| Docs (10 languages) | [shinydapps.mintlify.app](https://shinydapps.mintlify.app) |
 | npm | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
-| Criador | [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer) |
-| Backend API | [shinydapps-api.vercel.app](https://shinydapps-api.vercel.app) |
+| Creator | [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer) |
 | Lightning | shinydapps@blink.sv |
 
 ---
 
-## Contribuindo
+## License
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md). PRs são bem-vindos.
-
----
-
-## Licença
-
-MIT — use livremente, construa livremente.
+MIT — use freely, build freely. Bitcoin has no borders.
 
 ---
 
 <p align="center">
-  Construído com ⚡ por <a href="https://github.com/ShinyDapps">ShinyDapps</a> · <a href="https://github.com/ThiagoDataEngineer">Thiago Yoshiaki</a>
-  <br/>
-  Bitcoin tem fronteiras? Não.
+  Built with ⚡ by <a href="https://github.com/ShinyDapps">ShinyDapps</a> · <a href="https://github.com/ThiagoDataEngineer">Thiago Yoshiaki</a>
 </p>
