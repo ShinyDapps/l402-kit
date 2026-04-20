@@ -1,9 +1,6 @@
 {
   "$schema": "https://mintlify.com/schema.json",
   "name": "l402-kit",
-  "mintlify": {
-    "projectId": "69e5b1c6026c596d57627ecc"
-  },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
@@ -15,7 +12,7 @@
     "dark": "#C97400"
   },
   "topbarLinks": [
-    { "name": "GitHub", "url": "https://github.com/shinydapps/l402-kit" },
+    { "name": "GitHub", "url": "https://github.com/ShinyDapps/l402-kit" },
     { "name": "npm", "url": "https://npmjs.com/package/l402-kit" }
   ],
   "tabs": [
@@ -33,19 +30,10 @@
     {
       "group": "Guides",
       "pages": ["guides/ai-agents", "guides/security", "guides/production"]
-    },
-    {
-      "group": "API Reference",
-      "pages": ["api-reference/l402", "api-reference/providers", "api-reference/verify"]
     }
   ],
   "footerSocials": {
     "twitter": "https://twitter.com/shinydapps",
-    "github": "https://github.com/shinydapps/l402-kit"
-  },
-  "analytics": {
-    "mintlify": {
-      "projectId": "69e5b1c6026c596d57627ecc"
-    }
+    "github": "https://github.com/ShinyDapps/l402-kit"
   }
 }
