@@ -1,60 +1,158 @@
 ---
 title: Introduction
-description: The simplest way to charge for your API in Bitcoin sats.
+description: Monetize qualquer API com Bitcoin Lightning em 3 linhas. TypeScript e Python. Sem conta. Sem banco. Sem permissão.
 ---
 
-## What is l402-kit?
+## O que é l402-kit?
 
-**l402-kit** is an open-source middleware that lets any developer add Bitcoin Lightning micropayments to their API in 3 lines of code.
+**l402-kit** é um middleware open-source que implementa o protocolo [L402](https://docs.lightning.engineering/the-lightning-network/l402) — o padrão aberto para pagamentos por chamada de API usando Bitcoin Lightning Network.
 
-No credit card. No account. No chargeback. No minimum fee. Just sats.
+Você adiciona 3 linhas de código. Quem chama sua API paga em sats. Você recebe em segundos.
 
+```bash
+npm install l402-kit    # TypeScript / Express
+pip install l402kit     # Python / FastAPI / Flask
 ```
-npm install l402-kit
-```
 
-## The problem it solves
-
-Today, charging per API call is broken:
-
-- **Stripe**: minimum $0.30 per transaction — impossible for micropayments
-- **Subscriptions**: users who use little subsidize users who use a lot
-- **AI agents**: can't hold credit cards — can't pay APIs autonomously
-
-**l402-kit** is the third option: pay-per-call via the Lightning Network, settling in under 1 second, globally, with no intermediary.
-
-## How it works
-
-<Frame>
-```
-Client → GET /premium
-API    → 402 + Lightning invoice (100 sats)
-Client → pays invoice (< 1 second)
-Client → GET /premium + proof of payment
-API    → 200 + data ✓
-```
-</Frame>
-
-## Who is it for?
-
-<CardGroup cols={2}>
-  <Card title="API Developers" icon="code">
-    Charge per call instead of monthly subscriptions
+<CardGroup cols={3}>
+  <Card title="npm" icon="npm" href="https://npmjs.com/package/l402-kit">
+    l402-kit no npm
   </Card>
-  <Card title="AI Agent Builders" icon="robot">
-    Agents pay APIs autonomously — no human in the loop
+  <Card title="PyPI" icon="python" href="https://pypi.org/project/l402kit">
+    l402kit no PyPI
   </Card>
-  <Card title="Devs outside Stripe" icon="globe">
-    Argentina, Nigeria, India — Bitcoin has no borders
-  </Card>
-  <Card title="Data providers" icon="database">
-    Charge 1 sat per query — impossible with Stripe
+  <Card title="GitHub" icon="github" href="https://github.com/ShinyDapps/l402-kit">
+    Código fonte aberto
   </Card>
 </CardGroup>
 
-## Supported languages
+---
 
-| Language | Package | Frameworks |
+## Como funciona — fluxo completo
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  Cliente / Agente IA                                            │
+│         │                                                       │
+│         │ 1. GET /sua-api                                       │
+│         ▼                                                       │
+│  Sua API (l402-kit)  ──── 2. Cria invoice ───► ShinyDapps API  │
+│         │                                       (Blink wallet)  │
+│         │ 3. Retorna: 402 + invoice BOLT11                      │
+│         ▼                                                       │
+│  Cliente paga ──────────────────────────────► Lightning Network │
+│         │                    (< 1 segundo)                      │
+│         │ 4. Envia preimage como prova criptográfica            │
+│         ▼                                                       │
+│  Sua API verifica: SHA256(preimage) == hash ✓                   │
+│         │                                                       │
+│         │ 5. Split automático:                                  │
+│         │    → 99.7% ──────────────────────► Seu Lightning Addr │
+│         │    → 0.3%  ──────────────────────► ShinyDapps (taxa)  │
+│         │                                                       │
+│         │ 6. Sua API responde: 200 OK + dados                   │
+│         ▼                                                       │
+│  Cliente recebe o conteúdo                                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+<Note>
+**Transparência total:** ShinyDapps recebe o pagamento e envia **99.7%** para seu Lightning Address automaticamente. A taxa de **0.3%** é o que mantém o projeto vivo. Você pode auditar cada linha em [`src/split.ts`](https://github.com/ShinyDapps/l402-kit/blob/main/src/split.ts) e [`backend/api/split.ts`](https://github.com/ShinyDapps/l402-kit/blob/main/backend/api/split.ts).
+</Note>
+
+---
+
+## Quickstart em 2 minutos
+
+### TypeScript
+
+```typescript
+import express from "express";
+import { l402 } from "l402-kit";
+
+const app = express();
+
+app.get("/premium", l402({
+  priceSats: 100,
+  ownerLightningAddress: "você@blink.sv", // recebe 99.7% de cada pagamento
+}), (_req, res) => {
+  res.json({ data: "Pagamento confirmado." });
+});
+
+app.listen(3000);
+```
+
+### Python
+
+```python
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+
+app = FastAPI()
+
+@app.get("/premium")
+@l402_required(
+    price_sats=100,
+    owner_lightning_address="você@blink.sv",
+)
+async def premium(request: Request):
+    return {"data": "Pagamento confirmado."}
+```
+
+---
+
+## Por que não Stripe?
+
+| | Stripe | **l402-kit** |
 |---|---|---|
-| TypeScript | `npm install l402-kit` | Express |
-| Python | `pip install l402kit` | FastAPI, Flask |
+| Taxa mínima | **$0,30** | **< 1 sat (~$0,001)** |
+| Liquidação | 2–7 dias | **< 1 segundo** |
+| Chargeback | Sim | **Impossível** |
+| Requer conta | Sim | **Não** |
+| Suporte a IA | Não | **Sim, nativamente** |
+| Países bloqueados | ~50 | **0 — global** |
+| Código auditável | Não | **Sim, open source** |
+| Censurável | Sim | **Não** |
+
+---
+
+## Segurança
+
+Cada pagamento é verificado matematicamente:
+
+```
+SHA256(preimage) == paymentHash
+```
+
+- Impossível de forjar sem pagar de verdade
+- Cada preimage só funciona uma vez (anti-replay)
+- Tokens expiram em 1 hora
+- Todo o código é auditável em [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
+
+---
+
+## Para quem é?
+
+<CardGroup cols={2}>
+  <Card title="Desenvolvedores de API" icon="code">
+    Cobre por chamada em vez de assinatura mensal. Comece com 1 linha.
+  </Card>
+  <Card title="Construtores de Agentes IA" icon="robot">
+    Agentes pagam APIs de forma autônoma — sem cartão, sem humano no meio.
+  </Card>
+  <Card title="Devs fora do sistema financeiro" icon="globe">
+    Argentina, Nigéria, Iran — Bitcoin não tem fronteiras nem permissão.
+  </Card>
+  <Card title="Provedores de dados" icon="database">
+    Cobre 1 sat por query. Isso é impossível com Stripe.
+  </Card>
+</CardGroup>
+
+---
+
+## Criado por
+
+**ShinyDapps** · [github.com/ShinyDapps](https://github.com/ShinyDapps) · [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer)
+
+Lightning: `shinydapps@blink.sv`
