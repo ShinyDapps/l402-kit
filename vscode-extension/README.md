@@ -16,7 +16,7 @@
 
 This extension is part of the **l402-kit** ecosystem — the simplest way to add Bitcoin Lightning pay-per-call to any API.
 
-![ShinyDapps Lightning Payments — VS Code sidebar showing sats counter, chart and payment history](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/screenshot.svg)
+![ShinyDapps Lightning Payments — VS Code sidebar showing sats counter, chart and payment history](./docs/screenshot.png)
 
 ### Features
 
