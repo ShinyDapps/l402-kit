@@ -3,8 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShinyDapps — Bitcoin Lightning payments for any API</title>
-<meta name="description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. TypeScript + Python. No account. No bank. No chargebacks.">
+<title>l402-kit — Bitcoin Lightning payments for any API · 3 lines of code</title>
+<meta name="description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. TypeScript, Python, Go, Rust. No account. No bank. No chargebacks. Settles in <1 second.">
+<meta property="og:title" content="l402-kit — Bitcoin Lightning payments for any API">
+<meta property="og:description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. No account. No bank. Settles in <1 second.">
+<meta property="og:url" content="https://shinydapps-api.vercel.app">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="l402-kit — Bitcoin Lightning payments for any API">
+<meta name="twitter:description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. No account. No bank. No chargebacks.">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -106,6 +113,33 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .pricing-features li:last-child { border: none; }
 .pricing-features .check { color: #4ade80; }
 
+/* USE CASES */
+.usecases { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; }
+.usecases h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
+.usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.usecase-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.usecase-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); margin-bottom: 8px; }
+.usecase-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.usecase-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.usecase-code { margin-top: 12px; background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 6px; padding: 10px 12px; font-family: "SF Mono","Fira Code",monospace; font-size: 12px; color: #888; }
+
+/* FAQ */
+.faq { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
+.faq h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
+.faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer; user-select: none; }
+.faq-item:last-child { border: none; }
+.faq-q { font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.faq-q::after { content: "+"; color: var(--orange); font-size: 20px; font-weight: 300; flex-shrink: 0; transition: transform .2s; }
+.faq-item.open .faq-q::after { transform: rotate(45deg); }
+.faq-a { font-size: 14px; color: var(--muted); line-height: 1.7; max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s; }
+.faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
+
+/* STATS BANNER */
+.stats-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; margin-bottom: 80px; }
+.stat-item { text-align: center; }
+.stat-num { font-size: 28px; font-weight: 800; color: var(--orange); }
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
 /* CTA */
 .cta { text-align: center; padding: 80px 24px; border-top: 1px solid var(--border); }
 .cta h2 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
@@ -126,12 +160,13 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <a href="#pricing">Pricing</a>
     <a href="https://shinydapps-bd9fa40b.mintlify.app">Docs</a>
     <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
+    <a href="dashboard.html">Dashboard</a>
     <a href="https://shinydapps-bd9fa40b.mintlify.app" class="nav-cta">Get started</a>
   </div>
 </nav>
 
 <section class="hero">
-  <div class="hero-badge">⚡ Bitcoin Lightning · TypeScript · Python · Go · Rust · Open Source</div>
+  <div class="hero-badge">⚡ Bitcoin Lightning · TypeScript · Python · Go · Rust · v0.7.0 · <a href="https://github.com/ShinyDapps/l402-kit" style="color:inherit">Open Source</a></div>
   <h1>Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.</h1>
   <p>No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.</p>
   <div class="hero-actions">
@@ -231,6 +266,13 @@ app = <span class="c-fn">FastAPI</span>()
 }</pre></div>
 </section>
 
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num" id="stat-payments">...</div><div class="stat-label">Payments logged</div></div>
+  <div class="stat-item"><div class="stat-num">4</div><div class="stat-label">Languages supported</div></div>
+  <div class="stat-item"><div class="stat-num">&lt;1s</div><div class="stat-label">Settlement time</div></div>
+  <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">Countries blocked</div></div>
+</div>
+
 <section class="flow" id="how">
   <h2>How it works</h2>
   <div class="flow-steps">
@@ -314,6 +356,36 @@ app = <span class="c-fn">FastAPI</span>()
   </div>
 </section>
 
+<section class="usecases" id="usecases">
+  <h2>What will you build?</h2>
+  <div class="usecase-grid">
+    <div class="usecase-card">
+      <div class="usecase-tag">AI / Agents</div>
+      <div class="usecase-title">Monetize your AI tool</div>
+      <div class="usecase-desc">Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.</div>
+      <div class="usecase-code">priceSats: 50  // ~$0.05/call</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-tag">Data APIs</div>
+      <div class="usecase-title">Pay-per-query data</div>
+      <div class="usecase-desc">Weather, finance, sports, maps. No subscription needed &mdash; users pay exactly for what they use.</div>
+      <div class="usecase-code">priceSats: 10  // ~$0.01/query</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-tag">Content</div>
+      <div class="usecase-title">Paywalled endpoints</div>
+      <div class="usecase-desc">Articles, research papers, PDFs, audio. No account creation required from your users.</div>
+      <div class="usecase-code">priceSats: 500  // ~$0.50/read</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-tag">Compute</div>
+      <div class="usecase-title">Serverless billing</div>
+      <div class="usecase-desc">Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.</div>
+      <div class="usecase-code">priceSats: 1000  // ~$1/task</div>
+    </div>
+  </div>
+</section>
+
 <section class="pricing" id="pricing">
   <h2>Simple pricing</h2>
   <p class="pricing-sub">Start for free. We only earn when you earn.</p>
@@ -345,15 +417,40 @@ app = <span class="c-fn">FastAPI</span>()
   </div>
 </section>
 
+<section class="faq" id="faq">
+  <h2>Common questions</h2>
+  <div class="faq-item">
+    <div class="faq-q">Do my users need a Lightning wallet?</div>
+    <div class="faq-a">Yes &mdash; they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What happens if the Lightning network is down?</div>
+    <div class="faq-a">Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Is this production-ready?</div>
+    <div class="faq-a">Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">How does the 0.3% fee work?</div>
+    <div class="faq-a">When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Can I use it without Blink?</div>
+    <div class="faq-a">Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.</div>
+  </div>
+</section>
+
 <section class="cta">
   <h2>Start in 2 minutes</h2>
   <p>No account. No credit card. Just Bitcoin.</p>
-  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
     <a href="https://npmjs.com/package/l402-kit" class="btn-primary">npm install l402-kit</a>
     <a href="https://pypi.org/project/l402kit" class="btn-secondary">pip install l402kit</a>
-    <a href="https://pkg.go.dev/github.com/shinydapps/l402-kit/go" class="btn-secondary">go get (Go)</a>
-    <a href="https://github.com/ShinyDapps/l402-kit/tree/main/rust" class="btn-secondary">Cargo (Rust)</a>
+    <a href="https://pkg.go.dev/github.com/shinydapps/l402-kit/go" class="btn-secondary">go get</a>
+    <a href="https://crates.io/crates/l402kit" class="btn-secondary">cargo add l402kit</a>
   </div>
+  <p style="font-size:13px;color:var(--muted)">or <a href="https://shinydapps-bd9fa40b.mintlify.app">read the docs &rarr;</a></p>
 </section>
 
 <footer>
@@ -374,7 +471,26 @@ function showTab(lang) {
   document.getElementById('tab-' + lang).classList.add('active');
   event.target.classList.add('active');
 }
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.addEventListener('click', () => item.classList.toggle('open'));
+});
+
+(async () => {
+  try {
+    const r = await fetch('https://urcqtpklpfyvizcgcsia.supabase.co/rest/v1/payments?select=id', {
+      headers: {
+        apikey: 'sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-',
+        Prefer: 'count=exact',
+        'Range-Unit': 'items',
+        Range: '0-0'
+      }
+    });
+    const range = r.headers.get('content-range') ?? '';
+    const total = range.split('/')[1];
+    const el = document.getElementById('stat-payments');
+    if (el && total) el.textContent = parseInt(total).toLocaleString();
+  } catch {}
+})();  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".code-pane").forEach(p => p.classList.remove("active"));
   document.querySelector(`[onclick="showTab('${lang}')"]`).classList.add("active");
   document.getElementById(`tab-${lang}`).classList.add("active");
