@@ -1,0 +1,98 @@
+---
+title: Quickstart
+description: From zero to paid API in 5 minutes.
+---
+
+## 1. Get a free Lightning wallet
+
+Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card, works globally.
+
+Copy your **API Key** and **BTC Wallet ID**.
+
+## 2. Install
+
+<CodeGroup>
+```bash TypeScript
+npm install l402-kit
+```
+
+```bash Python
+pip install l402kit
+```
+</CodeGroup>
+
+## 3. Add to your API
+
+<CodeGroup>
+```typescript Express
+import express from "express";
+import { l402, BlinkProvider } from "l402-kit";
+
+const app = express();
+
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+// Free endpoint
+app.get("/", (_req, res) => {
+  res.json({ message: "Welcome!" });
+});
+
+// Costs 100 sats per call
+app.get("/premium", l402({ priceSats: 100, lightning }), (_req, res) => {
+  res.json({ data: "You paid 100 sats. Here is your data." });
+});
+
+app.listen(3000);
+```
+
+```python FastAPI
+import os
+from fastapi import FastAPI, Request
+from l402kit import l402_required, BlinkProvider
+
+app = FastAPI()
+
+lightning = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+
+@app.get("/premium")
+@l402_required(price_sats=100, lightning=lightning)
+async def premium(request: Request):
+    return {"data": "You paid 100 sats. Here is your data."}
+```
+</CodeGroup>
+
+## 4. Test it
+
+```bash
+curl http://localhost:3000/premium
+```
+
+Response:
+```json
+{
+  "error": "Payment Required",
+  "price_sats": 100,
+  "invoice": "lnbc1u1p...",
+  "macaroon": "eyJoYXNo..."
+}
+```
+
+Pay the invoice with any Lightning wallet, then:
+
+```bash
+curl http://localhost:3000/premium \
+  -H "Authorization: L402 <macaroon>:<preimage>"
+```
+
+Response:
+```json
+{ "data": "You paid 100 sats. Here is your data." }
+```
+
+<Check>Your API now accepts Bitcoin payments.</Check>

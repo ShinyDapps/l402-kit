@@ -1,0 +1,30 @@
+node_modules/
+dist/
+*.js.map
+*.d.ts.map
+
+# credentials — never commit
+.env
+.env.local
+.env.*.local
+CREDENTIALS.md
+OPERATIONS.md
+
+# claude code local settings (may contain api keys)
+.claude/
+
+# supabase temp (contains project ref and db urls)
+supabase/.temp/
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+python/.env
+
+# test files
+test-server.ts
+test-invoice.sh
+
+# phoenixd (old infra, not part of npm package)
+phoenixd/

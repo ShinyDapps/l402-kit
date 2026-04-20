@@ -1,0 +1,48 @@
+{
+  "name": "l402-dashboard",
+  "displayName": "L402 Dashboard",
+  "description": "Monitor your Lightning API earnings in satoshis directly in VSCode",
+  "version": "0.1.0",
+  "publisher": "ShinyDapps",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "keywords": ["bitcoin", "lightning", "l402", "sats", "earnings"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "l402-dashboard.show",
+        "title": "L402: Show Earnings Dashboard"
+      }
+    ],
+    "configuration": {
+      "title": "L402 Dashboard",
+      "properties": {
+        "l402-dashboard.supabaseUrl": {
+          "type": "string",
+          "description": "Your Supabase project URL"
+        },
+        "l402-dashboard.supabaseKey": {
+          "type": "string",
+          "description": "Your Supabase anon key"
+        },
+        "l402-dashboard.language": {
+          "type": "string",
+          "enum": ["en", "pt", "es", "zh", "ar", "hi", "fr", "ru", "ja", "de"],
+          "default": "en",
+          "description": "Dashboard display language"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  }
+}

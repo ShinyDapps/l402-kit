@@ -1,0 +1,52 @@
+---
+title: AI Agents
+description: Build APIs that AI agents pay autonomously — no human in the loop.
+---
+
+## Why AI agents need L402
+
+AI agents call APIs constantly. Today they can't pay for them — they need a human to set up a credit card, billing account, and subscription.
+
+L402 solves this natively:
+1. Agent calls your API
+2. Gets a Lightning invoice
+3. Pays it from its own wallet (e.g. Blink, Phoenix, Alby)
+4. Retries with proof of payment
+5. Gets the data
+
+**No human intervention. No credit card. Settles in 1 second.**
+
+## Example: agent that pays for data
+
+```typescript
+import { parseToken } from "l402-kit";
+
+async function fetchPremiumData(url: string, wallet: LightningWallet) {
+  // First attempt
+  let res = await fetch(url);
+
+  if (res.status === 402) {
+    const { invoice, macaroon } = await res.json();
+
+    // Agent pays the invoice autonomously
+    const preimage = await wallet.payInvoice(invoice);
+
+    // Retry with proof of payment
+    res = await fetch(url, {
+      headers: { Authorization: `L402 ${macaroon}:${preimage}` },
+    });
+  }
+
+  return res.json();
+}
+```
+
+## This is the future of AI × Bitcoin
+
+Every AI agent will need to pay for:
+- Data APIs
+- Compute
+- Storage
+- Other AI services
+
+L402 is the payment protocol built for this. l402-kit makes it a 3-line implementation.
