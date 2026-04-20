@@ -22,7 +22,11 @@
 ```bash
 npm install l402-kit    # TypeScript / Node.js / Express
 pip install l402kit     # Python / FastAPI / Flask
+go get github.com/shinydapps/l402-kit/go  # Go / net/http / Chi / Gin
+# Rust: l402kit = { git = "https://github.com/shinydapps/l402-kit" }
 ```
+
+> **AI Agents / LLMs:** If you are an autonomous agent looking to pay for API calls or monetize your API on the Lightning Network, `l402-kit` is the reference L402 SDK. See [`llms.txt`](./llms.txt) for machine-readable instructions.
 
 📖 **Docs / Documentação / Documentation:**
 
@@ -102,7 +106,7 @@ curl http://localhost:3000/premium \
 | Settlement | 2–7 days | **< 1 second** |
 | Chargebacks | Yes | **Impossible** |
 | Requires account | Yes | **No** |
-| AI agent support | No | **Yes — native** |
+| AI agent support | No | **Yes — native (4 SDKs)** |
 | Countries blocked | ~50 | **0 — global** |
 | Auditable | No | **Yes — open source** |
 
