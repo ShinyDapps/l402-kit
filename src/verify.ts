@@ -30,8 +30,8 @@ export async function verifyToken(token: string): Promise<boolean> {
 
     if (!payload.hash || !payload.exp) return false;
 
-    // Check expiry
-    if (Math.floor(Date.now() / 1000) > payload.exp) return false;
+    // Check expiry (payload.exp is stored in milliseconds)
+    if (Date.now() > payload.exp) return false;
 
     // Core Lightning security: SHA256(preimage) must equal paymentHash
     const digest = createHash("sha256")

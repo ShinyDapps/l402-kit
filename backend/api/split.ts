@@ -12,8 +12,16 @@ async function fetchInvoiceFromAddress(address: string, amountSats: number): Pro
   return pay.pr;
 }
 
+const SPLIT_SECRET = process.env.SPLIT_SECRET ?? "";
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  // Authenticate: only l402-kit middleware instances with the shared secret can call this
+  const authHeader = req.headers["x-split-secret"];
+  if (!SPLIT_SECRET || authHeader !== SPLIT_SECRET) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
   const { amountSats, ownerAddress } = req.body ?? {};
   if (!amountSats || !ownerAddress) return res.status(400).json({ error: "Missing amountSats or ownerAddress" });

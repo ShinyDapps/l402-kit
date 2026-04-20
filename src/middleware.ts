@@ -3,7 +3,8 @@ import { verifyToken } from "./verify";
 import { checkAndMarkPreimage } from "./replay";
 import type { L402Options, LightningProvider, Invoice } from "./types";
 
-const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://api.shinydapps.io";
+const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://shinydapps-api.vercel.app";
+const SPLIT_SECRET = process.env.SPLIT_SECRET ?? "";
 
 class ManagedProvider implements LightningProvider {
   constructor(private ownerAddress: string) {}
@@ -24,7 +25,7 @@ class ManagedProvider implements LightningProvider {
   async sendSplit(amountSats: number): Promise<void> {
     fetch(`${SHINYDAPPS_API}/api/split`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-split-secret": SPLIT_SECRET },
       body: JSON.stringify({ amountSats, ownerAddress: this.ownerAddress }),
     }).catch(() => {});
   }
