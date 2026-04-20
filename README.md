@@ -17,6 +17,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/ShinyDapps/l402-kit)](https://github.com/ShinyDapps/l402-kit)
 
+![l402-kit demo](docs/demo.svg)
+
 ```bash
 npm install l402-kit    # TypeScript / Node.js / Express
 pip install l402kit     # Python / FastAPI / Flask
