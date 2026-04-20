@@ -1,0 +1,183 @@
+---
+title: Providers
+description: Lightning providers supported by l402-kit — Blink, LNbits, OpenNode.
+---
+
+## Overview
+
+A **Lightning Provider** is the service that creates invoices and checks payment status. l402-kit ships with 3 built-in providers and a simple interface for custom ones.
+
+| Provider | Free tier | Self-hosted | Recommended |
+|---|---|---|---|
+| **Blink** | ✅ Unlimited | ❌ Custodial | ✅ Yes |
+| **LNbits** | ✅ (self-host) | ✅ Full control | For self-hosters |
+| **OpenNode** | ✅ Sandbox | ❌ Custodial | Sandbox testing |
+
+---
+
+## Blink (Recommended)
+
+[Blink](https://blink.sv) is a free custodial Bitcoin Lightning wallet with a GraphQL API. No KYC, no monthly fee, instant setup.
+
+**Get started:**
+1. Create account at [dashboard.blink.sv](https://dashboard.blink.sv)
+2. Go to **API Keys** → create a new key
+3. Copy your **BTC Wallet ID** from the wallet page
+
+<CodeGroup>
+```typescript TypeScript
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // blink_xxx...
+  process.env.BLINK_WALLET_ID!,  // UUID
+);
+```
+
+```python Python
+from l402kit.providers.blink import BlinkProvider
+
+blink = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+```
+
+```go Go
+import "github.com/shinydapps/l402-kit/go"
+
+provider := l402kit.NewBlinkProvider(
+    os.Getenv("BLINK_API_KEY"),
+    os.Getenv("BLINK_WALLET_ID"),
+)
+```
+</CodeGroup>
+
+**Environment variables:**
+```bash
+BLINK_API_KEY=blink_GHRHAIuz...
+BLINK_WALLET_ID=9da6b07e-7aaa-44e0-bc96-f1e22610b4d1
+```
+
+---
+
+## LNbits
+
+[LNbits](https://lnbits.com) is an open-source Lightning wallet server. Self-host it or use a public instance.
+
+**Get started:**
+1. Set up LNbits (self-host or use legend.lnbits.com)
+2. Create a wallet → copy the **Invoice/read key**
+
+<CodeGroup>
+```typescript TypeScript
+import { LNbitsProvider } from 'l402-kit';
+
+const lnbits = new LNbitsProvider(
+  process.env.LNBITS_KEY!,
+  process.env.LNBITS_URL ?? 'https://legend.lnbits.com',
+);
+```
+
+```python Python
+from l402kit.providers.lnbits import LNbitsProvider
+
+lnbits = LNbitsProvider(
+    api_key=os.environ["LNBITS_KEY"],
+    base_url=os.environ.get("LNBITS_URL", "https://legend.lnbits.com"),
+)
+```
+</CodeGroup>
+
+**Environment variables:**
+```bash
+LNBITS_KEY=your-invoice-read-key
+LNBITS_URL=https://your-lnbits-instance.com
+```
+
+---
+
+## OpenNode
+
+[OpenNode](https://opennode.com) is a Lightning provider with a free sandbox for testing.
+
+**Get started:**
+1. Create account at [app.opennode.com](https://app.opennode.com)
+2. Go to **Integrations** → **API Keys** → create a key
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenNodeProvider } from 'l402-kit';
+
+const opennode = new OpenNodeProvider(
+  process.env.OPENNODE_KEY!,
+  process.env.NODE_ENV !== 'production', // testMode
+);
+```
+
+```python Python
+from l402kit.providers.opennode import OpenNodeProvider
+
+opennode = OpenNodeProvider(
+    api_key=os.environ["OPENNODE_KEY"],
+    test_mode=os.environ.get("NODE_ENV") != "production",
+)
+```
+</CodeGroup>
+
+---
+
+## Custom provider
+
+Implement the `LightningProvider` interface to use any Lightning backend:
+
+<CodeGroup>
+```typescript TypeScript
+import type { LightningProvider, Invoice } from 'l402-kit';
+
+class MyProvider implements LightningProvider {
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    // Call your Lightning node API
+    const result = await myNode.createInvoice(amountSats);
+    const macaroon = Buffer.from(
+      JSON.stringify({ hash: result.hash, exp: Date.now() + 3_600_000 })
+    ).toString('base64');
+    return {
+      paymentRequest: result.bolt11,
+      paymentHash: result.hash,
+      macaroon,
+      amountSats,
+      expiresAt: Date.now() + 3_600_000,
+    };
+  }
+
+  async checkPayment(paymentHash: string): Promise<boolean> {
+    return myNode.isPaid(paymentHash);
+  }
+}
+```
+
+```python Python
+from l402kit.types import LightningProvider, Invoice
+from datetime import datetime, timedelta
+import base64, json
+
+class MyProvider(LightningProvider):
+    async def create_invoice(self, amount_sats: int) -> Invoice:
+        result = await my_node.create_invoice(amount_sats)
+        exp = int((datetime.now() + timedelta(hours=1)).timestamp() * 1000)
+        macaroon = base64.b64encode(
+            json.dumps({"hash": result.hash, "exp": exp}).encode()
+        ).decode()
+        return Invoice(
+            payment_request=result.bolt11,
+            payment_hash=result.hash,
+            macaroon=macaroon,
+            amount_sats=amount_sats,
+            expires_at=exp,
+        )
+
+    async def check_payment(self, payment_hash: str) -> bool:
+        return await my_node.is_paid(payment_hash)
+```
+</CodeGroup>

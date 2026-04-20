@@ -2,7 +2,7 @@
   "name": "shinydapps-l402",
   "displayName": "ShinyDapps ⚡ Lightning Payments",
   "description": "Monitor your Bitcoin Lightning API payments in real-time inside VS Code",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "ShinyDapps",
   "icon": "icon.png",
   "engines": { "vscode": "^1.85.0" },

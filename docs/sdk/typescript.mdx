@@ -1,0 +1,214 @@
+---
+title: TypeScript SDK
+description: Complete reference for the l402-kit TypeScript/JavaScript SDK.
+---
+
+## Installation
+
+```bash
+npm install l402-kit
+```
+
+**Peer dependency**: `express >= 4.0.0` (optional — only needed for Express middleware)
+
+---
+
+## Quick start
+
+```typescript
+import express from 'express';
+import { l402, BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+const app = express();
+
+app.get('/api/data', l402({ priceSats: 10, lightning: blink }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+
+---
+
+## `l402(options)` — middleware
+
+Returns an Express middleware that enforces L402 payment on the route.
+
+```typescript
+import { l402 } from 'l402-kit';
+
+app.get('/route', l402(options), handler);
+```
+
+### Options
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `priceSats` | `number` | ✅ | Price in satoshis |
+| `lightning` | `LightningProvider` | ✅ | Provider instance |
+
+### Behavior
+
+- **No token**: Returns `402 Payment Required` with invoice + macaroon
+- **Valid token**: Calls `next()` — route handler executes
+- **Invalid/expired token**: Returns `401 Unauthorized`
+- **Replayed token**: Returns `401 Token already used`
+
+### 402 Response body
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "priceSats": 10
+}
+```
+
+### WWW-Authenticate header
+
+```
+WWW-Authenticate: L402 macaroon="eyJ...", invoice="lnbc..."
+```
+
+---
+
+## `verifyToken(token)` — standalone verification
+
+Verify an L402 token without Express middleware:
+
+```typescript
+import { verifyToken } from 'l402-kit';
+
+const token = 'eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==:deadbeef...';
+const isValid = verifyToken(token); // true | false
+```
+
+---
+
+## `parseToken(token)` — parse token parts
+
+```typescript
+import { parseToken } from 'l402-kit';
+
+const { macaroon, preimage } = parseToken(token);
+// macaroon: 'eyJoYXNo...'
+// preimage: 'deadbeef...'
+```
+
+---
+
+## `checkAndMarkPreimage(preimage)` — replay protection
+
+```typescript
+import { checkAndMarkPreimage } from 'l402-kit';
+
+const isFirstUse = checkAndMarkPreimage(preimage);
+// true  → first use, mark as spent
+// false → already used (replay attack)
+```
+
+---
+
+## Providers
+
+### `BlinkProvider`
+
+```typescript
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(apiKey: string, walletId: string);
+```
+
+### `LNbitsProvider`
+
+```typescript
+import { LNbitsProvider } from 'l402-kit';
+
+const lnbits = new LNbitsProvider(
+  apiKey: string,
+  baseUrl?: string, // default: 'https://legend.lnbits.com'
+);
+```
+
+### `OpenNodeProvider`
+
+```typescript
+import { OpenNodeProvider } from 'l402-kit';
+
+const opennode = new OpenNodeProvider(
+  apiKey: string,
+  testMode?: boolean, // default: false
+);
+```
+
+---
+
+## Types
+
+```typescript
+interface LightningProvider {
+  createInvoice(amountSats: number): Promise<Invoice>;
+  checkPayment(paymentHash: string): Promise<boolean>;
+}
+
+interface Invoice {
+  paymentRequest: string;   // BOLT11 invoice string
+  paymentHash: string;      // SHA256 hash
+  macaroon: string;         // base64-encoded JSON {hash, exp}
+  amountSats: number;       // amount in satoshis
+  expiresAt: number;        // Unix timestamp (ms)
+}
+
+interface L402Options {
+  priceSats: number;
+  lightning: LightningProvider;
+  checkReplay?: (preimage: string) => boolean | Promise<boolean>;
+}
+```
+
+---
+
+## Full example
+
+```typescript
+import express from 'express';
+import { l402, BlinkProvider, verifyToken } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+const app = express();
+app.use(express.json());
+
+// Free endpoint
+app.get('/health', (req, res) => res.json({ ok: true }));
+
+// 10-sat endpoint
+app.get('/api/weather', l402({ priceSats: 10, lightning: blink }), (req, res) => {
+  res.json({ temp: 24, city: 'São Paulo' });
+});
+
+// 100-sat endpoint
+app.post('/api/generate', l402({ priceSats: 100, lightning: blink }), (req, res) => {
+  res.json({ result: 'AI-generated content' });
+});
+
+app.listen(3000, () => console.log('API running on :3000'));
+```
+
+**Test:**
+```bash
+# Triggers 402 → get invoice + macaroon
+curl http://localhost:3000/api/weather
+
+# Pay invoice via Lightning wallet, then:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/weather
+```

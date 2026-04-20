@@ -1,0 +1,143 @@
+---
+title: Security Guide
+description: Best practices for securing your L402-protected API in production.
+---
+
+## Token security model
+
+L402 tokens consist of two parts joined by `:`:
+
+```
+<macaroon>:<preimage>
+```
+
+- **Macaroon** — base64-encoded JSON containing `{hash, exp}`. Signed by SHA-256. Cannot be forged without knowing the preimage.
+- **Preimage** — the 32-byte secret that, when hashed with SHA-256, must match the hash embedded in the macaroon.
+
+**Verification is fully local** — no database lookup, no network call. The SDK verifies the hash relationship cryptographically in microseconds.
+
+---
+
+## Replay protection
+
+l402-kit includes **built-in replay protection**. Each preimage can only be used once:
+
+```typescript
+// ✅ Built-in — enabled by default
+app.get("/api", l402({ priceSats: 10, lightning: blink }), handler);
+```
+
+The first use of a token marks the preimage as spent. Any subsequent request with the same preimage returns `401 Token already used`.
+
+**Default store**: in-memory `Set`. This means:
+- Restarts clear the replay store (tokens become reusable across restarts)
+- Multiple instances don't share state
+
+**For production** with multiple instances, implement a persistent replay store:
+
+```typescript
+import { checkAndMarkPreimage } from "l402-kit";
+
+// Example: Redis-backed replay store
+async function redisCheckAndMark(preimage: string): Promise<boolean> {
+  const key = `l402:used:${preimage}`;
+  const set = await redis.set(key, "1", "NX", "EX", 86400); // 24h TTL
+  return set === "OK"; // true = first use, false = replay
+}
+```
+
+---
+
+## Token expiry
+
+Tokens carry an `exp` field (Unix timestamp in ms). The SDK rejects expired tokens automatically.
+
+Default TTL: **1 hour** (set by the Lightning provider when creating the invoice).
+
+```typescript
+// Tokens are valid for 1 hour after invoice creation.
+// After expiry, the client must pay again to get a new token.
+```
+
+---
+
+## HTTPS is required
+
+**Never use L402 over plain HTTP in production.** The macaroon and preimage are transmitted in the `Authorization` header. Over HTTP, they are exposed to network attackers.
+
+```nginx
+# nginx — redirect HTTP to HTTPS
+server {
+    listen 80;
+    return 301 https://$host$request_uri;
+}
+```
+
+---
+
+## Rate limiting
+
+L402 verifies tokens cryptographically, not by looking up a database — so it's cheap. But Lightning invoice creation (the 402 response) calls your Lightning provider's API.
+
+Protect invoice creation with a rate limiter to prevent DoS:
+
+```typescript
+import rateLimit from "express-rate-limit";
+
+const invoiceLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 20, // 20 unpaid requests per minute per IP
+  skip: (req) => req.headers.authorization?.startsWith("L402 ") ?? false,
+});
+
+app.use("/api", invoiceLimiter);
+app.get("/api/data", l402({ priceSats: 10, lightning: blink }), handler);
+```
+
+---
+
+## Secrets management
+
+Never hardcode API keys. Use environment variables:
+
+```typescript
+// ✅ Correct
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+// ❌ Never do this
+const blink = new BlinkProvider("blink_abc123...", "wallet-id-here");
+```
+
+Use a secrets manager in production: AWS Secrets Manager, Doppler, Vault, or `.env` + dotenv (never committed to git).
+
+---
+
+## Content Security Policy
+
+If you serve a frontend alongside your API, ensure your CSP doesn't block the L402 flow:
+
+```http
+Content-Security-Policy: connect-src 'self' https://api.blink.sv
+```
+
+---
+
+## Checklist
+
+<AccordionGroup>
+  <Accordion title="Before going live">
+    - [ ] HTTPS enforced on all endpoints
+    - [ ] API keys in environment variables, not source code
+    - [ ] Rate limiter on invoice creation
+    - [ ] Replay protection tested (try reusing a preimage → expect 401)
+    - [ ] Token expiry tested (set short TTL in dev, confirm 401 after expiry)
+  </Accordion>
+  <Accordion title="For high-traffic APIs">
+    - [ ] Redis-backed replay store (shared across instances)
+    - [ ] Monitoring on 402 response rates (spike = potential DoS)
+    - [ ] Lightning provider failover (BlinkProvider → LNbitsProvider fallback)
+  </Accordion>
+</AccordionGroup>

@@ -17,8 +17,20 @@
   ],
   "navigation": [
     {
-      "group": "🇺🇸 English",
-      "pages": ["introduction", "quickstart", "guides/ai-agents", "competitive"]
+      "group": "Getting Started",
+      "pages": ["introduction", "quickstart"]
+    },
+    {
+      "group": "SDKs",
+      "pages": ["sdk/typescript", "sdk/python"]
+    },
+    {
+      "group": "Guides",
+      "pages": ["guides/ai-agents", "guides/security", "guides/production"]
+    },
+    {
+      "group": "Reference",
+      "pages": ["providers", "competitive"]
     },
     {
       "group": "🇧🇷 Português",

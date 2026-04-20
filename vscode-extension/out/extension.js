@@ -65,6 +65,8 @@ const I18N = {
         dark: "Dark",
         auto: "Auto",
         revenue: "Revenue (USD est.)",
+        btcPrice: "BTC Price",
+        satValue: "Sat Value (USD)",
     },
     pt: {
         title: "⚡ Pagamentos ShinyDapps",
@@ -88,6 +90,8 @@ const I18N = {
         dark: "Escuro",
         auto: "Auto",
         revenue: "Receita (USD est.)",
+        btcPrice: "Preço BTC",
+        satValue: "Valor em USD",
     },
     es: {
         title: "⚡ Pagos ShinyDapps",
@@ -390,7 +394,7 @@ function getDashboardHtml(_context) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://urcqtpklpfyvizcgcsia.supabase.co; img-src data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://urcqtpklpfyvizcgcsia.supabase.co https://mempool.space; img-src data: blob:;">
 <style>
   :root {
     --bg: var(--vscode-editor-background, #1e1e1e);
@@ -428,7 +432,12 @@ function getDashboardHtml(_context) {
   .value { font-size: 20px; font-weight: 700; color: var(--accent); }
   .value-sm { font-size: 12px; font-weight: 600; word-break: break-all; color: var(--fg); }
   .chart-wrap { margin-bottom: 14px; }
-  .chart-title { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .chart-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .range-sel { display: flex; gap: 2px; }
+  .range-btn { background: none; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--muted); padding: 1px 5px; font-size: 9px; font-weight: 600; }
+  .range-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .range-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
   canvas { width: 100%; border-radius: 6px; }
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; padding: 6px 4px; color: var(--muted); border-bottom: 1px solid var(--border); font-size: 10px; text-transform: uppercase; }
@@ -480,9 +489,10 @@ const LANGS = [
   { code: 'it', label: '🇮🇹' },
 ];
 
-function t(key) { return (I18N[lang] || I18N.en)[key] || key; }
+function t(key) { return (I18N[lang] || I18N.en)[key] ?? I18N.en[key] ?? key; }
 
 function applyTheme(th) {
+  if (theme === th) th = 'auto';
   theme = th;
   document.documentElement.setAttribute('data-theme', th === 'auto' ? '' : th);
   document.querySelectorAll('.theme-btn').forEach(b => {
@@ -505,11 +515,10 @@ function buildTopbar() {
 
   const themeSel = document.getElementById('themeSel');
   themeSel.innerHTML = [
-    { code: 'auto', icon: '⬡' },
-    { code: 'light', icon: '☀️' },
-    { code: 'dark', icon: '🌙' },
+    { code: 'light', icon: '☀️', title: 'Light theme' },
+    { code: 'dark',  icon: '🌙', title: 'Dark theme' },
   ].map(th =>
-    '<button class="theme-btn' + (th.code === theme ? ' active' : '') + '" data-th="' + th.code + '">' + th.icon + '</button>'
+    '<button class="theme-btn' + (th.code === theme ? ' active' : '') + '" data-th="' + th.code + '" title="' + th.title + '">' + th.icon + '</button>'
   ).join('');
   themeSel.querySelectorAll('.theme-btn').forEach(btn => {
     btn.addEventListener('click', () => applyTheme(btn.dataset.th));
@@ -544,58 +553,107 @@ function renderSetup() {
 }
 
 let lastData = null;
+let chartRange = '7D';
+let btcPriceUsd = 0;
 
-function drawChart(rows) {
+async function fetchBtcPrice() {
+  try {
+    const r = await fetch('https://mempool.space/api/v1/prices');
+    const d = await r.json();
+    btcPriceUsd = d.USD || 0;
+    const el = document.getElementById('btcPriceEl');
+    if (el && btcPriceUsd) el.textContent = '$' + btcPriceUsd.toLocaleString();
+  } catch { btcPriceUsd = 0; }
+}
+
+function getBuckets(rows, range) {
+  const now = new Date();
+  let buckets, keyFn;
+  if (range === '1D') {
+    buckets = Array.from({length: 24}, (_, i) => {
+      const h = new Date(+now - (23 - i) * 3600_000);
+      return { key: h.toISOString().slice(0, 13), label: String(h.getHours()).padStart(2, '0') + 'h', val: 0 };
+    });
+    keyFn = r => r.paid_at ? r.paid_at.slice(0, 13) : null;
+  } else if (range === '7D' || range === '30D') {
+    const N = range === '7D' ? 7 : 30;
+    buckets = Array.from({length: N}, (_, i) => {
+      const d = new Date(now); d.setDate(d.getDate() - (N - 1 - i));
+      const iso = d.toISOString().slice(0, 10);
+      return { key: iso, label: iso.slice(5), val: 0 };
+    });
+    keyFn = r => r.paid_at ? r.paid_at.slice(0, 10) : null;
+  } else if (range === '1Y') {
+    buckets = Array.from({length: 12}, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+      const iso = d.toISOString().slice(0, 7);
+      return { key: iso, label: iso.slice(5), val: 0 };
+    });
+    keyFn = r => r.paid_at ? r.paid_at.slice(0, 7) : null;
+  } else { // ALL
+    if (!rows || rows.length === 0) {
+      buckets = Array.from({length: 7}, (_, i) => {
+        const d = new Date(now); d.setDate(d.getDate() - (6 - i));
+        return { key: d.toISOString().slice(0, 10), label: d.toISOString().slice(5, 10), val: 0 };
+      });
+      keyFn = r => r.paid_at ? r.paid_at.slice(0, 10) : null;
+    } else {
+      const first = rows.reduce((m, r) => (r.paid_at && r.paid_at < m) ? r.paid_at : m, now.toISOString());
+      const start = new Date(first.slice(0, 7) + '-01');
+      const months = [];
+      const cur = new Date(start);
+      while (+cur <= +now) {
+        const iso = cur.toISOString().slice(0, 7);
+        months.push({ key: iso, label: iso.slice(5), val: 0 });
+        cur.setMonth(cur.getMonth() + 1);
+      }
+      if (months.length === 0) months.push({ key: now.toISOString().slice(0, 7), label: now.toISOString().slice(5, 7), val: 0 });
+      buckets = months;
+      keyFn = r => r.paid_at ? r.paid_at.slice(0, 7) : null;
+    }
+  }
+  const bmap = Object.fromEntries(buckets.map(b => [b.key, b]));
+  (rows || []).forEach(r => { const k = keyFn(r); if (k && bmap[k]) bmap[k].val += r.amount_sats || 0; });
+  return buckets;
+}
+
+function drawChart(rows, range) {
   const canvas = document.getElementById('chart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  const now = new Date();
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
-  }
-
-  const satsPerDay = {};
-  days.forEach(d => satsPerDay[d] = 0);
-  (rows || []).forEach(r => {
-    const d = r.paid_at ? r.paid_at.slice(0, 10) : null;
-    if (d && satsPerDay[d] !== undefined) satsPerDay[d] += r.amount_sats || 0;
-  });
-
-  const values = days.map(d => satsPerDay[d]);
-  const maxVal = Math.max(...values, 1);
-  const barW = Math.floor((W - 20) / 7) - 4;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'light' ? false : true;
+  const buckets = getBuckets(rows, range || chartRange);
+  const N = buckets.length;
+  const maxVal = Math.max(...buckets.map(b => b.val), 1);
+  const gap = N > 20 ? 1 : 2;
+  const barW = Math.max(2, Math.floor((W - 20) / N) - gap);
 
   const bg = getComputedStyle(document.documentElement).getPropertyValue('--card').trim() || '#252526';
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  values.forEach((v, i) => {
-    const x = 10 + i * (barW + 4);
-    const barH = Math.round((v / maxVal) * (H - 28));
+  const skipLabel = N > 24 ? 4 : N > 12 ? 2 : 1;
+  buckets.forEach((b, i) => {
+    const x = 10 + i * (barW + gap);
+    const barH = Math.max(b.val > 0 ? 2 : 0, Math.round((b.val / maxVal) * (H - 28)));
     const y = H - barH - 18;
-    const alpha = v > 0 ? 1 : 0.25;
-    ctx.fillStyle = 'rgba(247,147,26,' + alpha + ')';
+    ctx.fillStyle = 'rgba(247,147,26,' + (b.val > 0 ? 1 : 0.18) + ')';
     ctx.beginPath();
-    if (ctx.roundRect) { ctx.roundRect(x, y, barW, barH, 3); } else { ctx.rect(x, y, barW, barH); }
+    if (ctx.roundRect) { ctx.roundRect(x, y, barW, barH, 2); } else { ctx.rect(x, y, barW, barH); }
     ctx.fill();
-
-    ctx.fillStyle = 'rgba(247,147,26,0.7)';
-    ctx.font = '9px sans-serif';
-    ctx.textAlign = 'center';
-    const label = days[i].slice(5);
-    ctx.fillText(label, x + barW / 2, H - 4);
-
-    if (v > 0) {
+    if (i % skipLabel === 0 || i === N - 1) {
+      ctx.fillStyle = 'rgba(247,147,26,0.6)';
+      ctx.font = '8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(b.label, x + barW / 2, H - 4);
+    }
+    if (b.val > 0) {
       ctx.fillStyle = '#f7931a';
       ctx.font = 'bold 9px sans-serif';
-      ctx.fillText(v >= 1000 ? (v/1000).toFixed(1)+'k' : v, x + barW / 2, y - 3);
+      ctx.textAlign = 'center';
+      ctx.fillText(b.val >= 1000 ? (b.val / 1000).toFixed(1) + 'k' : b.val, x + barW / 2, y - 3);
     }
   });
 }
@@ -605,20 +663,29 @@ function renderContent(rows) {
   if (!rows) { renderSetup(); return; }
 
   const total = rows.reduce((s, r) => s + (r.amount_sats || 0), 0);
-  const usd = (total * 0.00003).toFixed(2);
+  const usdFallback = (total * 0.00003).toFixed(2);
+  const usd = btcPriceUsd ? ((total / 100_000_000) * btcPriceUsd).toFixed(2) : usdFallback;
 
   const content = document.getElementById('content');
   content.innerHTML =
     '<h2>' + t('title') + '</h2>' +
     '<div class="cards">' +
-      '<div class="card"><div class="label">' + t('totalPayments') + '</div><div class="value" id="cnt">' + rows.length + '</div></div>' +
+      '<div class="card"><div class="label">' + t('totalPayments') + '</div><div class="value">' + rows.length + '</div></div>' +
       '<div class="card"><div class="label">' + t('totalSats') + '</div><div class="value">' + total.toLocaleString() + '</div></div>' +
       '<div class="card"><div class="label">' + t('revenue') + '</div><div class="value" style="font-size:16px">$' + usd + '</div></div>' +
-      '<div class="card"><div class="label">' + t('lightningAddr') + '</div><div class="value-sm">' + (LIGHTNING_ADDRESS || t('notSet')) + '</div></div>' +
+      '<div class="card"><div class="label">' + t('btcPrice') + '</div><div class="value-sm" id="btcPriceEl">' + (btcPriceUsd ? '$' + btcPriceUsd.toLocaleString() : '…') + '</div></div>' +
+      '<div class="card card-wide"><div class="label">' + t('lightningAddr') + '</div><div class="value-sm">' + (LIGHTNING_ADDRESS || t('notSet')) + '</div></div>' +
     '</div>' +
     '<div class="chart-wrap">' +
-      '<div class="chart-title">' + t('chartTitle') + '</div>' +
-      '<canvas id="chart" width="280" height="100"></canvas>' +
+      '<div class="chart-header">' +
+        '<div class="chart-title">' + t('chartTitle') + '</div>' +
+        '<div class="range-sel" id="rangeSel">' +
+          ['1D','7D','30D','1Y','ALL'].map(r =>
+            '<button class="range-btn' + (r === chartRange ? ' active' : '') + '" data-range="' + r + '">' + r + '</button>'
+          ).join('') +
+        '</div>' +
+      '</div>' +
+      '<canvas id="chart" width="280" height="110"></canvas>' +
     '</div>' +
     '<table>' +
       '<tr><th>' + t('when') + '</th><th>' + t('endpoint') + '</th><th>' + t('sats') + '</th></tr>' +
@@ -630,7 +697,16 @@ function renderContent(rows) {
       ) + '</tbody>' +
     '</table>';
 
-  requestAnimationFrame(() => drawChart(rows));
+  requestAnimationFrame(() => {
+    drawChart(rows, chartRange);
+    document.getElementById('rangeSel')?.querySelectorAll('.range-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        chartRange = btn.dataset.range;
+        document.querySelectorAll('.range-btn').forEach(b => b.classList.toggle('active', b.dataset.range === chartRange));
+        drawChart(lastData, chartRange);
+      });
+    });
+  });
 }
 
 async function load() {
@@ -642,7 +718,7 @@ async function load() {
     '<div class="empty" style="padding:40px 12px;">' + t('loading') + '</div>';
   try {
     const res = await fetch(
-      SUPABASE_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(LIGHTNING_ADDRESS) + '&order=paid_at.desc&limit=200',
+      SUPABASE_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(LIGHTNING_ADDRESS) + '&order=paid_at.desc&limit=500',
       { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
     );
     if (!res.ok) {
@@ -657,6 +733,7 @@ async function load() {
 }
 
 buildTopbar();
+fetchBtcPrice();
 load();
 </script>
 </body>

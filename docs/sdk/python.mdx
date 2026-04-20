@@ -1,0 +1,223 @@
+---
+title: Python SDK
+description: Complete reference for the l402kit Python SDK (FastAPI, Flask, async).
+---
+
+## Installation
+
+```bash
+pip install l402kit
+```
+
+**Requirements**: Python 3.9+, FastAPI or Flask (optional)
+
+---
+
+## Quick start (FastAPI)
+
+```python
+import os
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+from l402kit.providers.blink import BlinkProvider
+
+app = FastAPI()
+
+blink = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+
+@app.get("/api/data")
+@l402_required(price_sats=10, lightning=blink)
+async def get_data(request: Request):
+    return {"data": "premium content"}
+```
+
+---
+
+## Quick start (Flask)
+
+```python
+import os
+from flask import Flask, jsonify
+from l402kit import l402_required
+from l402kit.providers.blink import BlinkProvider
+
+app = Flask(__name__)
+
+blink = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+
+@app.route("/api/data")
+@l402_required(price_sats=10, lightning=blink)
+def get_data():
+    return jsonify({"data": "premium content"})
+
+if __name__ == "__main__":
+    app.run(port=3000)
+```
+
+---
+
+## `l402_required(price_sats, lightning)` — decorator
+
+```python
+from l402kit import l402_required
+
+@app.get("/route")
+@l402_required(price_sats=100, lightning=blink)
+async def handler(request: Request):
+    ...
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `price_sats` | `int` | ✅ | Price in satoshis |
+| `lightning` | `LightningProvider` | ✅ | Provider instance |
+
+### Behavior
+
+- **No `Authorization` header**: Returns `402` with invoice, macaroon, price
+- **Valid `L402 <macaroon>:<preimage>` header**: Route executes normally
+- **Invalid/expired token**: Returns `401`
+- **Replayed token**: Returns `401 Token already used`
+
+### 402 Response
+
+```json
+{
+  "error": "Payment Required",
+  "price_sats": 10,
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ=="
+}
+```
+
+---
+
+## `verify_token(token)` — standalone
+
+```python
+from l402kit.verify import verify_token
+
+token = "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==:deadbeef..."
+is_valid = verify_token(token)  # True / False
+```
+
+---
+
+## `check_and_mark_preimage(preimage)` — replay protection
+
+```python
+from l402kit.replay import check_and_mark_preimage
+
+is_first_use = check_and_mark_preimage(preimage)
+# True  → first use, marked as spent
+# False → already used
+```
+
+---
+
+## Providers
+
+### `BlinkProvider`
+
+```python
+from l402kit.providers.blink import BlinkProvider
+
+blink = BlinkProvider(
+    api_key="blink_xxx",
+    wallet_id="your-wallet-uuid",
+)
+```
+
+### `LNbitsProvider`
+
+```python
+from l402kit.providers.lnbits import LNbitsProvider
+
+lnbits = LNbitsProvider(
+    api_key="your-invoice-key",
+    base_url="https://legend.lnbits.com",  # optional
+)
+```
+
+### `OpenNodeProvider`
+
+```python
+from l402kit.providers.opennode import OpenNodeProvider
+
+opennode = OpenNodeProvider(
+    api_key="your-api-key",
+    test_mode=True,  # optional, default False
+)
+```
+
+---
+
+## Custom provider
+
+```python
+from l402kit.types import LightningProvider, Invoice
+import base64, json, time
+
+class MyProvider(LightningProvider):
+    async def create_invoice(self, amount_sats: int) -> Invoice:
+        result = await my_node.create_invoice(amount_sats)
+        exp = int((time.time() + 3600) * 1000)
+        macaroon = base64.b64encode(
+            json.dumps({"hash": result.hash, "exp": exp}).encode()
+        ).decode()
+        return Invoice(
+            payment_request=result.bolt11,
+            payment_hash=result.hash,
+            macaroon=macaroon,
+            amount_sats=amount_sats,
+            expires_at=exp,
+        )
+
+    async def check_payment(self, payment_hash: str) -> bool:
+        return await my_node.is_paid(payment_hash)
+```
+
+---
+
+## Testing
+
+```python
+from l402kit.verify import verify_token
+from l402kit.replay import check_and_mark_preimage
+import hashlib, base64, json, time, os
+
+def make_test_token():
+    preimage = os.urandom(32).hex()
+    payment_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+    exp = int((time.time() + 3600) * 1000)
+    macaroon = base64.b64encode(
+        json.dumps({"hash": payment_hash, "exp": exp}).encode()
+    ).decode()
+    return f"{macaroon}:{preimage}"
+
+token = make_test_token()
+assert verify_token(token) is True
+```
+
+---
+
+## Running
+
+```bash
+# FastAPI
+uvicorn main:app --port 3000
+
+# Flask
+python app.py
+
+# Test (triggers 402)
+curl http://localhost:3000/api/data
+```
