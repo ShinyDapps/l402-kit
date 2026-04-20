@@ -1,6 +1,6 @@
 # ShinyDapps ⚡ Lightning Payments
 
-🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية)
+🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية) · 🇮🇹 [Italiano](#italiano)
 
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 [![Downloads](https://img.shields.io/visual-studio-marketplace/d/ShinyDapps.shinydapps-l402)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
@@ -437,16 +437,17 @@ pip install l402kit
 
 ---
 
-🇺🇸 [English Docs](https://shinydapps.mintlify.app) ·
-🇧🇷 [Português](https://shinydapps.mintlify.app/pt/introduction) ·
-🇪🇸 [Español](https://shinydapps.mintlify.app/es/introduction) ·
-🇨🇳 [中文](https://shinydapps.mintlify.app/zh/introduction) ·
-🇮🇳 [हिंदी](https://shinydapps.mintlify.app/hi/introduction) ·
-🇸🇦 [العربية](https://shinydapps.mintlify.app/ar/introduction) ·
-🇫🇷 [Français](https://shinydapps.mintlify.app/fr/introduction) ·
-🇩🇪 [Deutsch](https://shinydapps.mintlify.app/de/introduction) ·
-🇷🇺 [Русский](https://shinydapps.mintlify.app/ru/introduction) ·
-🇯🇵 [日本語](https://shinydapps.mintlify.app/ja/introduction)
+🇺🇸 [English Docs](https://shinydapps-bd9fa40b.mintlify.app) ·
+🇧🇷 [Português](https://shinydapps-bd9fa40b.mintlify.app/pt/introduction) ·
+🇪🇸 [Español](https://shinydapps-bd9fa40b.mintlify.app/es/introduction) ·
+🇨🇳 [中文](https://shinydapps-bd9fa40b.mintlify.app/zh/introduction) ·
+🇮🇳 [हिंदी](https://shinydapps-bd9fa40b.mintlify.app/hi/introduction) ·
+🇸🇦 [العربية](https://shinydapps-bd9fa40b.mintlify.app/ar/introduction) ·
+🇫🇷 [Français](https://shinydapps-bd9fa40b.mintlify.app/fr/introduction) ·
+🇩🇪 [Deutsch](https://shinydapps-bd9fa40b.mintlify.app/de/introduction) ·
+🇷🇺 [Русский](https://shinydapps-bd9fa40b.mintlify.app/ru/introduction) ·
+🇯🇵 [日本語](https://shinydapps-bd9fa40b.mintlify.app/ja/introduction) ·
+🇮🇹 [Italiano](https://shinydapps-bd9fa40b.mintlify.app/it/introduction)
 
 ---
 

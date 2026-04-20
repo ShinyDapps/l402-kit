@@ -16,9 +16,19 @@ dependencies = [
 [project.optional-dependencies]
 fastapi = ["fastapi>=0.110"]
 flask = ["flask>=3.0"]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
+    "fastapi>=0.110",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
 
 [project.urls]
-Homepage = "https://shinydapps.mintlify.app"
-Documentation = "https://shinydapps.mintlify.app"
+Homepage = "https://shinydapps-bd9fa40b.mintlify.app"
+Documentation = "https://shinydapps-bd9fa40b.mintlify.app"
 Repository = "https://github.com/ShinyDapps/l402-kit"
 "npm package" = "https://npmjs.com/package/l402-kit"

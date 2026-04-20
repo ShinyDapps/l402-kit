@@ -10,6 +10,7 @@
 🇩🇪 **Monetarisiere deine API mit Bitcoin Lightning. 3 Zeilen Code.**
 🇷🇺 **Монетизируй свой API через Bitcoin Lightning. 3 строки кода.**
 🇯🇵 **Bitcoin Lightningで APIを3行で収益化。**
+🇮🇹 **Monetizza la tua API con Bitcoin Lightning. 3 righe di codice.**
 
 [![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
 [![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
@@ -21,7 +22,7 @@ pip install l402kit
 
 📖 **Docs / Documentação / Documentation:**
 
-[🇺🇸 English](https://shinydapps.mintlify.app) · [🇧🇷 Português](https://shinydapps.mintlify.app/pt/introduction) · [🇪🇸 Español](https://shinydapps.mintlify.app/es/introduction) · [🇨🇳 中文](https://shinydapps.mintlify.app/zh/introduction) · [🇮🇳 हिंदी](https://shinydapps.mintlify.app/hi/introduction) · [🇸🇦 العربية](https://shinydapps.mintlify.app/ar/introduction) · [🇫🇷 Français](https://shinydapps.mintlify.app/fr/introduction) · [🇩🇪 Deutsch](https://shinydapps.mintlify.app/de/introduction) · [🇷🇺 Русский](https://shinydapps.mintlify.app/ru/introduction) · [🇯🇵 日本語](https://shinydapps.mintlify.app/ja/introduction)
+[🇺🇸 English](https://shinydapps-bd9fa40b.mintlify.app) · [🇧🇷 Português](https://shinydapps-bd9fa40b.mintlify.app/pt/introduction) · [🇪🇸 Español](https://shinydapps-bd9fa40b.mintlify.app/es/introduction) · [🇨🇳 中文](https://shinydapps-bd9fa40b.mintlify.app/zh/introduction) · [🇮🇳 हिंदी](https://shinydapps-bd9fa40b.mintlify.app/hi/introduction) · [🇸🇦 العربية](https://shinydapps-bd9fa40b.mintlify.app/ar/introduction) · [🇫🇷 Français](https://shinydapps-bd9fa40b.mintlify.app/fr/introduction) · [🇩🇪 Deutsch](https://shinydapps-bd9fa40b.mintlify.app/de/introduction) · [🇷🇺 Русский](https://shinydapps-bd9fa40b.mintlify.app/ru/introduction) · [🇯🇵 日本語](https://shinydapps-bd9fa40b.mintlify.app/ja/introduction) · [🇮🇹 Italiano](https://shinydapps-bd9fa40b.mintlify.app/it/introduction)
 
 ---
 
@@ -173,6 +174,53 @@ async def premium(request: Request):
 
 ---
 
+## Italiano
+
+Aggiungi pagamenti pay-per-call in Bitcoin Lightning a qualsiasi API Python. Funziona con FastAPI e Flask.
+
+### FastAPI — avvio rapido
+
+```python
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+
+app = FastAPI()
+
+@app.get("/premium")
+@l402_required(
+    price_sats=100,
+    owner_lightning_address="tu@blink.sv",  # riceve il 99.7% di ogni pagamento
+)
+async def premium(request: Request):
+    return {"data": "Pagamento confermato."}
+```
+
+### Flask — avvio rapido
+
+```python
+from flask import Flask, jsonify
+from l402kit import l402_required
+
+app = Flask(__name__)
+
+@app.get("/premium")
+@l402_required(price_sats=100, owner_lightning_address="tu@blink.sv")
+def premium():
+    return jsonify({"data": "Pagamento confermato."})
+```
+
+### Perché non Stripe?
+
+| | Stripe | l402kit |
+|---|---|---|
+| Commissione minima | €0,25 | **< 1 sat** |
+| Liquidazione | 2–7 giorni | **< 1 secondo** |
+| Chargeback | Sì | **Impossibile** |
+| Supporto agenti IA | No | **Sì** |
+| Globale | No (~50 paesi bloccati) | **Sì — 0 frontiere** |
+
+---
+
 ## Advanced mode — bring your own Lightning wallet
 
 ```python
@@ -220,7 +268,7 @@ Your address: `yourname@blink.sv`
 
 | | |
 |---|---|
-| Docs (10 languages) | [shinydapps.mintlify.app](https://shinydapps.mintlify.app) |
+| Docs (11 languages) | [shinydapps.mintlify.app](https://shinydapps-bd9fa40b.mintlify.app) |
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
 | npm (TypeScript) | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |

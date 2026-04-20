@@ -55,6 +55,10 @@
     {
       "group": "🇯🇵 日本語",
       "pages": ["ja/introduction"]
+    },
+    {
+      "group": "🇮🇹 Italiano",
+      "pages": ["it/introduction"]
     }
   ],
   "footerSocials": {
