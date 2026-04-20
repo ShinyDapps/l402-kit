@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "l402kit"
-version = "0.2.0"
+version = "0.3.0"
 description = "Add Bitcoin Lightning pay-per-call to any API in 3 lines. L402 protocol for FastAPI and Flask. 0.3% fee, zero config."
 readme = "README.md"
 license = { text = "MIT" }

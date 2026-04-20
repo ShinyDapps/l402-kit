@@ -1,25 +1,42 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { verifyToken } from "./verify";
 import { checkAndMarkPreimage } from "./replay";
-import { splitPayment } from "./split";
-import { BlinkProvider } from "./providers/blink";
-import type { L402Options, LightningProvider } from "./types";
+import type { L402Options, LightningProvider, Invoice } from "./types";
 
-// ShinyDapps managed account — used when dev sets ownerLightningAddress
-const MANAGED_API_KEY = process.env.L402KIT_BLINK_API_KEY ?? "";
-const MANAGED_WALLET_ID = process.env.L402KIT_BLINK_WALLET_ID ?? "";
+const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://api.shinydapps.io";
+
+class ManagedProvider implements LightningProvider {
+  constructor(private ownerAddress: string) {}
+
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    const res = await fetch(`${SHINYDAPPS_API}/api/invoice`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountSats }),
+    });
+    if (!res.ok) throw new Error("ShinyDapps invoice creation failed");
+    const data = (await res.json()) as { paymentRequest: string; paymentHash: string; macaroon: string };
+    return { ...data, amountSats, expiresAt: Date.now() + 3600_000 };
+  }
+
+  async checkPayment(): Promise<boolean> { return false; }
+
+  async sendSplit(amountSats: number): Promise<void> {
+    fetch(`${SHINYDAPPS_API}/api/split`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountSats, ownerAddress: this.ownerAddress }),
+    }).catch(() => {});
+  }
+}
 
 export function l402(options: L402Options): RequestHandler {
   const { priceSats, ownerLightningAddress, supabaseUrl, supabaseKey, onPayment } = options;
   const dbUrl = supabaseUrl ?? process.env.SUPABASE_URL ?? "";
   const dbKey = supabaseKey ?? process.env.SUPABASE_ANON_KEY ?? "";
 
-  // Managed mode: dev sets ownerLightningAddress, we handle Lightning
-  // Advanced mode: dev brings their own lightning provider
-  const provider: LightningProvider = options.lightning ?? new BlinkProvider(
-    (MANAGED_API_KEY || process.env.BLINK_API_KEY) ?? "",
-    (MANAGED_WALLET_ID || process.env.BLINK_WALLET_ID) ?? "",
-  );
+  const managed = ownerLightningAddress ? new ManagedProvider(ownerLightningAddress) : null;
+  const provider: LightningProvider = options.lightning ?? managed ?? (() => { throw new Error("No Lightning provider configured"); })();
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers["authorization"] ?? "";
@@ -36,12 +53,7 @@ export function l402(options: L402Options): RequestHandler {
           return;
         }
 
-        // Split payment: send owner share, keep 0.3% fee
-        if (ownerLightningAddress && MANAGED_API_KEY && MANAGED_WALLET_ID) {
-          splitPayment(priceSats, ownerLightningAddress, MANAGED_API_KEY, MANAGED_WALLET_ID)
-            .catch(() => {});
-        }
-
+        if (managed) managed.sendSplit(priceSats);
         if (onPayment) await onPayment({ macaroon, preimage }, priceSats);
         if (dbUrl && dbKey) {
           logPayment(req.path, token, priceSats, ownerLightningAddress ?? "", dbUrl, dbKey).catch(() => {});
