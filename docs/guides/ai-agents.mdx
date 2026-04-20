@@ -5,48 +5,214 @@ description: Build APIs that AI agents pay autonomously — no human in the loop
 
 ## Why AI agents need L402
 
-AI agents call APIs constantly. Today they can't pay for them — they need a human to set up a credit card, billing account, and subscription.
+AI agents call APIs constantly. Today they can't pay for them — they need a human to set up a credit card, billing account, and subscription. That breaks autonomy.
 
 L402 solves this natively:
+
 1. Agent calls your API
-2. Gets a Lightning invoice
+2. Gets a `402 Payment Required` with a Lightning invoice
 3. Pays it from its own wallet (e.g. Blink, Phoenix, Alby)
-4. Retries with proof of payment
-5. Gets the data
+4. Retries with proof of payment (`Authorization: L402 <macaroon>:<preimage>`)
+5. Gets the data — **no human, no card, settles in under 1 second**
 
-**No human intervention. No credit card. Settles in 1 second.**
+---
 
-## Example: agent that pays for data
+## Setting up your paid API
+
+<CodeGroup>
+```typescript Express (TypeScript)
+import express from "express";
+import { l402, BlinkProvider } from "l402-kit";
+
+const app = express();
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+// AI agents call this — 21 sats per request
+app.get("/ai/weather", l402({ priceSats: 21, lightning }), (_req, res) => {
+  res.json({ temp: 22, unit: "C", city: "São Paulo" });
+});
+
+app.listen(3000);
+```
+
+```python FastAPI (Python)
+from fastapi import FastAPI, Request
+from l402kit import l402_required, BlinkProvider
+import os
+
+app = FastAPI()
+lightning = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+
+@app.get("/ai/weather")
+@l402_required(price_sats=21, lightning=lightning)
+async def weather(request: Request):
+    return {"temp": 22, "unit": "C", "city": "São Paulo"}
+```
+</CodeGroup>
+
+---
+
+## Agent client implementation
+
+This is what the agent-side code looks like — the pattern that any AI framework can implement:
 
 ```typescript
-import { parseToken } from "l402-kit";
+import type { LightningWallet } from "./wallet"; // your wallet integration
 
-async function fetchPremiumData(url: string, wallet: LightningWallet) {
-  // First attempt
-  let res = await fetch(url);
+/**
+ * Fetch a paid API endpoint. Automatically pays the invoice if needed.
+ * Compatible with any L402-protected URL.
+ */
+async function fetchL402(url: string, wallet: LightningWallet): Promise<unknown> {
+  // 1. First attempt — no auth
+  const res = await fetch(url);
 
   if (res.status === 402) {
-    const { invoice, macaroon } = await res.json();
+    const { invoice, macaroon } = await res.json() as {
+      invoice: string;
+      macaroon: string;
+      price_sats: number;
+    };
 
-    // Agent pays the invoice autonomously
+    // 2. Pay the invoice autonomously
     const preimage = await wallet.payInvoice(invoice);
 
-    // Retry with proof of payment
-    res = await fetch(url, {
+    // 3. Retry with proof of payment
+    const paid = await fetch(url, {
       headers: { Authorization: `L402 ${macaroon}:${preimage}` },
     });
+
+    return paid.json();
   }
 
   return res.json();
 }
 ```
 
+---
+
+## LangChain tool example
+
+Wrap any L402 API as a LangChain tool so your agent can call it mid-chain:
+
+```typescript
+import { DynamicTool } from "@langchain/core/tools";
+
+const weatherTool = new DynamicTool({
+  name: "get_weather",
+  description: "Returns current weather. Costs 21 sats per call.",
+  func: async (city: string) => {
+    const result = await fetchL402(
+      `https://your-api.com/ai/weather?city=${city}`,
+      wallet, // your LightningWallet instance
+    );
+    return JSON.stringify(result);
+  },
+});
+```
+
+---
+
+## OpenAI function calling example
+
+```python
+import openai
+import json
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Returns current weather for a city. Costs 21 sats.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string", "description": "City name"},
+                },
+                "required": ["city"],
+            },
+        },
+    }
+]
+
+def call_paid_tool(name: str, args: dict) -> str:
+    if name == "get_weather":
+        response = fetch_l402(
+            f"https://your-api.com/ai/weather?city={args['city']}",
+            wallet,
+        )
+        return json.dumps(response)
+
+messages = [{"role": "user", "content": "What's the weather in Tokyo?"}]
+response = openai.chat.completions.create(
+    model="gpt-4o",
+    messages=messages,
+    tools=tools,
+)
+
+# Handle tool call + auto-pay
+tool_call = response.choices[0].message.tool_calls[0]
+result = call_paid_tool(tool_call.function.name, json.loads(tool_call.function.arguments))
+```
+
+---
+
+## Flow diagram
+
+```
+Agent                    Your API                  Lightning Network
+  │                          │                            │
+  │──── GET /ai/weather ────▶│                            │
+  │                          │                            │
+  │◀─── 402 + invoice ───────│                            │
+  │         + macaroon        │                            │
+  │                          │                            │
+  │──────────────────────────────── pay invoice ─────────▶│
+  │                          │                            │
+  │◀──────────────────────────────── preimage ────────────│
+  │                          │                            │
+  │── GET /ai/weather ───────│                            │
+  │   Authorization: L402    │                            │
+  │   <macaroon>:<preimage>  │                            │
+  │                          │                            │
+  │◀─── 200 + data ──────────│                            │
+```
+
+---
+
+## Supported wallets for agents
+
+| Wallet | Node.js | Python | Self-custody |
+|--------|---------|--------|--------------|
+| [Blink](https://blink.sv) | ✅ `BlinkProvider` | ✅ `BlinkProvider` | ❌ custodial |
+| [OpenNode](https://opennode.com) | ✅ `OpenNodeProvider` | ✅ `OpenNodeProvider` | ❌ custodial |
+| [LNbits](https://lnbits.com) | ✅ `LNbitsProvider` | ✅ `LNbitsProvider` | ✅ self-hosted |
+| [Phoenix](https://phoenix.acinq.co) | custom | custom | ✅ self-custody |
+
+---
+
 ## This is the future of AI × Bitcoin
 
 Every AI agent will need to pay for:
-- Data APIs
-- Compute
+- Premium data APIs
+- GPU compute
 - Storage
 - Other AI services
 
-L402 is the payment protocol built for this. l402-kit makes it a 3-line implementation.
+L402 is the payment protocol built for this. **l402-kit makes it a 3-line implementation** — so you can ship your paid AI API today.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Ship your first paid API in 5 minutes
+  </Card>
+  <Card title="npm package" icon="npm" href="https://npmjs.com/package/l402-kit">
+    TypeScript / Node.js
+  </Card>
+</CardGroup>

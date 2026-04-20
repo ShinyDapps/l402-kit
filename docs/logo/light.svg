@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="36" viewBox="0 0 140 36">
+  <!-- Lightning bolt icon -->
+  <polygon points="19,2 8,20 17,20 13,34 28,14 19,14" fill="#F7931A"/>
+  <!-- Wordmark -->
+  <text x="36" y="25" font-family="ui-monospace, 'SF Mono', Menlo, Monaco, monospace" font-weight="700" font-size="17" fill="#111111" letter-spacing="-0.5">l402-kit</text>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Bitcoin orange rounded square background -->
+  <rect width="32" height="32" rx="7" fill="#F7931A"/>
+  <!-- White lightning bolt -->
+  <polygon points="18,3 7,19 15,19 11,29 25,13 17,13" fill="#FFFFFF"/>
+</svg>
