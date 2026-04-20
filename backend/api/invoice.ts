@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const preimage = randomBytes(32).toString("hex");
-    const paymentHash = createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
+    const paymentHash = createHash("sha256").update(preimage, "hex").digest("hex");
 
     const gql = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
