@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
 
+// Public anon key — safe to embed (RLS filters by owner_address per user)
+const SD_SUPABASE_URL = "https://urcqtpklpfyvizcgcsia.supabase.co";
+const SD_SUPABASE_KEY = "sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-";
+
 let statusBar: vscode.StatusBarItem;
 let pollInterval: ReturnType<typeof setInterval> | undefined;
 let sidebarProvider: PaymentsDashboardProvider | undefined;
@@ -316,32 +320,16 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("shinydapps.configure", async () => {
       const address = await vscode.window.showInputBox({
-        prompt: "⚡ Step 1/3 — Your Lightning Address (e.g. you@blink.sv)",
+        prompt: "⚡ Your Lightning Address (e.g. you@blink.sv)",
         placeHolder: "you@blink.sv",
         ignoreFocusOut: true,
+        validateInput: v => (v && v.includes("@") ? null : "Enter a valid Lightning address (e.g. you@blink.sv)"),
       });
       if (!address) return;
 
-      const supabaseUrl = await vscode.window.showInputBox({
-        prompt: "Step 2/3 — Supabase Project URL  (supabase.com → Project → Settings → API → Project URL)",
-        placeHolder: "https://xxxxxxxxxxxx.supabase.co",
-        ignoreFocusOut: true,
-      });
-      if (!supabaseUrl) return;
-
-      const supabaseKey = await vscode.window.showInputBox({
-        prompt: "Step 3/3 — Supabase anon public key  (same page → 'anon public')",
-        placeHolder: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…",
-        password: true,
-        ignoreFocusOut: true,
-      });
-      if (!supabaseKey) return;
-
       const cfg = vscode.workspace.getConfiguration("shinydapps");
       await cfg.update("lightningAddress", address, true);
-      await cfg.update("supabaseUrl", supabaseUrl, true);
-      await cfg.update("supabaseKey", supabaseKey, true);
-      vscode.window.showInformationMessage(`⚡ ShinyDapps configured! Receiving payments at: ${address}`);
+      vscode.window.showInformationMessage(`⚡ ShinyDapps ready! Monitoring payments for: ${address}`);
       startPolling(context);
       sidebarProvider?.refresh();
     })
@@ -354,24 +342,28 @@ function startPolling(_context: vscode.ExtensionContext) {
   if (pollInterval) clearInterval(pollInterval);
 
   const config = vscode.workspace.getConfiguration("shinydapps");
-  const supabaseUrl = config.get<string>("supabaseUrl");
-  const supabaseKey = config.get<string>("supabaseKey");
   const lightningAddress = config.get<string>("lightningAddress");
 
-  if (!supabaseUrl || !supabaseKey || !lightningAddress) return;
+  if (!lightningAddress) {
+    statusBar.text = "⚡ Not configured";
+    statusBar.tooltip = "ShinyDapps — Click to configure your Lightning Address";
+    return;
+  }
 
   const fetchStats = async () => {
     try {
       const res = await fetch(
-        `${supabaseUrl}/rest/v1/payments?owner_address=eq.${encodeURIComponent(lightningAddress)}&select=amount_sats`,
-        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+        `${SD_SUPABASE_URL}/rest/v1/payments?owner_address=eq.${encodeURIComponent(lightningAddress)}&select=amount_sats`,
+        { headers: { apikey: SD_SUPABASE_KEY, Authorization: `Bearer ${SD_SUPABASE_KEY}` } }
       );
       const rows = (await res.json()) as { amount_sats: number }[];
       const total = rows.reduce((s, r) => s + r.amount_sats, 0);
-      statusBar.text = `⚡ ${total.toLocaleString()} sats`;
+      statusBar.text = `⚡ ${total.toLocaleString()} sats (${rows.length})`;
+      statusBar.tooltip = `ShinyDapps — ${rows.length} payments, ${total.toLocaleString()} sats total`;
       if (rows.length > 0) statusBar.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
+      else statusBar.backgroundColor = undefined;
     } catch {
-      // silent
+      statusBar.text = "⚡ — (offline)";
     }
   };
 
@@ -381,8 +373,6 @@ function startPolling(_context: vscode.ExtensionContext) {
 
 function getDashboardHtml(_context: vscode.ExtensionContext): string {
   const config = vscode.workspace.getConfiguration("shinydapps");
-  const supabaseUrl = config.get<string>("supabaseUrl") ?? "";
-  const supabaseKey = config.get<string>("supabaseKey") ?? "";
   const lightningAddress = config.get<string>("lightningAddress") ?? "";
 
   const i18nJson = JSON.stringify(I18N);
@@ -392,6 +382,7 @@ function getDashboardHtml(_context: vscode.ExtensionContext): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://urcqtpklpfyvizcgcsia.supabase.co; img-src data: blob:;">
 <style>
   :root {
     --bg: var(--vscode-editor-background, #1e1e1e);
@@ -442,19 +433,25 @@ function getDashboardHtml(_context: vscode.ExtensionContext): string {
   .setup pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 10px; line-height: 1.6; overflow-x: auto; margin-top: 8px; color: var(--fg); font-family: monospace; }
   .hint { font-size: 10px; color: var(--muted); margin-top: 4px; font-style: italic; }
   .sats-badge { color: var(--accent); font-weight: 600; }
+  .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--muted); padding: 2px 8px; font-size: 13px; margin-left: auto; }
+  .refresh-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .error-box { background: var(--card); border: 1px solid #f44; border-radius: 10px; padding: 16px; }
+  .error-box h3 { color: #f66; font-size: 13px; margin-bottom: 8px; }
+  .err-msg { font-size: 10px; color: var(--muted); word-break: break-all; margin-bottom: 10px; }
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="lang-sel" id="langSel"></div>
   <div class="theme-sel" id="themeSel"></div>
+  <button class="refresh-btn" id="refreshBtn" title="Refresh">↺</button>
 </div>
 <div class="content" id="content"></div>
 
 <script>
 const vscodeApi = acquireVsCodeApi();
-const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
-const SUPABASE_KEY = ${JSON.stringify(supabaseKey)};
+const SUPABASE_URL = "https://urcqtpklpfyvizcgcsia.supabase.co";
+const SUPABASE_KEY = "sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-";
 const LIGHTNING_ADDRESS = ${JSON.stringify(lightningAddress)};
 const I18N = ${i18nJson};
 
@@ -509,15 +506,29 @@ function buildTopbar() {
   themeSel.querySelectorAll('.theme-btn').forEach(btn => {
     btn.addEventListener('click', () => applyTheme(btn.dataset.th));
   });
+
+  document.getElementById('refreshBtn').addEventListener('click', load);
+}
+
+function renderError(msg) {
+  document.getElementById('content').innerHTML =
+    '<div class="error-box">' +
+    '<h3>⚠ Connection Error</h3>' +
+    '<p class="err-msg">' + msg + '</p>' +
+    '<p style="font-size:10px;color:var(--muted);margin-bottom:10px;">Monitoring: <strong>' + LIGHTNING_ADDRESS + '</strong></p>' +
+    '<button id="retryBtn" style="width:100%;padding:8px;background:var(--btn);color:var(--btn-fg);border:none;border-radius:6px;font-size:12px;cursor:pointer;">↺ Retry</button>' +
+    '</div>';
+  document.getElementById('retryBtn').addEventListener('click', load);
 }
 
 function renderSetup() {
   document.getElementById('content').innerHTML = '<div class="setup">' +
     '<h3>' + t('setupTitle') + '</h3>' +
-    '<button id="cfgBtn" style="width:100%;margin-bottom:14px;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⚡ Configure Now</button>' +
-    '<p style="margin-bottom:8px;">' + t('setupStep3') + '</p>' +
-    '<pre>"shinydapps.lightningAddress": "you@blink.sv",\n"shinydapps.supabaseUrl": "https://xxxx.supabase.co",\n"shinydapps.supabaseKey": "your-anon-key"</pre>' +
-    '<p style="margin-top:10px;font-size:10px;color:var(--muted)">ℹ️ Get Supabase keys at <code>supabase.com</code> → Project → Settings → API</p>' +
+    '<p style="margin-bottom:12px;line-height:1.6;">' + t('setupStep1') + '<br>' + t('setupStep2') + '</p>' +
+    '<button id="cfgBtn" style="width:100%;margin-bottom:14px;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⚡ Set Lightning Address</button>' +
+    '<p style="margin-bottom:6px;">' + t('setupStep3') + '</p>' +
+    '<pre>"shinydapps.lightningAddress": "you@blink.sv"</pre>' +
+    '<p class="hint">' + t('setupHint') + '</p>' +
     '</div>';
   document.getElementById('cfgBtn').addEventListener('click', () => {
     vscodeApi.postMessage({ command: 'openConfigure' });
@@ -564,7 +575,7 @@ function drawChart(rows) {
     const alpha = v > 0 ? 1 : 0.25;
     ctx.fillStyle = 'rgba(247,147,26,' + alpha + ')';
     ctx.beginPath();
-    ctx.roundRect(x, y, barW, barH, 3);
+    if (ctx.roundRect) { ctx.roundRect(x, y, barW, barH, 3); } else { ctx.rect(x, y, barW, barH); }
     ctx.fill();
 
     ctx.fillStyle = 'rgba(247,147,26,0.7)';
@@ -615,20 +626,25 @@ function renderContent(rows) {
 }
 
 async function load() {
-  if (!SUPABASE_URL || !SUPABASE_KEY || !LIGHTNING_ADDRESS) {
+  if (!LIGHTNING_ADDRESS) {
     renderSetup();
     return;
   }
+  document.getElementById('content').innerHTML =
+    '<div class="empty" style="padding:40px 12px;">' + t('loading') + '</div>';
   try {
     const res = await fetch(
       SUPABASE_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(LIGHTNING_ADDRESS) + '&order=paid_at.desc&limit=200',
       { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
     );
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error('HTTP ' + res.status + (body ? ': ' + body.slice(0, 120) : ''));
+    }
     const rows = await res.json();
     renderContent(Array.isArray(rows) ? rows : []);
   } catch(e) {
-    renderContent([]);
+    renderError(e.message || 'Network error');
   }
 }
 

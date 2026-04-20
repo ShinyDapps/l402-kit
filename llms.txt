@@ -73,6 +73,26 @@ mux.Handle("/data", l402kit.Middleware(l402kit.Options{
 }, myHandler))
 ```
 
+## Minimum working example (Rust / axum)
+
+```rust
+use axum::{middleware, routing::get, Router};
+use l402kit::{l402_middleware, Options};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let opts = Arc::new(Options::new(10).with_address("you@blink.sv"));
+
+    let app = Router::new()
+        .route("/data", get(|| async { r#"{"data":"paid content"}"# }))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
+
 ---
 
 ## How the L402 protocol works

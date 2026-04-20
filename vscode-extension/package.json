@@ -2,7 +2,7 @@
   "name": "shinydapps-l402",
   "displayName": "ShinyDapps ⚡ Lightning Payments",
   "description": "Monitor your Bitcoin Lightning API payments in real-time inside VS Code",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publisher": "ShinyDapps",
   "icon": "icon.png",
   "engines": { "vscode": "^1.85.0" },
@@ -29,14 +29,6 @@
         "shinydapps.lightningAddress": {
           "type": "string",
           "description": "Your Lightning Address (e.g. you@blink.sv)"
-        },
-        "shinydapps.supabaseUrl": {
-          "type": "string",
-          "description": "Supabase project URL"
-        },
-        "shinydapps.supabaseKey": {
-          "type": "string",
-          "description": "Supabase anon key"
         }
       }
     },

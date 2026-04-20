@@ -135,6 +135,26 @@ func main() {
 }
 ```
 
+### Rust (axum)
+
+```rust
+use axum::{middleware, routing::get, Router};
+use l402kit::{l402_middleware, Options};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let opts = Arc::new(Options::new(100).with_address("you@blink.sv"));
+
+    let app = Router::new()
+        .route("/premium", get(|| async { r#"{"data":"Payment confirmed."}"# }))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
+
 ---
 
 ## Why not Stripe?

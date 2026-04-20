@@ -1,6 +1,6 @@
 {
   "name": "l402-kit",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Add Bitcoin Lightning pay-per-call to any API in 3 lines. L402 protocol, zero config, 0.3% fee. npm install l402-kit",
   "homepage": "https://shinydapps-bd9fa40b.mintlify.app",
   "repository": {

@@ -17,13 +17,15 @@ use crate::{
 
 /// Axum middleware that enforces L402 payment before calling the next handler.
 ///
-/// ```rust
+/// ```rust,no_run
 /// use axum::{Router, routing::get, middleware};
 /// use l402kit::{l402_middleware, Options};
 /// use std::sync::Arc;
 ///
+/// async fn my_handler() -> &'static str { "ok" }
+///
 /// let opts = Arc::new(Options::new(10).with_address("you@blink.sv"));
-/// let app = Router::new()
+/// let app: Router<()> = Router::new()
 ///     .route("/api/data", get(my_handler))
 ///     .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
 /// ```

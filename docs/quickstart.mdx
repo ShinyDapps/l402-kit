@@ -73,6 +73,47 @@ lightning = BlinkProvider(
 async def premium(request: Request):
     return {"data": "You paid 100 sats. Here is your data."}
 ```
+
+```go Go
+package main
+
+import (
+    "fmt"
+    "net/http"
+    "os"
+    l402kit "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+        PriceSats:             100,
+        OwnerLightningAddress: os.Getenv("OWNER_LIGHTNING_ADDRESS"),
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintln(w, `{"data": "You paid 100 sats. Here is your data."}`)
+    })))
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+```rust Rust (axum)
+use axum::{middleware, routing::get, Router};
+use l402kit::{l402_middleware, Options};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let opts = Arc::new(
+        Options::new(100).with_address("you@blink.sv"),
+    );
+
+    let app = Router::new()
+        .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
 </CodeGroup>
 
 ## 4. Test it
