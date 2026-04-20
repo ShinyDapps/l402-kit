@@ -1,0 +1,134 @@
+---
+title: vs. Competition
+description: How l402-kit compares to Stripe, Paddle, x402, BTCPay, and every other API monetization tool.
+---
+
+## TL;DR
+
+| | Stripe | Paddle | x402 (Coinbase) | BTCPay Server | **l402-kit** |
+|---|---|---|---|---|---|
+| Min fee per call | $0.30 | $0.50 | ~0 sats | ~0 sats | **~0 sats** |
+| Settlement time | 2–7 days | 3–5 days | < 1s | < 1s | **< 1 second** |
+| Chargebacks | Yes | Yes | Impossible | Impossible | **Impossible** |
+| AI agent support | ❌ | ❌ | ✅ | ❌ | **✅** |
+| 3-line integration | ❌ | ❌ | ❌ (manual) | ❌ | **✅** |
+| TypeScript SDK | ❌ | ❌ | partial | ❌ | **✅** |
+| Python SDK | ❌ | ❌ | ❌ | ❌ | **✅** |
+| Countries blocked | ~50 | ~40 | 0 | 0 | **0** |
+| Open source | ❌ | ❌ | partial | ✅ | **✅ MIT** |
+| Zero config mode | ❌ | ❌ | ❌ | ❌ | **✅** |
+| Monthly cost | $0–hundreds | $0–hundreds | 0 | self-host cost | **$0** |
+
+---
+
+## vs. Stripe
+
+**Stripe wins at**: KYC, recurring billing, credit card UX, fraud detection, enterprise contracts.
+
+**l402-kit wins at**: micropayments (< $0.01), AI agents, global reach, zero chargebacks, zero setup, instant settlement.
+
+Stripe's minimum fee is $0.30 + 2.9%. A 1-sat payment ($0.0006) on Stripe would cost 50,000% in fees. l402-kit charges 0.3% flat — nothing else.
+
+**Verdict**: Not competitors. Stripe is for subscriptions. l402-kit is for pay-per-call micropayments. Many projects will use both.
+
+---
+
+## vs. Paddle / Lemon Squeezy
+
+Same category as Stripe — merchant-of-record services built around subscriptions and credit cards. Same fee problem, same chargeback risk, same AI agent incompatibility.
+
+**Verdict**: Same as Stripe. No real overlap with l402-kit's use case.
+
+---
+
+## vs. x402 (Coinbase / Anthropic)
+
+This is our closest competitor. x402 is a protocol proposal (not an SDK) to standardize HTTP 402 payments, backed by Coinbase and partially adopted by Anthropic for Claude's computer use.
+
+**x402 strengths**:
+- Institutional backing (Coinbase)
+- Claude/Anthropic ecosystem interest
+- USDC support (stablecoin, not just Bitcoin)
+
+**l402-kit strengths**:
+- **Exists today** — x402 is a draft protocol, we're a working SDK
+- **3-line integration** — x402 has no official SDK, developers implement manually
+- **Python support** — x402 has no Python SDK
+- **Zero config** — our managed mode means no Lightning node needed
+- **11-language docs** — x402 has English-only docs
+- **Open source + MIT** — x402 spec is open but no reference implementation is published
+
+**The risk**: Coinbase ships a full x402 SDK. **Our moat**: we'll be the x402-compatible library — `l402-kit` can adopt the x402 spec when it finalizes. The protocol is compatible.
+
+**Verdict**: Monitor closely. Be ready to add x402 compatibility. Ship faster.
+
+---
+
+## vs. BTCPay Server
+
+BTCPay is a self-hosted Bitcoin payment processor — invoices, checkout pages, POS terminals.
+
+**BTCPay**: full merchant solution, UI-first, requires server setup, no developer middleware SDK.
+
+**l402-kit**: code-first, 3 lines, no server to manage, built for APIs not checkouts.
+
+**Verdict**: Different products. BTCPay users who want API monetization are a natural l402-kit audience.
+
+---
+
+## vs. OpenNode / Strike API / Lightspark
+
+These are Lightning infrastructure providers — they provide invoice creation APIs.
+
+**They are providers, not competitors** — l402-kit uses them (OpenNodeProvider, BlinkProvider). A dev who uses OpenNode's API still needs l402-kit to handle the L402 middleware logic.
+
+**Verdict**: They're our ecosystem partners.
+
+---
+
+## Our unique advantages (what no one else has)
+
+### 1. Full-stack middleware (not just a protocol)
+Every competitor is either a payment processor (Stripe) or a protocol spec (x402). We're the only ready-to-use middleware SDK for both TypeScript and Python.
+
+### 2. Zero-config managed mode
+```typescript
+app.get("/premium", l402({
+  priceSats: 100,
+  ownerLightningAddress: "you@blink.sv", // that's it
+}), handler);
+```
+No Lightning node. No wallet setup. Works in 30 seconds.
+
+### 3. Python support
+No other L402/x402 solution has a Python SDK. The entire FastAPI/Flask ecosystem (~40% of API developers) has no other option.
+
+### 4. AI agent native
+The L402 flow is exactly what AI agents need: HTTP-based, no browser, no OAuth, payment proof in the header. Stripe requires a human with a credit card. l402-kit requires nothing — the agent pays programmatically.
+
+### 5. Anti-replay built-in
+SHA256 cryptographic verification + in-memory replay protection out of the box. Other tools don't exist long enough to have solved this.
+
+### 6. 11-language developer experience
+Docs, extension UI, and READMEs in EN/PT/ES/ZH/JA/FR/DE/RU/HI/AR/IT — targeting the global developer community, not just English-speaking devs.
+
+---
+
+## Risks and mitigations
+
+| Risk | Likelihood | Mitigation |
+|---|---|---|
+| Coinbase ships full x402 SDK | Medium | Add x402 spec compatibility, become the x402 reference impl |
+| Lightning adoption stalls | Low | Add USDC/USDT support via same protocol |
+| Stripe adds micropayments | Very low | They've had 15 years and haven't — structurally incompatible with their model |
+| Major security bug | Low | 38 automated tests, SHA256 verification, anti-replay |
+| Provider (Blink) goes down | Medium | Provider-agnostic — swap to OpenNode/LNbits in 1 line |
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Try it in 5 minutes
+  </Card>
+  <Card title="AI Agents guide" icon="robot" href="/guides/ai-agents">
+    The killer use case
+  </Card>
+</CardGroup>

@@ -28,3 +28,49 @@ pip install l402kit    # Python / FastAPI / Flask
 - **AI 代理开发者** — 代理自动支付 API
 - **无法使用 Stripe 的开发者** — 比特币无国界
 - **数据提供商** — 每次查询收取 1 聪，Stripe 无法实现
+
+## 快速开始 — TypeScript
+
+```typescript
+import express from "express";
+import { l402 } from "l402-kit";
+
+const app = express();
+
+app.get("/premium", l402({
+  priceSats: 100,                          // 每次调用约 $0.06
+  ownerLightningAddress: "you@blink.sv",   // 您收到 99.7%
+}), (_req, res) => {
+  res.json({ data: "支付已确认。" });
+});
+
+app.listen(3000);
+```
+
+## 快速开始 — Python
+
+```python
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+
+app = FastAPI()
+
+@app.get("/premium")
+@l402_required(
+    price_sats=100,
+    owner_lightning_address="you@blink.sv",
+)
+async def premium(request: Request):
+    return {"data": "支付已确认。"}
+```
+
+## 立即测试
+
+```bash
+curl http://localhost:3000/premium
+# → {"error":"Payment Required","priceSats":100,"invoice":"lnbc..."}
+```
+
+<Card title="完整快速指南" icon="bolt" href="https://shinydapps-bd9fa40b.mintlify.app/quickstart">
+  5 分钟内从零到付费 API
+</Card>

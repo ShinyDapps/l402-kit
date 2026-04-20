@@ -27,3 +27,49 @@ pip install l402kit    # Python / FastAPI / Flask
 - **مطورو API** — احتسب رسوماً لكل استدعاء بدلاً من الاشتراك الشهري
 - **بناة وكلاء الذكاء الاصطناعي** — الوكلاء يدفعون تلقائياً
 - **المطورون بدون Stripe** — Bitcoin لا حدود له
+
+## البدء السريع — TypeScript
+
+```typescript
+import express from "express";
+import { l402 } from "l402-kit";
+
+const app = express();
+
+app.get("/premium", l402({
+  priceSats: 100,                           // ~$0.06 لكل طلب
+  ownerLightningAddress: "you@blink.sv",    // تحصل على 99.7%
+}), (_req, res) => {
+  res.json({ data: "تم تأكيد الدفع." });
+});
+
+app.listen(3000);
+```
+
+## البدء السريع — Python
+
+```python
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+
+app = FastAPI()
+
+@app.get("/premium")
+@l402_required(
+    price_sats=100,
+    owner_lightning_address="you@blink.sv",
+)
+async def premium(request: Request):
+    return {"data": "تم تأكيد الدفع."}
+```
+
+## اختبر الآن
+
+```bash
+curl http://localhost:3000/premium
+# → {"error":"Payment Required","priceSats":100,"invoice":"lnbc..."}
+```
+
+<Card title="دليل كامل" icon="bolt" href="https://shinydapps-bd9fa40b.mintlify.app/quickstart">
+  من الصفر إلى API مدفوع خلال 5 دقائق
+</Card>

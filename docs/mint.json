@@ -18,7 +18,7 @@
   "navigation": [
     {
       "group": "🇺🇸 English",
-      "pages": ["introduction", "quickstart", "guides/ai-agents"]
+      "pages": ["introduction", "quickstart", "guides/ai-agents", "competitive"]
     },
     {
       "group": "🇧🇷 Português",

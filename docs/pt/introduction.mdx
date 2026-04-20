@@ -40,3 +40,49 @@ API     → 200 + dados ✓
 - **Builders de agentes de IA** — agentes pagam APIs automaticamente
 - **Devs sem Stripe** — Brasil, Argentina, Nigéria — Bitcoin não tem fronteiras
 - **Provedores de dados** — cobra 1 sat por consulta, impossível com Stripe
+
+## Início rápido — TypeScript
+
+```typescript
+import express from "express";
+import { l402 } from "l402-kit";
+
+const app = express();
+
+app.get("/premium", l402({
+  priceSats: 100,                             // ~R$0,01 por chamada
+  ownerLightningAddress: "voce@blink.sv",     // recebe 99,7%
+}), (_req, res) => {
+  res.json({ data: "Pagamento confirmado." });
+});
+
+app.listen(3000);
+```
+
+## Início rápido — Python
+
+```python
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+
+app = FastAPI()
+
+@app.get("/premium")
+@l402_required(
+    price_sats=100,
+    owner_lightning_address="voce@blink.sv",
+)
+async def premium(request: Request):
+    return {"data": "Pagamento confirmado."}
+```
+
+## Teste agora
+
+```bash
+curl http://localhost:3000/premium
+# → {"error":"Payment Required","priceSats":100,"invoice":"lnbc..."}
+```
+
+<Card title="Quickstart completo" icon="bolt" href="https://shinydapps-bd9fa40b.mintlify.app/quickstart">
+  Do zero à API paga em 5 minutos
+</Card>
