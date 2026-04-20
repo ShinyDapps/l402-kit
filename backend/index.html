@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShinyDapps — Bitcoin Lightning payments for any API</title>
+<meta name="description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. TypeScript + Python. No account. No bank. No chargebacks.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --orange: #f7931a;
+  --bg: #080808;
+  --card: #0f0f0f;
+  --border: #1a1a1a;
+  --text: #e5e5e5;
+  --muted: #555;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+a { color: var(--orange); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* NAV */
+nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; }
+.nav-logo { font-weight: 700; font-size: 18px; }
+.nav-logo span { color: var(--orange); }
+.nav-links { display: flex; gap: 24px; align-items: center; font-size: 14px; color: var(--muted); }
+.nav-links a { color: var(--muted); }
+.nav-links a:hover { color: var(--text); text-decoration: none; }
+.nav-cta { background: var(--orange); color: #000 !important; padding: 8px 18px; border-radius: 8px; font-weight: 600; }
+.nav-cta:hover { background: #e8841a; text-decoration: none !important; }
+
+/* HERO */
+.hero { text-align: center; padding: 100px 24px 80px; max-width: 860px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: #f7931a15; border: 1px solid #f7931a33; color: var(--orange); padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 32px; }
+.hero h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -1px; }
+.hero h1 span { color: var(--orange); }
+.hero p { font-size: 20px; color: var(--muted); max-width: 560px; margin: 0 auto 40px; }
+.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-primary { background: var(--orange); color: #000; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; }
+.btn-primary:hover { background: #e8841a; text-decoration: none; }
+.btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 15px; }
+.btn-secondary:hover { border-color: #333; text-decoration: none; }
+.hero-langs { margin-top: 32px; font-size: 13px; color: var(--muted); }
+.hero-langs a { color: var(--muted); margin: 0 6px; }
+.hero-langs a:hover { color: var(--orange); text-decoration: none; }
+
+/* CODE DEMO */
+.demo { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
+.demo-tabs { display: flex; gap: 4px; margin-bottom: -1px; }
+.tab { padding: 8px 20px; font-size: 13px; border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; color: var(--muted); background: var(--bg); }
+.tab.active { background: var(--card); color: var(--text); border-color: var(--border); }
+.code-block { background: var(--card); border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 28px; overflow-x: auto; }
+.code-block pre { font-family: "SF Mono", "Fira Code", monospace; font-size: 14px; line-height: 1.7; }
+.c-comment { color: #555; }
+.c-keyword { color: #c792ea; }
+.c-string { color: #c3e88d; }
+.c-fn { color: #82aaff; }
+.c-num { color: var(--orange); }
+.code-pane { display: none; }
+.code-pane.active { display: block; }
+
+/* FLOW */
+.flow { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; }
+.flow h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
+.flow-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0; }
+.flow-step { text-align: center; padding: 24px 16px; position: relative; }
+.flow-step:not(:last-child)::after { content: "→"; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); color: var(--orange); font-size: 20px; }
+.step-icon { font-size: 28px; margin-bottom: 12px; }
+.step-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.step-desc { font-size: 12px; color: var(--muted); }
+
+/* COMPARISON */
+.compare { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; }
+.compare h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
+.compare table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.compare th { padding: 12px 16px; text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+.compare th:last-child { color: var(--orange); }
+.compare td { padding: 14px 16px; border-bottom: 1px solid #111; }
+.compare td:first-child { color: var(--muted); }
+.compare .yes { color: #4ade80; }
+.compare .no { color: #f87171; }
+.compare .highlight td { background: #f7931a08; }
+
+/* FEATURES */
+.features { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; }
+.features h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.feature-icon { font-size: 24px; margin-bottom: 12px; }
+.feature-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.feature-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* PRICING */
+.pricing { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; }
+.pricing h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+.pricing-sub { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 40px; }
+.pricing-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.pricing-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+.pricing-card.featured { border-color: var(--orange); }
+.pricing-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.pricing-price { font-size: 40px; font-weight: 800; margin-bottom: 4px; }
+.pricing-price span { font-size: 16px; font-weight: 400; color: var(--muted); }
+.pricing-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.pricing-features { list-style: none; }
+.pricing-features li { font-size: 13px; padding: 6px 0; border-bottom: 1px solid #111; display: flex; gap: 8px; }
+.pricing-features li:last-child { border: none; }
+.pricing-features .check { color: #4ade80; }
+
+/* CTA */
+.cta { text-align: center; padding: 80px 24px; border-top: 1px solid var(--border); }
+.cta h2 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
+.cta p { color: var(--muted); margin-bottom: 32px; }
+
+/* FOOTER */
+footer { border-top: 1px solid var(--border); padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 16px; }
+footer a { color: var(--muted); }
+footer a:hover { color: var(--orange); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">⚡ <span>ShinyDapps</span></div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://shinydapps.mintlify.app">Docs</a>
+    <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
+    <a href="https://shinydapps.mintlify.app" class="nav-cta">Get started</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">⚡ Bitcoin Lightning · TypeScript + Python · Open Source</div>
+  <h1>Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.</h1>
+  <p>No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.</p>
+  <div class="hero-actions">
+    <a href="https://shinydapps.mintlify.app" class="btn-primary">Read the docs →</a>
+    <a href="https://github.com/ShinyDapps/l402-kit" class="btn-secondary">View on GitHub</a>
+  </div>
+  <div class="hero-langs">
+    Docs in:
+    <a href="https://shinydapps.mintlify.app">🇺🇸 EN</a>
+    <a href="https://shinydapps.mintlify.app/pt/introduction">🇧🇷 PT</a>
+    <a href="https://shinydapps.mintlify.app/es/introduction">🇪🇸 ES</a>
+    <a href="https://shinydapps.mintlify.app/zh/introduction">🇨🇳 ZH</a>
+    <a href="https://shinydapps.mintlify.app/hi/introduction">🇮🇳 HI</a>
+    <a href="https://shinydapps.mintlify.app/ar/introduction">🇸🇦 AR</a>
+    <a href="https://shinydapps.mintlify.app/fr/introduction">🇫🇷 FR</a>
+    <a href="https://shinydapps.mintlify.app/de/introduction">🇩🇪 DE</a>
+    <a href="https://shinydapps.mintlify.app/ru/introduction">🇷🇺 RU</a>
+    <a href="https://shinydapps.mintlify.app/ja/introduction">🇯🇵 JA</a>
+  </div>
+</section>
+
+<section class="demo">
+  <div class="demo-tabs">
+    <div class="tab active" onclick="showTab('ts')">TypeScript</div>
+    <div class="tab" onclick="showTab('py')">Python</div>
+  </div>
+  <div class="code-block">
+    <div class="code-pane active" id="tab-ts"><pre>
+<span class="c-comment">// npm install l402-kit</span>
+<span class="c-keyword">import</span> express <span class="c-keyword">from</span> <span class="c-string">"express"</span>;
+<span class="c-keyword">import</span> { l402 } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
+
+<span class="c-keyword">const</span> app = <span class="c-fn">express</span>();
+
+app.<span class="c-fn">get</span>(<span class="c-string">"/premium"</span>, <span class="c-fn">l402</span>({
+  priceSats: <span class="c-num">100</span>,                          <span class="c-comment">// ~$0.10 per call</span>
+  ownerLightningAddress: <span class="c-string">"you@blink.sv"</span>,  <span class="c-comment">// receives 99.7%</span>
+}), (req, res) => {
+  res.<span class="c-fn">json</span>({ data: <span class="c-string">"Payment confirmed ⚡"</span> });
+});
+
+app.<span class="c-fn">listen</span>(<span class="c-num">3000</span>);</pre></div>
+    <div class="code-pane" id="tab-py"><pre>
+<span class="c-comment"># pip install l402kit</span>
+<span class="c-keyword">from</span> fastapi <span class="c-keyword">import</span> FastAPI, Request
+<span class="c-keyword">from</span> l402kit <span class="c-keyword">import</span> l402_required
+
+app = <span class="c-fn">FastAPI</span>()
+
+<span class="c-fn">@app.get</span>(<span class="c-string">"/premium"</span>)
+<span class="c-fn">@l402_required</span>(
+    price_sats=<span class="c-num">100</span>,
+    owner_lightning_address=<span class="c-string">"you@blink.sv"</span>,
+)
+<span class="c-keyword">async def</span> <span class="c-fn">premium</span>(request: Request):
+    <span class="c-keyword">return</span> {<span class="c-string">"data"</span>: <span class="c-string">"Payment confirmed ⚡"</span>}</pre></div>
+  </div>
+</section>
+
+<section class="flow" id="how">
+  <h2>How it works</h2>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="step-icon">📡</div>
+      <div class="step-title">Client calls API</div>
+      <div class="step-desc">GET /premium</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-icon">⚡</div>
+      <div class="step-title">402 + Invoice</div>
+      <div class="step-desc">BOLT11 Lightning invoice returned</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-icon">💸</div>
+      <div class="step-title">Client pays</div>
+      <div class="step-desc">Any Lightning wallet, &lt;1 second</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-icon">🔐</div>
+      <div class="step-title">Proof verified</div>
+      <div class="step-desc">SHA256(preimage) == hash</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-icon">✅</div>
+      <div class="step-title">200 OK + data</div>
+      <div class="step-desc">You get 99.7% of every sat</div>
+    </div>
+  </div>
+</section>
+
+<section class="compare">
+  <h2>Why not Stripe?</h2>
+  <table>
+    <tr>
+      <th></th><th>Stripe</th><th>PayPal</th><th>l402-kit ⚡</th>
+    </tr>
+    <tr><td>Minimum fee</td><td class="no">$0.30</td><td class="no">$0.30</td><td class="yes">&lt; 1 sat</td></tr>
+    <tr><td>Settlement</td><td class="no">2–7 days</td><td class="no">3–5 days</td><td class="yes">&lt; 1 second</td></tr>
+    <tr><td>Chargebacks</td><td class="no">Yes</td><td class="no">Yes</td><td class="yes">Impossible</td></tr>
+    <tr><td>Requires account</td><td class="no">Yes</td><td class="no">Yes</td><td class="yes">No</td></tr>
+    <tr class="highlight"><td>AI agent native</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+    <tr><td>Countries blocked</td><td class="no">~50</td><td class="no">~60</td><td class="yes">0 — global</td></tr>
+    <tr><td>Open source</td><td class="no">No</td><td class="no">No</td><td class="yes">100%</td></tr>
+  </table>
+</section>
+
+<section class="features">
+  <h2>Everything you need</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Zero setup</div>
+      <div class="feature-desc">Just set your Lightning Address. No node, no wallet setup, no config files.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌍</div>
+      <div class="feature-title">TypeScript + Python</div>
+      <div class="feature-desc">Express, FastAPI, Flask. Same protocol, any stack. The only multilanguage L402 middleware.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <div class="feature-title">AI agent native</div>
+      <div class="feature-desc">Machines can pay machines. No human in the loop. Perfect for autonomous AI agents.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <div class="feature-title">Cryptographic proof</div>
+      <div class="feature-desc">SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Payment logging</div>
+      <div class="feature-desc">Every payment logged to Supabase automatically. See who paid, when, and how much.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧩</div>
+      <div class="feature-title">Provider agnostic</div>
+      <div class="feature-desc">Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.</div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <h2>Simple pricing</h2>
+  <p class="pricing-sub">Start for free. We only earn when you earn.</p>
+  <div class="pricing-cards">
+    <div class="pricing-card">
+      <div class="pricing-name">Free</div>
+      <div class="pricing-price">$0 <span>forever</span></div>
+      <div class="pricing-desc">0.3% fee on payments received</div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span> Managed Lightning (no node)</li>
+        <li><span class="check">✓</span> TypeScript + Python</li>
+        <li><span class="check">✓</span> Unlimited API calls</li>
+        <li><span class="check">✓</span> Payment logging</li>
+        <li><span class="check">✓</span> Open source — self-host anytime</li>
+      </ul>
+    </div>
+    <div class="pricing-card featured">
+      <div class="pricing-name">Pro</div>
+      <div class="pricing-price">$9 <span>/month</span></div>
+      <div class="pricing-desc">For devs who want analytics + support</div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span> Everything in Free</li>
+        <li><span class="check">✓</span> Analytics dashboard</li>
+        <li><span class="check">✓</span> Payment history (90 days)</li>
+        <li><span class="check">✓</span> Email alerts on payment</li>
+        <li><span class="check">✓</span> Priority support</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Start in 2 minutes</h2>
+  <p>No account. No credit card. Just Bitcoin.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="https://npmjs.com/package/l402-kit" class="btn-primary">npm install l402-kit</a>
+    <a href="https://pypi.org/project/l402kit" class="btn-secondary">pip install l402kit</a>
+  </div>
+</section>
+
+<footer>
+  <div>⚡ ShinyDapps · <a href="https://github.com/ThiagoDataEngineer">Thiago Yoshiaki</a> · MIT License</div>
+  <div style="display:flex;gap:20px">
+    <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
+    <a href="https://shinydapps.mintlify.app">Docs</a>
+    <a href="https://npmjs.com/package/l402-kit">npm</a>
+    <a href="https://pypi.org/project/l402kit">PyPI</a>
+    <a href="dashboard.html">Dashboard</a>
+  </div>
+</footer>
+
+<script>
+function showTab(lang) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".code-pane").forEach(p => p.classList.remove("active"));
+  document.querySelector(`[onclick="showTab('${lang}')"]`).classList.add("active");
+  document.getElementById(`tab-${lang}`).classList.add("active");
+}
+</script>
+</body>
+</html>

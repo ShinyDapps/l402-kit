@@ -1,0 +1,81 @@
+{
+  "name": "shinydapps-l402",
+  "displayName": "ShinyDapps ⚡ Lightning Payments",
+  "description": "Monitor your Bitcoin Lightning API payments in real-time inside VS Code",
+  "version": "0.1.0",
+  "publisher": "ShinyDapps",
+  "icon": "icon.png",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "keywords": ["bitcoin", "lightning", "l402", "payments", "satoshi", "shinydapps"],
+  "repository": { "type": "git", "url": "https://github.com/ShinyDapps/l402-kit" },
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "shinydapps.showDashboard",
+        "title": "ShinyDapps: Open Payment Dashboard",
+        "icon": { "light": "lightning.svg", "dark": "lightning.svg" }
+      },
+      {
+        "command": "shinydapps.configure",
+        "title": "ShinyDapps: Configure Lightning Address"
+      }
+    ],
+    "configuration": {
+      "title": "ShinyDapps",
+      "properties": {
+        "shinydapps.lightningAddress": {
+          "type": "string",
+          "description": "Your Lightning Address (e.g. you@blink.sv)"
+        },
+        "shinydapps.supabaseUrl": {
+          "type": "string",
+          "description": "Supabase project URL"
+        },
+        "shinydapps.supabaseKey": {
+          "type": "string",
+          "description": "Supabase anon key"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "shinydapps",
+          "title": "ShinyDapps — Lightning Payments",
+          "icon": "lightning.svg"
+        }
+      ]
+    },
+    "views": {
+      "shinydapps": [
+        {
+          "id": "shinydapps.payments",
+          "name": "⚡ Payments",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "shinydapps.configure",
+          "when": "view == shinydapps.payments",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -watch -p tsconfig.json",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.24.0",
+    "typescript": "^5.4.0"
+  }
+}
