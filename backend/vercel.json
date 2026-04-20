@@ -1,1 +1,7 @@
-{}
+{
+  "buildCommand": "npm install",
+  "functions": {
+    "api/invoice.ts": { "runtime": "@vercel/node@3.0.7" },
+    "api/split.ts": { "runtime": "@vercel/node@3.0.7" }
+  }
+}
