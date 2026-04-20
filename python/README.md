@@ -1,8 +1,15 @@
 # l402kit
 
-**Charge for your API in Bitcoin Lightning. 3 lines of code.**
-**Monetize sua API com Bitcoin Lightning. 3 linhas de código.**
-**Monetiza tu API con Bitcoin Lightning. 3 líneas de código.**
+🇺🇸 **Charge for your API in Bitcoin Lightning. 3 lines of code.**
+🇧🇷 **Monetize sua API com Bitcoin Lightning. 3 linhas de código.**
+🇪🇸 **Monetiza tu API con Bitcoin Lightning. 3 líneas de código.**
+🇨🇳 **用 3 行代码，通过比特币闪电网络收费。**
+🇮🇳 **अपने API को Bitcoin Lightning से 3 लाइनों में मोनेटाइज़ करें।**
+🇸🇦 **اكسب من API الخاص بك عبر Bitcoin Lightning. 3 أسطر فقط.**
+🇫🇷 **Monétisez votre API en Bitcoin Lightning. 3 lignes de code.**
+🇩🇪 **Monetarisiere deine API mit Bitcoin Lightning. 3 Zeilen Code.**
+🇷🇺 **Монетизируй свой API через Bitcoin Lightning. 3 строки кода.**
+🇯🇵 **Bitcoin Lightningで APIを3行で収益化。**
 
 [![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
 [![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
@@ -12,17 +19,9 @@
 pip install l402kit
 ```
 
-📖 **Docs / Documentação:**
-[🇺🇸 English](https://shinydapps.mintlify.app) ·
-[🇧🇷 Português](https://shinydapps.mintlify.app/pt/introduction) ·
-[🇪🇸 Español](https://shinydapps.mintlify.app/es/introduction) ·
-[🇨🇳 中文](https://shinydapps.mintlify.app/zh/introduction) ·
-[🇮🇳 हिंदी](https://shinydapps.mintlify.app/hi/introduction) ·
-[🇸🇦 العربية](https://shinydapps.mintlify.app/ar/introduction) ·
-[🇫🇷 Français](https://shinydapps.mintlify.app/fr/introduction) ·
-[🇩🇪 Deutsch](https://shinydapps.mintlify.app/de/introduction) ·
-[🇷🇺 Русский](https://shinydapps.mintlify.app/ru/introduction) ·
-[🇯🇵 日本語](https://shinydapps.mintlify.app/ja/introduction)
+📖 **Docs / Documentação / Documentation:**
+
+[🇺🇸 English](https://shinydapps.mintlify.app) · [🇧🇷 Português](https://shinydapps.mintlify.app/pt/introduction) · [🇪🇸 Español](https://shinydapps.mintlify.app/es/introduction) · [🇨🇳 中文](https://shinydapps.mintlify.app/zh/introduction) · [🇮🇳 हिंदी](https://shinydapps.mintlify.app/hi/introduction) · [🇸🇦 العربية](https://shinydapps.mintlify.app/ar/introduction) · [🇫🇷 Français](https://shinydapps.mintlify.app/fr/introduction) · [🇩🇪 Deutsch](https://shinydapps.mintlify.app/de/introduction) · [🇷🇺 Русский](https://shinydapps.mintlify.app/ru/introduction) · [🇯🇵 日本語](https://shinydapps.mintlify.app/ja/introduction)
 
 ---
 
