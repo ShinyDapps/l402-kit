@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Background -->
+  <rect width="128" height="128" rx="24" fill="#0a0a0a"/>
+
+  <!-- Glow effect behind bolt -->
+  <ellipse cx="64" cy="66" rx="28" ry="32" fill="#f7931a" opacity="0.12"/>
+
+  <!-- Lightning bolt -->
+  <path d="M72 14 L40 70 L58 70 L56 114 L88 58 L70 58 Z"
+        fill="#f7931a"
+        stroke="#ff9f00"
+        stroke-width="1"
+        stroke-linejoin="round"/>
+
+  <!-- Shine on bolt -->
+  <path d="M72 14 L60 45 L70 45 Z"
+        fill="#ffcc00"
+        opacity="0.6"/>
+</svg>
