@@ -3,9 +3,5 @@
     "api/*.ts": {
       "runtime": "@vercel/node"
     }
-  },
-  "env": {
-    "L402KIT_BLINK_API_KEY": "@l402kit_blink_api_key",
-    "L402KIT_BLINK_WALLET_ID": "@l402kit_blink_wallet_id"
   }
 }
