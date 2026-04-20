@@ -388,34 +388,93 @@ app = <span class="c-fn">FastAPI</span>()
 
 <section class="pricing" id="pricing">
   <h2>Simple pricing</h2>
-  <p class="pricing-sub">Start for free. We only earn when you earn.</p>
-  <div class="pricing-cards">
+  <p class="pricing-sub">Pay with Bitcoin Lightning. No credit card. No account. Instant.</p>
+  <div class="pricing-cards" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
     <div class="pricing-card">
       <div class="pricing-name">Free</div>
       <div class="pricing-price">$0 <span>forever</span></div>
       <div class="pricing-desc">0.3% fee on payments received</div>
       <ul class="pricing-features">
+        <li><span class="check">✓</span> TypeScript, Python, Go, Rust</li>
         <li><span class="check">✓</span> Managed Lightning (no node)</li>
-        <li><span class="check">✓</span> TypeScript + Python</li>
         <li><span class="check">✓</span> Unlimited API calls</li>
-        <li><span class="check">✓</span> Payment logging</li>
-        <li><span class="check">✓</span> Open source — self-host anytime</li>
+        <li><span class="check">✓</span> 30-day payment history</li>
+        <li><span class="check">✓</span> Open source &mdash; self-host anytime</li>
       </ul>
+      <a href="https://shinydapps-bd9fa40b.mintlify.app" style="display:block;margin-top:24px;text-align:center;padding:10px;background:#1a1a1a;border-radius:8px;font-size:13px;font-weight:600">Get started →</a>
     </div>
     <div class="pricing-card featured">
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:#000;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px">POPULAR</div>
       <div class="pricing-name">Pro</div>
       <div class="pricing-price">$9 <span>/month</span></div>
-      <div class="pricing-desc">For devs who want analytics + support</div>
+      <div class="pricing-desc">Pay with Lightning &mdash; instant activation</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> Everything in Free</li>
-        <li><span class="check">✓</span> Analytics dashboard</li>
-        <li><span class="check">✓</span> Payment history (90 days)</li>
-        <li><span class="check">✓</span> Email alerts on payment</li>
+        <li><span class="check">✓</span> Full payment history (90 days)</li>
+        <li><span class="check">✓</span> All chart ranges (1D/7D/30D/1Y/ALL)</li>
+        <li><span class="check">✓</span> CSV export</li>
+        <li><span class="check">✓</span> Pro badge in VS Code extension</li>
         <li><span class="check">✓</span> Priority support</li>
       </ul>
+      <button onclick="openProModal('pro')" style="width:100%;margin-top:24px;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Subscribe with Lightning</button>
+    </div>
+    <div class="pricing-card">
+      <div class="pricing-name">Business</div>
+      <div class="pricing-price">$99 <span>/month</span></div>
+      <div class="pricing-desc">For teams and high-volume APIs</div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span> Everything in Pro</li>
+        <li><span class="check">✓</span> Full 1-year history</li>
+        <li><span class="check">✓</span> Webhook on payment</li>
+        <li><span class="check">✓</span> 0% platform fee</li>
+        <li><span class="check">✓</span> Multiple lightning addresses</li>
+        <li><span class="check">✓</span> SLA + dedicated support</li>
+      </ul>
+      <button onclick="openProModal('business')" style="width:100%;margin-top:24px;padding:12px;background:#1a1a1a;border:1px solid var(--orange);color:var(--orange);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Subscribe with Lightning</button>
+    </div>
+    <div class="pricing-card">
+      <div class="pricing-name">Lifetime</div>
+      <div class="pricing-price">$2,999 <span>one-time</span></div>
+      <div class="pricing-desc">Pay once. Use forever.</div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span> Everything in Business</li>
+        <li><span class="check">✓</span> Lifetime access &mdash; no renewals</li>
+        <li><span class="check">✓</span> White-label option</li>
+        <li><span class="check">✓</span> Custom provider integration</li>
+        <li><span class="check">✓</span> Direct founder access</li>
+      </ul>
+      <button onclick="openProModal('lifetime')" style="width:100%;margin-top:24px;padding:12px;background:#1a1a1a;border:1px solid #555;color:#aaa;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Buy Lifetime Access</button>
     </div>
   </div>
 </section>
+
+<!-- PRO PAYMENT MODAL -->
+<div id="proModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:32px;max-width:440px;width:100%;position:relative">
+    <button onclick="closeProModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#555;font-size:20px;cursor:pointer">&times;</button>
+    <div id="proModal-step1">
+      <h3 style="margin-bottom:8px">Subscribe with Lightning &#x26a1;</h3>
+      <p style="color:#666;font-size:13px;margin-bottom:24px">Enter your Lightning address. An invoice will be generated. Pay it from any Lightning wallet &mdash; access activates in seconds.</p>
+      <label style="font-size:13px;color:#888">Your Lightning address</label>
+      <input id="proAddr" type="email" placeholder="you@blink.sv" style="width:100%;margin-top:6px;margin-bottom:16px;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e5e5e5;font-size:14px;box-sizing:border-box">
+      <p style="font-size:12px;color:#555;margin-bottom:20px">Tier: <span id="proTierLabel" style="color:var(--orange)">Pro — $9/month</span></p>
+      <button onclick="generateProInvoice()" style="width:100%;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer" id="proGenBtn">Generate Invoice</button>
+    </div>
+    <div id="proModal-step2" style="display:none">
+      <h3 style="margin-bottom:8px">Pay this invoice &#x26a1;</h3>
+      <p style="color:#666;font-size:13px;margin-bottom:16px">Scan with any Lightning wallet or click to copy.</p>
+      <div id="proInvoiceBox" style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:12px;font-family:monospace;font-size:10px;word-break:break-all;color:#888;margin-bottom:12px;max-height:80px;overflow:hidden"></div>
+      <button onclick="copyProInvoice()" style="width:100%;margin-bottom:12px;padding:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#e5e5e5;border-radius:8px;font-size:13px;cursor:pointer">&#x2398; Copy invoice</button>
+      <div id="proStatus" style="text-align:center;font-size:13px;color:#666;padding:12px">⏳ Waiting for payment&hellip;</div>
+    </div>
+    <div id="proModal-step3" style="display:none;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⚡</div>
+      <h3 style="color:var(--orange);margin-bottom:8px">You&rsquo;re Pro!</h3>
+      <p style="color:#888;font-size:13px">Access activated. Open your VS Code extension to see the Pro dashboard.</p>
+      <button onclick="closeProModal()" style="margin-top:20px;padding:10px 24px;background:var(--orange);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Done</button>
+    </div>
+  </div>
+</div>
 
 <section class="faq" id="faq">
   <h2>Common questions</h2>
@@ -490,11 +549,71 @@ document.querySelectorAll('.faq-item').forEach(item => {
     const el = document.getElementById('stat-payments');
     if (el && total) el.textContent = parseInt(total).toLocaleString();
   } catch {}
-})();  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".code-pane").forEach(p => p.classList.remove("active"));
-  document.querySelector(`[onclick="showTab('${lang}')"]`).classList.add("active");
-  document.getElementById(`tab-${lang}`).classList.add("active");
+})();
+
+// Pro payment modal
+const TIER_LABELS = { pro: 'Pro \u2014 $9/month', business: 'Business \u2014 $99/month', lifetime: 'Lifetime \u2014 $2,999 one-time' };
+let proCurrentTier = 'pro', proPaymentHash = '', proInvoiceStr = '', proPollTimer = null;
+
+function openProModal(tier) {
+  proCurrentTier = tier;
+  document.getElementById('proTierLabel').textContent = TIER_LABELS[tier] || tier;
+  document.getElementById('proModal-step1').style.display = '';
+  document.getElementById('proModal-step2').style.display = 'none';
+  document.getElementById('proModal-step3').style.display = 'none';
+  document.getElementById('proAddr').value = '';
+  document.getElementById('proGenBtn').textContent = 'Generate Invoice';
+  document.getElementById('proGenBtn').disabled = false;
+  document.getElementById('proModal').style.display = 'flex';
 }
+function closeProModal() {
+  if (proPollTimer) { clearInterval(proPollTimer); proPollTimer = null; }
+  document.getElementById('proModal').style.display = 'none';
+}
+async function generateProInvoice() {
+  const address = document.getElementById('proAddr').value.trim();
+  if (!address || !address.includes('@')) { alert('Please enter a valid Lightning address (e.g. you@blink.sv)'); return; }
+  const btn = document.getElementById('proGenBtn');
+  btn.textContent = 'Generating\u2026'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/pro-subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lightningAddress: address, tier: proCurrentTier }),
+    });
+    const data = await r.json();
+    if (!r.ok) { alert(data.error || 'Failed'); btn.textContent = 'Generate Invoice'; btn.disabled = false; return; }
+    proPaymentHash = data.paymentHash;
+    proInvoiceStr = data.paymentRequest;
+    document.getElementById('proInvoiceBox').textContent = data.paymentRequest;
+    document.getElementById('proModal-step1').style.display = 'none';
+    document.getElementById('proModal-step2').style.display = '';
+    startProPoll(address, proCurrentTier);
+  } catch { alert('Network error'); btn.textContent = 'Generate Invoice'; btn.disabled = false; }
+}
+function copyProInvoice() {
+  navigator.clipboard.writeText(proInvoiceStr).then(() => {
+    const b = document.querySelector('[onclick="copyProInvoice()"]');
+    b.textContent = '\u2713 Copied!';
+    setTimeout(() => b.textContent = '\u2398 Copy invoice', 2000);
+  }).catch(() => {});
+}
+function startProPoll(address, tier) {
+  proPollTimer = setInterval(async () => {
+    try {
+      const r = await fetch('/api/pro-poll?paymentHash=' + proPaymentHash + '&address=' + encodeURIComponent(address) + '&tier=' + tier);
+      const d = await r.json();
+      if (d.paid) {
+        clearInterval(proPollTimer);
+        document.getElementById('proModal-step2').style.display = 'none';
+        document.getElementById('proModal-step3').style.display = '';
+      }
+    } catch {}
+  }, 3000);
+}
+document.getElementById('proModal').addEventListener('click', function(e) {
+  if (e.target === this) closeProModal();
+});
 </script>
 </body>
 </html>

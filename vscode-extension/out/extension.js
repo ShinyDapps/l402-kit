@@ -394,7 +394,7 @@ function getDashboardHtml(_context) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://urcqtpklpfyvizcgcsia.supabase.co https://mempool.space; img-src data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://urcqtpklpfyvizcgcsia.supabase.co https://mempool.space https://shinydapps-api.vercel.app; img-src data: blob:;">
 <style>
   :root {
     --bg: var(--vscode-editor-background, #1e1e1e);
@@ -555,6 +555,16 @@ function renderSetup() {
 let lastData = null;
 let chartRange = '7D';
 let btcPriceUsd = 0;
+let isPro = false;
+
+async function checkPro() {
+  if (!LIGHTNING_ADDRESS) return;
+  try {
+    const r = await fetch('https://shinydapps-api.vercel.app/api/pro-check?address=' + encodeURIComponent(LIGHTNING_ADDRESS));
+    const d = await r.json();
+    isPro = d.pro === true;
+  } catch { isPro = false; }
+}
 
 async function fetchBtcPrice() {
   try {
@@ -676,14 +686,23 @@ function renderContent(rows) {
       '<div class="card"><div class="label">' + t('btcPrice') + '</div><div class="value-sm" id="btcPriceEl">' + (btcPriceUsd ? '$' + btcPriceUsd.toLocaleString() : '…') + '</div></div>' +
       '<div class="card card-wide"><div class="label">' + t('lightningAddr') + '</div><div class="value-sm">' + (LIGHTNING_ADDRESS || t('notSet')) + '</div></div>' +
     '</div>' +
+    (isPro ? '' :
+      '<div style="margin-bottom:12px;background:#1a120a;border:1px solid #f7931a44;border-radius:8px;padding:10px 12px;font-size:11px;display:flex;align-items:center;gap:8px">' +
+      '<span style="font-size:16px">⚡</span>' +
+      '<span style="flex:1;color:#ccc">Pro unlocks 1Y/ALL history &amp; CSV export</span>' +
+      '<a href="https://shinydapps-bd9fa40b.mintlify.app#pricing" style="color:#f7931a;font-weight:700;font-size:10px;text-decoration:none" target="_blank">Upgrade →</a>' +
+      '</div>'
+    ) +
     '<div class="chart-wrap">' +
       '<div class="chart-header">' +
         '<div class="chart-title">' + t('chartTitle') + '</div>' +
         '<div class="range-sel" id="rangeSel">' +
-          ['1D','7D','30D','1Y','ALL'].map(r =>
-            '<button class="range-btn' + (r === chartRange ? ' active' : '') + '" data-range="' + r + '">' + r + '</button>'
-          ).join('') +
+          ['1D','7D','30D','1Y','ALL'].map(r => {
+            const proOnly = (r === '1Y' || r === 'ALL') && !isPro;
+            return '<button class="range-btn' + (r === chartRange ? ' active' : '') + '" data-range="' + r + '"' + (proOnly ? ' data-pro-lock="1" title="Pro only"' : '') + '>' + r + (proOnly ? ' 🔒' : '') + '</button>';
+          }).join('') +
         '</div>' +
+        (isPro ? '<button id="csvExportBtn" style="margin-left:6px;background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);padding:1px 6px;font-size:9px;font-weight:600">CSV</button>' : '') +
       '</div>' +
       '<canvas id="chart" width="280" height="110"></canvas>' +
     '</div>' +
@@ -701,11 +720,28 @@ function renderContent(rows) {
     drawChart(rows, chartRange);
     document.getElementById('rangeSel')?.querySelectorAll('.range-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (btn.dataset.proLock) {
+          window.open('https://shinydapps-bd9fa40b.mintlify.app#pricing', '_blank');
+          return;
+        }
         chartRange = btn.dataset.range;
         document.querySelectorAll('.range-btn').forEach(b => b.classList.toggle('active', b.dataset.range === chartRange));
         drawChart(lastData, chartRange);
       });
     });
+    const csvBtn = document.getElementById('csvExportBtn');
+    if (csvBtn) {
+      csvBtn.addEventListener('click', () => {
+        const header = 'date,endpoint,sats\n';
+        const body = (lastData || []).map(r =>
+          new Date(r.paid_at).toISOString() + ',' + (r.endpoint || '') + ',' + (r.amount_sats || 0)
+        ).join('\n');
+        const blob = new Blob([header + body], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'payments.csv'; a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
   });
 }
 
@@ -716,6 +752,7 @@ async function load() {
   }
   document.getElementById('content').innerHTML =
     '<div class="empty" style="padding:40px 12px;">' + t('loading') + '</div>';
+  await checkPro();
   try {
     const res = await fetch(
       SUPABASE_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(LIGHTNING_ADDRESS) + '&order=paid_at.desc&limit=500',

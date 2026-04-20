@@ -16,6 +16,7 @@ create table if not exists pro_access (
   id uuid default gen_random_uuid() primary key,
   address text not null,
   payment_hash text not null unique,
+  tier text not null default 'pro',
   expires_at timestamptz not null,
   created_at timestamptz not null default now()
 );
@@ -23,6 +24,8 @@ create table if not exists pro_access (
 create index on pro_access (address);
 create index on pro_access (expires_at);
 
+-- Migration helper (run if table already exists without tier column):
+-- ALTER TABLE pro_access ADD COLUMN IF NOT EXISTS tier text NOT NULL DEFAULT 'pro';
 -- Migration helper (run if table already exists without owner_address):
 -- ALTER TABLE payments ADD COLUMN IF NOT EXISTS owner_address text not null default '';
 -- CREATE INDEX IF NOT EXISTS payments_owner_address_idx ON payments (owner_address);
