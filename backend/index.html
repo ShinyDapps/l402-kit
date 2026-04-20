@@ -158,6 +158,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <div class="tab active" onclick="showTab('ts')">TypeScript</div>
     <div class="tab" onclick="showTab('py')">Python</div>
     <div class="tab" onclick="showTab('go')">Go</div>
+    <div class="tab" onclick="showTab('rs')">Rust</div>
   </div>
   <div class="code-block">
     <div class="code-pane active" id="tab-ts"><pre>
@@ -207,7 +208,27 @@ app = <span class="c-fn">FastAPI</span>()
     })))
     http.<span class="c-fn">ListenAndServe</span>(<span class="c-string">":8080"</span>, <span class="c-keyword">nil</span>)
 }</pre></div>
-  </div>
+    <div class="code-pane" id="tab-rs"><pre>
+<span class="c-comment">// Cargo.toml: l402kit = "0.1"</span>
+<span class="c-keyword">use</span> axum::{middleware, routing::get, Router};
+<span class="c-keyword">use</span> l402kit::{l402_middleware, Options};
+<span class="c-keyword">use</span> std::sync::Arc;
+
+<span class="c-keyword">async fn</span> <span class="c-fn">handler</span>() -> &<span class="c-keyword">'static</span> str {
+    <span class="c-string">"{\"data\":\"Payment confirmed ⚡\"}"</span>
+}
+
+<span class="c-fn">#[tokio::main]</span>
+<span class="c-keyword">async fn</span> <span class="c-fn">main</span>() {
+    <span class="c-keyword">let</span> opts = Arc::new(
+        Options::<span class="c-fn">new</span>(<span class="c-num">100</span>).<span class="c-fn">with_address</span>(<span class="c-string">"you@blink.sv"</span>),
+    );
+    <span class="c-keyword">let</span> app = Router::new()
+        .<span class="c-fn">route</span>(<span class="c-string">"/premium"</span>, get(handler))
+        .<span class="c-fn">route_layer</span>(middleware::<span class="c-fn">from_fn_with_state</span>(opts, l402_middleware));
+    <span class="c-keyword">let</span> listener = tokio::net::TcpListener::<span class="c-fn">bind</span>(<span class="c-string">"0.0.0.0:3000"</span>).<span class="c-keyword">await</span>.unwrap();
+    axum::<span class="c-fn">serve</span>(listener, app).<span class="c-keyword">await</span>.unwrap();
+}</pre></div>
 </section>
 
 <section class="flow" id="how">
@@ -267,8 +288,8 @@ app = <span class="c-fn">FastAPI</span>()
     </div>
     <div class="feature-card">
       <div class="feature-icon">🌍</div>
-      <div class="feature-title">TypeScript + Python</div>
-      <div class="feature-desc">Express, FastAPI, Flask. Same protocol, any stack. The only multilanguage L402 middleware.</div>
+      <div class="feature-title">4 languages</div>
+      <div class="feature-desc">TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Same protocol, any stack.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🤖</div>
@@ -348,6 +369,11 @@ app = <span class="c-fn">FastAPI</span>()
 
 <script>
 function showTab(lang) {
+  document.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + lang).classList.add('active');
+  event.target.classList.add('active');
+}
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".code-pane").forEach(p => p.classList.remove("active"));
   document.querySelector(`[onclick="showTab('${lang}')"]`).classList.add("active");
