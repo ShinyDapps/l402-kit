@@ -17,29 +17,45 @@
   ],
   "navigation": [
     {
-      "group": "Getting Started",
-      "pages": ["introduction", "quickstart", "providers"]
+      "group": "🇺🇸 English",
+      "pages": ["introduction", "quickstart", "guides/ai-agents"]
     },
     {
-      "group": "SDKs",
-      "pages": ["sdk/typescript", "sdk/python"]
+      "group": "🇧🇷 Português",
+      "pages": ["pt/introduction"]
     },
     {
-      "group": "Guides",
-      "pages": ["guides/ai-agents", "guides/security", "guides/production"]
+      "group": "🇪🇸 Español",
+      "pages": ["es/introduction"]
+    },
+    {
+      "group": "🇨🇳 中文",
+      "pages": ["zh/introduction"]
+    },
+    {
+      "group": "🇸🇦 العربية",
+      "pages": ["ar/introduction"]
+    },
+    {
+      "group": "🇮🇳 हिंदी",
+      "pages": ["hi/introduction"]
+    },
+    {
+      "group": "🇫🇷 Français",
+      "pages": ["fr/introduction"]
+    },
+    {
+      "group": "🇩🇪 Deutsch",
+      "pages": ["de/introduction"]
+    },
+    {
+      "group": "🇷🇺 Русский",
+      "pages": ["ru/introduction"]
+    },
+    {
+      "group": "🇯🇵 日本語",
+      "pages": ["ja/introduction"]
     }
-  ],
-  "languages": [
-    { "name": "English", "code": "en", "default": true },
-    { "name": "Português", "code": "pt" },
-    { "name": "Español", "code": "es" },
-    { "name": "中文", "code": "zh" },
-    { "name": "العربية", "code": "ar" },
-    { "name": "हिंदी", "code": "hi" },
-    { "name": "Français", "code": "fr" },
-    { "name": "Русский", "code": "ru" },
-    { "name": "日本語", "code": "ja" },
-    { "name": "Deutsch", "code": "de" }
   ],
   "footerSocials": {
     "twitter": "https://twitter.com/shinydapps",

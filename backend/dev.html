@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShinyDapps Pro — Developer Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --orange: #f7931a; --bg: #080808; --card: #0f0f0f; --border: #1a1a1a; --text: #e5e5e5; --muted: #555; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* SCREENS */
+.screen { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 24px; }
+.screen.active { display: flex; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; }
+.logo { text-align: center; font-size: 32px; margin-bottom: 8px; }
+h1 { text-align: center; font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.sub { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+input { width: 100%; padding: 12px 16px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; margin-bottom: 12px; }
+input:focus { outline: none; border-color: var(--orange); }
+.btn { width: 100%; padding: 13px; background: var(--orange); color: #000; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.btn:hover { background: #e8841a; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 8px; }
+.btn-outline:hover { border-color: var(--orange); color: var(--orange); background: transparent; }
+.err { color: #f87171; font-size: 13px; text-align: center; margin-top: 8px; }
+.price-badge { background: #f7931a15; border: 1px solid #f7931a33; color: var(--orange); text-align: center; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+
+/* INVOICE */
+.invoice-box { background: #111; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 16px 0; }
+.invoice-box code { font-size: 10px; word-break: break-all; color: #aaa; display: block; margin-bottom: 12px; }
+.copy-btn { width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 12px; cursor: pointer; }
+.copy-btn:hover { border-color: var(--orange); }
+.waiting { text-align: center; color: var(--muted); font-size: 13px; margin-top: 12px; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* DASHBOARD */
+#dashScreen { align-items: flex-start; padding: 0; }
+.dash-inner { width: 100%; max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+.dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.dash-header h1 { font-size: 20px; }
+.pro-badge { background: #f7931a20; border: 1px solid var(--orange); color: var(--orange); padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.logout { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.logout:hover { border-color: #444; color: var(--text); }
+
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.stat-val { font-size: 28px; font-weight: 700; }
+.stat-val.orange { color: var(--orange); }
+.stat-val.green { color: #4ade80; }
+
+.section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+.section h2 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); font-size: 12px; }
+td { padding: 10px; border-bottom: 1px solid #111; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #111; }
+.sats { color: var(--orange); font-weight: 600; }
+.ep { background: #1a1a1a; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; }
+.empty { text-align: center; padding: 40px; color: var(--muted); }
+
+/* CHART */
+.chart { height: 80px; display: flex; align-items: flex-end; gap: 3px; }
+.bar { background: var(--orange); border-radius: 3px 3px 0 0; opacity: 0.7; flex: 1; min-width: 4px; transition: opacity 0.2s; }
+.bar:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- STEP 1: Enter Lightning Address -->
+<div class="screen active" id="addrScreen">
+  <div class="card">
+    <div class="logo">⚡</div>
+    <h1>ShinyDapps Pro</h1>
+    <p class="sub">Analytics dashboard for your l402-kit API</p>
+    <div class="price-badge">$9 / month · Pay in Bitcoin · Cancel anytime</div>
+    <input type="email" id="addrInput" placeholder="your@lightning.address" />
+    <button class="btn" onclick="checkAccess()">Continue →</button>
+    <div class="err" id="addrErr"></div>
+  </div>
+</div>
+
+<!-- STEP 2: Pay invoice -->
+<div class="screen" id="payScreen">
+  <div class="card">
+    <div class="logo">⚡</div>
+    <h1>Pay to activate Pro</h1>
+    <p class="sub">One-time payment. Access lasts 30 days.</p>
+    <div class="invoice-box">
+      <code id="invoiceCode"></code>
+      <button class="copy-btn" onclick="copyInvoice()">📋 Copy invoice</button>
+    </div>
+    <div class="waiting"><span class="spinner"></span>Waiting for payment…</div>
+    <button class="btn btn-outline" onclick="goBack()">← Back</button>
+    <div class="err" id="payErr"></div>
+  </div>
+</div>
+
+<!-- STEP 3: Dashboard -->
+<div class="screen" id="dashScreen">
+  <div class="dash-inner">
+    <div class="dash-header">
+      <div>
+        <h1>⚡ ShinyDapps Pro</h1>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px" id="dashAddr"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="pro-badge">PRO</span>
+        <span style="font-size:12px;color:var(--muted)" id="expiresLabel"></span>
+        <button class="logout" onclick="logout()">Sign out</button>
+      </div>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat"><div class="stat-label">Total Payments</div><div class="stat-val" id="dCount">—</div></div>
+      <div class="stat"><div class="stat-label">Total Received</div><div class="stat-val orange" id="dSats">—</div></div>
+      <div class="stat"><div class="stat-label">Your Earnings (99.7%)</div><div class="stat-val green" id="dEarnings">—</div></div>
+      <div class="stat"><div class="stat-label">Endpoints</div><div class="stat-val" id="dEndpoints">—</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Sats received — last 30 days</h2>
+      <div class="chart" id="chart"></div>
+    </div>
+
+    <div class="section">
+      <h2>By endpoint</h2>
+      <div id="endpointTable"><div class="empty">No data yet</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Recent payments</h2>
+      <div id="recentTable"><div class="empty">No payments yet — share your API! ⚡</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let state = { address: "", macaroon: "", invoice: "", sessionToken: "", pollTimer: null };
+
+async function checkAccess() {
+  const address = document.getElementById("addrInput").value.trim();
+  if (!address || !address.includes("@")) {
+    document.getElementById("addrErr").textContent = "Enter a valid Lightning Address (e.g. you@blink.sv)";
+    return;
+  }
+  document.getElementById("addrErr").textContent = "";
+  state.address = address;
+
+  // Check localStorage for existing session
+  const saved = localStorage.getItem("sd_session_" + address);
+  if (saved) {
+    const s = JSON.parse(saved);
+    if (new Date(s.expiresAt) > new Date()) {
+      state.sessionToken = s.sessionToken;
+      await loadDashboard();
+      return;
+    }
+  }
+
+  try {
+    const res = await fetch(`/api/dev-token?address=${encodeURIComponent(address)}`);
+    const data = await res.json();
+    if (data.access) {
+      // Already has access — need sessionToken from localStorage or re-pay
+      document.getElementById("addrErr").textContent = "Session expired. Please pay again to continue.";
+    }
+    // Show payment screen
+    state.macaroon = data.macaroon;
+    state.invoice = data.invoice;
+    document.getElementById("invoiceCode").textContent = data.invoice;
+    show("payScreen");
+    startPolling();
+  } catch {
+    document.getElementById("addrErr").textContent = "Error connecting. Try again.";
+  }
+}
+
+function startPolling() {
+  if (state.pollTimer) clearInterval(state.pollTimer);
+  state.pollTimer = setInterval(checkPayment, 5000);
+}
+
+async function checkPayment() {
+  // For demo: user manually confirms after paying
+  // In production: poll Blink webhook or check payment status
+}
+
+async function confirmPayment(preimage) {
+  try {
+    const res = await fetch("/api/dev-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ macaroon: state.macaroon, preimage }),
+    });
+    const data = await res.json();
+    if (data.access) {
+      state.sessionToken = data.sessionToken;
+      localStorage.setItem("sd_session_" + state.address, JSON.stringify({ sessionToken: data.sessionToken, expiresAt: data.expiresAt }));
+      await loadDashboard();
+    } else {
+      document.getElementById("payErr").textContent = data.error || "Payment not confirmed yet.";
+    }
+  } catch {
+    document.getElementById("payErr").textContent = "Error verifying payment.";
+  }
+}
+
+async function loadDashboard() {
+  if (state.pollTimer) clearInterval(state.pollTimer);
+  show("dashScreen");
+
+  try {
+    const res = await fetch(`/api/dev-stats?address=${encodeURIComponent(state.address)}`, {
+      headers: { "x-session-token": state.sessionToken },
+    });
+    if (res.status === 401) { logout(); return; }
+    const data = await res.json();
+
+    document.getElementById("dashAddr").textContent = state.address;
+    document.getElementById("expiresLabel").textContent = "Expires " + new Date(data.proExpiresAt).toLocaleDateString();
+    document.getElementById("dCount").textContent = data.totalPayments.toLocaleString();
+    document.getElementById("dSats").textContent = data.totalSats.toLocaleString() + " sats";
+    document.getElementById("dEarnings").textContent = data.ownerEarnings.toLocaleString() + " sats";
+    document.getElementById("dEndpoints").textContent = Object.keys(data.byEndpoint).length;
+
+    // Chart
+    const days = Object.entries(data.daily).sort((a,b) => a[0].localeCompare(b[0])).slice(-30);
+    const max = Math.max(...days.map(d => d[1]), 1);
+    document.getElementById("chart").innerHTML = days.length === 0
+      ? '<div class="empty" style="width:100%">No data yet</div>'
+      : days.map(([day, sats]) =>
+          `<div class="bar" style="height:${Math.max(4, (sats/max)*76)}px" title="${day}: ${sats} sats"></div>`
+        ).join("");
+
+    // By endpoint
+    const eps = Object.entries(data.byEndpoint).sort((a,b) => b[1].sats - a[1].sats);
+    document.getElementById("endpointTable").innerHTML = eps.length === 0
+      ? '<div class="empty">No data yet</div>'
+      : `<table><tr><th>Endpoint</th><th>Calls</th><th>Sats received</th><th>Your earnings</th></tr>
+         ${eps.map(([ep, d]) => `<tr>
+           <td><span class="ep">${ep}</span></td>
+           <td>${d.count}</td>
+           <td class="sats">${d.sats.toLocaleString()}</td>
+           <td class="sats">${Math.floor(d.sats*0.997).toLocaleString()}</td>
+         </tr>`).join("")}</table>`;
+
+    // Recent
+    document.getElementById("recentTable").innerHTML = data.recent.length === 0
+      ? '<div class="empty">No payments yet — share your API! ⚡</div>'
+      : `<table><tr><th>When</th><th>Endpoint</th><th>Sats</th></tr>
+         ${data.recent.map(p => `<tr>
+           <td>${new Date(p.paid_at).toLocaleString()}</td>
+           <td><span class="ep">${p.endpoint}</span></td>
+           <td class="sats">${p.amount_sats}</td>
+         </tr>`).join("")}</table>`;
+  } catch {
+    document.getElementById("dCount").textContent = "Error";
+  }
+}
+
+function copyInvoice() {
+  navigator.clipboard.writeText(state.invoice);
+  document.querySelector(".copy-btn").textContent = "✅ Copied!";
+  setTimeout(() => document.querySelector(".copy-btn").textContent = "📋 Copy invoice", 2000);
+}
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function goBack() { show("addrScreen"); }
+
+function logout() {
+  localStorage.removeItem("sd_session_" + state.address);
+  state = { address: "", macaroon: "", invoice: "", sessionToken: "", pollTimer: null };
+  show("addrScreen");
+}
+
+// Auto-login if session exists
+window.onload = () => {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith("sd_session_"));
+  if (keys.length) {
+    const address = keys[0].replace("sd_session_", "");
+    document.getElementById("addrInput").value = address;
+  }
+};
+</script>
+</body>
+</html>
