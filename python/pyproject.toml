@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "l402kit"
-version = "0.1.0"
-description = "Lightning Network L402 payment middleware for FastAPI and Flask"
+version = "0.2.0"
+description = "Add Bitcoin Lightning pay-per-call to any API in 3 lines. L402 protocol for FastAPI and Flask. 0.3% fee, zero config."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
@@ -18,4 +18,7 @@ fastapi = ["fastapi>=0.110"]
 flask = ["flask>=3.0"]
 
 [project.urls]
-Homepage = "https://github.com/shinydapps/l402-kit"
+Homepage = "https://shinydapps.mintlify.app"
+Documentation = "https://shinydapps.mintlify.app"
+Repository = "https://github.com/ShinyDapps/l402-kit"
+"npm package" = "https://npmjs.com/package/l402-kit"

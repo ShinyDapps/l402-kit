@@ -15,20 +15,26 @@ export interface L402Token {
 export interface LightningProvider {
   createInvoice(amountSats: number): Promise<Invoice>;
   checkPayment(paymentHash: string): Promise<boolean>;
+  /** Send sats to a Lightning Address (LNURL-pay) */
+  sendPayment?(amountSats: number, lightningAddress: string): Promise<boolean>;
 }
 
 export interface L402Options {
   /** Price in satoshis per API call */
   priceSats: number;
   /**
-   * Plug in any LightningProvider implementation.
-   * Built-ins: BlinkProvider, OpenNodeProvider, LNbitsProvider
+   * Lightning Address of the API owner — receives 99.7% of each payment.
+   * Example: "you@blink.sv"
+   * When set, l402-kit manages everything: invoices via ShinyDapps account,
+   * automatic split, and 0.3% fee to ShinyDapps.
    */
-  lightning: LightningProvider;
+  ownerLightningAddress?: string;
   /**
-   * Supabase URL for logging transactions.
-   * Falls back to process.env.SUPABASE_URL
+   * Bring your own Lightning provider (advanced).
+   * Use when you want full control over your Lightning backend.
    */
+  lightning?: LightningProvider;
+  /** Supabase URL for logging. Falls back to process.env.SUPABASE_URL */
   supabaseUrl?: string;
   /** Falls back to process.env.SUPABASE_ANON_KEY */
   supabaseKey?: string;
