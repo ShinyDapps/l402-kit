@@ -131,7 +131,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 </nav>
 
 <section class="hero">
-  <div class="hero-badge">⚡ Bitcoin Lightning · TypeScript + Python · Open Source</div>
+  <div class="hero-badge">⚡ Bitcoin Lightning · TypeScript · Python · Go · Rust · Open Source</div>
   <h1>Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.</h1>
   <p>No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.</p>
   <div class="hero-actions">
@@ -154,9 +154,10 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 </section>
 
 <section class="demo">
-  <div class="demo-tabs">
+    <div class="demo-tabs">
     <div class="tab active" onclick="showTab('ts')">TypeScript</div>
     <div class="tab" onclick="showTab('py')">Python</div>
+    <div class="tab" onclick="showTab('go')">Go</div>
   </div>
   <div class="code-block">
     <div class="code-pane active" id="tab-ts"><pre>
@@ -188,6 +189,24 @@ app = <span class="c-fn">FastAPI</span>()
 )
 <span class="c-keyword">async def</span> <span class="c-fn">premium</span>(request: Request):
     <span class="c-keyword">return</span> {<span class="c-string">"data"</span>: <span class="c-string">"Payment confirmed ⚡"</span>}</pre></div>
+    <div class="code-pane" id="tab-go"><pre>
+<span class="c-comment">// go get github.com/shinydapps/l402-kit/go</span>
+<span class="c-keyword">package</span> main
+
+<span class="c-keyword">import</span> (
+    <span class="c-string">"fmt"</span>; <span class="c-string">"net/http"</span>
+    l402kit <span class="c-string">"github.com/shinydapps/l402-kit/go"</span>
+)
+
+<span class="c-keyword">func</span> <span class="c-fn">main</span>() {
+    http.<span class="c-fn">Handle</span>(<span class="c-string">"/premium"</span>, l402kit.<span class="c-fn">Middleware</span>(l402kit.Options{
+        PriceSats:             <span class="c-num">100</span>,
+        OwnerLightningAddress: <span class="c-string">"you@blink.sv"</span>,
+    }, http.<span class="c-fn">HandlerFunc</span>(<span class="c-keyword">func</span>(w http.ResponseWriter, r *http.Request) {
+        fmt.<span class="c-fn">Fprintln</span>(w, <span class="c-string">`{"data":"Payment confirmed ⚡"}`</span>)
+    })))
+    http.<span class="c-fn">ListenAndServe</span>(<span class="c-string">":8080"</span>, <span class="c-keyword">nil</span>)
+}</pre></div>
   </div>
 </section>
 
@@ -311,6 +330,8 @@ app = <span class="c-fn">FastAPI</span>()
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
     <a href="https://npmjs.com/package/l402-kit" class="btn-primary">npm install l402-kit</a>
     <a href="https://pypi.org/project/l402kit" class="btn-secondary">pip install l402kit</a>
+    <a href="https://pkg.go.dev/github.com/shinydapps/l402-kit/go" class="btn-secondary">go get (Go)</a>
+    <a href="https://github.com/ShinyDapps/l402-kit/tree/main/rust" class="btn-secondary">Cargo (Rust)</a>
   </div>
 </section>
 

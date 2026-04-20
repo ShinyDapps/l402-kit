@@ -19,6 +19,15 @@ npm install l402-kit
 ```bash Python
 pip install l402kit
 ```
+
+```bash Go
+go get github.com/shinydapps/l402-kit/go
+```
+
+```toml Rust
+# Add to Cargo.toml
+l402kit = { git = "https://github.com/shinydapps/l402-kit" }
+```
 </CodeGroup>
 
 ## 3. Add to your API
@@ -35,7 +44,6 @@ const lightning = new BlinkProvider(
   process.env.BLINK_WALLET_ID!,
 );
 
-// Free endpoint
 app.get("/", (_req, res) => {
   res.json({ message: "Welcome!" });
 });

@@ -1,13 +1,13 @@
 ---
 title: Introduction
-description: Monetize qualquer API com Bitcoin Lightning em 3 linhas. TypeScript e Python. Sem conta. Sem banco. Sem permissão.
+description: Charge for your API in Bitcoin Lightning. 3 lines of code. TypeScript, Python, Go, Rust. No account. No bank. No permission.
 ---
 
-## O que é l402-kit?
+## What is l402-kit?
 
-**l402-kit** é um middleware open-source que implementa o protocolo [L402](https://docs.lightning.engineering/the-lightning-network/l402) — o padrão aberto para pagamentos por chamada de API usando Bitcoin Lightning Network.
+**l402-kit** is an open-source middleware that implements the [L402 protocol](https://docs.lightning.engineering/the-lightning-network/l402) — the open standard for pay-per-call API monetization using the Bitcoin Lightning Network.
 
-Você adiciona 3 linhas de código. Quem chama sua API paga em sats. Você recebe em segundos.
+Add 3 lines of code. Callers pay in sats. You receive in seconds. Works with TypeScript, Python, Go, and Rust.
 
 ```bash
 npm install l402-kit    # TypeScript / Express
@@ -20,13 +20,13 @@ go get github.com/shinydapps/l402-kit/go  # Go / net/http
 
 <CardGroup cols={3}>
   <Card title="npm" icon="npm" href="https://npmjs.com/package/l402-kit">
-    l402-kit no npm
+    l402-kit on npm
   </Card>
   <Card title="PyPI" icon="python" href="https://pypi.org/project/l402kit">
-    l402kit no PyPI
+    l402kit on PyPI
   </Card>
   <Card title="GitHub" icon="github" href="https://github.com/ShinyDapps/l402-kit">
-    Código fonte aberto
+    Open source code
   </Card>
   <Card title="Go" icon="code" href="https://pkg.go.dev/github.com/shinydapps/l402-kit/go">
     Go SDK (net/http)
@@ -35,7 +35,7 @@ go get github.com/shinydapps/l402-kit/go  # Go / net/http
     Rust SDK (axum)
   </Card>
   <Card title="llms.txt" icon="robot" href="https://github.com/ShinyDapps/l402-kit/blob/main/llms.txt">
-    Para agentes de IA
+    For AI agents
   </Card>
 </CardGroup>
 
@@ -76,7 +76,7 @@ go get github.com/shinydapps/l402-kit/go  # Go / net/http
 
 ---
 
-## Quickstart em 2 minutos
+## Quickstart in 2 minutes
 
 ### TypeScript
 
@@ -88,9 +88,9 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,
-  ownerLightningAddress: "você@blink.sv", // recebe 99.7% de cada pagamento
+  ownerLightningAddress: "you@blink.sv", // receives 99.7% of every payment
 }), (_req, res) => {
-  res.json({ data: "Pagamento confirmado." });
+  res.json({ data: "Payment confirmed." });
 });
 
 app.listen(3000);
@@ -107,64 +107,86 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="você@blink.sv",
+    owner_lightning_address="you@blink.sv",
 )
 async def premium(request: Request):
-    return {"data": "Pagamento confirmado."}
+    return {"data": "Payment confirmed."}
+```
+
+### Go
+
+```go
+package main
+
+import (
+    "fmt"
+    "net/http"
+    l402kit "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+        PriceSats:             100,
+        OwnerLightningAddress: "you@blink.sv",
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintln(w, `{"data":"Payment confirmed."}`)
+    })))
+    http.ListenAndServe(":8080", nil)
+}
 ```
 
 ---
 
-## Por que não Stripe?
+## Why not Stripe?
 
 | | Stripe | **l402-kit** |
 |---|---|---|
-| Taxa mínima | **$0,30** | **< 1 sat (~$0,001)** |
-| Liquidação | 2–7 dias | **< 1 segundo** |
-| Chargeback | Sim | **Impossível** |
-| Requer conta | Sim | **Não** |
-| Suporte a IA | Não | **Sim, nativamente** |
-| Países bloqueados | ~50 | **0 — global** |
-| Código auditável | Não | **Sim, open source** |
-| Censurável | Sim | **Não** |
+| Minimum fee | **$0.30** | **< 1 sat (~$0.001)** |
+| Settlement | 2–7 days | **< 1 second** |
+| Chargebacks | Yes | **Impossible** |
+| Requires account | Yes | **No** |
+| AI agent support | No | **Yes — native** |
+| Countries blocked | ~50 | **0 — global** |
+| Open source | No | **Yes — MIT** |
+| Censurable | Yes | **No** |
 
 ---
 
-## Segurança
+## Security
 
-Cada pagamento é verificado matematicamente:
+Every payment is verified mathematically:
 
 ```
 SHA256(preimage) == paymentHash
 ```
 
-- Impossível de forjar sem pagar de verdade
-- Cada preimage só funciona uma vez (anti-replay)
-- Tokens expiram em 1 hora
-- Todo o código é auditável em [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
+- Impossible to fake without actually paying
+- Each preimage works exactly once (anti-replay)
+- Tokens expire after 1 hour
+- All code is auditable at [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
-## Para quem é?
+## Who is it for?
 
 <CardGroup cols={2}>
-  <Card title="Desenvolvedores de API" icon="code">
-    Cobre por chamada em vez de assinatura mensal. Comece com 1 linha.
+  <Card title="API developers" icon="code">
+    Charge per call instead of monthly subscriptions. Start in 1 line.
   </Card>
-  <Card title="Construtores de Agentes IA" icon="robot">
-    Agentes pagam APIs de forma autônoma — sem cartão, sem humano no meio.
+  <Card title="AI agent builders" icon="robot">
+    Agents pay APIs autonomously — no credit card, no human in the loop.
   </Card>
-  <Card title="Devs fora do sistema financeiro" icon="globe">
-    Argentina, Nigéria, Iran — Bitcoin não tem fronteiras nem permissão.
+  <Card title="Devs outside the financial system" icon="globe">
+    Argentina, Nigeria, Iran — Bitcoin has no borders or gatekeepers.
   </Card>
-  <Card title="Provedores de dados" icon="database">
-    Cobre 1 sat por query. Isso é impossível com Stripe.
+  <Card title="Data providers" icon="database">
+    Charge 1 sat per query. Impossible with Stripe.
   </Card>
 </CardGroup>
 
 ---
 
-## Criado por
+## Created by
 
 **ShinyDapps** · [github.com/ShinyDapps](https://github.com/ShinyDapps) · [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer)
 

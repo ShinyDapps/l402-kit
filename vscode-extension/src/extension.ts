@@ -269,6 +269,11 @@ class PaymentsDashboardProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = getDashboardHtml(this.context);
+    webviewView.webview.onDidReceiveMessage(msg => {
+      if (msg.command === "openConfigure") {
+        vscode.commands.executeCommand("shinydapps.configure");
+      }
+    });
   }
 
   refresh() {
@@ -300,21 +305,45 @@ export function activate(context: vscode.ExtensionContext) {
         { enableScripts: true }
       );
       panel.webview.html = getDashboardHtml(context);
+      panel.webview.onDidReceiveMessage(msg => {
+        if (msg.command === "openConfigure") {
+          vscode.commands.executeCommand("shinydapps.configure");
+        }
+      });
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("shinydapps.configure", async () => {
       const address = await vscode.window.showInputBox({
-        prompt: "Your Lightning Address (e.g. you@blink.sv)",
+        prompt: "⚡ Step 1/3 — Your Lightning Address (e.g. you@blink.sv)",
         placeHolder: "you@blink.sv",
+        ignoreFocusOut: true,
       });
-      if (address) {
-        await vscode.workspace.getConfiguration("shinydapps").update("lightningAddress", address, true);
-        vscode.window.showInformationMessage(`⚡ Lightning Address saved: ${address}`);
-        startPolling(context);
-        sidebarProvider?.refresh();
-      }
+      if (!address) return;
+
+      const supabaseUrl = await vscode.window.showInputBox({
+        prompt: "Step 2/3 — Supabase Project URL  (supabase.com → Project → Settings → API → Project URL)",
+        placeHolder: "https://xxxxxxxxxxxx.supabase.co",
+        ignoreFocusOut: true,
+      });
+      if (!supabaseUrl) return;
+
+      const supabaseKey = await vscode.window.showInputBox({
+        prompt: "Step 3/3 — Supabase anon public key  (same page → 'anon public')",
+        placeHolder: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…",
+        password: true,
+        ignoreFocusOut: true,
+      });
+      if (!supabaseKey) return;
+
+      const cfg = vscode.workspace.getConfiguration("shinydapps");
+      await cfg.update("lightningAddress", address, true);
+      await cfg.update("supabaseUrl", supabaseUrl, true);
+      await cfg.update("supabaseKey", supabaseKey, true);
+      vscode.window.showInformationMessage(`⚡ ShinyDapps configured! Receiving payments at: ${address}`);
+      startPolling(context);
+      sidebarProvider?.refresh();
     })
   );
 
@@ -365,14 +394,14 @@ function getDashboardHtml(_context: vscode.ExtensionContext): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   :root {
-    --bg: var(--vscode-editor-background);
-    --fg: var(--vscode-editor-foreground);
-    --card: var(--vscode-sideBar-background);
-    --border: var(--vscode-panel-border);
-    --muted: var(--vscode-descriptionForeground);
+    --bg: var(--vscode-editor-background, #1e1e1e);
+    --fg: var(--vscode-foreground, var(--vscode-editor-foreground, #cccccc));
+    --card: var(--vscode-sideBar-background, #252526);
+    --border: var(--vscode-panel-border, #3e3e42);
+    --muted: var(--vscode-descriptionForeground, #858585);
     --accent: #f7931a;
-    --btn: var(--vscode-button-background);
-    --btn-fg: var(--vscode-button-foreground);
+    --btn: var(--vscode-button-background, #0e639c);
+    --btn-fg: var(--vscode-button-foreground, #ffffff);
   }
   [data-theme="light"] {
     --bg: #ffffff; --fg: #1e1e1e; --card: #f3f3f3;
@@ -423,6 +452,7 @@ function getDashboardHtml(_context: vscode.ExtensionContext): string {
 <div class="content" id="content"></div>
 
 <script>
+const vscodeApi = acquireVsCodeApi();
 const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
 const SUPABASE_KEY = ${JSON.stringify(supabaseKey)};
 const LIGHTNING_ADDRESS = ${JSON.stringify(lightningAddress)};
@@ -484,12 +514,14 @@ function buildTopbar() {
 function renderSetup() {
   document.getElementById('content').innerHTML = '<div class="setup">' +
     '<h3>' + t('setupTitle') + '</h3>' +
-    '<p>' + t('setupStep1') + '<br><span class="hint">' + t('setupHint') + '</span></p>' +
-    '<p>' + t('setupStep2') + '</p>' +
-    '<p>' + t('setupStep3') + '</p>' +
+    '<button id="cfgBtn" style="width:100%;margin-bottom:14px;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⚡ Configure Now</button>' +
+    '<p style="margin-bottom:8px;">' + t('setupStep3') + '</p>' +
     '<pre>"shinydapps.lightningAddress": "you@blink.sv",\n"shinydapps.supabaseUrl": "https://xxxx.supabase.co",\n"shinydapps.supabaseKey": "your-anon-key"</pre>' +
     '<p style="margin-top:10px;font-size:10px;color:var(--muted)">ℹ️ Get Supabase keys at <code>supabase.com</code> → Project → Settings → API</p>' +
     '</div>';
+  document.getElementById('cfgBtn').addEventListener('click', () => {
+    vscodeApi.postMessage({ command: 'openConfigure' });
+  });
 }
 
 let lastData = null;

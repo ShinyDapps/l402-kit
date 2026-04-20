@@ -61,6 +61,23 @@
       "pages": ["it/introduction"]
     }
   ],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/ShinyDapps/l402-kit"
+    },
+    {
+      "name": "npm",
+      "icon": "npm",
+      "url": "https://npmjs.com/package/l402-kit"
+    },
+    {
+      "name": "PyPI",
+      "icon": "python",
+      "url": "https://pypi.org/project/l402kit"
+    }
+  ],
   "footerSocials": {
     "twitter": "https://twitter.com/shinydapps",
     "github": "https://github.com/ShinyDapps/l402-kit"
