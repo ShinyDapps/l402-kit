@@ -1,0 +1,29 @@
+---
+title: परिचय
+description: Bitcoin sats में अपनी API के लिए चार्ज करने का सबसे सरल तरीका।
+---
+
+## l402-kit क्या है?
+
+**l402-kit** एक open-source middleware है जो किसी भी डेवलपर को 3 लाइन कोड में अपनी API में Bitcoin Lightning micropayments जोड़ने देता है।
+
+कोई क्रेडिट कार्ड नहीं। कोई रजिस्ट्रेशन नहीं। कोई chargeback नहीं। कोई minimum fee नहीं। सिर्फ sats।
+
+```bash
+npm install l402-kit   # TypeScript / Express
+pip install l402kit    # Python / FastAPI / Flask
+```
+
+## यह किस समस्या को हल करता है?
+
+- **Stripe**: प्रति transaction minimum $0.30 — micropayments के लिए असंभव
+- **Subscriptions**: कम उपयोगकर्ता ज्यादा उपयोगकर्ताओं को subsidize करते हैं
+- **AI Agents**: credit card नहीं है — APIs को automatically pay नहीं कर सकते
+
+**l402-kit** तीसरा विकल्प है: Lightning Network के जरिए pay-per-call, 1 second से कम में global settlement।
+
+## यह किसके लिए है?
+
+- **API Developers** — monthly subscription की जगह per-call charge करें
+- **AI Agent Builders** — agents automatically APIs pay करते हैं
+- **Stripe के बिना Devs** — India, Bitcoin की कोई सीमा नहीं

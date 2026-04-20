@@ -1,0 +1,42 @@
+---
+title: Introdução
+description: A forma mais simples de cobrar pela sua API em Bitcoin sats.
+---
+
+## O que é o l402-kit?
+
+**l402-kit** é um middleware open-source que permite qualquer desenvolvedor adicionar micropagamentos Bitcoin Lightning à sua API em 3 linhas de código.
+
+Sem cartão de crédito. Sem cadastro. Sem chargeback. Sem taxa mínima. Só sats.
+
+```bash
+npm install l402-kit   # TypeScript / Express
+pip install l402kit    # Python / FastAPI / Flask
+```
+
+## O problema que resolve
+
+Cobrar por chamada de API hoje é impossível com os meios tradicionais:
+
+- **Stripe**: mínimo $0,30 por transação — inviável para micropagamentos
+- **Assinaturas**: quem usa pouco subsidia quem usa muito
+- **Agentes de IA**: não têm cartão de crédito — não conseguem pagar APIs sozinhos
+
+**l402-kit** é a terceira opção: pay-per-call via Lightning Network, liquidando em menos de 1 segundo, globalmente, sem intermediário.
+
+## Como funciona
+
+```
+Cliente → GET /premium
+API     → 402 + invoice Lightning (100 sats)
+Cliente → paga invoice (< 1 segundo)
+Cliente → GET /premium + prova de pagamento
+API     → 200 + dados ✓
+```
+
+## Para quem é?
+
+- **Devs de API** — cobra por chamada em vez de assinatura mensal
+- **Builders de agentes de IA** — agentes pagam APIs automaticamente
+- **Devs sem Stripe** — Brasil, Argentina, Nigéria — Bitcoin não tem fronteiras
+- **Provedores de dados** — cobra 1 sat por consulta, impossível com Stripe
