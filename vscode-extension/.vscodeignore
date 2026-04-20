@@ -1,0 +1,5 @@
+src/**
+tsconfig.json
+icon.svg
+node_modules/**
+.vscode/**
