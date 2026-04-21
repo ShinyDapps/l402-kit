@@ -1,5 +1,5 @@
 """
-Flask example — l402kit
+Flask example â€” l402kit
 Monetize any Flask route with Bitcoin Lightning (L402).
 
 Install:
@@ -22,35 +22,35 @@ from l402kit.providers.blink import BlinkProvider
 
 app = Flask(__name__)
 
-# ── Lightning provider ─────────────────────────────────────────────────────────
+# â”€â”€ Lightning provider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 blink = BlinkProvider(
     api_key=os.environ["BLINK_API_KEY"],
     wallet_id=os.environ["BLINK_WALLET_ID"],
 )
 
-# ── Free endpoint ──────────────────────────────────────────────────────────────
+# â”€â”€ Free endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route("/")
 def index():
     return jsonify({
         "service": "Weather API",
         "pricing": "10 sats per forecast",
-        "docs": "https://l402kit.com/docs",
+        "docs": "https://l402kit.vercel.app/docs",
     })
 
 
-# ── Paid endpoint (10 sats) ────────────────────────────────────────────────────
+# â”€â”€ Paid endpoint (10 sats) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route("/weather")
 @l402_required(price_sats=10, lightning=blink)
 def weather():
     return jsonify({
-        "city": "São Paulo",
+        "city": "SÃ£o Paulo",
         "temp_c": 24,
         "condition": "Sunny",
         "humidity_pct": 62,
     })
 
 
-# ── Another paid endpoint (50 sats) ───────────────────────────────────────────
+# â”€â”€ Another paid endpoint (50 sats) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route("/forecast/<city>")
 @l402_required(price_sats=50, lightning=blink)
 def forecast(city: str):

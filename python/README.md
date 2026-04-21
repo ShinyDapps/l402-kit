@@ -1,4 +1,4 @@
-﻿# l402kit
+# l402kit
 
 🇺🇸 **Charge for your API in Bitcoin Lightning. 3 lines of code.**
 🇧🇷 **Monetize sua API com Bitcoin Lightning. 3 linhas de código.**
@@ -22,7 +22,7 @@ pip install l402kit
 
 📖 **Docs / Documentação / Documentation:**
 
-[🇺🇸 English](https://l402kit.com/docs) · [🇧🇷 Português](https://l402kit.com/docs/pt/introduction) · [🇪🇸 Español](https://l402kit.com/docs/es/introduction) · [🇨🇳 中文](https://l402kit.com/docs/zh/introduction) · [🇮🇳 हिंदी](https://l402kit.com/docs/hi/introduction) · [🇸🇦 العربية](https://l402kit.com/docs/ar/introduction) · [🇫🇷 Français](https://l402kit.com/docs/fr/introduction) · [🇩🇪 Deutsch](https://l402kit.com/docs/de/introduction) · [🇷🇺 Русский](https://l402kit.com/docs/ru/introduction) · [🇯🇵 日本語](https://l402kit.com/docs/ja/introduction) · [🇮🇹 Italiano](https://l402kit.com/docs/it/introduction)
+[🇺🇸 English](https://l402kit.vercel.app/docs) · [🇧🇷 Português](https://l402kit.vercel.app/docs/pt/introduction) · [🇪🇸 Español](https://l402kit.vercel.app/docs/es/introduction) · [🇨🇳 中文](https://l402kit.vercel.app/docs/zh/introduction) · [🇮🇳 हिंदी](https://l402kit.vercel.app/docs/hi/introduction) · [🇸🇦 العربية](https://l402kit.vercel.app/docs/ar/introduction) · [🇫🇷 Français](https://l402kit.vercel.app/docs/fr/introduction) · [🇩🇪 Deutsch](https://l402kit.vercel.app/docs/de/introduction) · [🇷🇺 Русский](https://l402kit.vercel.app/docs/ru/introduction) · [🇯🇵 日本語](https://l402kit.vercel.app/docs/ja/introduction) · [🇮🇹 Italiano](https://l402kit.vercel.app/docs/it/introduction)
 
 ---
 
@@ -268,7 +268,7 @@ Your address: `yourname@blink.sv`
 
 | | |
 |---|---|
-| Docs (11 languages) | [shinydapps.mintlify.app](https://l402kit.com/docs) |
+| Docs (11 languages) | [shinydapps.mintlify.app](https://l402kit.vercel.app/docs) |
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
 | npm (TypeScript) | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |

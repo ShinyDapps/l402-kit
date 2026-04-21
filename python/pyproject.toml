@@ -40,7 +40,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [project.urls]
-Homepage = "https://l402kit.com"
-Documentation = "https://l402kit.com/docs"
+Homepage = "https://l402kit.vercel.app"
+Documentation = "https://l402kit.vercel.app/docs"
 Repository = "https://github.com/ShinyDapps/l402-kit"
 "npm package" = "https://npmjs.com/package/l402-kit"

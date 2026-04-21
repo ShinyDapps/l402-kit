@@ -8,7 +8,7 @@ use crate::{
     types::{BoxFuture, Invoice, LightningProvider},
 };
 
-const SHINYDAPPS_API: &str = "https://l402kit.com";
+const SHINYDAPPS_API: &str = "https://l402kit.vercel.app";
 
 pub struct ManagedProvider {
     owner_address: String,

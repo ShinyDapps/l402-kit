@@ -40,7 +40,7 @@ type Options struct {
 	OnPayment func(token L402Token, amountSats int)
 }
 
-const shinydappsAPI = "https://l402kit.com"
+const shinydappsAPI = "https://l402kit.vercel.app"
 
 // managedProvider uses the ShinyDapps backend to create invoices (zero-config mode).
 type managedProvider struct {
@@ -89,7 +89,7 @@ func (m *managedProvider) sendSplit(ctx context.Context, amountSats int) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, shinydappsAPI+"/api/split", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-split-secret", os.Getenv("SPLIT_SECRET"))
-	http.DefaultClient.Do(req) //nolint:errcheck — fire and forget
+	http.DefaultClient.Do(req) //nolint:errcheck â€” fire and forget
 }
 
 // Middleware returns an http.Handler that enforces L402 payment before calling next.
@@ -138,7 +138,7 @@ func Middleware(opts Options, next http.Handler) http.Handler {
 			}
 		}
 
-		// No valid token — create invoice and return 402
+		// No valid token â€” create invoice and return 402
 		inv, err := provider.CreateInvoice(r.Context(), opts.PriceSats)
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})

@@ -1,4 +1,4 @@
-﻿import * as vscode from "vscode";
+import * as vscode from "vscode";
 
 // Public anon key — safe to embed (RLS filters by owner_address per user)
 const SD_SUPABASE_URL = "https://urcqtpklpfyvizcgcsia.supabase.co";
@@ -386,7 +386,7 @@ function getDashboardHtml(_context: vscode.ExtensionContext): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://urcqtpklpfyvizcgcsia.supabase.co https://mempool.space https://l402kit.com; img-src data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://urcqtpklpfyvizcgcsia.supabase.co https://mempool.space https://l402kit.vercel.app; img-src data: blob:;">
 <style>
   :root {
     --bg: var(--vscode-editor-background, #1e1e1e);
@@ -552,7 +552,7 @@ let isPro = false;
 async function checkPro() {
   if (!LIGHTNING_ADDRESS) return;
   try {
-    const r = await fetch('https://l402kit.com/api/pro-check?address=' + encodeURIComponent(LIGHTNING_ADDRESS));
+    const r = await fetch('https://l402kit.vercel.app/api/pro-check?address=' + encodeURIComponent(LIGHTNING_ADDRESS));
     const d = await r.json();
     isPro = d.pro === true;
   } catch { isPro = false; }
@@ -682,7 +682,7 @@ function renderContent(rows) {
       '<div style="margin-bottom:12px;background:#1a120a;border:1px solid #f7931a44;border-radius:8px;padding:10px 12px;font-size:11px;display:flex;align-items:center;gap:8px">' +
       '<span style="font-size:16px">⚡</span>' +
       '<span style="flex:1;color:#ccc">Pro unlocks 1Y/ALL history &amp; CSV export</span>' +
-      '<a href="https://l402kit.com/docs#pricing" style="color:#f7931a;font-weight:700;font-size:10px;text-decoration:none" target="_blank">Upgrade →</a>' +
+      '<a href="https://l402kit.vercel.app/docs#pricing" style="color:#f7931a;font-weight:700;font-size:10px;text-decoration:none" target="_blank">Upgrade →</a>' +
       '</div>'
     ) +
     '<div class="chart-wrap">' +
@@ -713,7 +713,7 @@ function renderContent(rows) {
     document.getElementById('rangeSel')?.querySelectorAll('.range-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.dataset.proLock) {
-          window.open('https://l402kit.com/docs#pricing', '_blank');
+          window.open('https://l402kit.vercel.app/docs#pricing', '_blank');
           return;
         }
         chartRange = btn.dataset.range;
