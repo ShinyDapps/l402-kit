@@ -12,6 +12,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="l402-kit — Bitcoin Lightning payments for any API">
 <meta name="twitter:description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. No account. No bank. No chargebacks.">
+<!-- Vercel Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -438,7 +440,7 @@ app = <span class="c-fn">FastAPI</span>()
     </div>
     <div style="position:relative">
       <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,var(--orange)22,transparent 60%);border-radius:16px;z-index:0"></div>
-      <img src="/extension-screenshot.png" alt="ShinyDapps VS Code Extension — Lightning payment dashboard" style="width:100%;border-radius:14px;border:1px solid #2a2a2a;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)" loading="lazy">
+      <img src="https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/screenshot.png" alt="l402-kit VS Code Extension — Lightning payment dashboard" style="width:100%;border-radius:14px;border:1px solid #2a2a2a;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)" loading="lazy">
     </div>
   </div>
 </section>
@@ -491,7 +493,7 @@ app = <span class="c-fn">FastAPI</span>()
     </div>
     <div class="pricing-card">
       <div class="pricing-name">Lifetime</div>
-      <div class="pricing-price">$2,999 <span>one-time</span></div>
+      <div class="pricing-price">$9,999 <span>one-time</span></div>
       <div class="pricing-desc">Pay once. Use forever.</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> Everything in Business</li>
@@ -623,7 +625,7 @@ document.querySelectorAll('.faq-item').forEach(item => {
 })();
 
 // Pro payment modal
-const TIER_LABELS = { pro: 'Pro \u2014 $9/month', business: 'Business \u2014 $99/month', lifetime: 'Lifetime \u2014 $2,999 one-time' };
+const TIER_LABELS = { pro: 'Pro \u2014 $9/month', business: 'Business \u2014 $99/month', lifetime: 'Lifetime \u2014 $9,999 one-time' };
 let proCurrentTier = 'pro', proPaymentHash = '', proInvoiceStr = '', proPollTimer = null;
 
 function openProModal(tier) {

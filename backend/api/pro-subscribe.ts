@@ -5,7 +5,7 @@ const BLINK_WALLET_ID = process.env.L402KIT_BLINK_WALLET_ID ?? "";
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
 
-const TIER_PRICE_USD: Record<string, number> = { pro: 9, business: 99, lifetime: 2999 };
+const TIER_PRICE_USD: Record<string, number> = { pro: 9, business: 99, lifetime: 9999 };
 const TIER_DAYS: Record<string, number> = { pro: 30, business: 30, lifetime: 36500 };
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3, baseMs = 300): Promise<T> {
