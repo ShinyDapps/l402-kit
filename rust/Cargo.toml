@@ -5,6 +5,7 @@ edition = "2021"
 description = "L402 (HTTP 402 + Lightning Network) middleware for Rust. Supports axum."
 license = "MIT"
 repository = "https://github.com/shinydapps/l402-kit"
+readme = "README.md"
 keywords = ["lightning", "l402", "http402", "bitcoin", "middleware"]
 categories = ["web-programming", "network-programming"]
 
