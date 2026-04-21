@@ -64,10 +64,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.json({ paid: true, tier, expires_at });
   } catch (err) {
     console.error("[pro-poll] error:", String(err));
-
-    res.json({ paid: true, tier, expires_at });
-  } catch (err) {
-    console.error("[pro-poll] error:", String(err));
     res.status(500).json({ error: "Failed to check payment" });
   }
 }

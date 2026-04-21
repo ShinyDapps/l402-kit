@@ -1,4 +1,4 @@
-# l402kit
+﻿# l402kit
 
 🇺🇸 **Charge for your API in Bitcoin Lightning. 3 lines of code.**
 🇧🇷 **Monetize sua API com Bitcoin Lightning. 3 linhas de código.**
@@ -22,7 +22,7 @@ pip install l402kit
 
 📖 **Docs / Documentação / Documentation:**
 
-[🇺🇸 English](https://shinydapps-bd9fa40b.mintlify.app) · [🇧🇷 Português](https://shinydapps-bd9fa40b.mintlify.app/pt/introduction) · [🇪🇸 Español](https://shinydapps-bd9fa40b.mintlify.app/es/introduction) · [🇨🇳 中文](https://shinydapps-bd9fa40b.mintlify.app/zh/introduction) · [🇮🇳 हिंदी](https://shinydapps-bd9fa40b.mintlify.app/hi/introduction) · [🇸🇦 العربية](https://shinydapps-bd9fa40b.mintlify.app/ar/introduction) · [🇫🇷 Français](https://shinydapps-bd9fa40b.mintlify.app/fr/introduction) · [🇩🇪 Deutsch](https://shinydapps-bd9fa40b.mintlify.app/de/introduction) · [🇷🇺 Русский](https://shinydapps-bd9fa40b.mintlify.app/ru/introduction) · [🇯🇵 日本語](https://shinydapps-bd9fa40b.mintlify.app/ja/introduction) · [🇮🇹 Italiano](https://shinydapps-bd9fa40b.mintlify.app/it/introduction)
+[🇺🇸 English](https://l402kit.com/docs) · [🇧🇷 Português](https://l402kit.com/docs/pt/introduction) · [🇪🇸 Español](https://l402kit.com/docs/es/introduction) · [🇨🇳 中文](https://l402kit.com/docs/zh/introduction) · [🇮🇳 हिंदी](https://l402kit.com/docs/hi/introduction) · [🇸🇦 العربية](https://l402kit.com/docs/ar/introduction) · [🇫🇷 Français](https://l402kit.com/docs/fr/introduction) · [🇩🇪 Deutsch](https://l402kit.com/docs/de/introduction) · [🇷🇺 Русский](https://l402kit.com/docs/ru/introduction) · [🇯🇵 日本語](https://l402kit.com/docs/ja/introduction) · [🇮🇹 Italiano](https://l402kit.com/docs/it/introduction)
 
 ---
 
@@ -268,7 +268,7 @@ Your address: `yourname@blink.sv`
 
 | | |
 |---|---|
-| Docs (11 languages) | [shinydapps.mintlify.app](https://shinydapps-bd9fa40b.mintlify.app) |
+| Docs (11 languages) | [shinydapps.mintlify.app](https://l402kit.com/docs) |
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
 | npm (TypeScript) | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |

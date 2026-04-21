@@ -34,7 +34,7 @@ def index():
     return jsonify({
         "service": "Weather API",
         "pricing": "10 sats per forecast",
-        "docs": "https://shinydapps-bd9fa40b.mintlify.app",
+        "docs": "https://l402kit.com/docs",
     })
 
 

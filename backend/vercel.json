@@ -1,6 +1,9 @@
 {
   "buildCommand": "npm install",
   "outputDirectory": ".",
+  "redirects": [
+    { "source": "/docs/:path*", "destination": "https://shinydapps-bd9fa40b.mintlify.app/:path*", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]

@@ -1,4 +1,4 @@
-# ShinyDapps ⚡ Lightning Payments
+﻿# ShinyDapps ⚡ Lightning Payments
 
 🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية) · 🇮🇹 [Italiano](#italiano)
 
@@ -437,17 +437,17 @@ pip install l402kit
 
 ---
 
-🇺🇸 [English Docs](https://shinydapps-bd9fa40b.mintlify.app) ·
-🇧🇷 [Português](https://shinydapps-bd9fa40b.mintlify.app/pt/introduction) ·
-🇪🇸 [Español](https://shinydapps-bd9fa40b.mintlify.app/es/introduction) ·
-🇨🇳 [中文](https://shinydapps-bd9fa40b.mintlify.app/zh/introduction) ·
-🇮🇳 [हिंदी](https://shinydapps-bd9fa40b.mintlify.app/hi/introduction) ·
-🇸🇦 [العربية](https://shinydapps-bd9fa40b.mintlify.app/ar/introduction) ·
-🇫🇷 [Français](https://shinydapps-bd9fa40b.mintlify.app/fr/introduction) ·
-🇩🇪 [Deutsch](https://shinydapps-bd9fa40b.mintlify.app/de/introduction) ·
-🇷🇺 [Русский](https://shinydapps-bd9fa40b.mintlify.app/ru/introduction) ·
-🇯🇵 [日本語](https://shinydapps-bd9fa40b.mintlify.app/ja/introduction) ·
-🇮🇹 [Italiano](https://shinydapps-bd9fa40b.mintlify.app/it/introduction)
+🇺🇸 [English Docs](https://l402kit.com/docs) ·
+🇧🇷 [Português](https://l402kit.com/docs/pt/introduction) ·
+🇪🇸 [Español](https://l402kit.com/docs/es/introduction) ·
+🇨🇳 [中文](https://l402kit.com/docs/zh/introduction) ·
+🇮🇳 [हिंदी](https://l402kit.com/docs/hi/introduction) ·
+🇸🇦 [العربية](https://l402kit.com/docs/ar/introduction) ·
+🇫🇷 [Français](https://l402kit.com/docs/fr/introduction) ·
+🇩🇪 [Deutsch](https://l402kit.com/docs/de/introduction) ·
+🇷🇺 [Русский](https://l402kit.com/docs/ru/introduction) ·
+🇯🇵 [日本語](https://l402kit.com/docs/ja/introduction) ·
+🇮🇹 [Italiano](https://l402kit.com/docs/it/introduction)
 
 ---
 
