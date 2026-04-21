@@ -15,7 +15,7 @@
 [![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
 [![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-69%20passing-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-113%20passing-brightgreen)](#)
 [![GitHub Stars](https://img.shields.io/github/stars/ShinyDapps/l402-kit)](https://github.com/ShinyDapps/l402-kit)
 
 ![l402-kit demo](docs/demo.svg)
@@ -31,11 +31,10 @@
 ## Install
 
 ```bash
-npm install l402-kit                                             # TypeScript / Node.js / Express
-pip install l402kit                                              # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go                        # Go / net/http / Chi / Gin
-# Rust — add to Cargo.toml:
-# l402kit = { git = "https://github.com/shinydapps/l402-kit" }  # Rust / axum
+npm install l402-kit        # TypeScript / Node.js / Express
+pip install l402kit         # Python / FastAPI / Flask
+go get github.com/shinydapps/l402-kit/go   # Go / net/http / Chi / Gin
+cargo add l402kit           # Rust / axum
 ```
 
 📖 **Official docs in 11 languages:**
@@ -206,7 +205,7 @@ class MyProvider implements LightningProvider {
 - SHA256 — unforgeable mathematical proof
 - Anti-replay — each preimage works exactly once
 - Expiry — tokens expire after 1 hour
-- 50 automated tests across 4 languages
+- 113 automated tests across 4 languages
 - Open source — audit everything at [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
 
 ---
