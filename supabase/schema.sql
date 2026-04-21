@@ -45,9 +45,23 @@ alter table pro_access enable row level security;
 create policy "anon_select_pro" on pro_access for select to anon using (true);
 create policy "service_full_pro" on pro_access for all to service_role using (true);
 
+-- Waitlist (email capture from landing page)
+create table if not exists waitlist (
+  id bigint generated always as identity primary key,
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+
+alter table waitlist enable row level security;
+-- Only service role can read/write (backend API uses service key for inserts)
+create policy "service_full_waitlist" on waitlist for all to service_role using (true);
+
 -- ─── Migrations (run if tables already exist) ────────────────────────────────
 -- ALTER TABLE pro_access ADD COLUMN IF NOT EXISTS tier text NOT NULL DEFAULT 'pro';
 -- ALTER TABLE payments ADD COLUMN IF NOT EXISTS owner_address text not null default '';
+-- CREATE TABLE IF NOT EXISTS waitlist (id bigint generated always as identity primary key, email text not null unique, created_at timestamptz not null default now());
+-- ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "service_full_waitlist" ON waitlist FOR ALL TO service_role USING (true);
 -- CREATE INDEX IF NOT EXISTS payments_owner_address_idx ON payments (owner_address);
 -- ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE pro_access ENABLE ROW LEVEL SECURITY;
