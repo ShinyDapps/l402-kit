@@ -52,6 +52,19 @@ export interface L402Options {
    * Generate with: `openssl rand -hex 32`
    */
   webhookSecret?: string;
+  /**
+   * Pluggable replay-protection backend.
+   * - Default: in-memory (single instance, resets on restart)
+   * - Production: `new RedisReplayAdapter(redis)` for multi-instance deployments
+   *
+   * @example
+   * ```ts
+   * import Redis from "ioredis";
+   * import { RedisReplayAdapter } from "l402-kit";
+   * { replayAdapter: new RedisReplayAdapter(new Redis(process.env.REDIS_URL)) }
+   * ```
+   */
+  replayAdapter?: import("./replay").ReplayAdapter;
 }
 
 export interface PaymentRecord {

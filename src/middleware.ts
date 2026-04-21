@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { verifyToken } from "./verify";
 import { checkAndMarkPreimage } from "./replay";
 import { sendWebhook } from "./webhook";
+import type { ReplayAdapter } from "./replay";
 import type { L402Options, LightningProvider, Invoice } from "./types";
 import { randomBytes, createHash } from "crypto";
 
@@ -39,7 +40,7 @@ class ManagedProvider implements LightningProvider {
 
 export function l402(options: L402Options): RequestHandler {
   const { priceSats, ownerLightningAddress, supabaseUrl, supabaseKey, onPayment,
-    webhookUrl, webhookSecret } = options;
+    webhookUrl, webhookSecret, replayAdapter } = options;
   const dbUrl = supabaseUrl ?? process.env.SUPABASE_URL ?? "";
   const dbKey = supabaseKey ?? process.env.SUPABASE_ANON_KEY ?? "";
 
@@ -56,7 +57,10 @@ export function l402(options: L402Options): RequestHandler {
       if (valid) {
         const [macaroon, preimage] = token.split(":");
 
-        if (!checkAndMarkPreimage(preimage)) {
+        // Layer 1: fast replay check via configured adapter (in-memory or Redis)
+        const adapter: ReplayAdapter = replayAdapter ?? { check: checkAndMarkPreimage };
+        const firstUse = await adapter.check(preimage);
+        if (!firstUse) {
           res.status(401).json({ error: "Token already used" });
           return;
         }

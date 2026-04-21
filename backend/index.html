@@ -161,6 +161,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="nav-logo">⚡ <span>ShinyDapps</span></div>
   <div class="nav-links">
     <a href="#how">How it works</a>
+    <a href="#vs-x402">vs x402</a>
     <a href="#extension">Extension</a>
     <a href="#pricing">Pricing</a>
     <a href="https://shinydapps-bd9fa40b.mintlify.app">Docs</a>
@@ -325,6 +326,26 @@ app = <span class="c-fn">FastAPI</span>()
     <tr><td>Countries blocked</td><td class="no">~50</td><td class="no">~60</td><td class="yes">0 — global</td></tr>
     <tr><td>Open source</td><td class="no">No</td><td class="no">No</td><td class="yes">100%</td></tr>
   </table>
+</section>
+
+<section class="compare" id="vs-x402">
+  <h2>Why not x402 <span style="font-size:16px;font-weight:400;color:var(--muted)">(Coinbase)</span>?</h2>
+  <p style="text-align:center;color:var(--muted);font-size:14px;margin-top:-28px;margin-bottom:28px">x402 settles in USDC on Base chain. l402-kit settles in Bitcoin Lightning.</p>
+  <table>
+    <tr>
+      <th></th><th>x402 <span style="font-weight:400;color:#888">(Coinbase)</span></th><th>Aperture <span style="font-weight:400;color:#888">(Lightning Labs)</span></th><th>l402-kit ⚡</th>
+    </tr>
+    <tr><td>Payment rail</td><td class="no">USDC · Base chain</td><td class="yes">Bitcoin Lightning</td><td class="yes">Bitcoin Lightning</td></tr>
+    <tr><td>Confirmation time</td><td class="no">~2 s (chain)</td><td class="yes">&lt; 1 s</td><td class="yes">&lt; 1 s</td></tr>
+    <tr><td>Min transaction</td><td class="no">~$0.001 gas</td><td class="yes">1 sat ≈ $0.001</td><td class="yes">1 sat ≈ $0.001</td></tr>
+    <tr class="highlight"><td>Corporate dependency</td><td class="no">Coinbase / Base</td><td class="no">Lightning Labs</td><td class="yes">None — open protocol</td></tr>
+    <tr><td>Languages</td><td class="no">TS + Python</td><td class="no">Go only</td><td class="yes">TS · Python · Go · Rust</td></tr>
+    <tr><td>Setup complexity</td><td class="no">Deploy infra</td><td class="no">Run gateway</td><td class="yes">3 lines — zero infra</td></tr>
+    <tr><td>AI agent native</td><td class="no">Partial</td><td class="no">No</td><td class="yes">Yes — by design</td></tr>
+    <tr><td>Replay protection</td><td class="no">None</td><td class="yes">Redis</td><td class="yes">Memory · Redis · DB</td></tr>
+    <tr><td>Censorship resistant</td><td class="no">No (Coinbase ToS)</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+  </table>
+  <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--muted)">USDC requires trust in Coinbase, Base chain, and USD-backing. Bitcoin needs none of that.</p>
 </section>
 
 <section class="features">
