@@ -227,6 +227,7 @@ Other options: Wallet of Satoshi, Phoenix, Zeus, Alby.
 | npm | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
 | Go | [pkg.go.dev/github.com/shinydapps/l402-kit/go](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
+| Rust | [crates.io/crates/l402kit](https://crates.io/crates/l402kit) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
 | VS Code Extension | [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) |
 | Creator | [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer) |

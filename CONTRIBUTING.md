@@ -26,9 +26,19 @@ python/l402kit/        # Python — FastAPI/Flask SDK
   middleware.py        # decorator @l402_required
   providers/           # same providers, Python
 
+go/                    # Go — net/http / Chi / Gin SDK
+  l402kit.go           # middleware
+  middleware.go        # handler wrapper
+  verify.go            # SHA256 verification
+
+rust/src/              # Rust — axum SDK
+  middleware.rs        # tower Layer
+  verify.rs            # SHA256 verification
+  types.rs             # shared types
+
 examples/              # runnable examples (keep them minimal)
 supabase/schema.sql    # payment logging schema
-extension/             # VSCode dashboard (coming soon)
+vscode-extension/      # VS Code dashboard — real-time sats
 ```
 
 ## Rules (short)
