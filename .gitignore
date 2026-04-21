@@ -29,3 +29,5 @@ test-invoice.sh
 # phoenixd (old infra, not part of npm package)
 phoenixd/
 MASTER.md
+COCKPIT.md
+WHITEPAPER.md
