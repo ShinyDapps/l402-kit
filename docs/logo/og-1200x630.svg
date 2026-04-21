@@ -1,0 +1,267 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="l402-kit — Pay-per-call APIs. 3 lines of code.">
+  <title>l402-kit — Pay-per-call APIs. 3 lines of code.</title>
+  <defs>
+    <!-- Clip to canvas -->
+    <clipPath id="canvas">
+      <rect width="1200" height="630"/>
+    </clipPath>
+    <!-- Left half clip (for ghost text containment) -->
+    <clipPath id="left-half">
+      <rect width="615" height="630"/>
+    </clipPath>
+  </defs>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       BACKGROUND SYSTEM
+       Dark space with engineering precision.
+       Every element is placed, nothing is arbitrary.
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <!-- Base field -->
+  <rect width="1200" height="630" fill="#07080E"/>
+
+  <!-- Subtle grid — engineering blueprint substrate, 40px pitch -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#8892B0" stroke-width="0.4" opacity="0.06"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Top accent rail — single authoritative line (2px) -->
+  <rect x="0" y="0" width="1200" height="2" fill="#F7931A" opacity="0.85"/>
+
+  <!-- Ghost model number — Ken Okuyama / Porsche technique
+       "402" at typographic scale. The number IS the product.
+       Cropped left, barely visible, pure depth. -->
+  <text
+    x="290" y="560"
+    font-family="'Inter','Helvetica Neue','Arial Black',sans-serif"
+    font-weight="900" font-size="540"
+    fill="#F7931A" opacity="0.040"
+    text-anchor="middle"
+    clip-path="url(#left-half)">402</text>
+
+  <!-- Speed lines — motion through precision
+       Ken Okuyama's Porsche Carrera GT had these ruled-edge slashes.
+       Here: the payment clears at lightning speed. -->
+  <line x1="1200" y1="80"  x2="680" y2="630" stroke="#F7931A" stroke-width="0.6" opacity="0.07"/>
+  <line x1="1200" y1="200" x2="790" y2="630" stroke="#F7931A" stroke-width="0.6" opacity="0.05"/>
+  <line x1="1200" y1="350" x2="920" y2="630" stroke="#F7931A" stroke-width="0.4" opacity="0.04"/>
+
+  <!-- Vertical divider — center spine, clean separation -->
+  <line x1="615" y1="28" x2="615" y2="598" stroke="#F7931A" stroke-width="0.8" opacity="0.18"/>
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       LEFT SECTION — Identity + Proposition
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <!-- Protocol label — establishes technical authority -->
+  <text
+    x="78" y="72"
+    font-family="'JetBrains Mono','Fira Code','Cascadia Code','Courier New',monospace"
+    font-size="11" font-weight="400" letter-spacing="2"
+    fill="#F7931A" opacity="0.70">HTTP 402  ·  PAYMENT REQUIRED</text>
+
+  <!-- Lightning bolt mark — inline icon at display scale -->
+  <!-- Derived from mark.svg polygon, scaled ~×0.22 and positioned -->
+  <!-- Original (400 space): 210,40 100,220 190,220 150,360 300,160 210,160 -->
+  <!-- Scale ×0.22 center (200,200) → translate to display position (96, 130) -->
+  <!-- x_new = 78 + (x_orig-200)*0.22   y_new = 148 + (y_orig-200)*0.22 -->
+  <polygon
+    points="80.2,139.2  56.0,184.4  75.8,184.4  67.0,210.4  122.0,168.8  102.2,168.8"
+    fill="#F7931A"/>
+
+  <!-- Wordmark — primary brand statement
+       Monospace: emphasizes code DNA. Bold: confidence.
+       Tracking slightly open for display-size legibility. -->
+  <text
+    x="132" y="188"
+    font-family="'JetBrains Mono','Fira Code','SF Mono','Courier New',monospace"
+    font-size="82" font-weight="700" letter-spacing="-1"
+    fill="#FFFFFF">l402-kit</text>
+
+  <!-- Tagline — two-line proposition, developer language -->
+  <text
+    x="78" y="260"
+    font-family="'Inter','Helvetica Neue',sans-serif"
+    font-size="24" font-weight="400"
+    fill="#64748B">Pay-per-call APIs.</text>
+  <text
+    x="78" y="294"
+    font-family="'Inter','Helvetica Neue',sans-serif"
+    font-size="24" font-weight="400"
+    fill="#64748B">3 lines of code.</text>
+
+  <!-- Separator line — precision engineering detail -->
+  <line x1="78" y1="322" x2="320" y2="322" stroke="#1E2535" stroke-width="1"/>
+
+  <!-- Language ecosystem badges — technical breadth -->
+  <text x="78" y="350"
+    font-family="'Inter','Helvetica Neue',sans-serif"
+    font-size="11" font-weight="500" letter-spacing="1.5"
+    fill="#3D4A6B">SUPPORTED</text>
+
+  <!-- TS badge -->
+  <rect x="78" y="368" width="52" height="28" rx="4" fill="#0F1628" stroke="#1E2D48" stroke-width="1"/>
+  <text x="104" y="387" font-family="'JetBrains Mono','Courier New',monospace" font-size="12" font-weight="700" fill="#7B9FFF" text-anchor="middle">TS</text>
+
+  <!-- PY badge -->
+  <rect x="138" y="368" width="52" height="28" rx="4" fill="#0F1628" stroke="#1E2D48" stroke-width="1"/>
+  <text x="164" y="387" font-family="'JetBrains Mono','Courier New',monospace" font-size="12" font-weight="700" fill="#7B9FFF" text-anchor="middle">PY</text>
+
+  <!-- GO badge -->
+  <rect x="198" y="368" width="52" height="28" rx="4" fill="#0F1628" stroke="#1E2D48" stroke-width="1"/>
+  <text x="224" y="387" font-family="'JetBrains Mono','Courier New',monospace" font-size="12" font-weight="700" fill="#7B9FFF" text-anchor="middle">GO</text>
+
+  <!-- RS badge -->
+  <rect x="258" y="368" width="52" height="28" rx="4" fill="#0F1628" stroke="#1E2D48" stroke-width="1"/>
+  <text x="284" y="387" font-family="'JetBrains Mono','Courier New',monospace" font-size="12" font-weight="700" fill="#7B9FFF" text-anchor="middle">RS</text>
+
+  <!-- Key stat — the number that matters -->
+  <text x="78" y="460"
+    font-family="'Inter','Helvetica Neue',sans-serif"
+    font-size="40" font-weight="800"
+    fill="#FFFFFF">0.3<tspan font-size="22" font-weight="400" fill="#64748B" dy="0">%</tspan></text>
+  <text x="78" y="490"
+    font-family="'Inter','Helvetica Neue',sans-serif"
+    font-size="13" font-weight="400" letter-spacing="0.5"
+    fill="#3D4A6B">flat fee · no minimums · no chargebacks</text>
+
+  <!-- github -->
+  <text x="78" y="555"
+    font-family="'JetBrains Mono','Courier New',monospace"
+    font-size="12" font-weight="400"
+    fill="#3D4A6B">github.com/ShinyDapps/l402-kit</text>
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       RIGHT SECTION — Terminal / Code Demo
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <!-- Terminal window -->
+  <rect x="640" y="46" width="520" height="494" rx="10"
+    fill="#0A0B15" stroke="#1A2040" stroke-width="1"/>
+
+  <!-- Window chrome / title bar -->
+  <!-- Traffic lights -->
+  <circle cx="666" cy="76" r="6" fill="#FF5F57"/>
+  <circle cx="686" cy="76" r="6" fill="#FEBC2E"/>
+  <circle cx="706" cy="76" r="6" fill="#28C840"/>
+  <!-- Title -->
+  <text x="900" y="80"
+    font-family="'Inter','Helvetica Neue',sans-serif"
+    font-size="12" fill="#2E3A50" text-anchor="middle">bash</text>
+  <!-- Separator -->
+  <line x1="640" y1="92" x2="1160" y2="92" stroke="#14192E" stroke-width="1"/>
+
+  <!-- ── Code content ────────────────────────────── -->
+  <!-- Font stack: JetBrains Mono for terminal precision -->
+  <!-- Line height: 26px from y=118 -->
+
+  <!-- Line 1: install -->
+  <text x="660" y="125"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14" fill="#10B981">$ </text>
+  <text x="678" y="125"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14" fill="#CDD6F4">npm install l402-kit</text>
+
+  <!-- Line 2: install result -->
+  <text x="660" y="149"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="13" fill="#3D4A6B">  added 3 packages in 0.9s</text>
+
+  <!-- Line 3: blank -->
+
+  <!-- Line 4: import -->
+  <text x="660" y="193"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14">
+    <tspan fill="#89DCEB">import</tspan>
+    <tspan fill="#CDD6F4"> { </tspan>
+    <tspan fill="#F7931A">l402</tspan>
+    <tspan fill="#CDD6F4">, </tspan>
+    <tspan fill="#F7931A">BlinkProvider</tspan>
+    <tspan fill="#CDD6F4"> } </tspan>
+    <tspan fill="#89DCEB">from</tspan>
+    <tspan fill="#A6E3A1"> 'l402-kit'</tspan>
+  </text>
+
+  <!-- Line 5: blank -->
+
+  <!-- Line 6: app.use -->
+  <text x="660" y="237"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14" fill="#CDD6F4">app.<tspan fill="#F7931A">use</tspan>(<tspan fill="#F7931A">l402</tspan>({</text>
+
+  <!-- Line 7: provider -->
+  <text x="660" y="263"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14" fill="#CDD6F4">  provider: <tspan fill="#89DCEB">new</tspan> <tspan fill="#F7931A">BlinkProvider</tspan>(key),</text>
+
+  <!-- Line 8: price -->
+  <text x="660" y="289"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14" fill="#CDD6F4">  priceSats: <tspan fill="#FAB387">21</tspan>,</text>
+
+  <!-- Line 9: close -->
+  <text x="660" y="315"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14" fill="#CDD6F4">}))</text>
+
+  <!-- Thin separator inside terminal -->
+  <line x1="660" y1="335" x2="1140" y2="335" stroke="#141929" stroke-width="1"/>
+
+  <!-- Comment: first request -->
+  <text x="660" y="360"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="13" fill="#3D4A6B">// first request — no payment</text>
+
+  <!-- 402 response line -->
+  <text x="660" y="390"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14">
+    <tspan fill="#EF4444">← 402</tspan>
+    <tspan fill="#64748B">  Payment Required</tspan>
+  </text>
+  <!-- invoice badge -->
+  <rect x="870" y="374" width="22" height="22" rx="3" fill="#1A1200"/>
+  <text x="881" y="389"
+    font-family="'JetBrains Mono','Courier New',monospace"
+    font-size="13" fill="#F7931A" text-anchor="middle">⚡</text>
+
+  <!-- Comment: after payment -->
+  <text x="660" y="424"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="13" fill="#3D4A6B">// wallet pays invoice</text>
+
+  <!-- 200 OK response line -->
+  <text x="660" y="454"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14">
+    <tspan fill="#10B981">→ 200</tspan>
+    <tspan fill="#64748B">  OK  </tspan>
+    <tspan fill="#A6E3A1">{ data: "₿ paid 21 sats" }</tspan>
+  </text>
+
+  <!-- Terminal cursor -->
+  <text x="660" y="497"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="14" fill="#10B981">$ <tspan fill="#CDD6F4" opacity="0.3">▋</tspan></text>
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       BOTTOM RAIL — Authority strip
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <line x1="0" y1="593" x2="1200" y2="593" stroke="#F7931A" stroke-width="0.8" opacity="0.25"/>
+  <text
+    x="600" y="616"
+    font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+    font-size="11" letter-spacing="1"
+    fill="#2E3A50" text-anchor="middle">
+    Bitcoin Lightning  ·  Open Source  ·  MIT License  ·  npm  ·  PyPI  ·  crates.io  ·  pkg.go.dev
+  </text>
+
+</svg>

@@ -50,7 +50,7 @@ push(output(NL, t));
 t += 0.2;
 push(output(
   `${GRAY}added 4 packages in 1.2s${RESET}${NL}` +
-  `${GREEN}✓${RESET} installed ${BOLD}l402-kit@0.3.4${RESET}${NL}`,
+  `${GREEN}✓${RESET} installed ${BOLD}l402-kit@0.9.2${RESET}${NL}`,
   t
 ));
 t += 1.2;
@@ -126,8 +126,8 @@ t += 1.0;
 // ── Scene 6: tagline ─────────────────────────────────────────────────────────
 push(output(
   NL +
-  `${BOLD}${ORANGE}  ⚡ l402-kit${RESET} — Bitcoin Lightning pay-per-call in 3 lines${NL}` +
-  `${GRAY}  npm install l402-kit  •  pip install l402kit${RESET}${NL}` +
+  `${BOLD}${ORANGE}  ⚡ l402-kit${RESET} ${GRAY}v0.9.2${RESET} — Bitcoin Lightning pay-per-call in 3 lines${NL}` +
+  `${GRAY}  npm i l402-kit  •  pip install l402kit  •  cargo add l402kit  •  go get .../go${RESET}${NL}` +
   `${GRAY}  github.com/ShinyDapps/l402-kit${RESET}${NL}`,
   t
 ));
@@ -138,7 +138,7 @@ const header = JSON.stringify({
   version: 2,
   width: 82,
   height: 25,
-  timestamp: 1745193600,
+  timestamp: 1745193600,  // 2026-04-21
   title: "l402-kit demo — Lightning pay-per-call in 3 lines",
 });
 
