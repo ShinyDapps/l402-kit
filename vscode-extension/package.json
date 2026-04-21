@@ -1,8 +1,8 @@
-{
+﻿{
   "name": "shinydapps-l402",
-  "displayName": "ShinyDapps ⚡ Lightning Payments",
+  "displayName": "ShinyDapps âš¡ Lightning Payments",
   "description": "Monitor your Bitcoin Lightning API payments in real-time inside VS Code",
-  "version": "0.9.2",
+  "version": "1.0.0",
   "publisher": "ShinyDapps",
   "icon": "icon.png",
   "engines": { "vscode": "^1.85.0" },
@@ -22,16 +22,16 @@
     "pago ia", "agente de inteligencia artificial", "paiement ia", "agent ia",
     "pagamento intelligenza artificiale", "agente intelligenza artificiale",
     "bitcoin italiano", "bitcoin arabo", "bitcoin arabic",
-    "بيتكوين", "بي تي سي", "كريبتو", "بلوكتشين", "مدفوعات", "عملة رقمية",
-    "وكيل ذكاء اصطناعي", "دفع بالذكاء الاصطناعي",
+    "Ø¨ÙŠØªÙƒÙˆÙŠÙ†", "Ø¨ÙŠ ØªÙŠ Ø³ÙŠ", "ÙƒØ±ÙŠØ¨ØªÙˆ", "Ø¨Ù„ÙˆÙƒØªØ´ÙŠÙ†", "Ù…Ø¯ÙÙˆØ¹Ø§Øª", "Ø¹Ù…Ù„Ø© Ø±Ù‚Ù…ÙŠØ©",
+    "ÙˆÙƒÙŠÙ„ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ", "Ø¯ÙØ¹ Ø¨Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ",
     "bitcoin", "pagamento bitcoin", "rete lightning", "criptovaluta",
     "moneta digitale", "pagamento automatico", "agente automatico",
-    "비트코인", "라이트닝", "암호화폐", "블록체인",
-    "比特币", "闪电网络", "加密货币", "区块链", "人工智能支付",
-    "ビットコイン", "ライトニング", "暗号通貨", "AIエージェント",
-    "bitcoin zahlung", "kryptowährung", "blitzkanal",
-    "paiement bitcoin", "cryptomonnaie", "réseau lightning",
-    "оплата биткоин", "криптовалюта", "молниеносная сеть"
+    "ë¹„íŠ¸ì½”ì¸", "ë¼ì´íŠ¸ë‹", "ì•”í˜¸í™”í", "ë¸”ë¡ì²´ì¸",
+    "æ¯”ç‰¹å¸", "é—ªç”µç½‘ç»œ", "åŠ å¯†è´§å¸", "åŒºå—é“¾", "äººå·¥æ™ºèƒ½æ”¯ä»˜",
+    "ãƒ“ãƒƒãƒˆã‚³ã‚¤ãƒ³", "ãƒ©ã‚¤ãƒˆãƒ‹ãƒ³ã‚°", "æš—å·é€šè²¨", "AIã‚¨ãƒ¼ã‚¸ã‚§ãƒ³ãƒˆ",
+    "bitcoin zahlung", "kryptowÃ¤hrung", "blitzkanal",
+    "paiement bitcoin", "cryptomonnaie", "rÃ©seau lightning",
+    "Ð¾Ð¿Ð»Ð°Ñ‚Ð° Ð±Ð¸Ñ‚ÐºÐ¾Ð¸Ð½", "ÐºÑ€Ð¸Ð¿Ñ‚Ð¾Ð²Ð°Ð»ÑŽÑ‚Ð°", "Ð¼Ð¾Ð»Ð½Ð¸ÐµÐ½Ð¾ÑÐ½Ð°Ñ ÑÐµÑ‚ÑŒ"
   ],
   "repository": { "type": "git", "url": "https://github.com/ShinyDapps/l402-kit" },
   "activationEvents": ["onStartupFinished"],
@@ -61,7 +61,7 @@
       "activitybar": [
         {
           "id": "shinydapps",
-          "title": "ShinyDapps — Lightning Payments",
+          "title": "ShinyDapps â€” Lightning Payments",
           "icon": "lightning.svg"
         }
       ]
@@ -70,7 +70,7 @@
       "shinydapps": [
         {
           "id": "shinydapps.payments",
-          "name": "⚡ Payments",
+          "name": "âš¡ Payments",
           "type": "webview"
         }
       ]
