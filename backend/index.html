@@ -178,8 +178,9 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <h1>Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.</h1>
   <p>No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.</p>
   <div class="hero-actions">
-    <a href="https://l402kit.com/docs" class="btn-primary">Read the docs →</a>
-    <a href="https://github.com/ShinyDapps/l402-kit" class="btn-secondary">View on GitHub</a>
+    <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:14px;letter-spacing:-0.3px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:12px;opacity:.7">copy</span></button>
+    <a href="https://l402kit.com/docs" class="btn-secondary">Read the docs →</a>
+    <a href="https://github.com/ShinyDapps/l402-kit" class="btn-secondary">GitHub</a>
   </div>
   <div class="hero-langs">
     Docs in:
@@ -597,6 +598,13 @@ app = <span class="c-fn">FastAPI</span>()
 </footer>
 
 <script>
+function copyInstall() {
+  navigator.clipboard.writeText('npm install l402-kit').then(() => {
+    const icon = document.getElementById('installIcon');
+    icon.textContent = '✓ copied';
+    setTimeout(() => { icon.textContent = 'copy'; }, 2000);
+  });
+}
 function showTab(lang) {
   document.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
