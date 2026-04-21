@@ -6,10 +6,10 @@ L402 (HTTP 402 + Lightning Network) middleware for Rust. Supports **axum**.
 
 ```toml
 [dependencies]
-l402kit = { git = "https://github.com/shinydapps/l402-kit", version = "0.1.0" }
+l402kit = "0.1.0"
 ```
 
-> Will be published to [crates.io](https://crates.io/crates/l402kit) soon.
+Published on [crates.io](https://crates.io/crates/l402kit).
 
 ## Usage (axum)
 

@@ -35,6 +35,11 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .nav-links { display: flex; gap: 24px; align-items: center; font-size: 14px; color: var(--muted); }
 .nav-links a { color: var(--muted); }
 .nav-links a:hover { color: var(--text); text-decoration: none; }
+.lang-picker { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; background: #101010; border: 1px solid #252525; border-radius: 8px; }
+.lang-picker span { font-size: 12px; color: #888; }
+.lang-picker select { background: transparent; color: #ddd; border: none; outline: none; font-size: 13px; cursor: pointer; font-weight: 600; }
+.wallet-pill { background: #151515; border: 1px solid #2d2d2d; color: #ddd !important; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.wallet-pill:hover { border-color: #444; color: #fff !important; text-decoration: none !important; }
 .nav-cta { background: var(--orange); color: #000 !important; padding: 8px 18px; border-radius: 8px; font-weight: 600; }
 .nav-cta:hover { background: #e8841a; text-decoration: none !important; }
 
@@ -49,9 +54,30 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .btn-primary:hover { background: #e8841a; text-decoration: none; }
 .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 15px; }
 .btn-secondary:hover { border-color: #333; text-decoration: none; }
-.hero-langs { margin-top: 32px; font-size: 13px; color: var(--muted); }
-.hero-langs a { color: var(--muted); margin: 0 6px; }
-.hero-langs a:hover { color: var(--orange); text-decoration: none; }
+.language-console { margin-top: 28px; max-width: 760px; margin-left: auto; margin-right: auto; background: linear-gradient(180deg, #0f0f0f, #0b0b0b); border: 1px solid #252525; border-radius: 14px; padding: 16px; text-align: left; }
+.language-console-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.language-console-label { font-size: 13px; color: #d0d0d0; font-weight: 600; }
+.language-console-hint { font-size: 12px; color: #7a7a7a; }
+.language-console-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.language-console select { width: 100%; background: #0a0a0a; color: #e7e7e7; border: 1px solid #2b2b2b; border-radius: 10px; padding: 11px 12px; font-size: 14px; font-weight: 600; outline: none; }
+.language-console select:focus { border-color: #f7931a66; }
+.language-console .docs-open-btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px 14px; border-radius: 10px; border: 1px solid #2b2b2b; background: #151515; color: #f2f2f2; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.language-console .docs-open-btn:hover { border-color: var(--orange); text-decoration: none; }
+
+/* WALLET CONNECT */
+.wallet-connect { max-width: 860px; margin: 0 auto 80px; padding: 0 24px; }
+.wallet-connect h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+.wallet-connect .sub { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+.wallet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; }
+.wallet-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+.wallet-card h3 { font-size: 16px; margin-bottom: 10px; }
+.wallet-card p { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.wallet-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.wallet-input { width: 100%; padding: 11px 12px; background: #0a0a0a; border: 1px solid #282828; border-radius: 8px; color: var(--text); font-size: 14px; outline: none; }
+.wallet-input:focus { border-color: #f7931a66; }
+.wallet-btn { padding: 10px 14px; border-radius: 8px; border: 1px solid #2c2c2c; background: #181818; color: #e7e7e7; font-size: 13px; font-weight: 600; cursor: pointer; }
+.wallet-btn.primary { border-color: transparent; background: var(--orange); color: #000; }
+.wallet-status { font-size: 12px; color: #888; min-height: 16px; margin-top: 10px; word-break: break-word; }
 
 /* CODE DEMO */
 .demo { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
@@ -152,6 +178,10 @@ footer { border-top: 1px solid var(--border); padding: 32px 40px; display: flex;
 footer a { color: var(--muted); }
 footer a:hover { color: var(--orange); text-decoration: none; }
 @media (max-width: 700px) {
+  nav { padding: 14px 12px; align-items: flex-start; gap: 10px; }
+  .nav-links { gap: 10px; flex-wrap: wrap; justify-content: flex-end; font-size: 12px; }
+  .lang-picker { padding: 6px 8px; }
+  .language-console-row { grid-template-columns: 1fr; }
   #extension > div { grid-template-columns: 1fr !important; }
   #extension > div > div:last-child { order: -1; }
 }
@@ -162,38 +192,89 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 <nav>
   <div class="nav-logo">⚡ <span>l402-kit</span> <small style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px">by ShinyDapps</small></div>
   <div class="nav-links">
-    <a href="#how">How it works</a>
+    <a href="#how" data-i18n="navHow">How it works</a>
     <a href="#vs-x402">vs x402</a>
     <a href="#extension">Extension</a>
-    <a href="#pricing">Pricing</a>
-    <a href="https://l402kit.vercel.app/docs">Docs</a>
+    <a href="#pricing" data-i18n="navPricing">Pricing</a>
+    <a href="https://l402kit.vercel.app/docs" id="navDocsLink" data-docs-link="1">Docs</a>
     <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
     <a href="dashboard.html">Dashboard</a>
-    <a href="https://l402kit.vercel.app/docs" class="nav-cta">Get started</a>
+    <a href="#wallet-connect" class="wallet-pill" data-i18n="navWallet">Connect wallet</a>
+    <label class="lang-picker" for="languageSelect">
+      <span>🌐</span>
+      <select id="languageSelect" aria-label="Language selector">
+        <option value="en">EN</option>
+        <option value="pt">PT</option>
+        <option value="es">ES</option>
+        <option value="fr">FR</option>
+        <option value="de">DE</option>
+        <option value="it">IT</option>
+        <option value="ja">JA</option>
+        <option value="ru">RU</option>
+        <option value="zh">ZH</option>
+        <option value="hi">HI</option>
+        <option value="ar">AR</option>
+      </select>
+    </label>
+    <a href="https://l402kit.vercel.app/docs" class="nav-cta" id="navStartLink" data-docs-link="1" data-i18n="navStart">Get started</a>
   </div>
 </nav>
 
 <section class="hero">
   <div class="hero-badge">⚡ <strong style="color:var(--orange)">l402-kit</strong> &nbsp;·&nbsp; Bitcoin Lightning · TypeScript · Python · Go · Rust · v0.9.2 · <a href="https://github.com/ShinyDapps/l402-kit" style="color:inherit">Open Source</a></div>
-  <h1>Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.</h1>
-  <p>No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.</p>
+  <h1 id="heroTitle">Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.</h1>
+  <p id="heroSubtitle">No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.</p>
   <div class="hero-actions">
     <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:14px;letter-spacing:-0.3px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:12px;opacity:.7">copy</span></button>
-    <a href="https://l402kit.vercel.app/docs" class="btn-secondary">Read the docs →</a>
+    <a href="https://l402kit.vercel.app/docs" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Read the docs →</a>
     <a href="https://github.com/ShinyDapps/l402-kit" class="btn-secondary">GitHub</a>
   </div>
-  <div class="hero-langs">
-    Docs in:
-    <a href="https://l402kit.vercel.app/docs">🇺🇸 EN</a>
-    <a href="https://l402kit.vercel.app/docs/pt/introduction">🇧🇷 PT</a>
-    <a href="https://l402kit.vercel.app/docs/es/introduction">🇪🇸 ES</a>
-    <a href="https://l402kit.vercel.app/docs/zh/introduction">🇨🇳 ZH</a>
-    <a href="https://l402kit.vercel.app/docs/hi/introduction">🇮🇳 HI</a>
-    <a href="https://l402kit.vercel.app/docs/ar/introduction">🇸🇦 AR</a>
-    <a href="https://l402kit.vercel.app/docs/fr/introduction">🇫🇷 FR</a>
-    <a href="https://l402kit.vercel.app/docs/de/introduction">🇩🇪 DE</a>
-    <a href="https://l402kit.vercel.app/docs/ru/introduction">🇷🇺 RU</a>
-    <a href="https://l402kit.vercel.app/docs/ja/introduction">🇯🇵 JA</a>
+  <div class="language-console" id="languageConsole">
+    <div class="language-console-head">
+      <div class="language-console-label" id="langConsoleLabel">Language</div>
+      <div class="language-console-hint" id="langConsoleHint">Applies to the entire page</div>
+    </div>
+    <div class="language-console-row">
+      <select id="heroLanguageSelect" aria-label="Page language selector">
+        <option value="en">English (EN)</option>
+        <option value="pt">Portugues (PT)</option>
+        <option value="es">Espanol (ES)</option>
+        <option value="fr">Francais (FR)</option>
+        <option value="de">Deutsch (DE)</option>
+        <option value="it">Italiano (IT)</option>
+        <option value="ja">日本語 (JA)</option>
+        <option value="ru">Русский (RU)</option>
+        <option value="zh">中文 (ZH)</option>
+        <option value="hi">हिन्दी (HI)</option>
+        <option value="ar">العربية (AR)</option>
+      </select>
+      <a href="https://l402kit.vercel.app/docs" id="localizedDocsBtn" class="docs-open-btn" data-docs-link="1">Open docs in English →</a>
+    </div>
+  </div>
+</section>
+
+<section class="wallet-connect" id="wallet-connect">
+  <h2 id="walletTitle">Connect your wallet</h2>
+  <p class="sub" id="walletSub">Use Lightning for payments, and optionally connect an EVM wallet (MetaMask-compatible) for identity and app flows.</p>
+  <div class="wallet-grid">
+    <div class="wallet-card">
+      <h3 id="walletEvmTitle">EVM wallet (MetaMask, Rabby, OKX, etc.)</h3>
+      <p id="walletEvmDesc">Optional for dApp identity. L402 payments stay on Bitcoin Lightning.</p>
+      <div class="wallet-row">
+        <button class="wallet-btn primary" onclick="connectEvmWallet()" id="evmConnectBtn">Connect EVM wallet</button>
+      </div>
+      <div class="wallet-status" id="evmWalletStatus">Not connected</div>
+    </div>
+    <div class="wallet-card">
+      <h3 id="walletLnTitle">Lightning wallet</h3>
+      <p id="walletLnDesc">Set your Lightning Address to receive sats via l402-kit (Blink, Alby, Wallet of Satoshi and others).</p>
+      <input class="wallet-input" id="lnAddressInput" type="text" placeholder="you@blink.sv" />
+      <div class="wallet-row" style="margin-top:10px">
+        <button class="wallet-btn primary" onclick="saveLightningAddress()" id="lnSaveBtn">Save address</button>
+        <button class="wallet-btn" onclick="clearLightningAddress()" id="lnClearBtn">Clear</button>
+      </div>
+      <div class="wallet-status" id="lnWalletStatus">No Lightning address saved</div>
+    </div>
   </div>
 </section>
 
@@ -581,7 +662,7 @@ app = <span class="c-fn">FastAPI</span>()
     <a href="https://npmjs.com/package/l402-kit" class="btn-primary">npm install l402-kit</a>
     <a href="https://pypi.org/project/l402kit" class="btn-secondary">pip install l402kit</a>
     <a href="https://pkg.go.dev/github.com/shinydapps/l402-kit/go" class="btn-secondary">go get</a>
-    <a href="https://github.com/ShinyDapps/l402-kit/tree/main/rust" class="btn-secondary">cargo (git)</a>
+    <a href="https://crates.io/crates/l402kit" class="btn-secondary">cargo add l402kit</a>
   </div>
   <p style="font-size:13px;color:var(--muted)">or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a></p>
 </section>
@@ -590,7 +671,7 @@ app = <span class="c-fn">FastAPI</span>()
   <div>⚡ <strong>l402-kit</strong> &nbsp;·&nbsp; by <a href="https://github.com/ThiagoDataEngineer" style="color:var(--muted)">ShinyDapps</a> · MIT License</div>
   <div style="display:flex;gap:20px">
     <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
-    <a href="https://l402kit.vercel.app/docs">Docs</a>
+    <a href="https://l402kit.vercel.app/docs" id="footerDocsLink" data-docs-link="1">Docs</a>
     <a href="https://npmjs.com/package/l402-kit">npm</a>
     <a href="https://pypi.org/project/l402kit">PyPI</a>
     <a href="dashboard.html">Dashboard</a>
@@ -605,6 +686,439 @@ function copyInstall() {
     setTimeout(() => { icon.textContent = 'copy'; }, 2000);
   });
 }
+
+const I18N = {
+  en: {
+    navHow: 'How it works', navPricing: 'Pricing', navWallet: 'Connect wallet', navStart: 'Get started',
+    heroTitle: 'Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.',
+    heroSubtitle: 'No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.',
+    heroReadDocs: 'Read the docs →',
+    walletTitle: 'Connect your wallet',
+    walletSub: 'Use Lightning for payments, and optionally connect an EVM wallet (MetaMask-compatible) for identity and app flows.',
+    walletEvmTitle: 'EVM wallet (MetaMask, Rabby, OKX, etc.)',
+    walletEvmDesc: 'Optional for dApp identity. L402 payments stay on Bitcoin Lightning.',
+    walletLnTitle: 'Lightning wallet',
+    walletLnDesc: 'Set your Lightning Address to receive sats via l402-kit (Blink, Alby, Wallet of Satoshi and others).',
+    evmConnectBtn: 'Connect EVM wallet', lnSaveBtn: 'Save address', lnClearBtn: 'Clear',
+    langConsoleLabel: 'Language', langConsoleHint: 'Applies to the entire page'
+  },
+  pt: {
+    navHow: 'Como funciona', navPricing: 'Precos', navWallet: 'Conectar wallet', navStart: 'Comecar',
+    heroTitle: 'Monetize sua API<br>com <span>Bitcoin Lightning</span>.<br>3 linhas de codigo.',
+    heroSubtitle: 'Sem cartao. Sem banco. Sem chargeback. Sem minimo. Liquida em menos de 1 segundo.',
+    heroReadDocs: 'Ler docs →',
+    walletTitle: 'Conecte sua wallet',
+    walletSub: 'Use Lightning para pagamentos, e opcionalmente conecte uma wallet EVM (MetaMask e similares) para identidade.',
+    walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX etc.)',
+    walletEvmDesc: 'Opcional para identidade em dApps. O pagamento L402 continua no Bitcoin Lightning.',
+    walletLnTitle: 'Wallet Lightning',
+    walletLnDesc: 'Defina seu Lightning Address para receber sats via l402-kit (Blink, Alby, Wallet of Satoshi e outras).',
+    evmConnectBtn: 'Conectar wallet EVM', lnSaveBtn: 'Salvar endereco', lnClearBtn: 'Limpar',
+    langConsoleLabel: 'Idioma', langConsoleHint: 'Aplica na pagina inteira'
+  },
+  es: { navHow: 'Como funciona', navPricing: 'Precios', navWallet: 'Conectar wallet', navStart: 'Empezar', heroReadDocs: 'Leer docs →' },
+  fr: { navHow: 'Comment ca marche', navPricing: 'Tarifs', navWallet: 'Connecter wallet', navStart: 'Commencer', heroReadDocs: 'Lire docs →' },
+  de: { navHow: 'So funktioniert es', navPricing: 'Preise', navWallet: 'Wallet verbinden', navStart: 'Loslegen', heroReadDocs: 'Docs lesen →' },
+  it: { navHow: 'Come funziona', navPricing: 'Prezzi', navWallet: 'Connetti wallet', navStart: 'Inizia', heroReadDocs: 'Leggi docs →' },
+  ja: { navHow: '仕組み', navPricing: '料金', navWallet: 'ウォレット接続', navStart: '開始', heroReadDocs: 'ドキュメント →' },
+  ru: { navHow: 'Как это работает', navPricing: 'Тарифы', navWallet: 'Подключить кошелек', navStart: 'Начать', heroReadDocs: 'Документация →' },
+  zh: { navHow: '工作原理', navPricing: '定价', navWallet: '连接钱包', navStart: '开始使用', heroReadDocs: '查看文档 →' },
+  hi: { navHow: 'कैसे काम करता है', navPricing: 'प्राइसिंग', navWallet: 'वॉलेट कनेक्ट करें', navStart: 'शुरू करें', heroReadDocs: 'डॉक्स पढ़ें →' },
+  ar: { navHow: 'كيف يعمل', navPricing: 'الاسعار', navWallet: 'ربط المحفظة', navStart: 'ابدأ', heroReadDocs: 'اقرا التوثيق →' }
+};
+
+const LANG_INFO = {
+  en: { docs: 'https://l402kit.vercel.app/docs', nameEn: 'English', namePt: 'Ingles' },
+  pt: { docs: 'https://l402kit.vercel.app/docs/pt/introduction', nameEn: 'Portuguese', namePt: 'Portugues' },
+  es: { docs: 'https://l402kit.vercel.app/docs/es/introduction', nameEn: 'Spanish', namePt: 'Espanhol' },
+  fr: { docs: 'https://l402kit.vercel.app/docs/fr/introduction', nameEn: 'French', namePt: 'Frances' },
+  de: { docs: 'https://l402kit.vercel.app/docs/de/introduction', nameEn: 'German', namePt: 'Alemao' },
+  it: { docs: 'https://l402kit.vercel.app/docs/it/introduction', nameEn: 'Italian', namePt: 'Italiano' },
+  ja: { docs: 'https://l402kit.vercel.app/docs/ja/introduction', nameEn: 'Japanese', namePt: 'Japones' },
+  ru: { docs: 'https://l402kit.vercel.app/docs/ru/introduction', nameEn: 'Russian', namePt: 'Russo' },
+  zh: { docs: 'https://l402kit.vercel.app/docs/zh/introduction', nameEn: 'Chinese', namePt: 'Chines' },
+  hi: { docs: 'https://l402kit.vercel.app/docs/hi/introduction', nameEn: 'Hindi', namePt: 'Hindi' },
+  ar: { docs: 'https://l402kit.vercel.app/docs/ar/introduction', nameEn: 'Arabic', namePt: 'Arabe' }
+};
+
+function syncDocsLinks(lang) {
+  const key = LANG_INFO[lang] ? lang : 'en';
+  const docsUrl = LANG_INFO[key].docs;
+  const uiLang = localStorage.getItem('l402_lang') || 'en';
+  const isPt = uiLang === 'pt';
+  const btn = document.getElementById('localizedDocsBtn');
+  document.querySelectorAll('[data-docs-link="1"]').forEach((a) => { a.href = docsUrl; });
+  if (btn) {
+    const label = isPt ? 'Abrir docs em ' : 'Open docs in ';
+    const langName = isPt ? LANG_INFO[key].namePt : LANG_INFO[key].nameEn;
+    btn.textContent = `${label}${langName} →`;
+  }
+}
+
+function applyLanguage(lang) {
+  const fallback = I18N.en;
+  const dict = I18N[lang] || fallback;
+  const merged = { ...fallback, ...dict };
+  Object.keys(merged).forEach((key) => {
+    const node = document.querySelector(`[data-i18n="${key}"]`) || document.getElementById(key);
+    if (!node) return;
+    if (key === 'heroTitle') node.innerHTML = merged[key];
+    else node.textContent = merged[key];
+  });
+  applyFullPageCopy(lang);
+  syncDocsLinks(lang);
+  localStorage.setItem('l402_lang', lang);
+}
+
+const FULL_PAGE_COPY = {
+  en: {
+    '.nav-links a[href="#vs-x402"]': 'vs x402',
+    '.nav-links a[href="#extension"]': 'Extension',
+    '.nav-links a[href="https://l402kit.vercel.app/docs"]:not(.nav-cta)': 'Docs',
+    '.nav-links a[href="https://github.com/ShinyDapps/l402-kit"]': 'GitHub',
+    '.nav-links a[href="dashboard.html"]': 'Dashboard',
+
+    '.stats-bar .stat-item:nth-child(1) .stat-label': 'Payments logged',
+    '.stats-bar .stat-item:nth-child(2) .stat-label': 'GitHub stars',
+    '.stats-bar .stat-item:nth-child(3) .stat-label': 'npm downloads/wk',
+    '.stats-bar .stat-item:nth-child(4) .stat-label': 'Languages supported',
+    '.stats-bar .stat-item:nth-child(5) .stat-label': 'Settlement time',
+    '.stats-bar .stat-item:nth-child(6) .stat-label': 'Countries blocked',
+
+    '.flow h2': 'How it works',
+    '.flow-step:nth-child(1) .step-title': 'Client calls API',
+    '.flow-step:nth-child(1) .step-desc': 'GET /premium',
+    '.flow-step:nth-child(2) .step-title': '402 + Invoice',
+    '.flow-step:nth-child(2) .step-desc': 'BOLT11 Lightning invoice returned',
+    '.flow-step:nth-child(3) .step-title': 'Client pays',
+    '.flow-step:nth-child(3) .step-desc': 'Any Lightning wallet, <1 second',
+    '.flow-step:nth-child(4) .step-title': 'Proof verified',
+    '.flow-step:nth-child(4) .step-desc': 'SHA256(preimage) == hash',
+    '.flow-step:nth-child(5) .step-title': '200 OK + data',
+    '.flow-step:nth-child(5) .step-desc': 'You get 99.7% of every sat',
+
+    '.compare:not(#vs-x402) h2': 'Why not Stripe?',
+    '.compare:not(#vs-x402) tr:nth-child(1) th:nth-child(2)': 'Stripe',
+    '.compare:not(#vs-x402) tr:nth-child(1) th:nth-child(3)': 'PayPal',
+    '.compare:not(#vs-x402) tr:nth-child(1) th:nth-child(4)': 'l402-kit ⚡',
+
+    '#vs-x402 h2': 'Why not x402 <span style="font-size:16px;font-weight:400;color:var(--muted)">(Coinbase)</span>?',
+    '#vs-x402 > p': 'x402 settles in USDC on Base chain. l402-kit settles in Bitcoin Lightning.',
+
+    '.features h2': 'Everything you need',
+    '.usecases h2': 'What will you build?',
+
+    '.pricing h2': 'Simple pricing',
+    '.pricing-sub': 'Pay with Bitcoin Lightning. No credit card. No account. Instant.',
+
+    '.faq h2': 'Common questions',
+
+    '#waitlist h2': 'Stay in the loop',
+    '#waitlist > p': 'Get notified about major releases, new providers, and security patches.',
+    '#waitlistBtn': 'Notify me ⚡',
+
+    '.cta h2': 'Start in 2 minutes',
+    '.cta > p': 'No account. No credit card. Just Bitcoin.',
+    '.cta .btn-secondary[href="https://crates.io/crates/l402kit"]': 'cargo add l402kit',
+    '.cta p:last-child': 'or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a>'
+  },
+  pt: {
+    '.nav-links a[href="#vs-x402"]': 'vs x402',
+    '.nav-links a[href="#extension"]': 'Extensao',
+    '.nav-links a[href="https://l402kit.vercel.app/docs"]:not(.nav-cta)': 'Docs',
+    '.nav-links a[href="https://github.com/ShinyDapps/l402-kit"]': 'GitHub',
+    '.nav-links a[href="dashboard.html"]': 'Painel',
+
+    '.stats-bar .stat-item:nth-child(1) .stat-label': 'Pagamentos registrados',
+    '.stats-bar .stat-item:nth-child(2) .stat-label': 'Stars no GitHub',
+    '.stats-bar .stat-item:nth-child(3) .stat-label': 'Downloads npm/sem',
+    '.stats-bar .stat-item:nth-child(4) .stat-label': 'Linguagens suportadas',
+    '.stats-bar .stat-item:nth-child(5) .stat-label': 'Tempo de liquidacao',
+    '.stats-bar .stat-item:nth-child(6) .stat-label': 'Paises bloqueados',
+
+    '.flow h2': 'Como funciona',
+    '.flow-step:nth-child(1) .step-title': 'Cliente chama a API',
+    '.flow-step:nth-child(1) .step-desc': 'GET /premium',
+    '.flow-step:nth-child(2) .step-title': '402 + Fatura',
+    '.flow-step:nth-child(2) .step-desc': 'Retorna invoice Lightning BOLT11',
+    '.flow-step:nth-child(3) .step-title': 'Cliente paga',
+    '.flow-step:nth-child(3) .step-desc': 'Qualquer wallet Lightning, <1 segundo',
+    '.flow-step:nth-child(4) .step-title': 'Prova verificada',
+    '.flow-step:nth-child(4) .step-desc': 'SHA256(preimage) == hash',
+    '.flow-step:nth-child(5) .step-title': '200 OK + dados',
+    '.flow-step:nth-child(5) .step-desc': 'Voce recebe 99.7% de cada sat',
+
+    '.compare:not(#vs-x402) h2': 'Por que nao Stripe?',
+    '.compare:not(#vs-x402) tr:nth-child(1) th:nth-child(2)': 'Stripe',
+    '.compare:not(#vs-x402) tr:nth-child(1) th:nth-child(3)': 'PayPal',
+    '.compare:not(#vs-x402) tr:nth-child(1) th:nth-child(4)': 'l402-kit ⚡',
+
+    '#vs-x402 h2': 'Por que nao x402 <span style="font-size:16px;font-weight:400;color:var(--muted)">(Coinbase)</span>?',
+    '#vs-x402 > p': 'x402 liquida em USDC na Base. l402-kit liquida em Bitcoin Lightning.',
+
+    '.features h2': 'Tudo o que voce precisa',
+    '.usecases h2': 'O que voce vai construir?',
+
+    '.pricing h2': 'Precos simples',
+    '.pricing-sub': 'Pague com Bitcoin Lightning. Sem cartao. Sem conta. Instantaneo.',
+
+    '.faq h2': 'Perguntas comuns',
+
+    '#waitlist h2': 'Fique por dentro',
+    '#waitlist > p': 'Receba aviso de releases importantes, novos providers e patches de seguranca.',
+    '#waitlistBtn': 'Me avise ⚡',
+
+    '.cta h2': 'Comece em 2 minutos',
+    '.cta > p': 'Sem conta. Sem cartao. So Bitcoin.',
+    '.cta .btn-secondary[href="https://crates.io/crates/l402kit"]': 'cargo add l402kit',
+    '.cta p:last-child': 'ou <a href="https://l402kit.vercel.app/docs/pt/introduction">leia a documentacao &rarr;</a>'
+  }
+};
+
+function applyFullPageCopy(lang) {
+  const selected = FULL_PAGE_COPY[lang] ? lang : 'en';
+  const copy = FULL_PAGE_COPY[selected];
+  Object.entries(copy).forEach(([selector, text]) => {
+    const node = document.querySelector(selector);
+    if (!node) return;
+    if (selector === '#vs-x402 h2' || selector === '.cta p:last-child') {
+      node.innerHTML = text;
+      return;
+    }
+    node.textContent = text;
+  });
+
+  // Feature cards
+  const featureCards = document.querySelectorAll('.features-grid .feature-card');
+  if (featureCards.length === 6) {
+    const data = selected === 'pt'
+      ? [
+          ['Configuracao zero', 'Defina seu Lightning Address. Sem node, sem setup de wallet, sem arquivos de config.'],
+          ['4 linguagens', 'TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Mesmo protocolo em qualquer stack.'],
+          ['Nativo para agentes de IA', 'Maquinas pagando maquinas. Sem humano no meio. Perfeito para agentes autonomos.'],
+          ['Prova criptografica', 'SHA256(preimage) == paymentHash. Matematicamente infalsificavel. Sem chargeback.'],
+          ['Logs de pagamento', 'Cada pagamento e registrado no Supabase automaticamente. Veja quem pagou, quando e quanto.'],
+          ['Provider-agnostic', 'Blink, OpenNode, LNbits ou o seu provider. Implemente LightningProvider em poucas linhas.']
+        ]
+      : [
+          ['Zero setup', 'Just set your Lightning Address. No node, no wallet setup, no config files.'],
+          ['4 languages', 'TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Same protocol, any stack.'],
+          ['AI agent native', 'Machines can pay machines. No human in the loop. Perfect for autonomous AI agents.'],
+          ['Cryptographic proof', 'SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.'],
+          ['Payment logging', 'Every payment logged to Supabase automatically. See who paid, when, and how much.'],
+          ['Provider agnostic', 'Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.']
+        ];
+    featureCards.forEach((card, idx) => {
+      card.querySelector('.feature-title').textContent = data[idx][0];
+      card.querySelector('.feature-desc').textContent = data[idx][1];
+    });
+  }
+
+  // Use cases
+  const usecases = document.querySelectorAll('.usecase-grid .usecase-card');
+  if (usecases.length === 4) {
+    const uc = selected === 'pt'
+      ? [
+          ['IA / Agentes', 'Monetize sua ferramenta de IA', 'Cobre por chamada de inferencia. Wrappers de LLM, geracao de imagem, OCR APIs. Funciona com agentes LangChain e AutoGPT.'],
+          ['APIs de Dados', 'Dados por consulta', 'Clima, financas, esportes, mapas. Sem assinatura: usuarios pagam so pelo uso.'],
+          ['Conteudo', 'Endpoints com paywall', 'Artigos, pesquisas, PDFs, audio. Sem exigir criacao de conta do usuario.'],
+          ['Computacao', 'Billing serverless', 'Cobre por tarefas pesadas: render, transcricao, compressao. 100% por uso.']
+        ]
+      : [
+          ['AI / Agents', 'Monetize your AI tool', 'Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.'],
+          ['Data APIs', 'Pay-per-query data', 'Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.'],
+          ['Content', 'Paywalled endpoints', 'Articles, research papers, PDFs, audio. No account creation required from your users.'],
+          ['Compute', 'Serverless billing', 'Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.']
+        ];
+    usecases.forEach((card, idx) => {
+      card.querySelector('.usecase-tag').textContent = uc[idx][0];
+      card.querySelector('.usecase-title').textContent = uc[idx][1];
+      card.querySelector('.usecase-desc').textContent = uc[idx][2];
+    });
+  }
+
+  // Extension block
+  const ext = document.querySelector('#extension');
+  if (ext) {
+    const badge = ext.querySelector('div[style*="letter-spacing:1px"]');
+    const h2 = ext.querySelector('h2');
+    const p = ext.querySelector('p');
+    const lis = ext.querySelectorAll('li');
+    const links = ext.querySelectorAll('a');
+    if (selected === 'pt') {
+      if (badge) badge.textContent = 'EXTENSAO VS CODE';
+      if (h2) h2.textContent = 'Veja os sats entrando sem sair do editor';
+      if (p) p.textContent = 'Dashboard de pagamentos Lightning em tempo real dentro do VS Code. Veja cada pagamento no instante em que cai.';
+      if (lis[0]) lis[0].textContent = '✓ Feed de pagamentos ao vivo com valor e endpoint';
+      if (lis[1]) lis[1].textContent = '✓ Grafico de barras — 1D / 7D / 30D / 1Y / ALL';
+      if (lis[2]) lis[2].textContent = '✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)';
+      if (lis[3]) lis[3].textContent = '✓ Tema claro / escuro / automatico';
+      if (lis[4]) lis[4].textContent = '✓ Zero config — so definir seu Lightning address';
+      if (links[0]) links[0].textContent = 'Instalar gratis no Marketplace';
+      if (links[1]) links[1].textContent = 'Ver codigo-fonte →';
+    } else {
+      if (badge) badge.textContent = 'VS CODE EXTENSION';
+      if (h2) h2.textContent = 'Watch your sats roll in — without leaving your editor';
+      if (p) p.textContent = 'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart. Works in any language.';
+      if (lis[0]) lis[0].textContent = '✓ Live payment feed with amount & endpoint';
+      if (lis[1]) lis[1].textContent = '✓ Bar chart — 1D / 7D / 30D / 1Y / ALL ranges';
+      if (lis[2]) lis[2].textContent = '✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)';
+      if (lis[3]) lis[3].textContent = '✓ Light / dark / auto theme';
+      if (lis[4]) lis[4].textContent = '✓ Zero config — just set your Lightning address';
+      if (links[0]) links[0].textContent = 'Install Free on Marketplace';
+      if (links[1]) links[1].textContent = 'View source →';
+    }
+  }
+
+  // Pricing cards
+  const pricingCards = document.querySelectorAll('.pricing-card');
+  if (pricingCards.length >= 4) {
+    if (selected === 'pt') {
+      pricingCards[0].querySelector('.pricing-name').textContent = 'Gratis';
+      pricingCards[0].querySelector('.pricing-desc').textContent = 'Taxa de 0.3% nos pagamentos recebidos';
+      pricingCards[0].querySelector('a').textContent = 'Comecar →';
+
+      pricingCards[1].querySelector('.pricing-desc').textContent = 'Pague com Lightning — ativacao instantanea';
+      pricingCards[1].querySelector('button').textContent = '⚡ Assinar com Lightning';
+
+      pricingCards[2].querySelector('.pricing-desc').textContent = 'Para times e APIs de alto volume';
+      pricingCards[2].querySelector('button').textContent = '⚡ Assinar com Lightning';
+
+      pricingCards[3].querySelector('.pricing-desc').textContent = 'Pague uma vez. Use para sempre.';
+      pricingCards[3].querySelector('button').textContent = '⚡ Comprar acesso vitalicio';
+    } else {
+      pricingCards[0].querySelector('.pricing-name').textContent = 'Free';
+      pricingCards[0].querySelector('.pricing-desc').textContent = '0.3% fee on payments received';
+      pricingCards[0].querySelector('a').textContent = 'Get started →';
+
+      pricingCards[1].querySelector('.pricing-desc').textContent = 'Pay with Lightning — instant activation';
+      pricingCards[1].querySelector('button').textContent = '⚡ Subscribe with Lightning';
+
+      pricingCards[2].querySelector('.pricing-desc').textContent = 'For teams and high-volume APIs';
+      pricingCards[2].querySelector('button').textContent = '⚡ Subscribe with Lightning';
+
+      pricingCards[3].querySelector('.pricing-desc').textContent = 'Pay once. Use forever.';
+      pricingCards[3].querySelector('button').textContent = '⚡ Buy Lifetime Access';
+    }
+  }
+
+  // FAQ
+  const faqItems = document.querySelectorAll('.faq-item');
+  if (faqItems.length === 5 && selected === 'pt') {
+    faqItems[0].querySelector('.faq-q').textContent = 'Meus usuarios precisam de wallet Lightning?';
+    faqItems[0].querySelector('.faq-a').textContent = 'Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.';
+    faqItems[1].querySelector('.faq-q').textContent = 'E se a Lightning ficar fora do ar?';
+    faqItems[1].querySelector('.faq-a').textContent = 'A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.';
+    faqItems[2].querySelector('.faq-q').textContent = 'Ja esta pronto para producao?';
+    faqItems[2].querySelector('.faq-a').textContent = 'Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.';
+    faqItems[3].querySelector('.faq-q').textContent = 'Como funciona a taxa de 0.3%?';
+    faqItems[3].querySelector('.faq-a').textContent = 'No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.';
+    faqItems[4].querySelector('.faq-q').textContent = 'Posso usar sem Blink?';
+    faqItems[4].querySelector('.faq-a').textContent = 'Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.';
+  } else if (faqItems.length === 5) {
+    faqItems[0].querySelector('.faq-q').textContent = 'Do my users need a Lightning wallet?';
+    faqItems[0].querySelector('.faq-a').textContent = 'Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.';
+    faqItems[1].querySelector('.faq-q').textContent = 'What happens if the Lightning network is down?';
+    faqItems[1].querySelector('.faq-a').textContent = 'Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.';
+    faqItems[2].querySelector('.faq-q').textContent = 'Is this production-ready?';
+    faqItems[2].querySelector('.faq-a').textContent = 'Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.';
+    faqItems[3].querySelector('.faq-q').textContent = 'How does the 0.3% fee work?';
+    faqItems[3].querySelector('.faq-a').textContent = 'When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.';
+    faqItems[4].querySelector('.faq-q').textContent = 'Can I use it without Blink?';
+    faqItems[4].querySelector('.faq-a').textContent = 'Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.';
+  }
+}
+
+function initLanguageSelector() {
+  const select = document.getElementById('languageSelect');
+  const heroSelect = document.getElementById('heroLanguageSelect');
+  if (!select || !heroSelect) return;
+  const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  const saved = localStorage.getItem('l402_lang');
+  const lang = I18N[saved] ? saved : (I18N[browser] ? browser : 'en');
+  select.value = lang;
+  heroSelect.value = lang;
+  applyLanguage(lang);
+  select.addEventListener('change', (e) => {
+    heroSelect.value = e.target.value;
+    applyLanguage(e.target.value);
+  });
+  heroSelect.addEventListener('change', (e) => {
+    select.value = e.target.value;
+    applyLanguage(e.target.value);
+  });
+}
+
+async function connectEvmWallet() {
+  const status = document.getElementById('evmWalletStatus');
+  const btn = document.getElementById('evmConnectBtn');
+  if (!window.ethereum) {
+    status.textContent = 'No EVM wallet detected. Install MetaMask, Rabby or another injected wallet.';
+    status.style.color = '#f87171';
+    return;
+  }
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Connecting...';
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    if (accounts && accounts[0]) {
+      const short = `${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`;
+      status.textContent = `Connected: ${short} on chain ${chainId}`;
+      status.style.color = '#4ade80';
+      localStorage.setItem('l402_evm_account', accounts[0]);
+      btn.textContent = 'Connected';
+    }
+  } catch (err) {
+    status.textContent = 'Connection rejected or unavailable.';
+    status.style.color = '#f87171';
+    btn.textContent = 'Connect EVM wallet';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function saveLightningAddress() {
+  const input = document.getElementById('lnAddressInput');
+  const status = document.getElementById('lnWalletStatus');
+  const value = input.value.trim();
+  if (!/^.+@.+\..+$/.test(value) && !/^.+@.+$/.test(value)) {
+    status.textContent = 'Invalid Lightning Address. Example: you@blink.sv';
+    status.style.color = '#f87171';
+    return;
+  }
+  localStorage.setItem('l402_ln_address', value);
+  status.textContent = `Saved: ${value}`;
+  status.style.color = '#4ade80';
+}
+
+function clearLightningAddress() {
+  localStorage.removeItem('l402_ln_address');
+  document.getElementById('lnAddressInput').value = '';
+  const status = document.getElementById('lnWalletStatus');
+  status.textContent = 'No Lightning address saved';
+  status.style.color = '#888';
+}
+
+function initWalletPrefs() {
+  const savedLn = localStorage.getItem('l402_ln_address');
+  if (savedLn) {
+    const input = document.getElementById('lnAddressInput');
+    const status = document.getElementById('lnWalletStatus');
+    input.value = savedLn;
+    status.textContent = `Saved: ${savedLn}`;
+    status.style.color = '#4ade80';
+  }
+  const evm = localStorage.getItem('l402_evm_account');
+  if (evm) {
+    const status = document.getElementById('evmWalletStatus');
+    const btn = document.getElementById('evmConnectBtn');
+    status.textContent = `Last connected: ${evm.slice(0, 6)}...${evm.slice(-4)}`;
+    status.style.color = '#fbbf24';
+    btn.textContent = 'Reconnect EVM wallet';
+  }
+}
+
 function showTab(lang) {
   document.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -631,6 +1145,9 @@ document.querySelectorAll('.faq-item').forEach(item => {
     if (el && total) el.textContent = parseInt(total).toLocaleString();
   } catch {}
 })();
+
+initLanguageSelector();
+initWalletPrefs();
 
 // Pro payment modal
 const TIER_LABELS = { pro: 'Pro \u2014 $9/month', business: 'Business \u2014 $99/month', lifetime: 'Lifetime \u2014 $9,999 one-time' };
