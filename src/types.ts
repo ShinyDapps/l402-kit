@@ -40,6 +40,18 @@ export interface L402Options {
   supabaseKey?: string;
   /** Called after a successful payment is verified */
   onPayment?: (token: L402Token, amountSats: number) => void | Promise<void>;
+  /**
+   * HTTP endpoint on your server to receive signed payment events.
+   * l402-kit will POST a `WebhookEvent` with an `l402-signature` header.
+   * Use `verifyWebhook(secret, rawBody, signatureHeader)` to verify.
+   */
+  webhookUrl?: string;
+  /**
+   * Secret used to sign webhook payloads (HMAC-SHA256).
+   * Required when `webhookUrl` is set.
+   * Generate with: `openssl rand -hex 32`
+   */
+  webhookSecret?: string;
 }
 
 export interface PaymentRecord {

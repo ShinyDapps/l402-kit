@@ -1,7 +1,9 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { verifyToken } from "./verify";
 import { checkAndMarkPreimage } from "./replay";
+import { sendWebhook } from "./webhook";
 import type { L402Options, LightningProvider, Invoice } from "./types";
+import { randomBytes, createHash } from "crypto";
 
 const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://shinydapps-api.vercel.app";
 const SPLIT_SECRET = process.env.SPLIT_SECRET ?? "";
@@ -36,7 +38,8 @@ class ManagedProvider implements LightningProvider {
 }
 
 export function l402(options: L402Options): RequestHandler {
-  const { priceSats, ownerLightningAddress, supabaseUrl, supabaseKey, onPayment } = options;
+  const { priceSats, ownerLightningAddress, supabaseUrl, supabaseKey, onPayment,
+    webhookUrl, webhookSecret } = options;
   const dbUrl = supabaseUrl ?? process.env.SUPABASE_URL ?? "";
   const dbKey = supabaseKey ?? process.env.SUPABASE_ANON_KEY ?? "";
 
@@ -73,6 +76,25 @@ export function l402(options: L402Options): RequestHandler {
           managed.sendSplit(priceSats).catch(err => console.error("[l402] split failed:", String(err)));
         }
         if (onPayment) await onPayment({ macaroon, preimage }, priceSats);
+
+        // Fire outgoing webhook (non-blocking, errors logged internally)
+        if (webhookUrl && webhookSecret) {
+          const decoded = JSON.parse(Buffer.from(macaroon, "base64").toString()) as { hash?: string };
+          const paymentHash = decoded.hash ?? createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
+          sendWebhook(webhookUrl, webhookSecret, {
+            id: randomBytes(16).toString("hex"),
+            type: "payment.received",
+            created: Math.floor(Date.now() / 1000),
+            data: {
+              endpoint: req.path,
+              amountSats: priceSats,
+              preimage,
+              paymentHash,
+              ownerAddress: ownerLightningAddress ?? "",
+            },
+          });
+        }
+
         return next();
       }
     }
