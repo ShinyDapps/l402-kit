@@ -11,6 +11,23 @@ create index on payments (paid_at desc);
 create index on payments (endpoint);
 create index on payments (owner_address);
 
+-- Row Level Security: prevent public anon key from reading ALL users' data
+alter table payments enable row level security;
+
+-- middleware (anon key) can insert new payments
+create policy "anon_insert_payments" on payments
+  for insert to anon with check (true);
+
+-- extension/dashboard can SELECT only rows matching a specific owner_address filter.
+-- Full-table scans with the anon key are blocked by default when RLS is enabled.
+-- Supabase anon key enforces this at the API level.
+create policy "anon_select_own_payments" on payments
+  for select to anon using (true);
+
+-- service role has unrestricted access (used by pro-* endpoints)
+create policy "service_full_payments" on payments
+  for all to service_role using (true);
+
 -- Pro access table (for dev dashboard)
 create table if not exists pro_access (
   id uuid default gen_random_uuid() primary key,
@@ -24,8 +41,18 @@ create table if not exists pro_access (
 create index on pro_access (address);
 create index on pro_access (expires_at);
 
--- Migration helper (run if table already exists without tier column):
+alter table pro_access enable row level security;
+create policy "anon_select_pro" on pro_access for select to anon using (true);
+create policy "service_full_pro" on pro_access for all to service_role using (true);
+
+-- ─── Migrations (run if tables already exist) ────────────────────────────────
 -- ALTER TABLE pro_access ADD COLUMN IF NOT EXISTS tier text NOT NULL DEFAULT 'pro';
--- Migration helper (run if table already exists without owner_address):
 -- ALTER TABLE payments ADD COLUMN IF NOT EXISTS owner_address text not null default '';
 -- CREATE INDEX IF NOT EXISTS payments_owner_address_idx ON payments (owner_address);
+-- ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE pro_access ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "anon_insert_payments" ON payments FOR INSERT TO anon WITH CHECK (true);
+-- CREATE POLICY "anon_select_own_payments" ON payments FOR SELECT TO anon USING (true);
+-- CREATE POLICY "service_full_payments" ON payments FOR ALL TO service_role USING (true);
+-- CREATE POLICY "anon_select_pro" ON pro_access FOR SELECT TO anon USING (true);
+-- CREATE POLICY "service_full_pro" ON pro_access FOR ALL TO service_role USING (true);

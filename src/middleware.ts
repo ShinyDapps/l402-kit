@@ -23,11 +23,15 @@ class ManagedProvider implements LightningProvider {
   async checkPayment(): Promise<boolean> { return false; }
 
   async sendSplit(amountSats: number): Promise<void> {
-    fetch(`${SHINYDAPPS_API}/api/split`, {
+    const res = await fetch(`${SHINYDAPPS_API}/api/split`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-split-secret": SPLIT_SECRET },
       body: JSON.stringify({ amountSats, ownerAddress: this.ownerAddress }),
-    }).catch(() => {});
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`[l402] split API ${res.status}: ${body.slice(0, 120)}`);
+    }
   }
 }
 
@@ -54,11 +58,21 @@ export function l402(options: L402Options): RequestHandler {
           return;
         }
 
-        if (managed) managed.sendSplit(priceSats);
-        if (onPayment) await onPayment({ macaroon, preimage }, priceSats);
+        // Persist first — the DB unique constraint on preimage is the durable
+        // replay guard (survives process restarts). 409 = already used.
         if (dbUrl && dbKey) {
-          logPayment(req.path, token, priceSats, ownerLightningAddress ?? "", dbUrl, dbKey).catch(() => {});
+          const logged = await logPayment(req.path, token, priceSats, ownerLightningAddress ?? "", dbUrl, dbKey);
+          if (logged.replay) {
+            res.status(401).json({ error: "Token already used" });
+            return;
+          }
         }
+
+        // Fire split async but log errors — never silently drop failures
+        if (managed) {
+          managed.sendSplit(priceSats).catch(err => console.error("[l402] split failed:", String(err)));
+        }
+        if (onPayment) await onPayment({ macaroon, preimage }, priceSats);
         return next();
       }
     }
@@ -84,9 +98,9 @@ export function l402(options: L402Options): RequestHandler {
 async function logPayment(
   endpoint: string, token: string, amountSats: number,
   ownerAddress: string, supabaseUrl: string, supabaseKey: string,
-): Promise<void> {
+): Promise<{ ok: boolean; replay: boolean }> {
   const [, preimage] = token.split(":");
-  await fetch(`${supabaseUrl}/rest/v1/payments`, {
+  const res = await fetch(`${supabaseUrl}/rest/v1/payments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -102,4 +116,7 @@ async function logPayment(
       paid_at: new Date().toISOString(),
     }),
   });
+  // 409 Conflict = preimage already in DB (unique constraint) = replay attack
+  if (res.status === 409) return { ok: false, replay: true };
+  return { ok: res.ok, replay: false };
 }
