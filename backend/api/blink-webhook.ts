@@ -33,7 +33,7 @@ function verifyBlinkSignature(rawBody: string, sigHeader: string): boolean {
   const a = Buffer.from(expected.padEnd(received.length, "0"), "hex");
   const b = Buffer.from(received.padEnd(expected.length, "0"), "hex");
   if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  return timingSafeEqual(new Uint8Array(a.buffer, a.byteOffset, a.byteLength), new Uint8Array(b.buffer, b.byteOffset, b.byteLength));
 }
 
 export const config = { api: { bodyParser: false } };

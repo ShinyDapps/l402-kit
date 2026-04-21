@@ -92,5 +92,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.json({ paymentRequest: invoice.paymentRequest, paymentHash: invoice.paymentHash, amountSats, btcUsd, tier });
   } catch (err) {
     console.error("[pro-subscribe] all retries failed:", String(err));
-    res.status(503).json({ error: "Lightning provider temporarily unavailable. Retry in a moment.
+    res.status(503).json({ error: "Lightning provider temporarily unavailable. Retry in a moment." });
+  }
 }

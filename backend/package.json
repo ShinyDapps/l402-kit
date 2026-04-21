@@ -2,10 +2,8 @@
   "name": "shinydapps-backend",
   "version": "1.0.0",
   "private": true,
-  "dependencies": {
-    "@vercel/node": "^3.0.0"
-  },
   "devDependencies": {
+    "@vercel/node": "^5.7.12",
     "typescript": "^5.4.0"
   }
 }
