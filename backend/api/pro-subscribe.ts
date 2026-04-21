@@ -1,23 +1,23 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createHash, randomBytes } from "crypto";
 
 const BLINK_API_KEY = process.env.L402KIT_BLINK_API_KEY ?? "";
 const BLINK_WALLET_ID = process.env.L402KIT_BLINK_WALLET_ID ?? "";
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
 
-// Price in USD per tier
-const TIER_PRICE_USD: Record<string, number> = {
-  pro: 9,
-  business: 99,
-  lifetime: 2999,
-};
-// Days of access per tier
-const TIER_DAYS: Record<string, number> = {
-  pro: 30,
-  business: 30,
-  lifetime: 36500, // ~100 years
-};
+const TIER_PRICE_USD: Record<string, number> = { pro: 9, business: 99, lifetime: 2999 };
+const TIER_DAYS: Record<string, number> = { pro: 30, business: 30, lifetime: 36500 };
+
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3, baseMs = 300): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn(); } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) await new Promise(r => setTimeout(r, baseMs * 2 ** i));
+    }
+  }
+  throw lastErr;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -40,35 +40,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const amountSats = Math.ceil((TIER_PRICE_USD[tier] / btcUsd) * 100_000_000);
 
-  // Create invoice via Blink
   try {
-    const gql = await fetch("https://api.blink.sv/graphql", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": BLINK_API_KEY },
-      body: JSON.stringify({
-        query: `mutation CreateInvoice($input: LnInvoiceCreateInput!) {
-          lnInvoiceCreate(input: $input) {
-            invoice { paymentRequest paymentHash }
-            errors { message }
-          }
-        }`,
-        variables: {
-          input: {
-            walletId: BLINK_WALLET_ID,
-            amount: amountSats,
-            memo: `l402-kit ${tier} subscription — ${lightningAddress}`,
+    const invoice = await withRetry(async () => {
+      const gql = await fetch("https://api.blink.sv/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-KEY": BLINK_API_KEY },
+        body: JSON.stringify({
+          query: `mutation CreateInvoice($input: LnInvoiceCreateInput!) {
+            lnInvoiceCreate(input: $input) {
+              invoice { paymentRequest paymentHash }
+              errors { message }
+            }
+          }`,
+          variables: {
+            input: {
+              walletId: BLINK_WALLET_ID,
+              amount: amountSats,
+              memo: `l402-kit ${tier} subscription \u2014 ${lightningAddress}`,
+            },
           },
-        },
-      }),
+        }),
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (!gql.ok) throw new Error(`Blink HTTP ${gql.status}`);
+      const json = await gql.json() as {
+        data: { lnInvoiceCreate: { invoice: { paymentRequest: string; paymentHash: string }; errors: { message: string }[] } };
+      };
+      const { invoice, errors } = json.data.lnInvoiceCreate;
+      if (errors?.length) throw new Error(errors[0].message);
+      return invoice;
     });
 
-    const json = await gql.json() as {
-      data: { lnInvoiceCreate: { invoice: { paymentRequest: string; paymentHash: string }; errors: { message: string }[] } };
-    };
-    const { invoice, errors } = json.data.lnInvoiceCreate;
-    if (errors?.length) return res.status(500).json({ error: errors[0].message });
-
-    // Save pending record (expires_at in the past = not yet active)
+    // Save pending record. expires_at = null means unpaid.
+    // pro-poll (or blink-webhook) will set a real date on confirmation.
     await fetch(`${SUPABASE_URL}/rest/v1/pro_access`, {
       method: "POST",
       headers: {
@@ -80,19 +84,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         address: lightningAddress,
         payment_hash: invoice.paymentHash,
-        expires_at: new Date(0).toISOString(), // epoch = pending
+        expires_at: null,
         tier,
       }),
     });
 
-    res.json({
-      paymentRequest: invoice.paymentRequest,
-      paymentHash: invoice.paymentHash,
-      amountSats,
-      btcUsd,
-      tier,
-    });
+    res.json({ paymentRequest: invoice.paymentRequest, paymentHash: invoice.paymentHash, amountSats, btcUsd, tier });
   } catch (err) {
-    res.status(500).json({ error: "Failed to create invoice" });
-  }
+    console.error("[pro-subscribe] all retries failed:", String(err));
+    res.status(503).json({ error: "Lightning provider temporarily unavailable. Retry in a moment.
 }

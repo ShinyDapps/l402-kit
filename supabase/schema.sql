@@ -34,7 +34,9 @@ create table if not exists pro_access (
   address text not null,
   payment_hash text not null unique,
   tier text not null default 'pro',
-  expires_at timestamptz not null,
+  -- null = pending (invoice created, not yet paid)
+  -- timestamptz = activation expiry (set by pro-poll or blink-webhook on confirmation)
+  expires_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -62,6 +64,7 @@ create policy "service_full_waitlist" on waitlist for all to service_role using 
 -- CREATE TABLE IF NOT EXISTS waitlist (id bigint generated always as identity primary key, email text not null unique, created_at timestamptz not null default now());
 -- ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 -- CREATE POLICY "service_full_waitlist" ON waitlist FOR ALL TO service_role USING (true);
+-- ALTER TABLE pro_access ALTER COLUMN expires_at DROP NOT NULL;
 -- CREATE INDEX IF NOT EXISTS payments_owner_address_idx ON payments (owner_address);
 -- ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE pro_access ENABLE ROW LEVEL SECURITY;

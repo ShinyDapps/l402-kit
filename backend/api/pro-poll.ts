@@ -28,6 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }`,
         variables: { paymentHash },
       }),
+      signal: AbortSignal.timeout(8_000),
     });
     const json = await gql.json() as { data: { lnInvoice: { status: string } } };
     const status = json.data?.lnInvoice?.status;
@@ -36,11 +37,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ paid: false, status: status ?? "PENDING" });
     }
 
-    // Activate: update expires_at from epoch to now + days
+    // Payment confirmed — upsert activation.
+    // expires_at was null (pending); set it to a real future date now.
     const days = TIER_DAYS[tier] ?? 30;
     const expires_at = new Date(Date.now() + days * 86400_000).toISOString();
 
-    const update = await fetch(
+    const upsert = await fetch(
       `${SUPABASE_URL}/rest/v1/pro_access?payment_hash=eq.${encodeURIComponent(paymentHash)}`,
       {
         method: "PATCH",
@@ -54,12 +56,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     );
 
-    if (!update.ok) {
+    if (!upsert.ok) {
+      console.error("[pro-poll] activate failed:", upsert.status);
       return res.status(500).json({ error: "Failed to activate subscription" });
     }
 
     res.json({ paid: true, tier, expires_at });
   } catch (err) {
+    console.error("[pro-poll] error:", String(err));
+
+    res.json({ paid: true, tier, expires_at });
+  } catch (err) {
+    console.error("[pro-poll] error:", String(err));
     res.status(500).json({ error: "Failed to check payment" });
   }
 }
