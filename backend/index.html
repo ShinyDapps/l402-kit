@@ -149,6 +149,10 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 footer { border-top: 1px solid var(--border); padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 16px; }
 footer a { color: var(--muted); }
 footer a:hover { color: var(--orange); text-decoration: none; }
+@media (max-width: 700px) {
+  #extension > div { grid-template-columns: 1fr !important; }
+  #extension > div > div:last-child { order: -1; }
+}
 </style>
 </head>
 <body>
@@ -157,6 +161,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="nav-logo">⚡ <span>ShinyDapps</span></div>
   <div class="nav-links">
     <a href="#how">How it works</a>
+    <a href="#extension">Extension</a>
     <a href="#pricing">Pricing</a>
     <a href="https://shinydapps-bd9fa40b.mintlify.app">Docs</a>
     <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
@@ -382,6 +387,35 @@ app = <span class="c-fn">FastAPI</span>()
       <div class="usecase-title">Serverless billing</div>
       <div class="usecase-desc">Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.</div>
       <div class="usecase-code">priceSats: 1000  // ~$1/task</div>
+    </div>
+  </div>
+</section>
+
+<!-- VS CODE EXTENSION SHOWCASE -->
+<section id="extension" style="max-width:960px;margin:0 auto 80px;padding:0 24px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center">
+    <div>
+      <div style="display:inline-block;background:#1a120a;border:1px solid var(--orange);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--orange);margin-bottom:16px;letter-spacing:1px">VS CODE EXTENSION</div>
+      <h2 style="font-size:32px;font-weight:800;margin-bottom:16px;line-height:1.2">Watch your sats roll in — without leaving your editor</h2>
+      <p style="color:var(--muted);font-size:15px;line-height:1.7;margin-bottom:24px">Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart. Works in any language.</p>
+      <ul style="list-style:none;margin-bottom:28px">
+        <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Live payment feed with amount &amp; endpoint</li>
+        <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Bar chart — 1D / 7D / 30D / 1Y / ALL ranges</li>
+        <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)</li>
+        <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Light / dark / auto theme</li>
+        <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Zero config — just set your Lightning address</li>
+      </ul>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--orange);color:#000;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14.25 0L8 6.25 1.75 0 0 1.75l6.25 6.25L0 14.25 1.75 16l6.25-6.25L14.25 16 16 14.25 9.75 8 16 1.75z"/></svg>
+          Install Free on Marketplace
+        </a>
+        <a href="https://github.com/ShinyDapps/l402-kit/tree/main/vscode-extension" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:transparent;color:#e5e5e5;border:1px solid #333;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none">View source →</a>
+      </div>
+    </div>
+    <div style="position:relative">
+      <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,var(--orange)22,transparent 60%);border-radius:16px;z-index:0"></div>
+      <img src="/extension-screenshot.png" alt="ShinyDapps VS Code Extension — Lightning payment dashboard" style="width:100%;border-radius:14px;border:1px solid #2a2a2a;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)" loading="lazy">
     </div>
   </div>
 </section>
