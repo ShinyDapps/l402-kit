@@ -653,7 +653,7 @@ dependencies = [
 
 [[package]]
 name = "l402kit"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "axum",
  "base64",
