@@ -18,9 +18,11 @@ alter table payments enable row level security;
 create policy "anon_insert_payments" on payments
   for insert to anon with check (true);
 
--- extension/dashboard can SELECT only rows matching a specific owner_address filter.
--- Full-table scans with the anon key are blocked by default when RLS is enabled.
--- Supabase anon key enforces this at the API level.
+-- anon key (used by VS Code extension) can read payments.
+-- ⚠ ACKNOWLEDGED RISK: using (true) allows full table reads with the anon key.
+-- Payments contain endpoint + amount_sats — no PII, no preimages.
+-- The extension always filters by owner_address client-side; this is enforced
+-- by application logic, not RLS. Tighten to JWT claims if you add auth later.
 create policy "anon_select_own_payments" on payments
   for select to anon using (true);
 
@@ -44,7 +46,9 @@ create index on pro_access (address);
 create index on pro_access (expires_at);
 
 alter table pro_access enable row level security;
-create policy "anon_select_pro" on pro_access for select to anon using (true);
+-- NO anon_select_pro: pro_access contains Lightning addresses (privacy-sensitive).
+-- All pro_access reads go through /api/pro-check (server-side, service key).
+-- anon key has zero access to this table.
 create policy "service_full_pro" on pro_access for all to service_role using (true);
 
 -- Waitlist (email capture from landing page)
@@ -59,6 +63,8 @@ alter table waitlist enable row level security;
 create policy "service_full_waitlist" on waitlist for all to service_role using (true);
 
 -- ─── Migrations (run if tables already exist) ────────────────────────────────
+-- Security fix 2026-04-22: remove anon read access to pro_access (address privacy)
+-- DROP POLICY IF EXISTS "anon_select_pro" ON pro_access;
 -- ALTER TABLE pro_access ADD COLUMN IF NOT EXISTS tier text NOT NULL DEFAULT 'pro';
 -- ALTER TABLE payments ADD COLUMN IF NOT EXISTS owner_address text not null default '';
 -- CREATE TABLE IF NOT EXISTS waitlist (id bigint generated always as identity primary key, email text not null unique, created_at timestamptz not null default now());

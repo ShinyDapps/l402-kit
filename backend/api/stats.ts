@@ -7,7 +7,7 @@ const DASHBOARD_SECRET = process.env.DASHBOARD_SECRET ?? "";
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
-  const token = req.headers["x-dashboard-secret"] ?? req.query.secret;
+  const token = req.headers["x-dashboard-secret"];
   if (!DASHBOARD_SECRET || token !== DASHBOARD_SECRET) {
     return res.status(401).json({ error: "Unauthorized" });
   }

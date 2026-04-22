@@ -215,7 +215,9 @@ async function init() {
 
     if (!r.ok) {
       const e = await r.json().catch(() => ({}));
-      throw new Error(e.error || `HTTP ${r.status}`);
+      const msg = e.error || `HTTP ${r.status}`;
+      const retryable = e.retryable !== false;
+      throw Object.assign(new Error(msg), { retryable });
     }
 
     const { paymentRequest, paymentHash: hash, amountSats, btcUsd } = await r.json();
@@ -241,9 +243,12 @@ async function init() {
     poll(); // immediate first check
 
   } catch (err) {
+    const canRetry = err.retryable !== false;
     document.getElementById('loadingView').innerHTML =
-      `<div class="logo">⚡</div><p style="color:var(--red);font-size:14px;margin-top:16px">Failed to create invoice.<br><span style="color:var(--muted)">${err.message}</span></p>
-       <button class="copy-btn" style="margin-top:24px" onclick="location.reload()">Try Again</button>`;
+      `<div class="logo">⚡</div>
+       <p style="color:var(--red);font-size:14px;margin-top:16px">Failed to create invoice.<br>
+       <span style="color:var(--muted)">${err.message}</span></p>
+       ${canRetry ? `<button class="copy-btn" style="margin-top:24px" onclick="location.reload()">Try Again</button>` : ''}`;
   }
 }
 

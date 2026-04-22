@@ -91,7 +91,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.json({ paymentRequest: invoice.paymentRequest, paymentHash: invoice.paymentHash, amountSats, btcUsd, tier });
   } catch (err) {
-    console.error("[pro-subscribe] all retries failed:", String(err));
-    res.status(503).json({ error: "Lightning provider temporarily unavailable. Retry in a moment." });
+    const msg = String(err);
+    console.error("[pro-subscribe] all retries failed:", msg);
+    // Check if Blink itself is reporting downtime vs. our config error
+    const isBlinkDown = msg.includes("503") || msg.includes("timeout") || msg.includes("fetch failed");
+    res.status(503).json({
+      error: isBlinkDown
+        ? "Lightning provider is temporarily down. Check https://status.blink.sv and retry in a moment."
+        : "Failed to create invoice. Please retry.",
+      provider: "blink",
+      retryable: true,
+    });
   }
 }
