@@ -328,7 +328,60 @@ describe("[Stats] /api/stats — emailStats e waitlist", () => {
   });
 });
 
-// ─── 7. VERCEL — ambiente de produção ─────────────────────────────────────────
+// ─── 7. DELETE DATA — endpoint /api/delete-data ───────────────────────────────
+
+describe("[Delete Data] /api/delete-data", () => {
+  it_live("GET → 405", async () => {
+    const r = await fetch(`${BASE}/api/delete-data`);
+    expect(r.status).toBe(405);
+  });
+
+  it_live("POST body vazio → 400", async () => {
+    const r = await fetch(`${BASE}/api/delete-data`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(r.status).toBe(400);
+  });
+
+  it_live("lightningAddress inválido (sem @) → 400", async () => {
+    const r = await fetch(`${BASE}/api/delete-data`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lightningAddress: "notanemail" }),
+    });
+    expect(r.status).toBe(400);
+  });
+
+  it_live("lightningAddress válido desconhecido → 200 com deleted.payments=0", async () => {
+    const r = await fetch(`${BASE}/api/delete-data`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lightningAddress: "nonexistent@blink.sv" }),
+    });
+    expect(r.status).toBe(200);
+    const d = await r.json() as any;
+    expect(d).toHaveProperty("deleted");
+    expect(typeof d.deleted.payments).toBe("number");
+    expect(d.deleted.payments).toBe(0);
+    expect(typeof d.deleted.proAccess).toBe("boolean");
+  });
+
+  it_live("response não vaza stack trace ou internal state", async () => {
+    const r = await fetch(`${BASE}/api/delete-data`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lightningAddress: "bad" }),
+    });
+    const text = await r.text();
+    expect(text).not.toMatch(/supabase/i);
+    expect(text).not.toMatch(/stack/i);
+    expect(text).not.toMatch(/SERVICE_KEY/i);
+  });
+});
+
+// ─── 9. VERCEL — ambiente de produção ─────────────────────────────────────────
 
 describe("[Vercel] ambiente de produção", () => {
   it_live("deploy atual retorna 200 na landing", async () => {

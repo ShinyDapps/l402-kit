@@ -265,6 +265,102 @@ describe("[Visual] resend-webhook — estrutura do código", () => {
   });
 });
 
+// ─── delete-data.ts — estrutura do endpoint ──────────────────────────────────
+
+describe("[Visual] delete-data — estrutura do endpoint", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../../backend/api/delete-data.ts"), "utf-8"
+    );
+  });
+
+  it("rejeita GET → 405", () => {
+    expect(src).toMatch(/405/);
+    expect(src).toMatch(/Method not allowed/);
+  });
+
+  it("valida que lightningAddress contém '@'", () => {
+    expect(src).toMatch(/includes\("@"\)/);
+    expect(src).toMatch(/400/);
+  });
+
+  it("usa SERVICE_KEY (não anon) para deletar", () => {
+    expect(src).toMatch(/SUPABASE_SERVICE_KEY/);
+    expect(src).not.toMatch(/SUPABASE_ANON_KEY/);
+  });
+
+  it("deleta de payments filtrando por owner_address", () => {
+    expect(src).toMatch(/payments\?owner_address=eq\./);
+    expect(src).toMatch(/method.*DELETE/i);
+  });
+
+  it("deleta de pro_access filtrando por address", () => {
+    expect(src).toMatch(/pro_access\?address=eq\./);
+  });
+
+  it("retorna { deleted: { payments, proAccess } }", () => {
+    expect(src).toMatch(/deleted/);
+    expect(src).toMatch(/payments/);
+    expect(src).toMatch(/proAccess/);
+  });
+
+  it("não vaza stack trace (catch sem rethrow)", () => {
+    expect(src).toMatch(/Internal server error/);
+    expect(src).not.toMatch(/console\.error/);
+  });
+});
+
+// ─── extension.ts — Danger Zone ──────────────────────────────────────────────
+
+describe("[Visual] extension — Danger Zone", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../../vscode-extension/src/extension.ts"), "utf-8"
+    );
+  });
+
+  it("tem seção Danger Zone no HTML", () => {
+    expect(src).toMatch(/Danger Zone/);
+    expect(src).toMatch(/danger-zone/);
+  });
+
+  it("botão de trigger existe", () => {
+    expect(src).toMatch(/deleteTriggerBtn/);
+    expect(src).toMatch(/Delete all my data/i);
+  });
+
+  it("caixa de confirmação existe", () => {
+    expect(src).toMatch(/deleteConfirmBox/);
+    expect(src).toMatch(/deleteInput/);
+    expect(src).toMatch(/deleteConfirmBtn/);
+  });
+
+  it("aviso menciona payment history E Pro subscription", () => {
+    expect(src).toMatch(/payment history/i);
+    expect(src).toMatch(/Pro subscription/i);
+    expect(src).toMatch(/cannot be undone/i);
+  });
+
+  it("confirmação desabilitada até texto bater com ADDR", () => {
+    expect(src).toMatch(/disabled.*ADDR|ADDR.*disabled/s);
+    expect(src).toMatch(/deleteInput.*value.*ADDR|ADDR.*deleteInput.*value/s);
+  });
+
+  it("chama /api/delete-data com POST", () => {
+    expect(src).toMatch(/api\/delete-data/);
+    expect(src).toMatch(/method.*POST.*delete-data|delete-data.*POST/s);
+  });
+
+  it("tem CSS para todos os elementos da danger zone", () => {
+    expect(src).toMatch(/\.danger-zone/);
+    expect(src).toMatch(/\.delete-trigger-btn/);
+    expect(src).toMatch(/\.delete-confirm-btn/);
+    expect(src).toMatch(/\.delete-input/);
+  });
+});
+
 // ─── checkout.html — QR code e UI ────────────────────────────────────────────
 
 describe("[Visual] checkout — backend/checkout.html", () => {
