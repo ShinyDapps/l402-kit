@@ -1,6 +1,6 @@
 {
   "name": "shinydapps-l402",
-  "displayName": "ShinyDapps âš¡ Lightning Payments",
+  "displayName": "ShinyDapps Lightning Payments",
   "description": "Monitor your Bitcoin Lightning API payments in real-time inside VS Code",
   "version": "1.0.0",
   "publisher": "ShinyDapps",
@@ -61,7 +61,7 @@
       "activitybar": [
         {
           "id": "shinydapps",
-          "title": "ShinyDapps â€” Lightning Payments",
+          "title": "ShinyDapps - Lightning Payments",
           "icon": "lightning.svg"
         }
       ]
@@ -70,7 +70,7 @@
       "shinydapps": [
         {
           "id": "shinydapps.payments",
-          "name": "âš¡ Payments",
+          "name": "Payments",
           "type": "webview"
         }
       ]

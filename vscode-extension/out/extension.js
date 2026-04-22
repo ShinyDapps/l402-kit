@@ -417,12 +417,25 @@ function getDashboardHtml(_context) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--vscode-font-family, sans-serif); background: var(--bg); color: var(--fg); font-size: 12px; }
   .topbar { display: flex; align-items: center; gap: 6px; padding: 10px 12px 6px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .lang-sel { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-  .lang-btn { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; color: var(--fg); padding: 2px 5px; font-size: 11px; opacity: 0.6; }
-  .lang-btn.active { border-color: var(--accent); opacity: 1; color: var(--accent); font-weight: 600; }
-  .theme-sel { display: flex; gap: 3px; }
-  .theme-btn { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; color: var(--muted); padding: 2px 6px; font-size: 11px; }
-  .theme-btn.active { border-color: var(--border); color: var(--fg); background: var(--card); }
+  .control-group { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .control-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .control-select {
+    min-width: 110px;
+    max-width: 170px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--fg);
+    font-size: 11px;
+    padding: 3px 7px;
+    outline: none;
+  }
+  .control-select:focus { border-color: var(--accent); }
+  .control-select { color-scheme: dark; }
+  [data-theme="light"] .control-select { color-scheme: light; }
+  .btc-ticker { display: none; align-items: center; gap: 10px; padding: 6px 12px; background: rgba(247,147,26,0.07); border-bottom: 1px solid rgba(247,147,26,0.18); font-size: 10px; color: var(--muted); flex-wrap: wrap; }
+  .btc-ticker strong { color: var(--accent); font-weight: 700; }
+  .btc-ticker-sep { color: rgba(247,147,26,0.25); margin: 0 4px; }
   .content { padding: 12px; }
   h2 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
   .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
@@ -459,14 +472,40 @@ function getDashboardHtml(_context) {
 </head>
 <body>
 <div class="topbar">
-  <div class="lang-sel" id="langSel"></div>
-  <div class="theme-sel" id="themeSel"></div>
+  <div class="control-group">
+    <span class="control-label">Language</span>
+    <select id="langSelect" class="control-select"></select>
+  </div>
+  <div class="control-group" style="justify-content:flex-end;">
+    <span class="control-label" id="themeLabel">Theme</span>
+    <select id="themeSelect" class="control-select"></select>
+  </div>
   <button class="refresh-btn" id="refreshBtn" title="Refresh">↺</button>
 </div>
+<div class="btc-ticker" id="btcTicker"></div>
 <div class="content" id="content"></div>
 
 <script>
-const vscodeApi = acquireVsCodeApi();
+// ── Error handlers FIRST — before anything that can throw ──────────────
+window.addEventListener('error', (ev) => {
+  try { renderError('Runtime error: ' + (ev.message || 'unknown')); } catch(e2) {
+    document.getElementById('content').innerHTML = '<div style="color:#f66;padding:20px">Runtime error: ' + (ev.message || 'unknown') + '</div>';
+  }
+});
+window.addEventListener('unhandledrejection', (ev) => {
+  const r = ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason || 'unknown');
+  try { renderError('Promise error: ' + r); } catch(e2) {
+    document.getElementById('content').innerHTML = '<div style="color:#f66;padding:20px">Promise error: ' + r + '</div>';
+  }
+});
+
+// ── Immediately show loading so content is never black ──────────────────
+document.getElementById('content').innerHTML = '<div class="empty" style="padding:36px 12px;color:var(--muted)">⚡ Loading…</div>';
+
+// ── Acquire VS Code API safely ──────────────────────────────────────────
+let vscodeApi;
+try { vscodeApi = acquireVsCodeApi(); } catch(e) { vscodeApi = { postMessage: () => {} }; }
+
 const SUPABASE_URL = "https://urcqtpklpfyvizcgcsia.supabase.co";
 const SUPABASE_KEY = "sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-";
 const LIGHTNING_ADDRESS = ${JSON.stringify(lightningAddress)};
@@ -476,53 +515,67 @@ let lang = 'en';
 let theme = 'auto';
 
 const LANGS = [
-  { code: 'en', label: '🇺🇸' },
-  { code: 'pt', label: '🇧🇷' },
-  { code: 'es', label: '🇪🇸' },
-  { code: 'zh', label: '🇨🇳' },
-  { code: 'ja', label: '🇯🇵' },
-  { code: 'fr', label: '🇫🇷' },
-  { code: 'de', label: '🇩🇪' },
-  { code: 'ru', label: '🇷🇺' },
-  { code: 'hi', label: '🇮🇳' },
-  { code: 'ar', label: '🇸🇦' },
-  { code: 'it', label: '🇮🇹' },
+  { code: 'en', label: 'English (EN)' },
+  { code: 'pt', label: 'Portugues (PT)' },
+  { code: 'es', label: 'Espanol (ES)' },
+  { code: 'zh', label: '中文 (ZH)' },
+  { code: 'ja', label: '日本語 (JA)' },
+  { code: 'fr', label: 'Francais (FR)' },
+  { code: 'de', label: 'Deutsch (DE)' },
+  { code: 'ru', label: 'Русский (RU)' },
+  { code: 'hi', label: 'हिन्दी (HI)' },
+  { code: 'ar', label: 'العربية (AR)' },
+  { code: 'it', label: 'Italiano (IT)' },
 ];
 
 function t(key) { return (I18N[lang] || I18N.en)[key] ?? I18N.en[key] ?? key; }
 
+function loadPrefs() {
+  try {
+    const savedLang = localStorage.getItem('sd_lang');
+    const savedTheme = localStorage.getItem('sd_theme');
+    if (savedLang && LANGS.some(l => l.code === savedLang)) lang = savedLang;
+    if (savedTheme && ['auto', 'light', 'dark'].includes(savedTheme)) theme = savedTheme;
+  } catch {}
+}
+
+function savePrefs() {
+  try {
+    localStorage.setItem('sd_lang', lang);
+    localStorage.setItem('sd_theme', theme);
+  } catch {}
+}
+
 function applyTheme(th) {
-  if (theme === th) th = 'auto';
   theme = th;
   document.documentElement.setAttribute('data-theme', th === 'auto' ? '' : th);
-  document.querySelectorAll('.theme-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.th === th);
-  });
+  const themeSelect = document.getElementById('themeSelect');
+  if (themeSelect) themeSelect.value = th;
+  savePrefs();
 }
 
 function buildTopbar() {
-  const langSel = document.getElementById('langSel');
-  langSel.innerHTML = LANGS.map(l =>
-    '<button class="lang-btn' + (l.code === lang ? ' active' : '') + '" data-lang="' + l.code + '">' + l.label + '</button>'
-  ).join('');
-  langSel.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      lang = btn.dataset.lang;
-      langSel.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-      renderContent(lastData);
-    });
+  const langSelect = document.getElementById('langSelect');
+  const themeSelect = document.getElementById('themeSelect');
+  if (!langSelect || !themeSelect) return;
+
+  langSelect.innerHTML = LANGS.map(l => '<option value="' + l.code + '">' + l.label + '</option>').join('');
+  langSelect.value = lang;
+  langSelect.addEventListener('change', () => {
+    lang = langSelect.value;
+    savePrefs();
+    renderContent(lastData);
   });
 
-  const themeSel = document.getElementById('themeSel');
-  themeSel.innerHTML = [
-    { code: 'light', icon: '☀️', title: 'Light theme' },
-    { code: 'dark',  icon: '🌙', title: 'Dark theme' },
-  ].map(th =>
-    '<button class="theme-btn' + (th.code === theme ? ' active' : '') + '" data-th="' + th.code + '" title="' + th.title + '">' + th.icon + '</button>'
-  ).join('');
-  themeSel.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => applyTheme(btn.dataset.th));
-  });
+  themeSelect.innerHTML = [
+    { code: 'auto', label: t('auto') },
+    { code: 'light', label: t('light') },
+    { code: 'dark', label: t('dark') },
+  ].map(th => '<option value="' + th.code + '">' + th.label + '</option>').join('');
+  themeSelect.value = theme;
+  themeSelect.addEventListener('change', () => applyTheme(themeSelect.value));
+  const themeLabel = document.getElementById('themeLabel');
+  if (themeLabel) themeLabel.textContent = t('theme');
 
   document.getElementById('refreshBtn').addEventListener('click', load);
 }
@@ -537,6 +590,7 @@ function renderError(msg) {
     '</div>';
   document.getElementById('retryBtn').addEventListener('click', load);
 }
+
 
 function renderSetup() {
   document.getElementById('content').innerHTML = '<div class="setup">' +
@@ -571,8 +625,24 @@ async function fetchBtcPrice() {
     const r = await fetch('https://mempool.space/api/v1/prices');
     const d = await r.json();
     btcPriceUsd = d.USD || 0;
-    const el = document.getElementById('btcPriceEl');
-    if (el && btcPriceUsd) el.textContent = '$' + btcPriceUsd.toLocaleString();
+    if (btcPriceUsd) {
+      const satUsd = btcPriceUsd / 100_000_000;
+      const ticker = document.getElementById('btcTicker');
+      if (ticker) {
+        ticker.style.display = 'flex';
+        ticker.innerHTML =
+          '<span style="color:var(--accent);font-size:12px">⚡</span>' +
+          '<strong>BTC</strong> $' + btcPriceUsd.toLocaleString() +
+          '<span class="btc-ticker-sep">·</span>' +
+          '1 sat = <strong>$' + satUsd.toFixed(6) + '</strong>' +
+          '<span class="btc-ticker-sep">·</span>' +
+          '100 sats = <strong>$' + (satUsd * 100).toFixed(4) + '</strong>' +
+          '<span class="btc-ticker-sep">·</span>' +
+          '1,000 sats = <strong>$' + (satUsd * 1000).toFixed(3) + '</strong>';
+      }
+      const el = document.getElementById('btcPriceEl');
+      if (el) el.textContent = '$' + btcPriceUsd.toLocaleString();
+    }
   } catch { btcPriceUsd = 0; }
 }
 
@@ -630,13 +700,23 @@ function getBuckets(rows, range) {
 function drawChart(rows, range) {
   const canvas = document.getElementById('chart');
   if (!canvas) return;
+
+  // Match canvas resolution to physical pixels for crisp rendering
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = Math.max((canvas.parentElement || canvas).getBoundingClientRect().width || 280, 150);
+  const cssH = 110;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  canvas.style.height = cssH + 'px';
+
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
+  ctx.scale(dpr, dpr);
+  const W = cssW, H = cssH;
 
   const buckets = getBuckets(rows, range || chartRange);
   const N = buckets.length;
-  const maxVal = Math.max(...buckets.map(b => b.val), 1);
+  const maxSat = Math.max(...buckets.map(b => b.val));
+  const maxVal = maxSat > 0 ? maxSat : 1;
   const gap = N > 20 ? 1 : 2;
   const barW = Math.max(2, Math.floor((W - 20) / N) - gap);
 
@@ -647,14 +727,15 @@ function drawChart(rows, range) {
   const skipLabel = N > 24 ? 4 : N > 12 ? 2 : 1;
   buckets.forEach((b, i) => {
     const x = 10 + i * (barW + gap);
-    const barH = Math.max(b.val > 0 ? 2 : 0, Math.round((b.val / maxVal) * (H - 28)));
+    // Ghost bars (3 px) always visible — real bars scale from maxVal
+    const barH = b.val > 0 ? Math.max(3, Math.round((b.val / maxVal) * (H - 28))) : 3;
     const y = H - barH - 18;
-    ctx.fillStyle = 'rgba(247,147,26,' + (b.val > 0 ? 1 : 0.18) + ')';
+    ctx.fillStyle = b.val > 0 ? '#f7931a' : 'rgba(247,147,26,0.13)';
     ctx.beginPath();
     if (ctx.roundRect) { ctx.roundRect(x, y, barW, barH, 2); } else { ctx.rect(x, y, barW, barH); }
     ctx.fill();
     if (i % skipLabel === 0 || i === N - 1) {
-      ctx.fillStyle = 'rgba(247,147,26,0.6)';
+      ctx.fillStyle = 'rgba(247,147,26,0.55)';
       ctx.font = '8px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(b.label, x + barW / 2, H - 4);
@@ -663,7 +744,7 @@ function drawChart(rows, range) {
       ctx.fillStyle = '#f7931a';
       ctx.font = 'bold 9px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(b.val >= 1000 ? (b.val / 1000).toFixed(1) + 'k' : b.val, x + barW / 2, y - 3);
+      ctx.fillText(b.val >= 1000 ? (b.val / 1000).toFixed(1) + 'k' : String(b.val), x + barW / 2, y - 3);
     }
   });
 }
@@ -687,10 +768,13 @@ function renderContent(rows) {
       '<div class="card card-wide"><div class="label">' + t('lightningAddr') + '</div><div class="value-sm">' + (LIGHTNING_ADDRESS || t('notSet')) + '</div></div>' +
     '</div>' +
     (isPro ? '' :
-      '<div style="margin-bottom:12px;background:#1a120a;border:1px solid #f7931a44;border-radius:8px;padding:10px 12px;font-size:11px;display:flex;align-items:center;gap:8px">' +
-      '<span style="font-size:16px">⚡</span>' +
-      '<span style="flex:1;color:#ccc">Pro unlocks 1Y/ALL history &amp; CSV export</span>' +
-      '<a href="https://l402kit.vercel.app/docs#pricing" style="color:#f7931a;font-weight:700;font-size:10px;text-decoration:none" target="_blank">Upgrade →</a>' +
+      '<div style="margin-bottom:14px;background:linear-gradient(135deg,rgba(247,147,26,0.07),rgba(247,147,26,0.03));border:1px solid rgba(247,147,26,0.28);border-radius:10px;padding:12px 14px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">' +
+        '<span style="font-size:12px;font-weight:700;color:#f7931a">⚡ ShinyDapps Pro</span>' +
+        '<span style="font-size:9px;color:#f7931a;background:rgba(247,147,26,0.12);border:1px solid rgba(247,147,26,0.22);border-radius:4px;padding:1px 7px;font-weight:600">9,000 sats / mo</span>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Full history · CSV export · Pay in Bitcoin · Cancel anytime</div>' +
+      '<a href="https://l402kit.vercel.app/docs#pricing" style="display:block;text-align:center;background:#f7931a;color:#000;border-radius:7px;padding:7px 0;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:0.2px" target="_blank">Upgrade with Bitcoin →</a>' +
       '</div>'
     ) +
     '<div class="chart-wrap">' +
@@ -709,7 +793,7 @@ function renderContent(rows) {
     '<table>' +
       '<tr><th>' + t('when') + '</th><th>' + t('endpoint') + '</th><th>' + t('sats') + '</th></tr>' +
       '<tbody>' + (rows.length === 0
-        ? '<tr><td colspan="3" class="empty">' + t('noPayments') + '</td></tr>'
+        ? '<tr><td colspan="3" style="text-align:center;padding:28px 12px"><div style="font-size:22px;margin-bottom:8px;opacity:0.35">⚡</div><div style="color:var(--muted);font-size:11px;margin-bottom:4px">' + t('noPayments') + '</div><div style="color:var(--muted);font-size:10px;opacity:0.55">Your first satoshi is waiting</div></td></tr>'
         : rows.slice(0, 50).map(r =>
             '<tr><td>' + new Date(r.paid_at).toLocaleString() + '</td><td>' + (r.endpoint || '—') + '</td><td class="sats-badge">' + (r.amount_sats || 0) + '</td></tr>'
           ).join('')
@@ -717,7 +801,28 @@ function renderContent(rows) {
     '</table>';
 
   requestAnimationFrame(() => {
+    const themeSelect = document.getElementById('themeSelect');
+    if (themeSelect) {
+      themeSelect.innerHTML = [
+        { code: 'auto', label: t('auto') },
+        { code: 'light', label: t('light') },
+        { code: 'dark', label: t('dark') },
+      ].map(th => '<option value="' + th.code + '">' + th.label + '</option>').join('');
+      themeSelect.value = theme;
+    }
+    const themeLabel = document.getElementById('themeLabel');
+    if (themeLabel) themeLabel.textContent = t('theme');
+
     drawChart(rows, chartRange);
+    // Re-draw when sidebar is resized
+    try {
+      if (window._chartRo) window._chartRo.disconnect();
+      window._chartRo = new ResizeObserver(() => {
+        if (lastData !== null) drawChart(lastData, chartRange);
+      });
+      const cw = document.querySelector('.chart-wrap');
+      if (cw) window._chartRo.observe(cw);
+    } catch(_) {}
     document.getElementById('rangeSel')?.querySelectorAll('.range-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.dataset.proLock) {
@@ -769,9 +874,16 @@ async function load() {
   }
 }
 
-buildTopbar();
-fetchBtcPrice();
-load();
+try {
+  loadPrefs();
+  buildTopbar();
+  applyTheme(theme);
+  fetchBtcPrice();
+  load();
+} catch (e) {
+  const m = e && e.message ? e.message : String(e || 'unknown');
+  renderError('Init failed: ' + m);
+}
 </script>
 </body>
 </html>`;
