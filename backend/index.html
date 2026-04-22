@@ -527,7 +527,7 @@ app = <span class="c-fn">FastAPI</span>()
       <p style="color:var(--muted);font-size:15px;line-height:1.7;margin-bottom:24px">See every payment in real time, with live charts and instant notifications. No setup, no account, no permissions required. Works with TypeScript, Python, Go, Rust and more.</p>
       <ul style="list-style:none;margin-bottom:28px">
         <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Real-time payment feed</li>
-        <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Live charts and stats</li>
+        <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)</li>
         <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Multi-language support</li>
         <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> Light & dark mode</li>
         <li style="padding:6px 0;font-size:14px;color:#ccc;display:flex;gap:10px"><span style="color:#4ade80">✓</span> No account or permissions needed</li>
@@ -583,8 +583,8 @@ app = <span class="c-fn">FastAPI</span>()
         <li><span class="check">✓</span> TypeScript, Python, Go, Rust</li>
         <li><span class="check">✓</span> Managed Lightning — no node needed</li>
         <li><span class="check">✓</span> Unlimited API calls</li>
-        <li><span class="check">✓</span> Payment history (last 30 days)</li>
-        <li><span class="check">✓</span> 1D / 7D / 30D charts</li>
+        <li><span class="check">✓</span> Payment history (last 7 days)</li>
+        <li><span class="check">✓</span> 1D / 7D charts</li>
         <li><span class="check">✓</span> Open source — self-host anytime</li>
       </ul>
       <a href="https://l402kit.vercel.app/docs" data-docs-link="1" style="display:block;margin-top:24px;text-align:center;padding:10px;background:#1a1a1a;border-radius:8px;font-size:13px;font-weight:600">Get started free →</a>
@@ -597,8 +597,8 @@ app = <span class="c-fn">FastAPI</span>()
       <div class="pricing-desc">Pay with Bitcoin — activates in seconds</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> Everything in Free</li>
-        <li><span class="check">✓</span> Full history — no 30-day limit</li>
-        <li><span class="check">✓</span> All chart ranges (1Y / ALL)</li>
+        <li><span class="check">✓</span> Full history — no 7-day limit</li>
+        <li><span class="check">✓</span> All chart ranges (30D / 1Y / ALL)</li>
         <li><span class="check">✓</span> CSV export</li>
         <li><span class="check">✓</span> Lightning receipt — verifiable proof</li>
       </ul>
@@ -1025,7 +1025,7 @@ function applyFullPageCopy(lang) {
       if (h2) h2.textContent = 'Veja os sats entrando sem sair do editor';
       if (p) p.textContent = 'Dashboard de pagamentos Lightning em tempo real dentro do VS Code. Veja cada pagamento no instante em que cai.';
       if (lis[0]) lis[0].textContent = '✓ Feed de pagamentos ao vivo com valor e endpoint';
-      if (lis[1]) lis[1].textContent = '✓ Grafico de barras — 1D / 7D / 30D / 1Y / ALL';
+      if (lis[1]) lis[1].textContent = '✓ Grafico de barras — 1D / 7D (free) · 30D / 1Y / ALL (Pro)';
       if (lis[2]) lis[2].textContent = '✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)';
       if (lis[3]) lis[3].textContent = '✓ Tema claro / escuro / automatico';
       if (lis[4]) lis[4].textContent = '✓ Zero config — so definir seu Lightning address';
@@ -1036,7 +1036,7 @@ function applyFullPageCopy(lang) {
       if (h2) h2.textContent = 'Watch your sats roll in — without leaving your editor';
       if (p) p.textContent = 'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart. Works in any language.';
       if (lis[0]) lis[0].textContent = '✓ Live payment feed with amount & endpoint';
-      if (lis[1]) lis[1].textContent = '✓ Bar chart — 1D / 7D / 30D / 1Y / ALL ranges';
+      if (lis[1]) lis[1].textContent = '✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)';
       if (lis[2]) lis[2].textContent = '✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)';
       if (lis[3]) lis[3].textContent = '✓ Light / dark / auto theme';
       if (lis[4]) lis[4].textContent = '✓ Zero config — just set your Lightning address';
