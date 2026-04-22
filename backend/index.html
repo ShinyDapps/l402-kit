@@ -110,6 +110,42 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .step-desc { font-size: 12px; color: var(--muted); }
 
 /* COMPARISON */
+/* ── Under the hood ── */
+.hood { max-width: 860px; margin: 0 auto 64px; padding: 0 24px; }
+.hood h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.hood-sub { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+.hood-flow { display: flex; flex-direction: column; gap: 0; }
+.hood-row { display: grid; grid-template-columns: 32px 1fr; gap: 0 16px; align-items: start; }
+.hood-connector { width: 32px; display: flex; flex-direction: column; align-items: center; }
+.hood-connector .hc-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--orange); background: var(--bg); flex-shrink: 0; margin-top: 6px; }
+.hood-connector .hc-line { width: 2px; background: var(--border); flex: 1; min-height: 20px; }
+.hood-row:last-child .hc-line { display: none; }
+.hood-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; }
+.hood-box-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--orange); margin-bottom: 6px; }
+.hood-box-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.hood-box pre { font-family: 'Fira Code', monospace; font-size: 12px; color: #a8c5da; background: #0d1117; border-radius: 6px; padding: 10px 14px; margin: 0; overflow-x: auto; line-height: 1.55; }
+.hood-box pre .hl { color: var(--orange); }
+.hood-token { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; margin-top: 28px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.hood-token-half { padding: 18px 20px; }
+.hood-token-half:first-child { border-right: 1px solid var(--border); }
+.hood-token-sep { display: flex; align-items: center; justify-content: center; padding: 0 4px; font-size: 20px; font-weight: 700; color: var(--orange); background: #111; }
+.hood-token-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; color: var(--muted); }
+.hood-token-half:first-child .hood-token-tag { color: #7dd3fc; }
+.hood-token-half:last-child .hood-token-tag { color: #86efac; }
+.hood-token-half code { font-family: 'Fira Code', monospace; font-size: 11px; word-break: break-all; display: block; margin-bottom: 8px; color: #cdd6f4; }
+.hood-token-half p { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0; }
+/* ── Problem ── */
+.problem { max-width: 860px; margin: 0 auto 56px; padding: 0 24px; }
+.problem h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.problem-sub { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 40px; }
+.problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.problem-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; }
+.problem-card .pc-icon { font-size: 26px; margin-bottom: 10px; }
+.problem-card .pc-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.problem-card .pc-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+.problem-footer { text-align: center; font-size: 14px; color: var(--muted); padding: 16px 24px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+.problem-footer strong { color: var(--text); }
+/* ── Compare ── */
 .compare { max-width: 860px; margin: 0 auto 56px; padding: 0 24px; }
 .compare h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
 .compare table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -480,7 +516,7 @@ app = <span class="c-fn">FastAPI</span>()
     <div class="flow-step">
       <div class="step-icon">🔐</div>
       <div class="step-title">Proof verified</div>
-      <div class="step-desc">SHA256(preimage) == hash</div>
+      <div class="step-desc">Verified in &lt;1ms — no DB, pure crypto</div>
     </div>
     <div class="flow-step">
       <div class="step-icon">✅</div>
@@ -491,6 +527,107 @@ app = <span class="c-fn">FastAPI</span>()
 </section>
 
 
+
+<section class="hood">
+  <h2>Under the hood</h2>
+  <p class="hood-sub">L402 is built on HTTP 402 — a status code reserved since 1996 for "Payment Required". Here's every step, in full.</p>
+  <div class="hood-flow">
+
+    <div class="hood-row">
+      <div class="hood-connector"><div class="hc-dot"></div><div class="hc-line"></div></div>
+      <div class="hood-box">
+        <div class="hood-box-label">Step 1 — Request (no token)</div>
+        <div class="hood-box-title">Client calls your API normally</div>
+        <pre>GET /api/data HTTP/1.1
+Host: yourapi.com</pre>
+      </div>
+    </div>
+
+    <div class="hood-row">
+      <div class="hood-connector"><div class="hc-dot"></div><div class="hc-line"></div></div>
+      <div class="hood-box">
+        <div class="hood-box-label">Step 2 — 402 Payment Required</div>
+        <div class="hood-box-title">Server returns a Lightning invoice — no payment taken yet</div>
+        <pre>HTTP/1.1 <span class="hl">402 Payment Required</span>
+WWW-Authenticate: L402
+  token="eyJoYXNoIjoiYTNmOGIy...",
+  invoice="<span class="hl">lnbc10n1p...</span>"   ← BOLT11, pay this</pre>
+      </div>
+    </div>
+
+    <div class="hood-row">
+      <div class="hood-connector"><div class="hc-dot"></div><div class="hc-line"></div></div>
+      <div class="hood-box">
+        <div class="hood-box-label">Step 3 — Lightning payment</div>
+        <div class="hood-box-title">Client pays the invoice → Lightning Network returns a preimage (proof of payment)</div>
+        <pre>preimage = await wallet.pay("lnbc10n1p...")
+// → "<span class="hl">a3f8b2c1d4e5f678...</span>"  (32-byte secret, unique per invoice)</pre>
+      </div>
+    </div>
+
+    <div class="hood-row">
+      <div class="hood-connector"><div class="hc-dot"></div><div class="hc-line"></div></div>
+      <div class="hood-box">
+        <div class="hood-box-label">Step 4 — Retry with proof</div>
+        <div class="hood-box-title">Client attaches the token + preimage in the Authorization header</div>
+        <pre>GET /api/data HTTP/1.1
+Authorization: L402 <span class="hl">&lt;token&gt;:&lt;preimage&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="hood-row">
+      <div class="hood-connector"><div class="hc-dot"></div><div class="hc-line"></div></div>
+      <div class="hood-box">
+        <div class="hood-box-label">Step 5 — Local verification (&lt;1ms, no DB)</div>
+        <div class="hood-box-title">Server checks one equation. No network call, no database lookup — pure cryptography.</div>
+        <pre>SHA256(<span class="hl">preimage</span>) === token.hash  →  <span class="hl">200 OK</span> + your data</pre>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="hood-token">
+    <div class="hood-token-half">
+      <div class="hood-token-tag">Macaroon (server-signed)</div>
+      <code>eyJoYXNoIjoiYTNmOGIyYzEu<br>Li4iLCJleHAiOjE3MTA4MH0=</code>
+      <p>Base64 JSON: <code style="background:none;padding:0;font-size:11px">{ hash, exp }</code><br>Signed by SHA-256. Can't be forged without the preimage.</p>
+    </div>
+    <div class="hood-token-sep">:</div>
+    <div class="hood-token-half">
+      <div class="hood-token-tag">Preimage (payment proof)</div>
+      <code>a3f8b2c1d4e5f6789abc<br>def0123456789abcdef01</code>
+      <p>32-byte secret revealed by the Lightning Network <em>only after</em> the payment settles. Impossible to fake.</p>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <h2>Why credit cards fail for APIs</h2>
+  <p class="problem-sub">Stripe was built for humans buying products. APIs charge per-call — and that breaks everything.</p>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="pc-icon">💸</div>
+      <div class="pc-title">$0.30 minimum fee</div>
+      <div class="pc-desc">A 1-cent API call costs $0.30 in card fees. You lose money on every request under that threshold.</div>
+    </div>
+    <div class="problem-card">
+      <div class="pc-icon">🤖</div>
+      <div class="pc-title">AI agents can't hold cards</div>
+      <div class="pc-desc">Autonomous agents have no billing address, no CVV, no human to click "confirm". Card payment fails.</div>
+    </div>
+    <div class="problem-card">
+      <div class="pc-icon">↩️</div>
+      <div class="pc-title">APIs can't be "returned"</div>
+      <div class="pc-desc">You already delivered the data. A chargeback lets the caller take it for free — and you pay the fee.</div>
+    </div>
+    <div class="problem-card">
+      <div class="pc-icon">🌍</div>
+      <div class="pc-title">50+ countries blocked</div>
+      <div class="pc-desc">Stripe and PayPal don't operate everywhere. Your API is global — your payment processor shouldn't decide who gets in.</div>
+    </div>
+  </div>
+  <p class="problem-footer"><strong>l402-kit</strong> uses the HTTP 402 standard + Bitcoin Lightning to eliminate all four problems at once — no accounts, no minimums, no chargebacks, no borders.</p>
+</section>
 
 <section class="compare">
   <h2>Why not legacy payments?</h2>
@@ -532,7 +669,7 @@ app = <span class="c-fn">FastAPI</span>()
     <div class="feature-card">
       <div class="feature-icon">🔐</div>
       <div class="feature-title">Cryptographic proof</div>
-      <div class="feature-desc">SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.</div>
+      <div class="feature-desc">SHA256(preimage) === token.hash — verified in &lt;1ms locally. No DB, no network. Chargebacks are impossible.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">📊</div>
