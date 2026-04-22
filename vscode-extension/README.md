@@ -3,8 +3,6 @@
 🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية) · 🇮🇹 [Italiano](#italiano)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.png)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
-[![VS Code Installs](https://img.shields.io/visual-studio-marketplace/i/ShinyDapps.shinydapps-l402.png?color=f7931a&label=installs)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![VS Code Rating](https://img.shields.io/visual-studio-marketplace/r/ShinyDapps.shinydapps-l402.png?color=f7931a&label=rating)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 
 > **🌐 [l402kit.vercel.app](https://l402kit.vercel.app)** — docs, demo, and SDK for all languages
 
@@ -34,7 +32,7 @@ Real-time Bitcoin Lightning payment dashboard for developers using [l402-kit](ht
 
 ### How to use
 
-![ShinyDapps extension in action — live sats counter, payment sidebar, bar chart](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![ShinyDapps extension in action — live sats counter, payment sidebar, bar chart](https://l402kit.vercel.app/demo-extension.gif)
 
 **Step 1 — Add l402-kit to your API**
 
@@ -76,7 +74,7 @@ Click the ⚡ icon in the activity bar. The sidebar shows:
 
 ### How it works
 
-![Payment flow — HTTP 402 → Lightning invoice → pay → token → data](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-en.gif)
+![Payment flow — HTTP 402 → Lightning invoice → pay → token → data](https://l402kit.vercel.app/flow-en.gif)
 
 ```
 Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning invoice
@@ -144,7 +142,7 @@ Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usa
 
 ### Como usar
 
-![Extensão ShinyDapps em ação — contador de sats ao vivo, painel lateral, gráfico de barras](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![Extensão ShinyDapps em ação — contador de sats ao vivo, painel lateral, gráfico de barras](https://l402kit.vercel.app/demo-extension.gif)
 
 **Passo 1 — Adicione l402-kit à sua API**
 
@@ -172,7 +170,7 @@ Clique no ícone ⚡ na barra de atividades. O painel mostra sats recebidos, his
 
 ### Como funciona
 
-![Fluxo de pagamento — HTTP 402 → fatura Lightning → pagamento → token → dados](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-pt.gif)
+![Fluxo de pagamento — HTTP 402 → fatura Lightning → pagamento → token → dados](https://l402kit.vercel.app/flow-pt.gif)
 
 ```
 Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
@@ -221,7 +219,7 @@ Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
 
 ### Cómo usar
 
-![Extensión ShinyDapps en acción — contador de sats en vivo, panel lateral, gráfico de barras](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![Extensión ShinyDapps en acción — contador de sats en vivo, panel lateral, gráfico de barras](https://l402kit.vercel.app/demo-extension.gif)
 
 **Paso 1 — Agrega l402-kit a tu API**
 
@@ -245,7 +243,7 @@ Haz clic en el icono ⚡ en la barra de actividades.
 
 ### Cómo funciona
 
-![Flujo de pago — HTTP 402 → factura Lightning → pago → token → datos](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-es.gif)
+![Flujo de pago — HTTP 402 → factura Lightning → pago → token → datos](https://l402kit.vercel.app/flow-es.gif)
 
 ```
 Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
@@ -284,7 +282,7 @@ Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
 
 ### 如何使用
 
-![ShinyDapps 扩展实操 — 实时 sats 计数器、支付侧边栏、柱状图](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![ShinyDapps 扩展实操 — 实时 sats 计数器、支付侧边栏、柱状图](https://l402kit.vercel.app/demo-extension.gif)
 
 **第一步 — 将 l402-kit 添加到您的 API**
 
@@ -308,7 +306,7 @@ cargo add l402kit         # Rust
 
 ### 工作原理
 
-![支付流程 — HTTP 402 → 闪电发票 → 支付 → 令牌 → 数据](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-zh.gif)
+![支付流程 — HTTP 402 → 闪电发票 → 支付 → 令牌 → 数据](https://l402kit.vercel.app/flow-zh.gif)
 
 ```
 您的 API ──► l402-kit ──► HTTP 402 + 闪电发票
@@ -347,7 +345,7 @@ cargo add l402kit         # Rust
 
 ### 使い方
 
-![ShinyDapps 拡張機能の実際動作 — リアルタイム sats カウンター、支払いサイドバー、棒グラフ](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![ShinyDapps 拡張機能の実際動作 — リアルタイム sats カウンター、支払いサイドバー、棒グラフ](https://l402kit.vercel.app/demo-extension.gif)
 
 **ステップ 1 — API に l402-kit を追加**
 
@@ -371,7 +369,7 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
 
 ### 仕組み
 
-![支払いフロー — HTTP 402 → Lightning インボイス → 支払い → トークン → データ](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ja.gif)
+![支払いフロー — HTTP 402 → Lightning インボイス → 支払い → トークン → データ](https://l402kit.vercel.app/flow-ja.gif)
 
 ```
 あなたの API ──► l402-kit ──► HTTP 402 + Lightning インボイス
@@ -410,7 +408,7 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
 
 ### Comment utiliser
 
-![Extension ShinyDapps en action — compteur de sats en direct, panneau latéral, graphique](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![Extension ShinyDapps en action — compteur de sats en direct, panneau latéral, graphique](https://l402kit.vercel.app/demo-extension.gif)
 
 **Étape 1 — Ajoutez l402-kit à votre API**
 
@@ -434,7 +432,7 @@ Cliquez sur l'icône ⚡ dans la barre d'activités.
 
 ### Comment ça marche
 
-![Flux de paiement — HTTP 402 → facture Lightning → paiement → token → données](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-fr.gif)
+![Flux de paiement — HTTP 402 → facture Lightning → paiement → token → données](https://l402kit.vercel.app/flow-fr.gif)
 
 ```
 Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
@@ -473,7 +471,7 @@ Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
 
 ### Verwendung
 
-![ShinyDapps Erweiterung in Aktion — Live-Sats-Zähler, Zahlungs-Seitenleiste, Balkendiagramm](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![ShinyDapps Erweiterung in Aktion — Live-Sats-Zähler, Zahlungs-Seitenleiste, Balkendiagramm](https://l402kit.vercel.app/demo-extension.gif)
 
 **Schritt 1 — l402-kit zu Ihrer API hinzufügen**
 
@@ -497,7 +495,7 @@ Klicken Sie auf das ⚡-Symbol in der Aktivitätsleiste.
 
 ### So funktioniert es
 
-![Zahlungsfluss — HTTP 402 → Lightning-Rechnung → Zahlung → Token → Daten](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-de.gif)
+![Zahlungsfluss — HTTP 402 → Lightning-Rechnung → Zahlung → Token → Daten](https://l402kit.vercel.app/flow-de.gif)
 
 ```
 Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
@@ -536,7 +534,7 @@ Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
 
 ### Использование
 
-![Расширение ShinyDapps в действии — живой счётчик сатошей, боковая панель, диаграмма](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![Расширение ShinyDapps в действии — живой счётчик сатошей, боковая панель, диаграмма](https://l402kit.vercel.app/demo-extension.gif)
 
 **Шаг 1 — Добавьте l402-kit в ваш API**
 
@@ -560,7 +558,7 @@ Command Palette (`Ctrl+Shift+P`) →
 
 ### Как это работает
 
-![Поток платежей — HTTP 402 → Lightning-инвойс → оплата → токен → данные](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ru.gif)
+![Поток платежей — HTTP 402 → Lightning-инвойс → оплата → токен → данные](https://l402kit.vercel.app/flow-ru.gif)
 
 ```
 Ваш API ──► l402-kit ──► HTTP 402 + Lightning-инвойс
@@ -599,7 +597,7 @@ Command Palette (`Ctrl+Shift+P`) →
 
 ### कैसे उपयोग करें
 
-![ShinyDapps एक्सटेंशन in action — live sats counter, payment sidebar, bar chart](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![ShinyDapps एक्सटेंशन in action — live sats counter, payment sidebar, bar chart](https://l402kit.vercel.app/demo-extension.gif)
 
 **चरण 1 — अपनी API में l402-kit जोड़ें**
 
@@ -623,7 +621,7 @@ Activity bar में ⚡ आइकन क्लिक करें।
 
 ### यह कैसे काम करता है
 
-![भुगतान प्रवाह — HTTP 402 → Lightning invoice → भुगतान → token → डेटा](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-hi.gif)
+![भुगतान प्रवाह — HTTP 402 → Lightning invoice → भुगतान → token → डेटा](https://l402kit.vercel.app/flow-hi.gif)
 
 ```
 आपकी API ──► l402-kit ──► HTTP 402 + Lightning invoice
@@ -662,7 +660,7 @@ Activity bar में ⚡ आइकन क्लिक करें।
 
 ### كيفية الاستخدام
 
-![إضافة ShinyDapps في العمل — عداد sats مباشر، لوحة جانبية، رسم بياني](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![إضافة ShinyDapps في العمل — عداد sats مباشر، لوحة جانبية، رسم بياني](https://l402kit.vercel.app/demo-extension.gif)
 
 **الخطوة 1 — أضف l402-kit إلى API الخاص بك**
 
@@ -686,7 +684,7 @@ cargo add l402kit         # Rust
 
 ### كيف يعمل
 
-![تدفق الدفع — HTTP 402 → فاتورة Lightning → دفع → رمز → بيانات](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ar.gif)
+![تدفق الدفع — HTTP 402 → فاتورة Lightning → دفع → رمز → بيانات](https://l402kit.vercel.app/flow-ar.gif)
 
 ```
 API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightning
@@ -725,7 +723,7 @@ API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightni
 
 ### Come usare
 
-![Estensione ShinyDapps in azione — contatore sats live, pannello laterale, grafico a barre](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
+![Estensione ShinyDapps in azione — contatore sats live, pannello laterale, grafico a barre](https://l402kit.vercel.app/demo-extension.gif)
 
 **Passo 1 — Aggiungi l402-kit alla tua API**
 
@@ -749,7 +747,7 @@ Clicca sull'icona ⚡ nella barra delle attività.
 
 ### Come funziona
 
-![Flusso di pagamento — HTTP 402 → fattura Lightning → pagamento → token → dati](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-it.gif)
+![Flusso di pagamento — HTTP 402 → fattura Lightning → pagamento → token → dati](https://l402kit.vercel.app/flow-it.gif)
 
 ```
 La tua API ──► l402-kit ──► HTTP 402 + fattura Lightning
