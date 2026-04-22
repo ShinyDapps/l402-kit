@@ -1,279 +1,4 @@
-import * as vscode from "vscode";
-
-const SD_SUPABASE_URL = "https://urcqtpklpfyvizcgcsia.supabase.co";
-const SD_SUPABASE_KEY = "sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-";
-const CMD_OPEN_CONFIGURE = "openConfigure";
-const CMD_DOWNLOAD_CSV = "downloadCsv";
-const MONTHLY_FEE_USD = 9;
-
-let statusBar: vscode.StatusBarItem;
-let pollInterval: ReturnType<typeof setInterval> | undefined;
-let sidebarProvider: PaymentsDashboardProvider | undefined;
-let activePanel: vscode.WebviewPanel | undefined;
-let csvDownloadPending = false;
-
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const I18N: Record<string, Record<string, string>> = {
-  en: {
-    title: "⚡ ShinyDapps Payments", totalPayments: "Total Payments",
-    totalSats: "Total Sats", lightningAddr: "Lightning Address", notSet: "Not configured",
-    when: "When", endpoint: "Endpoint", sats: "Sats",
-    noPayments: "No payments yet — share your API!",
-    loading: "Loading…", setupTitle: "⚡ Quick Setup",
-    setupStep1: "1. Open Command Palette (Ctrl+Shift+P)",
-    setupStep2: "2. Run: ShinyDapps: Configure Lightning Address",
-    setupStep3: "Or add manually to VS Code settings:",
-    setupHint: "Get a free Lightning address at dashboard.blink.sv",
-    chartTitle: "Sats earned", revenue: "Revenue (USD est.)", btcPrice: "BTC Price",
-  },
-  pt: {
-    title: "⚡ Pagamentos ShinyDapps", totalPayments: "Total de Pagamentos",
-    totalSats: "Total de Sats", lightningAddr: "Endereço Lightning", notSet: "Não configurado",
-    when: "Quando", endpoint: "Endpoint", sats: "Sats",
-    noPayments: "Nenhum pagamento ainda — compartilhe sua API!",
-    loading: "Carregando…", setupTitle: "⚡ Configuração Rápida",
-    setupStep1: "1. Abra o Command Palette (Ctrl+Shift+P)",
-    setupStep2: "2. Execute: ShinyDapps: Configure Lightning Address",
-    setupStep3: "Ou adicione manualmente nas configurações do VS Code:",
-    setupHint: "Obtenha um endereço Lightning gratuito em dashboard.blink.sv",
-    chartTitle: "Sats ganhos", revenue: "Receita (USD est.)", btcPrice: "Preço BTC",
-  },
-  es: {
-    title: "⚡ Pagos ShinyDapps", totalPayments: "Total de Pagos",
-    totalSats: "Total de Sats", lightningAddr: "Dirección Lightning", notSet: "No configurado",
-    when: "Cuándo", endpoint: "Endpoint", sats: "Sats",
-    noPayments: "Sin pagos aún — ¡comparte tu API!",
-    loading: "Cargando…", setupTitle: "⚡ Configuración Rápida",
-    setupStep1: "1. Abre el Command Palette (Ctrl+Shift+P)",
-    setupStep2: "2. Ejecuta: ShinyDapps: Configure Lightning Address",
-    setupStep3: "O configura manualmente en ajustes de VS Code:",
-    setupHint: "Obtén una dirección Lightning gratuita en dashboard.blink.sv",
-    chartTitle: "Sats ganados", revenue: "Ingresos (USD est.)", btcPrice: "Precio BTC",
-  },
-  zh: {
-    title: "⚡ ShinyDapps 收款", totalPayments: "总付款次数",
-    totalSats: "总 Sats", lightningAddr: "闪电地址", notSet: "未配置",
-    when: "时间", endpoint: "接口", sats: "Sats",
-    noPayments: "暂无付款 — 分享您的 API！",
-    loading: "加载中…", setupTitle: "⚡ 快速设置",
-    setupStep1: "1. 打开命令面板 (Ctrl+Shift+P)",
-    setupStep2: "2. 运行: ShinyDapps: Configure Lightning Address",
-    setupStep3: "或在 VS Code 设置中手动配置：",
-    setupHint: "在 dashboard.blink.sv 获取免费闪电地址",
-    chartTitle: "收入 Sats", revenue: "收入 (USD 估)", btcPrice: "BTC 价格",
-  },
-  ja: {
-    title: "⚡ ShinyDapps 支払い", totalPayments: "総支払い数",
-    totalSats: "総 Sats", lightningAddr: "Lightning アドレス", notSet: "未設定",
-    when: "日時", endpoint: "エンドポイント", sats: "Sats",
-    noPayments: "まだ支払いなし — APIをシェアしよう！",
-    loading: "読み込み中…", setupTitle: "⚡ クイック設定",
-    setupStep1: "1. コマンドパレットを開く (Ctrl+Shift+P)",
-    setupStep2: "2. 実行: ShinyDapps: Configure Lightning Address",
-    setupStep3: "または VS Code 設定で手動設定：",
-    setupHint: "dashboard.blink.sv で無料の Lightning アドレスを取得",
-    chartTitle: "獲得 Sats", revenue: "収益 (USD 推定)", btcPrice: "BTC 価格",
-  },
-  fr: {
-    title: "⚡ Paiements ShinyDapps", totalPayments: "Total Paiements",
-    totalSats: "Total Sats", lightningAddr: "Adresse Lightning", notSet: "Non configuré",
-    when: "Quand", endpoint: "Endpoint", sats: "Sats",
-    noPayments: "Aucun paiement — partagez votre API !",
-    loading: "Chargement…", setupTitle: "⚡ Configuration Rapide",
-    setupStep1: "1. Ouvrez la palette de commandes (Ctrl+Shift+P)",
-    setupStep2: "2. Exécutez : ShinyDapps: Configure Lightning Address",
-    setupStep3: "Ou configurez manuellement dans les paramètres VS Code :",
-    setupHint: "Obtenez une adresse Lightning gratuite sur dashboard.blink.sv",
-    chartTitle: "Sats gagnés", revenue: "Revenus (USD est.)", btcPrice: "Prix BTC",
-  },
-  de: {
-    title: "⚡ ShinyDapps Zahlungen", totalPayments: "Zahlungen gesamt",
-    totalSats: "Sats gesamt", lightningAddr: "Lightning-Adresse", notSet: "Nicht konfiguriert",
-    when: "Wann", endpoint: "Endpunkt", sats: "Sats",
-    noPayments: "Noch keine Zahlungen — teilen Sie Ihre API!",
-    loading: "Laden…", setupTitle: "⚡ Schnelleinrichtung",
-    setupStep1: "1. Befehlspalette öffnen (Strg+Umschalt+P)",
-    setupStep2: "2. Ausführen: ShinyDapps: Configure Lightning Address",
-    setupStep3: "Oder manuell in den VS Code-Einstellungen:",
-    setupHint: "Kostenlosen Lightning-Adresse auf dashboard.blink.sv holen",
-    chartTitle: "Verdiente Sats", revenue: "Einnahmen (USD geschätzt)", btcPrice: "BTC-Preis",
-  },
-  ru: {
-    title: "⚡ Платежи ShinyDapps", totalPayments: "Всего платежей",
-    totalSats: "Всего сатошей", lightningAddr: "Lightning-адрес", notSet: "Не настроено",
-    when: "Когда", endpoint: "Эндпоинт", sats: "Сат.",
-    noPayments: "Платежей ещё нет — поделитесь API!",
-    loading: "Загрузка…", setupTitle: "⚡ Быстрая настройка",
-    setupStep1: "1. Откройте палитру команд (Ctrl+Shift+P)",
-    setupStep2: "2. Выполните: ShinyDapps: Configure Lightning Address",
-    setupStep3: "Или настройте вручную в параметрах VS Code:",
-    setupHint: "Получите бесплатный Lightning-адрес на dashboard.blink.sv",
-    chartTitle: "Заработанные сатоши", revenue: "Доход (USD, оценка)", btcPrice: "Цена BTC",
-  },
-  hi: {
-    title: "⚡ ShinyDapps भुगतान", totalPayments: "कुल भुगतान",
-    totalSats: "कुल Sats", lightningAddr: "Lightning पता", notSet: "कॉन्फ़िगर नहीं",
-    when: "कब", endpoint: "एंडपॉइंट", sats: "Sats",
-    noPayments: "अभी कोई भुगतान नहीं — अपना API शेयर करें!",
-    loading: "लोड हो रहा है…", setupTitle: "⚡ त्वरित सेटअप",
-    setupStep1: "1. Command Palette खोलें (Ctrl+Shift+P)",
-    setupStep2: "2. चलाएं: ShinyDapps: Configure Lightning Address",
-    setupStep3: "या VS Code सेटिंग्स में मैन्युअली सेट करें:",
-    setupHint: "dashboard.blink.sv पर मुफ़्त Lightning पता प्राप्त करें",
-    chartTitle: "अर्जित Sats", revenue: "आय (USD अनुमानित)", btcPrice: "BTC मूल्य",
-  },
-  ar: {
-    title: "⚡ مدفوعات ShinyDapps", totalPayments: "إجمالي المدفوعات",
-    totalSats: "إجمالي Sats", lightningAddr: "عنوان Lightning", notSet: "غير مُهيَّأ",
-    when: "وقت", endpoint: "نقطة النهاية", sats: "Sats",
-    noPayments: "لا مدفوعات بعد — شارك واجهة API الخاصة بك!",
-    loading: "جارٍ التحميل…", setupTitle: "⚡ الإعداد السريع",
-    setupStep1: "1. افتح لوحة الأوامر (Ctrl+Shift+P)",
-    setupStep2: "2. شغّل: ShinyDapps: Configure Lightning Address",
-    setupStep3: "أو اضبط يدويًا في إعدادات VS Code:",
-    setupHint: "احصل على عنوان Lightning مجاني على dashboard.blink.sv",
-    chartTitle: "Sats المكتسبة", revenue: "الإيرادات (USD تقريبي)", btcPrice: "سعر BTC",
-  },
-  it: {
-    title: "⚡ Pagamenti ShinyDapps", totalPayments: "Pagamenti Totali",
-    totalSats: "Sats Totali", lightningAddr: "Indirizzo Lightning", notSet: "Non configurato",
-    when: "Quando", endpoint: "Endpoint", sats: "Sats",
-    noPayments: "Nessun pagamento ancora — condividi la tua API!",
-    loading: "Caricamento…", setupTitle: "⚡ Configurazione Rapida",
-    setupStep1: "1. Apri il Command Palette (Ctrl+Shift+P)",
-    setupStep2: "2. Esegui: ShinyDapps: Configure Lightning Address",
-    setupStep3: "Oppure configura manualmente nelle impostazioni VS Code:",
-    setupHint: "Ottieni un indirizzo Lightning gratuito su dashboard.blink.sv",
-    chartTitle: "Sats guadagnati", revenue: "Ricavi (USD stimati)", btcPrice: "Prezzo BTC",
-  },
-};
-
-// ── Shared webview message handler ───────────────────────────────────────────
-function handleWebviewMessage(msg: { command: string; data?: string }) {
-  if (msg.command === CMD_OPEN_CONFIGURE) {
-    vscode.commands.executeCommand("shinydapps.configure");
-  } else if (msg.command === CMD_DOWNLOAD_CSV) {
-    handleCsvDownload(msg.data as string);
-  }
-}
-
-// ── Provider ──────────────────────────────────────────────────────────────────
-class PaymentsDashboardProvider implements vscode.WebviewViewProvider {
-  private _view?: vscode.WebviewView;
-  constructor(_context: vscode.ExtensionContext) {}
-
-  resolveWebviewView(webviewView: vscode.WebviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.html = getDashboardHtml();
-    webviewView.webview.onDidReceiveMessage(handleWebviewMessage);
-  }
-
-  refresh() {
-    if (this._view) this._view.webview.html = getDashboardHtml();
-  }
-}
-
-// ── Activation ────────────────────────────────────────────────────────────────
-export function activate(context: vscode.ExtensionContext) {
-  statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  statusBar.command = "shinydapps.showDashboard";
-  statusBar.text = "⚡ 0 sats (0)";
-  statusBar.tooltip = "ShinyDapps — Click to open payment dashboard";
-  statusBar.show();
-  context.subscriptions.push(statusBar);
-
-  sidebarProvider = new PaymentsDashboardProvider(context);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("shinydapps.payments", sidebarProvider)
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("shinydapps.showDashboard", () => {
-      if (activePanel) { activePanel.reveal(); return; }
-      activePanel = vscode.window.createWebviewPanel(
-        "shinydappsDashboard", "⚡ ShinyDapps Payments",
-        vscode.ViewColumn.One, { enableScripts: true }
-      );
-      activePanel.webview.html = getDashboardHtml();
-      activePanel.webview.onDidReceiveMessage(handleWebviewMessage);
-      activePanel.onDidDispose(() => { activePanel = undefined; });
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("shinydapps.configure", async () => {
-      const address = await vscode.window.showInputBox({
-        prompt: "⚡ Your Lightning Address (e.g. you@blink.sv)",
-        placeHolder: "you@blink.sv",
-        ignoreFocusOut: true,
-        validateInput: v => (v && v.includes("@") ? null : "Enter a valid Lightning address (e.g. you@blink.sv)"),
-      });
-      if (!address) return;
-      const cfg = vscode.workspace.getConfiguration("shinydapps");
-      await cfg.update("lightningAddress", address, true);
-      vscode.window.showInformationMessage(`⚡ ShinyDapps ready! Monitoring: ${address}`);
-      startPolling();
-      sidebarProvider?.refresh();
-      if (activePanel) activePanel.webview.html = getDashboardHtml();
-    })
-  );
-
-  startPolling();
-}
-
-function startPolling() {
-  if (pollInterval) clearInterval(pollInterval);
-  const addr = vscode.workspace.getConfiguration("shinydapps").get<string>("lightningAddress");
-  if (!addr) {
-    statusBar.text = "⚡ Not configured";
-    statusBar.tooltip = "ShinyDapps — Click to configure your Lightning Address";
-    return;
-  }
-  const poll = async () => {
-    try {
-      const res = await fetch(
-        `${SD_SUPABASE_URL}/rest/v1/payments?owner_address=eq.${encodeURIComponent(addr)}&select=amount_sats`,
-        { headers: { apikey: SD_SUPABASE_KEY, Authorization: `Bearer ${SD_SUPABASE_KEY}` } }
-      );
-      const rows = (await res.json()) as { amount_sats: number }[];
-      const total = rows.reduce((s, r) => s + (r.amount_sats || 0), 0);
-      statusBar.text = `⚡ ${total.toLocaleString()} sats (${rows.length})`;
-      statusBar.tooltip = `ShinyDapps — ${rows.length} payments · ${total.toLocaleString()} sats`;
-      statusBar.backgroundColor = rows.length > 0
-        ? new vscode.ThemeColor("statusBarItem.warningBackground")
-        : undefined;
-    } catch {
-      statusBar.text = "⚡ — (offline)";
-    }
-  };
-  poll();
-  pollInterval = setInterval(poll, 30_000);
-}
-
-// ── CSV download ──────────────────────────────────────────────────────────────
-async function handleCsvDownload(csvData: string) {
-  if (csvDownloadPending) return;
-  csvDownloadPending = true;
-  try {
-    const uri = await vscode.window.showSaveDialog({
-      defaultUri: vscode.Uri.file("payments.csv"),
-      filters: { "CSV": ["csv"] },
-    });
-    if (!uri) return;
-    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(csvData));
-    vscode.window.showInformationMessage(`⚡ Payments exported to ${uri.fsPath}`);
-  } finally {
-    csvDownloadPending = false;
-  }
-}
-
-// ── Webview HTML ──────────────────────────────────────────────────────────────
-function getDashboardHtml(): string {
-  const addr = vscode.workspace.getConfiguration("shinydapps").get<string>("lightningAddress") ?? "";
-  const i18n = JSON.stringify(I18N);
-
-  return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -404,6 +129,33 @@ td { padding: 5px 4px; border-bottom: 1px solid #181818; font-size: 11px; color:
 .retry-btn:hover { background: #222; border-color: #444; }
 .loading { text-align: center; padding: 44px 12px; color: #f7931a; font-size: 13px; }
 </style>
+
+<script>
+// Mock Supabase with sample payments
+const _realFetch = window.fetch.bind(window);
+window.fetch = async function(url, opts) {
+  if (url.includes('supabase.co') && url.includes('payments')) {
+    const now = new Date();
+    const rows = [
+      { paid_at: new Date(now-1*3600000).toISOString(), amount_sats: 210, endpoint: '/api/weather' },
+      { paid_at: new Date(now-2*3600000).toISOString(), amount_sats: 100, endpoint: '/api/premium' },
+      { paid_at: new Date(now-5*3600000).toISOString(), amount_sats: 500, endpoint: '/api/data' },
+      { paid_at: new Date(now-1*86400000).toISOString(), amount_sats: 1000, endpoint: '/api/gpt' },
+      { paid_at: new Date(now-2*86400000).toISOString(), amount_sats: 250, endpoint: '/api/weather' },
+      { paid_at: new Date(now-3*86400000).toISOString(), amount_sats: 750, endpoint: '/api/premium' },
+      { paid_at: new Date(now-4*86400000).toISOString(), amount_sats: 100, endpoint: '/api/data' },
+    ];
+    return { ok: true, json: async () => rows, text: async () => JSON.stringify(rows) };
+  }
+  if (url.includes('pro-check')) {
+    return { ok: true, json: async () => ({ pro: false }) };
+  }
+  if (url.includes('mempool.space')) {
+    return { ok: true, json: async () => ({ USD: 93420 }) };
+  }
+  return _realFetch(url, opts);
+};
+</script>
 </head>
 <body>
 
@@ -421,8 +173,8 @@ td { padding: 5px 4px; border-bottom: 1px solid #181818; font-size: 11px; color:
 'use strict';
 
 // ── constants ──────────────────────────────────────────────────────────
-const ADDR = ${JSON.stringify(addr)};
-const I18N = ${i18n};
+const ADDR = "testdev@blink.sv";
+const I18N = {"en":{"title":"⚡ ShinyDapps Payments","totalPayments":"Total Payments","totalSats":"Total Sats","lightningAddr":"Lightning Address","when":"When","endpoint":"Endpoint","sats":"Sats","noPayments":"No payments yet — share your API!","loading":"Loading…","setupTitle":"⚡ Quick Setup","setupStep1":"1. Open Command Palette (Ctrl+Shift+P)","setupStep2":"2. Run: ShinyDapps: Configure Lightning Address","setupStep3":"Or add manually to VS Code settings:","setupHint":"Get a free Lightning address at dashboard.blink.sv","chartTitle":"Sats earned","revenue":"Revenue (USD est.)","btcPrice":"BTC Price"},"pt":{"title":"⚡ Pagamentos ShinyDapps","totalPayments":"Total de Pagamentos","totalSats":"Total de Sats","lightningAddr":"Endereço Lightning","when":"Quando","endpoint":"Endpoint","sats":"Sats","noPayments":"Nenhum pagamento ainda!","loading":"Carregando…","setupTitle":"⚡ Configuração Rápida","setupStep1":"1. Abra o Command Palette","setupStep2":"2. Configure Lightning Address","setupStep3":"Ou configure manualmente:","setupHint":"dashboard.blink.sv","chartTitle":"Sats ganhos","revenue":"Receita (USD est.)","btcPrice":"Preço BTC"}};
 const SB_URL = 'https://urcqtpklpfyvizcgcsia.supabase.co';
 const SB_KEY = 'sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-';
 const LANG_LABELS = {
@@ -610,10 +362,9 @@ function renderContent(rows) {
   // pro banner
   if (!isPro) {
     html += '<div class="pro-banner">';
-    const proSats = btcPrice > 0 ? Math.ceil(${MONTHLY_FEE_USD} / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
-    html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
+    html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">9,000 sats / mo</span></div>';
     html += '<div class="pro-features">Full history · 30D/1Y/ALL charts · CSV export · Pay in Bitcoin</div>';
-    html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
+    html += '<a href="https://l402kit.vercel.app/docs#pricing" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
     html += '</div>';
   }
 
@@ -658,7 +409,7 @@ function renderContent(rows) {
       btn.addEventListener('click', function() {
         const r = btn.getAttribute('data-r');
         if ((r === '1Y' || r === 'ALL') && !isPro) {
-          window.open('https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
+          window.open('https://l402kit.vercel.app/docs#pricing', '_blank');
           return;
         }
         chartRange = r;
@@ -669,7 +420,7 @@ function renderContent(rows) {
       });
     });
 
-    // csv — postMessage to host (blob downloads blocked in VSCode webviews)
+    // csv
     const csvBtn = el('csvBtn');
     if (csvBtn) {
       csvBtn.addEventListener('click', function() {
@@ -677,7 +428,10 @@ function renderContent(rows) {
         const body = (lastRows || []).map(function(r) {
           return new Date(r.paid_at).toISOString() + ',' + (r.endpoint || '') + ',' + (r.amount_sats || 0);
         }).join('\\n');
-        vsc.postMessage({ command: 'downloadCsv', data: header + body });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([header + body], {type:'text/csv'}));
+        a.download = 'payments.csv';
+        a.click();
       });
     }
 
@@ -688,11 +442,8 @@ function renderContent(rows) {
     // resize observer
     try {
       if (window._cRo) window._cRo.disconnect();
-      if (window._cRoTimer) clearTimeout(window._cRoTimer);
       window._cRo = new ResizeObserver(function() {
-        if (lastRows === null) return;
-        if (window._cRoTimer) clearTimeout(window._cRoTimer);
-        window._cRoTimer = setTimeout(function() { drawChart(lastRows, chartRange); }, 120);
+        if (lastRows !== null) drawChart(lastRows, chartRange);
       });
       const cw = document.querySelector('.chart-wrap');
       if (cw) window._cRo.observe(cw);
@@ -737,9 +488,8 @@ async function load() {
   setContent('<div class="loading">⚡ ' + t('loading') + '</div>');
   await checkPro();
   try {
-    const cutoff = isPro ? '' : '&paid_at=gte.' + new Date(Date.now() - 30 * 86400_000).toISOString();
     const res = await fetch(
-      SB_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(ADDR) + '&order=paid_at.desc&limit=500' + cutoff,
+      SB_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(ADDR) + '&order=paid_at.desc&limit=500',
       { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
     );
     if (!res.ok) {
@@ -760,9 +510,4 @@ load();
 })(); // end IIFE
 </script>
 </body>
-</html>`;
-}
-
-export function deactivate() {
-  if (pollInterval) clearInterval(pollInterval);
-}
+</html>`
