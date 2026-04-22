@@ -83,10 +83,12 @@ describe("BlinkProvider", () => {
 
   it("macaroon contains future expiry timestamp", async () => {
     globalThis.fetch = mockFetch(validInvoiceResponse(100));
-    const before = Date.now();
+    const beforeSecs = Math.floor(Date.now() / 1000);
     const inv = await provider.createInvoice(100);
     const decoded = JSON.parse(Buffer.from(inv.macaroon, "base64").toString());
-    expect(decoded.exp).toBeGreaterThan(before);
+    // exp may be in seconds or ms — normalise both to seconds for comparison
+    const expSecs = decoded.exp > 1e12 ? Math.floor(decoded.exp / 1000) : decoded.exp;
+    expect(expSecs).toBeGreaterThan(beforeSecs);
   });
 
   it("createInvoice throws on GraphQL errors array", async () => {

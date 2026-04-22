@@ -224,11 +224,11 @@ describe("RedisReplayAdapter", () => {
     expect(trueCount).toBe(1);
   });
 
-  it("key contains the exact preimage hex", async () => {
+  it("key contains a 64-char hex digest (preimage is hashed before storage)", async () => {
     const { client, calls } = makeMockRedis();
     const adapter = new RedisReplayAdapter(client);
-    const p = randomBytes(32).toString("hex");
-    await adapter.check(p);
-    expect(calls[0]).toContain(p);
+    await adapter.check(randomBytes(32).toString("hex"));
+    // The key is l402:replay:<hex> — the hex part is a 64-char SHA256 hash
+    expect(calls[0]).toMatch(/^SET l402:replay:[0-9a-f]{64}/);
   });
 });
