@@ -13,7 +13,7 @@
 🇮🇹 **Monetizza la tua API con Bitcoin Lightning. 3 righe di codice.**
 
 [![PyPI version](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=pypi)](https://pypi.org/project/l402kit)
-[![PyPI downloads](https://img.shields.io/pypi/dm/l402kit?color=3776ab&label=downloads%2Fmo)](https://pypi.org/project/l402kit)
+[![PyPI downloads](https://img.shields.io/pepy/dt/l402kit?color=3776ab&label=total%20downloads)](https://pypi.org/project/l402kit)
 [![Python](https://img.shields.io/pypi/pyversions/l402kit?color=3776ab)](https://pypi.org/project/l402kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
 

@@ -12,8 +12,8 @@
 
 | SDK | Install | Version | Downloads |
 |:----|:--------|:-------:|----------:|
-| 📦 **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit.png?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm dls](https://img.shields.io/npm/dw/l402-kit.png?color=f7931a&label=dls%2Fwk)](https://npmjs.com/package/l402-kit) |
-| 🐍 **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit.png?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi dls](https://img.shields.io/pypi/dm/l402kit.png?color=3776ab&label=dls%2Fmo)](https://pypi.org/project/l402kit) |
+| 📦 **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit.png?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit.png?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
+| 🐍 **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit.png?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit.png?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
 | 🦀 **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit.png?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit.png?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
 | 🦫 **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.0.1-00acd7.png?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7.png)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
 
@@ -25,7 +25,7 @@
 
 Real-time Bitcoin Lightning payment dashboard built for developers using [l402-kit](https://npmjs.com/package/l402-kit). Every payment your API receives appears instantly: endpoint hit, amount in sats, USD value, and a live chart.
 
-![ShinyDapps Lightning Payments — VS Code sidebar showing sats counter, chart and payment history](./docs/screenshot.png)
+![ShinyDapps Lightning Payments — connect wallet, view sats, switch theme and language](./docs/demo.gif)
 
 ### Features
 
