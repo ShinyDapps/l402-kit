@@ -2,12 +2,20 @@
 
 🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية) · 🇮🇹 [Italiano](#italiano)
 
-[![VS Code Marketplace](https://vsmarketplacebadges.dev/version/ShinyDapps.shinydapps-l402.png)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![VS Code](https://vsmarketplacebadges.dev/version/ShinyDapps.shinydapps-l402.png)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 [![Installs](https://vsmarketplacebadges.dev/installs/ShinyDapps.shinydapps-l402.png)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![npm](https://img.shields.io/npm/v/l402-kit.png)](https://npmjs.com/package/l402-kit)
-[![npm downloads](https://img.shields.io/npm/dw/l402-kit.png)](https://npmjs.com/package/l402-kit)
-[![PyPI](https://img.shields.io/pypi/v/l402kit.png)](https://pypi.org/project/l402kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.png)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
+
+---
+
+### SDK ecosystem — live download stats
+
+| SDK | Install | Version | Downloads |
+|:----|:--------|:-------:|----------:|
+| 📦 **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit.png?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm dls](https://img.shields.io/npm/dw/l402-kit.png?color=f7931a&label=dls%2Fwk)](https://npmjs.com/package/l402-kit) |
+| 🐍 **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit.png?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi dls](https://img.shields.io/pypi/dm/l402kit.png?color=3776ab&label=dls%2Fmo)](https://pypi.org/project/l402kit) |
+| 🦀 **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit.png?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit.png?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
+| 🦫 **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.0.1-00acd7.png?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7.png)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
 
 ---
 
