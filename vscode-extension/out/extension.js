@@ -38,10 +38,14 @@ exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const SD_SUPABASE_URL = "https://urcqtpklpfyvizcgcsia.supabase.co";
 const SD_SUPABASE_KEY = "sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-";
+const CMD_OPEN_CONFIGURE = "openConfigure";
+const CMD_DOWNLOAD_CSV = "downloadCsv";
+const MONTHLY_FEE_USD = 9;
 let statusBar;
 let pollInterval;
 let sidebarProvider;
 let activePanel;
+let csvDownloadPending = false;
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N = {
     en: {
@@ -177,6 +181,15 @@ const I18N = {
         chartTitle: "Sats guadagnati", revenue: "Ricavi (USD stimati)", btcPrice: "Prezzo BTC",
     },
 };
+// ── Shared webview message handler ───────────────────────────────────────────
+function handleWebviewMessage(msg) {
+    if (msg.command === CMD_OPEN_CONFIGURE) {
+        vscode.commands.executeCommand("shinydapps.configure");
+    }
+    else if (msg.command === CMD_DOWNLOAD_CSV) {
+        handleCsvDownload(msg.data);
+    }
+}
 // ── Provider ──────────────────────────────────────────────────────────────────
 class PaymentsDashboardProvider {
     constructor(_context) { }
@@ -184,14 +197,7 @@ class PaymentsDashboardProvider {
         this._view = webviewView;
         webviewView.webview.options = { enableScripts: true };
         webviewView.webview.html = getDashboardHtml();
-        webviewView.webview.onDidReceiveMessage(msg => {
-            if (msg.command === "openConfigure") {
-                vscode.commands.executeCommand("shinydapps.configure");
-            }
-            else if (msg.command === "downloadCsv") {
-                handleCsvDownload(msg.data);
-            }
-        });
+        webviewView.webview.onDidReceiveMessage(handleWebviewMessage);
     }
     refresh() {
         if (this._view)
@@ -215,14 +221,7 @@ function activate(context) {
         }
         activePanel = vscode.window.createWebviewPanel("shinydappsDashboard", "⚡ ShinyDapps Payments", vscode.ViewColumn.One, { enableScripts: true });
         activePanel.webview.html = getDashboardHtml();
-        activePanel.webview.onDidReceiveMessage(msg => {
-            if (msg.command === "openConfigure") {
-                vscode.commands.executeCommand("shinydapps.configure");
-            }
-            else if (msg.command === "downloadCsv") {
-                handleCsvDownload(msg.data);
-            }
-        });
+        activePanel.webview.onDidReceiveMessage(handleWebviewMessage);
         activePanel.onDidDispose(() => { activePanel = undefined; });
     }));
     context.subscriptions.push(vscode.commands.registerCommand("shinydapps.configure", async () => {
@@ -273,14 +272,22 @@ function startPolling() {
 }
 // ── CSV download ──────────────────────────────────────────────────────────────
 async function handleCsvDownload(csvData) {
-    const uri = await vscode.window.showSaveDialog({
-        defaultUri: vscode.Uri.file("payments.csv"),
-        filters: { "CSV": ["csv"] },
-    });
-    if (!uri)
+    if (csvDownloadPending)
         return;
-    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(csvData));
-    vscode.window.showInformationMessage(`⚡ Payments exported to ${uri.fsPath}`);
+    csvDownloadPending = true;
+    try {
+        const uri = await vscode.window.showSaveDialog({
+            defaultUri: vscode.Uri.file("payments.csv"),
+            filters: { "CSV": ["csv"] },
+        });
+        if (!uri)
+            return;
+        await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(csvData));
+        vscode.window.showInformationMessage(`⚡ Payments exported to ${uri.fsPath}`);
+    }
+    finally {
+        csvDownloadPending = false;
+    }
 }
 // ── Webview HTML ──────────────────────────────────────────────────────────────
 function getDashboardHtml() {
@@ -623,9 +630,9 @@ function renderContent(rows) {
   // pro banner
   if (!isPro) {
     html += '<div class="pro-banner">';
-    const proSats = btcPrice > 0 ? Math.ceil(9 / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
+    const proSats = btcPrice > 0 ? Math.ceil(${MONTHLY_FEE_USD} / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
     html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
-    html += '<div class="pro-features">Full history · CSV export · Pay in Bitcoin · Cancel anytime</div>';
+    html += '<div class="pro-features">Full history · 30D/1Y/ALL charts · CSV export · Pay in Bitcoin</div>';
     html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
     html += '</div>';
   }
@@ -636,7 +643,7 @@ function renderContent(rows) {
   html += '<div class="chart-label">' + t('chartTitle') + '</div>';
   html += '<div>';
   ['1D','7D','30D','1Y','ALL'].forEach(function(r) {
-    const lock = (r === '1Y' || r === 'ALL') && !isPro;
+    const lock = (r === '30D' || r === '1Y' || r === 'ALL') && !isPro;
     html += '<button class="rbtn' + (r === chartRange ? ' active' : '') + '" data-r="' + r + '"' + (lock ? ' title="Pro only"' : '') + '>' + r + (lock ? ' 🔒' : '') + '</button>';
   });
   html += '</div>';

@@ -1,0 +1,96 @@
+---
+title: Go SDK
+description: Complete reference for the l402-kit Go SDK (net/http middleware).
+---
+
+## Installation
+
+```bash
+go get github.com/shinydapps/l402-kit/go@v1.0.0
+```
+
+<Note>
+The module requires Go 1.21+. If you run into access issues, contact `shinydapps@gmail.com` — the module is authenticated and distributed directly.
+</Note>
+
+---
+
+## Quick start
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    mux := http.NewServeMux()
+
+    protected := l402.Middleware(l402.Options{
+        PriceSats:        10,
+        LightningAddress: "you@blink.sv",
+    })
+
+    mux.Handle("/api/data", protected(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
+    })))
+
+    http.ListenAndServe(":8080", mux)
+}
+```
+
+---
+
+## `l402.Options`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `PriceSats` | `int64` | ✅ | Amount in satoshis per call |
+| `LightningAddress` | `string` | ✅ | Your Lightning address (`you@blink.sv`) |
+| `InvoiceExpiry` | `int` | — | Invoice TTL in seconds (default: 3600) |
+
+---
+
+## `l402.Middleware(opts Options)`
+
+Returns an `func(http.Handler) http.Handler` compatible with `net/http`, Chi, Gorilla Mux, and any standard Go HTTP framework.
+
+**First call (no token):**
+```
+HTTP 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+**Subsequent call (with payment proof):**
+```
+Authorization: L402 <macaroon>:<preimage>
+→ HTTP 200 OK
+```
+
+---
+
+## Verification
+
+The middleware verifies `SHA256(preimage) == paymentHash` locally — no external call on the hot path.
+
+Replay prevention: each preimage is checked against Supabase (unique constraint) before access is granted.
+
+---
+
+## Error codes
+
+| Status | Meaning |
+|---|---|
+| `402` | No payment token — pay the invoice |
+| `401` | Invalid preimage (wrong payment proof) |
+| `401` | Replayed token (already used) |
+
+---
+
+## Contact
+
+Questions or access issues: `shinydapps@gmail.com` · Lightning: `shinydapps@blink.sv`

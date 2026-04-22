@@ -1,0 +1,110 @@
+---
+title: Rust SDK
+description: Complete reference for the l402-kit Rust SDK (axum middleware).
+---
+
+## Installation
+
+```bash
+cargo add l402kit
+```
+
+Or in `Cargo.toml`:
+
+```toml
+[dependencies]
+l402kit = "1.0"
+```
+
+---
+
+## Quick start
+
+```rust
+use axum::{Router, routing::get, Json};
+use l402kit::l402_middleware;
+use serde_json::{json, Value};
+
+#[tokio::main]
+async fn main() {
+    let app = Router::new()
+        .route("/api/data", get(handler))
+        .layer(l402_middleware(l402kit::Options {
+            price_sats: 10,
+            lightning_address: "you@blink.sv".into(),
+        }));
+
+    axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
+
+async fn handler() -> Json<Value> {
+    Json(json!({ "data": "premium content" }))
+}
+```
+
+---
+
+## `l402kit::Options`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `price_sats` | `u64` | ✅ | Amount in satoshis per call |
+| `lightning_address` | `String` | ✅ | Your Lightning address (`you@blink.sv`) |
+| `invoice_expiry` | `u32` | — | Invoice TTL in seconds (default: 3600) |
+
+---
+
+## `l402_middleware(opts: Options)`
+
+Returns an `axum::middleware::Layer` compatible with axum 0.8+.
+
+**First call (no token):**
+```
+HTTP 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+**Subsequent call (with payment proof):**
+```
+Authorization: L402 <macaroon>:<preimage>
+→ HTTP 200 OK
+```
+
+---
+
+## Verification
+
+The middleware verifies `SHA256(preimage) == paymentHash` using the `sha2` crate — no external call on the hot path.
+
+---
+
+## Features
+
+The crate has a single feature flag:
+
+```toml
+[features]
+default = ["axum-middleware"]
+axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
+```
+
+Disable `axum-middleware` if you only need the core `verify_token` function.
+
+---
+
+## Error codes
+
+| Status | Meaning |
+|---|---|
+| `402` | No payment token — pay the invoice |
+| `401` | Invalid preimage (wrong payment proof) |
+| `401` | Replayed token (already used) |
+
+---
+
+## Contact
+
+`shinydapps@gmail.com` · [crates.io/crates/l402kit](https://crates.io/crates/l402kit)
