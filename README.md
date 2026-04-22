@@ -1,4 +1,47 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://l402kit.vercel.app/logo-dark.svg" height="72">
+  <img src="https://l402kit.vercel.app/logo-light.svg" height="72" alt="l402-kit">
+</picture>
+
 # l402-kit
+
+**Add Bitcoin Lightning pay-per-call to any API. 3 lines of code.**
+
+[![npm version](https://img.shields.io/npm/v/l402-kit?color=f7931a&label=npm)](https://npmjs.com/package/l402-kit)
+[![npm downloads](https://img.shields.io/npm/dw/l402-kit?color=f7931a&label=npm%20dls%2Fwk)](https://npmjs.com/package/l402-kit)
+[![PyPI version](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=pypi)](https://pypi.org/project/l402kit)
+[![PyPI downloads](https://img.shields.io/pypi/dm/l402kit?color=3776ab&label=pypi%20dls%2Fmo)](https://pypi.org/project/l402kit)
+[![crates.io version](https://img.shields.io/crates/v/l402kit?color=ce422b&label=crates.io)](https://crates.io/crates/l402kit)
+[![crates.io downloads](https://img.shields.io/crates/d/l402kit?color=ce422b&label=crates%20dls)](https://crates.io/crates/l402kit)
+[![VS Code](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?color=007acc&label=vscode)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![VS Code installs](https://img.shields.io/visual-studio-marketplace/i/ShinyDapps.shinydapps-l402?color=007acc&label=vscode%20installs)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.vercel.app/demo)
+
+<br/>
+
+<a href="https://l402kit.vercel.app/demo" title="Watch end-to-end demo">
+  <img src="https://l402kit.vercel.app/extension-preview.png" width="600" alt="ShinyDapps VS Code extension — real-time Lightning payment dashboard" />
+</a>
+
+<br/>
+
+**[▶ Watch end-to-end demo — install → 402 → pay → 200 OK](https://l402kit.vercel.app/demo)**
+
+<br/>
+
+> ⚡ **1,200+ npm downloads/week** · 4 languages · 4 SDKs · 139 tests · AI-agent native · MIT
+
+</div>
+
+---
+
+<details>
+<summary>🌍 Available in 11 languages — click to expand</summary>
+
+<br/>
 
 🇺🇸 **Charge for your API in Bitcoin Lightning. 3 lines of code.**
 🇧🇷 Monetize sua API com Bitcoin Lightning. 3 linhas de código.
@@ -12,24 +55,9 @@
 🇯🇵 Bitcoin LightningでAPIを3行で収益化。
 🇮🇹 Monetizza la tua API con Bitcoin Lightning. 3 righe di codice.
 
-[![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
-[![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-139%20passing-brightgreen)](#)
-[![VS Code](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?label=vscode)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![Live Demo](https://img.shields.io/badge/▶%20live%20demo-end--to--end-f7931a)](https://l402kit.vercel.app/demo)
+📖 **Official docs:** [🇺🇸](https://l402kit.vercel.app/docs) · [🇧🇷](https://l402kit.vercel.app/docs/pt/introduction) · [🇪🇸](https://l402kit.vercel.app/docs/es/introduction) · [🇨🇳](https://l402kit.vercel.app/docs/zh/introduction) · [🇮🇳](https://l402kit.vercel.app/docs/hi/introduction) · [🇸🇦](https://l402kit.vercel.app/docs/ar/introduction) · [🇫🇷](https://l402kit.vercel.app/docs/fr/introduction) · [🇩🇪](https://l402kit.vercel.app/docs/de/introduction) · [🇷🇺](https://l402kit.vercel.app/docs/ru/introduction) · [🇯🇵](https://l402kit.vercel.app/docs/ja/introduction) · [🇮🇹](https://l402kit.vercel.app/docs/it/introduction)
 
-<p align="center">
-  <a href="https://l402kit.vercel.app/demo" title="Watch end-to-end demo">
-    <img src="vscode-extension/docs/screenshot.png" width="520" alt="ShinyDapps VS Code extension — real-time sats dashboard" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://l402kit.vercel.app/demo"><strong>▶ Watch end-to-end demo — install → 402 → pay → 200 OK</strong></a>
-</p>
-
-> **AI Agents / LLMs:** See [`llms.txt`](./llms.txt) for machine-readable instructions on how to use and monetize with l402-kit.
+</details>
 
 ---
 
@@ -38,34 +66,39 @@
 ```bash
 npm install l402-kit        # TypeScript / Node.js / Express
 pip install l402kit         # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go   # Go / net/http / Chi / Gin
+go get github.com/shinydapps/l402-kit/go@v1.0.1   # Go / net/http / Chi / Gin
 cargo add l402kit           # Rust / axum
 ```
 
-📖 **Official docs in 11 languages:**
-
-[🇺🇸 English](https://l402kit.vercel.app/docs) · [🇧🇷 Português](https://l402kit.vercel.app/docs/pt/introduction) · [🇪🇸 Español](https://l402kit.vercel.app/docs/es/introduction) · [🇨🇳 中文](https://l402kit.vercel.app/docs/zh/introduction) · [🇮🇳 हिंदी](https://l402kit.vercel.app/docs/hi/introduction) · [🇸🇦 العربية](https://l402kit.vercel.app/docs/ar/introduction) · [🇫🇷 Français](https://l402kit.vercel.app/docs/fr/introduction) · [🇩🇪 Deutsch](https://l402kit.vercel.app/docs/de/introduction) · [🇷🇺 Русский](https://l402kit.vercel.app/docs/ru/introduction) · [🇯🇵 日本語](https://l402kit.vercel.app/docs/ja/introduction) · [🇮🇹 Italiano](https://l402kit.vercel.app/docs/it/introduction)
+> **AI Agents / LLMs:** See [`llms.txt`](./llms.txt) for machine-readable instructions.
 
 ---
 
 ## How it works
 
 ```
-Client calls your API
-  → Your API returns 402 + Lightning invoice (BOLT11)
-  → Client pays (< 1 second, any Lightning wallet)
-  → Client sends cryptographic proof: Authorization: L402 <macaroon>:<preimage>
-  → SHA256(preimage) == paymentHash ✓
-  → Your API responds 200 + data
+1. Client calls your API
+       ↓
+2. API returns  HTTP 402 + BOLT11 invoice + macaroon
+       ↓
+3. Client pays  (any Lightning wallet, < 1 second, any country)
+       ↓
+4. Client sends Authorization: L402 <macaroon>:<preimage>
+       ↓
+5. API verifies SHA256(preimage) == paymentHash  ✓
+       ↓
+6. HTTP 200 OK + your data
 
-Money flow (managed mode):
-  Payment → ShinyDapps backend → 99.7% to your Lightning Address
-                               → 0.3% fee to ShinyDapps
+── Fee flow (managed mode) ─────────────────────────────────
+   Payment → 99.7% → your Lightning Address  (instant)
+           →  0.3% → ShinyDapps
 ```
 
 ---
 
-## Quickstart — TypeScript
+## Quickstart
+
+### TypeScript
 
 ```typescript
 import express from "express";
@@ -74,16 +107,16 @@ import { l402 } from "l402-kit";
 const app = express();
 
 app.get("/premium", l402({
-  priceSats: 100,                           // ~$0.10 per call
-  ownerLightningAddress: "you@blink.sv",    // your Lightning Address
+  priceSats: 100,                          // ~$0.10 per call
+  ownerLightningAddress: "you@blink.sv",   // your Lightning Address
 }), (_req, res) => {
-  res.json({ data: "Payment confirmed. Here is your data." });
+  res.json({ data: "Payment confirmed." });
 });
 
 app.listen(3000);
 ```
 
-## Quickstart — Python
+### Python
 
 ```python
 from fastapi import FastAPI, Request
@@ -97,7 +130,7 @@ async def premium(request: Request):
     return {"data": "Payment confirmed."}
 ```
 
-## Quickstart — Go
+### Go
 
 ```go
 package main
@@ -119,7 +152,7 @@ func main() {
 }
 ```
 
-## Quickstart — Rust (axum)
+### Rust
 
 ```rust
 use axum::{middleware, routing::get, Router};
@@ -141,111 +174,134 @@ async fn main() {
 
 ---
 
-## Test it
+## Test it live
 
 ```bash
-# First call — returns payment challenge
+# Step 1 — triggers 402 + returns invoice
 curl http://localhost:3000/premium
-# → { "error": "Payment Required", "invoice": "lnbc1u...", "macaroon": "eyJ..." }
+# ← { "error": "Payment Required", "invoice": "lnbc1u...", "macaroon": "eyJ..." }
 
-# Pay the invoice with any Lightning wallet, then:
+# Step 2 — pay the invoice with any Lightning wallet, then:
 curl http://localhost:3000/premium \
   -H "Authorization: L402 <macaroon>:<preimage>"
-# → { "data": "Payment confirmed. Here is your data." }
+# ← { "data": "Payment confirmed." }
 ```
+
+[▶ Try the interactive demo](https://l402kit.vercel.app/demo)
 
 ---
 
 ## Why not Stripe?
 
-| | Stripe | l402-kit |
-|---|---|---|
-| Minimum fee | $0.30 | **< 1 sat (~$0.001)** |
-| Settlement | 2–7 days | **< 1 second** |
-| Chargebacks | Yes | **Impossible** |
-| Requires account | Yes | **No** |
-| AI agent support | No | **Yes — native (4 SDKs)** |
-| Countries blocked | ~50 | **0 — global** |
+|  | Stripe | l402-kit |
+|--|--------|----------|
+| Minimum fee | $0.30 | **< 1 sat (~$0.0003)** |
+| Settlement time | 2–7 days | **< 1 second** |
+| Chargebacks | Yes | **Impossible — cryptographic proof** |
+| Requires account | Yes | **No — any Lightning wallet** |
+| AI agent support | No | **Yes — 4 SDKs, native** |
+| Countries blocked | ~50 | **0 — global by default** |
+| Reversible | Yes | **No — final on receipt** |
 | Open source | No | **Yes — MIT** |
 
 ---
 
-## Advanced — bring your own Lightning wallet
+## Providers
 
 ```typescript
-import { l402, BlinkProvider } from "l402-kit";
+import { BlinkProvider, OpenNodeProvider, LNbitsProvider } from "l402-kit";
 
-const lightning = new BlinkProvider(
-  process.env.BLINK_API_KEY!,
-  process.env.BLINK_WALLET_ID!,
-);
+// Blink (recommended — free, instant setup)
+const provider = new BlinkProvider(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
 
-app.get("/premium", l402({ priceSats: 100, lightning }), handler);
+// OpenNode (production, custodial)
+const provider = new OpenNodeProvider(process.env.OPENNODE_KEY!);
+
+// LNbits (self-hosted)
+const provider = new LNbitsProvider(process.env.LNBITS_KEY!, "https://your.lnbits.host");
 ```
 
-Available providers: `BlinkProvider`, `OpenNodeProvider`, `LNbitsProvider`
-
-Or implement `LightningProvider` to plug in any backend:
+**Bring your own node** — implement the `LightningProvider` interface in 5 lines:
 
 ```typescript
 import type { LightningProvider } from "l402-kit";
 
-class MyProvider implements LightningProvider {
-  async createInvoice(amountSats: number) { /* ... */ }
-  async checkPayment(paymentHash: string) { /* ... */ }
+class MyNode implements LightningProvider {
+  async createInvoice(amountSats: number) { /* return Invoice */ }
+  async checkPayment(paymentHash: string) { /* return boolean */ }
 }
 ```
 
 ---
 
-## Security
+## Security model
 
 ```
-1. API creates invoice: paymentHash = SHA256(preimage)
-2. Client pays — Lightning Network releases preimage
-3. API verifies: SHA256(preimage) == paymentHash ✓
-4. Preimage marked used — impossible to replay
+Invoice creation:  paymentHash = SHA256(preimage)
+Client payment:    Lightning Network releases preimage to payer
+API verification:  SHA256(preimage) == paymentHash  ✓
+Replay protection: each preimage is marked used — works exactly once
+Token expiry:      macaroons expire after 1 hour
 ```
 
-- SHA256 — unforgeable mathematical proof
-- Anti-replay — each preimage works exactly once
-- Expiry — tokens expire after 1 hour
-- 139 automated tests across 4 languages
-- Open source — audit everything at [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
+- **Unforgeable** — SHA256 is a one-way function; you cannot fake a preimage
+- **No chargebacks** — cryptographic settlement, not reversible card auth
+- **Replay-safe** — MemoryReplayAdapter (dev) or RedisReplayAdapter (production, multi-instance)
+- **139 automated tests** across 4 languages
+- **Fully auditable** — MIT, every line open source
 
 ---
 
-## Get a free Lightning Address
+## VS Code Extension
 
-Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card.
+Monitor every sat in real-time without leaving your editor.
+
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?color=007acc&label=Install%20on%20VS%20Code)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+
+- ⚡ Live payment feed per endpoint
+- 📊 Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)
+- 🌍 11 languages built-in
+- 🎨 Light / dark / auto theme
+- 🔧 Zero config — just set your Lightning Address
+
+---
+
+## Get a Lightning Address (free)
+
+Sign up at **[dashboard.blink.sv](https://dashboard.blink.sv)** — free, no credit card, instant.
 Your address: `yourname@blink.sv`
 
-Other options: Wallet of Satoshi, Phoenix, Zeus, Alby.
+Other wallets: [Wallet of Satoshi](https://walletofsatoshi.com) · [Phoenix](https://phoenix.acinq.co) · [Zeus](https://zeusln.app) · [Alby](https://getalby.com)
 
 ---
 
 ## Links
 
-| | |
-|---|---|
-| Docs (11 languages) | [l402kit.vercel.app/docs](https://l402kit.vercel.app/docs) |
-| npm | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
-| PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
-| Go | [pkg.go.dev/github.com/shinydapps/l402-kit/go](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
-| Rust | [crates.io/crates/l402kit](https://crates.io/crates/l402kit) |
-| GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
-| VS Code Extension | [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) |
-| Creator | [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer) |
-| Lightning | shinydapps@blink.sv |
+| Resource | URL |
+|----------|-----|
+| 📖 Docs (11 languages) | [l402kit.vercel.app/docs](https://l402kit.vercel.app/docs) |
+| 📦 npm | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
+| 🐍 PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
+| 🦫 Go | [pkg.go.dev/github.com/shinydapps/l402-kit/go](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
+| 🦀 Rust | [crates.io/crates/l402kit](https://crates.io/crates/l402kit) |
+| 🔌 VS Code | [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) |
+| ⚡ Lightning | shinydapps@blink.sv |
+| 🐙 GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
 
 ---
 
-## License
+<div align="center">
 
-MIT — use freely, build freely. Bitcoin has no borders.
+MIT — use freely, build freely.
 
----
+**Bitcoin has no borders.**
 
-<p align="center">
-  Built with ⚡ by <a href="https://github.com/ShinyDapps">ShinyDapps</a> · <a href="https://github.com/ThiagoDataEngineer">Thiago Yoshiaki</a>
-</p>
+<br/>
+
+Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps) · [Thiago Yoshiaki](https://github.com/ThiagoDataEngineer)
+
+<br/>
+
+<a href="https://l402kit.vercel.app/docs">Docs</a> · <a href="https://l402kit.vercel.app/demo">Demo</a> · <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">VS Code</a> · <a href="https://npmjs.com/package/l402-kit">npm</a>
+
+</div>
