@@ -17,9 +17,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-139%20passing-brightgreen)](#)
 [![GitHub Stars](https://img.shields.io/github/stars/ShinyDapps/l402-kit)](https://github.com/ShinyDapps/l402-kit)
+[![Live Demo](https://img.shields.io/badge/▶%20live%20demo-end--to--end-f7931a)](https://l402kit.vercel.app/demo)
 
 <p align="center">
-  <img src="vscode-extension/docs/screenshot.png" width="520" alt="ShinyDapps VS Code extension — real-time sats dashboard" />
+  <a href="https://l402kit.vercel.app/demo" title="Watch end-to-end demo">
+    <img src="vscode-extension/docs/screenshot.png" width="520" alt="ShinyDapps VS Code extension — real-time sats dashboard" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://l402kit.vercel.app/demo"><strong>▶ Watch end-to-end demo — install → 402 → pay → 200 OK</strong></a>
 </p>
 
 > **AI Agents / LLMs:** See [`llms.txt`](./llms.txt) for machine-readable instructions on how to use and monetize with l402-kit.

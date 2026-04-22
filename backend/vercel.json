@@ -8,6 +8,7 @@
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/checkout", "destination": "/checkout.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },
-    { "source": "/dev", "destination": "/dev.html" }
+    { "source": "/dev", "destination": "/dev.html" },
+    { "source": "/demo", "destination": "/demo.html" }
   ]
 }
