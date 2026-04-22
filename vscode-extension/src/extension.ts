@@ -25,6 +25,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "Or add manually to VS Code settings:",
     setupHint: "Get a free Lightning address at dashboard.blink.sv",
     chartTitle: "Sats earned", revenue: "Revenue (USD est.)", btcPrice: "BTC Price",
+    proFeatures: "Full history · 30D/1Y/ALL · CSV export · Pay in Bitcoin",
+    upgradeBtn: "Upgrade with Bitcoin →", emptySub: "Your first satoshi is waiting",
+    connectionError: "Connection Error", retryBtn: "Retry", cfgBtn: "Set Lightning Address",
   },
   pt: {
     title: "⚡ Pagamentos ShinyDapps", totalPayments: "Total de Pagamentos",
@@ -37,6 +40,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "Ou adicione manualmente nas configurações do VS Code:",
     setupHint: "Obtenha um endereço Lightning gratuito em dashboard.blink.sv",
     chartTitle: "Sats ganhos", revenue: "Receita (USD est.)", btcPrice: "Preço BTC",
+    proFeatures: "Histórico completo · 30D/1Y/ALL · CSV · Pagar em Bitcoin",
+    upgradeBtn: "Assinar com Bitcoin →", emptySub: "Seu primeiro satoshi está esperando",
+    connectionError: "Erro de conexão", retryBtn: "Tentar novamente", cfgBtn: "Definir Lightning Address",
   },
   es: {
     title: "⚡ Pagos ShinyDapps", totalPayments: "Total de Pagos",
@@ -49,6 +55,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "O configura manualmente en ajustes de VS Code:",
     setupHint: "Obtén una dirección Lightning gratuita en dashboard.blink.sv",
     chartTitle: "Sats ganados", revenue: "Ingresos (USD est.)", btcPrice: "Precio BTC",
+    proFeatures: "Historial completo · 30D/1Y/ALL · CSV · Pagar en Bitcoin",
+    upgradeBtn: "Suscribirse con Bitcoin →", emptySub: "Tu primer satoshi te espera",
+    connectionError: "Error de conexión", retryBtn: "Reintentar", cfgBtn: "Configurar Lightning Address",
   },
   zh: {
     title: "⚡ ShinyDapps 收款", totalPayments: "总付款次数",
@@ -61,6 +70,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "或在 VS Code 设置中手动配置：",
     setupHint: "在 dashboard.blink.sv 获取免费闪电地址",
     chartTitle: "收入 Sats", revenue: "收入 (USD 估)", btcPrice: "BTC 价格",
+    proFeatures: "完整历史 · 30D/1Y/ALL · CSV导出 · 用Bitcoin支付",
+    upgradeBtn: "用 Bitcoin 升级 →", emptySub: "你的第一个 satoshi 正在等待",
+    connectionError: "连接错误", retryBtn: "重试", cfgBtn: "设置 Lightning 地址",
   },
   ja: {
     title: "⚡ ShinyDapps 支払い", totalPayments: "総支払い数",
@@ -73,6 +85,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "または VS Code 設定で手動設定：",
     setupHint: "dashboard.blink.sv で無料の Lightning アドレスを取得",
     chartTitle: "獲得 Sats", revenue: "収益 (USD 推定)", btcPrice: "BTC 価格",
+    proFeatures: "全履歴 · 30D/1Y/ALL · CSVエクスポート · Bitcoinで支払い",
+    upgradeBtn: "Bitcoinでアップグレード →", emptySub: "最初のsatをお待ちしています",
+    connectionError: "接続エラー", retryBtn: "再試行", cfgBtn: "Lightning Addressを設定",
   },
   fr: {
     title: "⚡ Paiements ShinyDapps", totalPayments: "Total Paiements",
@@ -85,6 +100,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "Ou configurez manuellement dans les paramètres VS Code :",
     setupHint: "Obtenez une adresse Lightning gratuite sur dashboard.blink.sv",
     chartTitle: "Sats gagnés", revenue: "Revenus (USD est.)", btcPrice: "Prix BTC",
+    proFeatures: "Historique complet · 30D/1Y/ALL · Export CSV · Payer en Bitcoin",
+    upgradeBtn: "Améliorer avec Bitcoin →", emptySub: "Votre premier satoshi vous attend",
+    connectionError: "Erreur de connexion", retryBtn: "Réessayer", cfgBtn: "Définir Lightning Address",
   },
   de: {
     title: "⚡ ShinyDapps Zahlungen", totalPayments: "Zahlungen gesamt",
@@ -97,6 +115,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "Oder manuell in den VS Code-Einstellungen:",
     setupHint: "Kostenlosen Lightning-Adresse auf dashboard.blink.sv holen",
     chartTitle: "Verdiente Sats", revenue: "Einnahmen (USD geschätzt)", btcPrice: "BTC-Preis",
+    proFeatures: "Vollständiger Verlauf · 30D/1Y/ALL · CSV-Export · Mit Bitcoin bezahlen",
+    upgradeBtn: "Mit Bitcoin upgraden →", emptySub: "Dein erster Satoshi wartet",
+    connectionError: "Verbindungsfehler", retryBtn: "Erneut versuchen", cfgBtn: "Lightning-Adresse setzen",
   },
   ru: {
     title: "⚡ Платежи ShinyDapps", totalPayments: "Всего платежей",
@@ -109,6 +130,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "Или настройте вручную в параметрах VS Code:",
     setupHint: "Получите бесплатный Lightning-адрес на dashboard.blink.sv",
     chartTitle: "Заработанные сатоши", revenue: "Доход (USD, оценка)", btcPrice: "Цена BTC",
+    proFeatures: "Полная история · 30D/1Y/ALL · Экспорт CSV · Оплата Bitcoin",
+    upgradeBtn: "Обновить через Bitcoin →", emptySub: "Ждём первый сатоши",
+    connectionError: "Ошибка подключения", retryBtn: "Повторить", cfgBtn: "Задать Lightning-адрес",
   },
   hi: {
     title: "⚡ ShinyDapps भुगतान", totalPayments: "कुल भुगतान",
@@ -121,6 +145,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "या VS Code सेटिंग्स में मैन्युअली सेट करें:",
     setupHint: "dashboard.blink.sv पर मुफ़्त Lightning पता प्राप्त करें",
     chartTitle: "अर्जित Sats", revenue: "आय (USD अनुमानित)", btcPrice: "BTC मूल्य",
+    proFeatures: "पूरा इतिहास · 30D/1Y/ALL · CSV निर्यात · Bitcoin से भुगतान",
+    upgradeBtn: "Bitcoin से अपग्रेड करें →", emptySub: "आपका पहला satoshi इंतजार कर रहा है",
+    connectionError: "कनेक्शन त्रुटि", retryBtn: "पुनः प्रयास", cfgBtn: "Lightning Address सेट करें",
   },
   ar: {
     title: "⚡ مدفوعات ShinyDapps", totalPayments: "إجمالي المدفوعات",
@@ -133,6 +160,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "أو اضبط يدويًا في إعدادات VS Code:",
     setupHint: "احصل على عنوان Lightning مجاني على dashboard.blink.sv",
     chartTitle: "Sats المكتسبة", revenue: "الإيرادات (USD تقريبي)", btcPrice: "سعر BTC",
+    proFeatures: "تاريخ كامل · 30D/1Y/ALL · تصدير CSV · الدفع بـ Bitcoin",
+    upgradeBtn: "ترقية بـ Bitcoin →", emptySub: "أول satoshi في انتظارك",
+    connectionError: "خطأ في الاتصال", retryBtn: "إعادة المحاولة", cfgBtn: "تعيين Lightning Address",
   },
   it: {
     title: "⚡ Pagamenti ShinyDapps", totalPayments: "Pagamenti Totali",
@@ -145,6 +175,9 @@ const I18N: Record<string, Record<string, string>> = {
     setupStep3: "Oppure configura manualmente nelle impostazioni VS Code:",
     setupHint: "Ottieni un indirizzo Lightning gratuito su dashboard.blink.sv",
     chartTitle: "Sats guadagnati", revenue: "Ricavi (USD stimati)", btcPrice: "Prezzo BTC",
+    proFeatures: "Cronologia completa · 30D/1Y/ALL · Esporta CSV · Paga con Bitcoin",
+    upgradeBtn: "Aggiorna con Bitcoin →", emptySub: "Il tuo primo satoshi ti aspetta",
+    connectionError: "Errore di connessione", retryBtn: "Riprova", cfgBtn: "Imposta Lightning Address",
   },
 };
 
@@ -467,7 +500,8 @@ langSel.value = lang;
 langSel.addEventListener('change', function() {
   lang = this.value;
   try { localStorage.setItem('sd_lang', lang); } catch(_) {}
-  if (lastRows !== null) renderContent(lastRows);
+  if (!ADDR) renderSetup();
+  else if (lastRows !== null) renderContent(lastRows);
 });
 
 el('refreshBtn').addEventListener('click', load);
@@ -568,7 +602,7 @@ function renderSetup() {
     '<div class="setup-box">' +
     '<h3>' + t('setupTitle') + '</h3>' +
     '<p>' + t('setupStep1') + '<br>' + t('setupStep2') + '</p>' +
-    '<button class="cfg-btn" id="cfgBtn">⚡ Set Lightning Address</button>' +
+    '<button class="cfg-btn" id="cfgBtn">⚡ ' + t('cfgBtn') + '</button>' +
     '<p>' + t('setupStep3') + '</p>' +
     '<pre>"shinydapps.lightningAddress": "you@blink.sv"</pre>' +
     '<p class="hint">' + t('setupHint') + '</p>' +
@@ -581,10 +615,10 @@ function renderSetup() {
 function renderError(msg) {
   setContent(
     '<div class="error-box">' +
-    '<h3>⚠ Connection Error</h3>' +
+    '<h3>⚠ ' + t('connectionError') + '</h3>' +
     '<p class="error-detail">' + esc(msg) + '</p>' +
     (ADDR ? '<p class="error-addr">Monitoring: <strong>' + esc(ADDR) + '</strong></p>' : '') +
-    '<button class="retry-btn" id="retryBtn">↺ Retry</button>' +
+    '<button class="retry-btn" id="retryBtn">↺ ' + t('retryBtn') + '</button>' +
     '</div>'
   );
   const btn = el('retryBtn');
@@ -612,8 +646,8 @@ function renderContent(rows) {
     html += '<div class="pro-banner">';
     const proSats = btcPrice > 0 ? Math.ceil(${MONTHLY_FEE_USD} / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
     html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
-    html += '<div class="pro-features">Full history · 30D/1Y/ALL charts · CSV export · Pay in Bitcoin</div>';
-    html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
+    html += '<div class="pro-features">' + t('proFeatures') + '</div>';
+    html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">' + t('upgradeBtn') + '</a>';
     html += '</div>';
   }
 
@@ -637,7 +671,7 @@ function renderContent(rows) {
   if (rows.length === 0) {
     html += '<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">⚡</div>' +
       '<div class="empty-text">' + t('noPayments') + '</div>' +
-      '<div class="empty-sub">Your first satoshi is waiting</div></div></td></tr>';
+      '<div class="empty-sub">' + t('emptySub') + '</div></div></td></tr>';
   } else {
     rows.slice(0, 50).forEach(function(r) {
       html += '<tr><td>' + new Date(r.paid_at).toLocaleString() + '</td>' +
