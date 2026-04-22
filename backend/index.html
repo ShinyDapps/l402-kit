@@ -204,6 +204,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   #extension > div > div:last-child { order: -1; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -659,15 +660,27 @@ app = <span class="c-fn">FastAPI</span>()
     <div id="proModal-step2" style="display:none">
       <h3 style="margin-bottom:8px">Pay this invoice &#x26a1;</h3>
       <p style="color:#666;font-size:13px;margin-bottom:16px">Scan with any Lightning wallet or click to copy.</p>
-      <div id="proInvoiceBox" style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:12px;font-family:monospace;font-size:10px;word-break:break-all;color:#888;margin-bottom:12px;max-height:80px;overflow:hidden"></div>
-      <button onclick="copyProInvoice()" style="width:100%;margin-bottom:12px;padding:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#e5e5e5;border-radius:8px;font-size:13px;cursor:pointer">&#x2398; Copy invoice</button>
-      <div id="proStatus" style="text-align:center;font-size:13px;color:#666;padding:12px">⏳ Waiting for payment&hellip;</div>
+      <div style="text-align:center;margin-bottom:12px;cursor:pointer" onclick="copyProInvoice()" title="Click to copy">
+        <canvas id="proQrCanvas" style="border-radius:10px"></canvas>
+      </div>
+      <div id="proInvoiceBox" style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:10px;font-family:monospace;font-size:10px;word-break:break-all;color:#888;margin-bottom:10px;max-height:60px;overflow:hidden;cursor:pointer" onclick="copyProInvoice()"></div>
+      <button id="proCopyBtn" onclick="copyProInvoice()" style="width:100%;margin-bottom:10px;padding:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#e5e5e5;border-radius:8px;font-size:13px;cursor:pointer">&#x2398; Copy invoice</button>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div id="proStatus" style="font-size:13px;color:#666;display:flex;align-items:center;gap:6px"><span id="proStatusDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f7931a;animation:pulse 1.5s infinite"></span> Waiting for payment…</div>
+        <div id="proTimer" style="font-size:12px;color:#444"></div>
+      </div>
     </div>
     <div id="proModal-step3" style="display:none;text-align:center">
-      <div style="font-size:48px;margin-bottom:16px">⚡</div>
-      <h3 style="color:var(--orange);margin-bottom:8px">You&rsquo;re Pro!</h3>
-      <p style="color:#888;font-size:13px">Access activated. Open your VS Code extension to see the Pro dashboard.</p>
-      <button onclick="closeProModal()" style="margin-top:20px;padding:10px 24px;background:var(--orange);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Done</button>
+      <div style="font-size:48px;margin-bottom:12px">✅</div>
+      <h3 style="color:#22c55e;margin-bottom:8px">You&rsquo;re Pro!</h3>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Payment confirmed. Open VS Code to see your Pro dashboard.</p>
+      <div style="background:#0a0a0a;border:1px solid #1a3a1a;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
+        <div style="font-size:11px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Lightning Receipt</div>
+        <div id="proReceiptHash" style="font-size:10px;font-family:monospace;color:#22c55e;word-break:break-all;margin-bottom:8px"></div>
+        <a id="proVerifyLink" href="#" target="_blank" style="font-size:12px;color:#555;text-decoration:none">Verify independently →</a>
+      </div>
+      <p style="font-size:11px;color:#444;margin-bottom:16px">This hash is your permanent proof of payment — verifiable on Lightning.</p>
+      <button onclick="closeProModal()" style="padding:10px 28px;background:var(--orange);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Done ⚡</button>
     </div>
   </div>
 </div>
@@ -1245,7 +1258,7 @@ initWalletPrefs();
 
 // Pro payment modal
 const TIER_LABELS = { pro: 'Pro \u2014 $9/month', business: 'Business \u2014 $99/month', lifetime: 'Lifetime \u2014 $9,999 one-time' };
-let proCurrentTier = 'pro', proPaymentHash = '', proInvoiceStr = '', proPollTimer = null;
+let proCurrentTier = 'pro', proPaymentHash = '', proInvoiceStr = '', proPollTimer = null, proCountdownTimer = null, proExpiresAt = 0;
 
 function openProModal(tier) {
   proCurrentTier = tier;
@@ -1260,6 +1273,7 @@ function openProModal(tier) {
 }
 function closeProModal() {
   if (proPollTimer) { clearInterval(proPollTimer); proPollTimer = null; }
+  if (proCountdownTimer) { clearInterval(proCountdownTimer); proCountdownTimer = null; }
   document.getElementById('proModal').style.display = 'none';
 }
 async function generateProInvoice() {
@@ -1277,18 +1291,41 @@ async function generateProInvoice() {
     if (!r.ok) { alert(data.error || 'Failed'); btn.textContent = 'Generate Invoice'; btn.disabled = false; return; }
     proPaymentHash = data.paymentHash;
     proInvoiceStr = data.paymentRequest;
+    proExpiresAt = Date.now() + 10 * 60 * 1000;
     document.getElementById('proInvoiceBox').textContent = data.paymentRequest;
+    // QR code
+    const canvas = document.getElementById('proQrCanvas');
+    QRCode.toCanvas(canvas, data.paymentRequest, { width: 200, margin: 2, color: { dark: '#000', light: '#fff' } });
     document.getElementById('proModal-step1').style.display = 'none';
     document.getElementById('proModal-step2').style.display = '';
+    startProCountdown();
     startProPoll(address, proCurrentTier);
   } catch { alert('Network error'); btn.textContent = 'Generate Invoice'; btn.disabled = false; }
 }
 function copyProInvoice() {
-  navigator.clipboard.writeText(proInvoiceStr).then(() => {
-    const b = document.querySelector('[onclick="copyProInvoice()"]');
-    b.textContent = '\u2713 Copied!';
-    setTimeout(() => b.textContent = '\u2398 Copy invoice', 2000);
-  }).catch(() => {});
+  const btn = document.getElementById('proCopyBtn');
+  const done = () => { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '⎘ Copy invoice', 2000); };
+  navigator.clipboard.writeText(proInvoiceStr).then(done).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = proInvoiceStr; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); done();
+  });
+}
+function startProCountdown() {
+  clearInterval(proCountdownTimer);
+  proCountdownTimer = setInterval(() => {
+    const left = Math.max(0, proExpiresAt - Date.now());
+    const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+    document.getElementById('proTimer').textContent = left > 0
+      ? m + ':' + s.toString().padStart(2,'0')
+      : 'Expired';
+    if (left === 0) {
+      clearInterval(proCountdownTimer);
+      clearInterval(proPollTimer);
+      document.getElementById('proStatus').innerHTML = '<span style="color:#ef4444">⚠ Invoice expired</span>';
+    }
+  }, 1000);
 }
 function startProPoll(address, tier) {
   proPollTimer = setInterval(async () => {
@@ -1297,6 +1334,9 @@ function startProPoll(address, tier) {
       const d = await r.json();
       if (d.paid) {
         clearInterval(proPollTimer);
+        clearInterval(proCountdownTimer);
+        document.getElementById('proReceiptHash').textContent = proPaymentHash;
+        document.getElementById('proVerifyLink').href = 'https://l402kit.vercel.app/api/verify?paymentHash=' + encodeURIComponent(proPaymentHash);
         document.getElementById('proModal-step2').style.display = 'none';
         document.getElementById('proModal-step3').style.display = '';
       }
