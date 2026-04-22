@@ -1,6 +1,7 @@
 package l402kit_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -9,37 +10,49 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	l402kit "github.com/shinydapps/l402-kit/go"
 )
 
-// helpers
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+func freshPreimage(t *testing.T) string {
+	t.Helper()
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		t.Fatal(err)
+	}
+	return hex.EncodeToString(b)
+}
 
 func makeToken(t *testing.T, expOffsetMs int64) string {
 	t.Helper()
-
-	// Generate random 32-byte preimage
-	preimageBytes := make([]byte, 32)
-	if _, err := rand.Read(preimageBytes); err != nil {
-		t.Fatal(err)
-	}
-	preimage := hex.EncodeToString(preimageBytes)
-
-	// paymentHash = SHA256(preimage)
+	preimageHex := freshPreimage(t)
+	preimageBytes, _ := hex.DecodeString(preimageHex)
 	hash := sha256.Sum256(preimageBytes)
 	hashHex := hex.EncodeToString(hash[:])
-
 	exp := time.Now().UnixMilli() + expOffsetMs
-
 	payload, _ := json.Marshal(map[string]any{"hash": hashHex, "exp": exp})
 	macaroon := base64.StdEncoding.EncodeToString(payload)
-
-	return macaroon + ":" + preimage
+	return macaroon + ":" + preimageHex
 }
 
-// --- ParseToken ---
+func makeTokenFromPreimage(t *testing.T, preimageHex string, expOffsetMs int64) string {
+	t.Helper()
+	preimageBytes, _ := hex.DecodeString(preimageHex)
+	hash := sha256.Sum256(preimageBytes)
+	hashHex := hex.EncodeToString(hash[:])
+	exp := time.Now().UnixMilli() + expOffsetMs
+	payload, _ := json.Marshal(map[string]any{"hash": hashHex, "exp": exp})
+	macaroon := base64.StdEncoding.EncodeToString(payload)
+	return macaroon + ":" + preimageHex
+}
+
+// ─── ParseToken ───────────────────────────────────────────────────────────────
 
 func TestParseToken_Valid(t *testing.T) {
 	tok, err := l402kit.ParseToken("abc123:def456")
@@ -51,6 +64,26 @@ func TestParseToken_Valid(t *testing.T) {
 	}
 }
 
+func TestParseToken_SplitsOnLastColon(t *testing.T) {
+	tok, err := l402kit.ParseToken("abc:def:ghi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tok.Macaroon != "abc:def" || tok.Preimage != "ghi" {
+		t.Errorf("unexpected parse: %+v", tok)
+	}
+}
+
+func TestParseToken_Base64WithColons(t *testing.T) {
+	tok, err := l402kit.ParseToken("a:b:c:d:preimage")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tok.Preimage != "preimage" {
+		t.Errorf("expected preimage='preimage', got %q", tok.Preimage)
+	}
+}
+
 func TestParseToken_NoColon(t *testing.T) {
 	_, err := l402kit.ParseToken("nodivider")
 	if err == nil {
@@ -58,27 +91,59 @@ func TestParseToken_NoColon(t *testing.T) {
 	}
 }
 
-// --- VerifyToken ---
+func TestParseToken_EmptyString(t *testing.T) {
+	_, err := l402kit.ParseToken("")
+	if err == nil {
+		t.Fatal("expected error for empty string")
+	}
+}
+
+func TestParseToken_ReturnsBothParts(t *testing.T) {
+	tok, err := l402kit.ParseToken("eyJoYXNocg==:abc123def456")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tok.Macaroon == "" || tok.Preimage == "" {
+		t.Error("both parts should be non-empty")
+	}
+}
+
+// ─── VerifyToken ──────────────────────────────────────────────────────────────
 
 func TestVerifyToken_ValidToken(t *testing.T) {
-	token := makeToken(t, 3_600_000) // expires in 1 hour
+	token := makeToken(t, 3_600_000)
 	ok, err := l402kit.VerifyToken(token)
 	if err != nil || !ok {
 		t.Errorf("expected valid token, got ok=%v err=%v", ok, err)
 	}
 }
 
+func TestVerifyToken_ValidToken_FarFuture(t *testing.T) {
+	token := makeToken(t, 365*24*3_600_000)
+	ok, err := l402kit.VerifyToken(token)
+	if err != nil || !ok {
+		t.Errorf("expected far-future token to be valid, got ok=%v err=%v", ok, err)
+	}
+}
+
 func TestVerifyToken_ExpiredToken(t *testing.T) {
-	token := makeToken(t, -1000) // expired 1 second ago
+	token := makeToken(t, -1000)
 	ok, _ := l402kit.VerifyToken(token)
 	if ok {
 		t.Error("expected expired token to be invalid")
 	}
 }
 
+func TestVerifyToken_ExpiredByOneHour(t *testing.T) {
+	token := makeToken(t, -3_600_000)
+	ok, _ := l402kit.VerifyToken(token)
+	if ok {
+		t.Error("expected token expired 1h ago to be invalid")
+	}
+}
+
 func TestVerifyToken_WrongPreimage(t *testing.T) {
 	token := makeToken(t, 3_600_000)
-	// Corrupt the preimage (flip last hex char)
 	parts := []rune(token)
 	if parts[len(parts)-1] == 'a' {
 		parts[len(parts)-1] = 'b'
@@ -88,6 +153,21 @@ func TestVerifyToken_WrongPreimage(t *testing.T) {
 	ok, _ := l402kit.VerifyToken(string(parts))
 	if ok {
 		t.Error("expected tampered token to be invalid")
+	}
+}
+
+func TestVerifyToken_AllZerosPreimage(t *testing.T) {
+	// Build macaroon for a real preimage but submit all-zeros preimage
+	realPreimage := freshPreimage(t)
+	realBytes, _ := hex.DecodeString(realPreimage)
+	hash := sha256.Sum256(realBytes)
+	exp := time.Now().UnixMilli() + 3_600_000
+	payload, _ := json.Marshal(map[string]any{"hash": hex.EncodeToString(hash[:]), "exp": exp})
+	mac := base64.StdEncoding.EncodeToString(payload)
+	zeros := strings.Repeat("0", 64)
+	ok, _ := l402kit.VerifyToken(mac + ":" + zeros)
+	if ok {
+		t.Error("expected all-zeros preimage to be invalid")
 	}
 }
 
@@ -105,34 +185,131 @@ func TestVerifyToken_Garbage(t *testing.T) {
 	}
 }
 
-// --- CheckAndMarkPreimage (replay protection) ---
+func TestVerifyToken_EmptyString(t *testing.T) {
+	ok, _ := l402kit.VerifyToken("")
+	if ok {
+		t.Error("expected empty string to be invalid")
+	}
+}
+
+func TestVerifyToken_MissingHashField(t *testing.T) {
+	payload, _ := json.Marshal(map[string]any{"exp": time.Now().UnixMilli() + 3_600_000})
+	mac := base64.StdEncoding.EncodeToString(payload)
+	ok, _ := l402kit.VerifyToken(mac + ":" + strings.Repeat("a", 64))
+	if ok {
+		t.Error("expected token with missing hash to be invalid")
+	}
+}
+
+func TestVerifyToken_MissingExpField(t *testing.T) {
+	preimage := freshPreimage(t)
+	preimageBytes, _ := hex.DecodeString(preimage)
+	hash := sha256.Sum256(preimageBytes)
+	payload, _ := json.Marshal(map[string]any{"hash": hex.EncodeToString(hash[:])})
+	mac := base64.StdEncoding.EncodeToString(payload)
+	ok, _ := l402kit.VerifyToken(mac + ":" + preimage)
+	if ok {
+		t.Error("expected token with missing exp to be invalid")
+	}
+}
+
+func TestVerifyToken_Concurrent(t *testing.T) {
+	tokens := make([]string, 20)
+	for i := range tokens {
+		tokens[i] = makeToken(t, 3_600_000)
+	}
+	var wg sync.WaitGroup
+	results := make([]bool, len(tokens))
+	for i, tok := range tokens {
+		wg.Add(1)
+		go func(idx int, token string) {
+			defer wg.Done()
+			ok, _ := l402kit.VerifyToken(token)
+			results[idx] = ok
+		}(i, tok)
+	}
+	wg.Wait()
+	for i, ok := range results {
+		if !ok {
+			t.Errorf("token[%d] should be valid", i)
+		}
+	}
+}
+
+// ─── CheckAndMarkPreimage (replay protection) ─────────────────────────────────
 
 func TestReplay_FirstUseAllowed(t *testing.T) {
-	preimage := hex.EncodeToString(make([]byte, 32))
-	// Use a unique preimage per test to avoid cross-test pollution
-	preimage = preimage[:63] + "1"
-	ok := l402kit.CheckAndMarkPreimage(preimage)
-	if !ok {
+	preimage := freshPreimage(t)
+	if !l402kit.CheckAndMarkPreimage(preimage) {
 		t.Error("first use should be allowed")
 	}
 }
 
 func TestReplay_SecondUseBlocked(t *testing.T) {
-	preimage := hex.EncodeToString(make([]byte, 32))
-	preimage = preimage[:63] + "2"
+	preimage := freshPreimage(t)
 	l402kit.CheckAndMarkPreimage(preimage)
-	ok := l402kit.CheckAndMarkPreimage(preimage)
-	if ok {
+	if l402kit.CheckAndMarkPreimage(preimage) {
 		t.Error("second use should be blocked")
 	}
 }
 
-// --- Middleware ---
-
-// mockProvider returns a predictable invoice for testing.
-type mockProvider struct {
-	token string
+func TestReplay_ThirdUseAlsoBlocked(t *testing.T) {
+	preimage := freshPreimage(t)
+	l402kit.CheckAndMarkPreimage(preimage)
+	l402kit.CheckAndMarkPreimage(preimage)
+	if l402kit.CheckAndMarkPreimage(preimage) {
+		t.Error("third use should also be blocked")
+	}
 }
+
+func TestReplay_DifferentPreimagesAreIndependent(t *testing.T) {
+	p1, p2 := freshPreimage(t), freshPreimage(t)
+	if !l402kit.CheckAndMarkPreimage(p1) {
+		t.Error("p1 first use should be allowed")
+	}
+	if !l402kit.CheckAndMarkPreimage(p2) {
+		t.Error("p2 first use should be allowed")
+	}
+	if l402kit.CheckAndMarkPreimage(p1) {
+		t.Error("p1 second use should be blocked")
+	}
+}
+
+func TestReplay_ConcurrentSamePreimage_ExactlyOneSucceeds(t *testing.T) {
+	preimage := freshPreimage(t)
+	const N = 50
+	results := make([]bool, N)
+	var wg sync.WaitGroup
+	for i := 0; i < N; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			results[idx] = l402kit.CheckAndMarkPreimage(preimage)
+		}(i)
+	}
+	wg.Wait()
+	trueCount := 0
+	for _, r := range results {
+		if r {
+			trueCount++
+		}
+	}
+	if trueCount != 1 {
+		t.Errorf("expected exactly 1 success in concurrent replay, got %d", trueCount)
+	}
+}
+
+func TestReplay_100UniquePreimagesAllSucceed(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		if !l402kit.CheckAndMarkPreimage(freshPreimage(t)) {
+			t.Errorf("preimage %d should succeed on first use", i)
+		}
+	}
+}
+
+// ─── Middleware ────────────────────────────────────────────────────────────────
+
+type mockProvider struct{}
 
 func (m *mockProvider) CreateInvoice(_ context.Context, _ int) (l402kit.Invoice, error) {
 	return l402kit.Invoice{
@@ -143,30 +320,88 @@ func (m *mockProvider) CreateInvoice(_ context.Context, _ int) (l402kit.Invoice,
 	}, nil
 }
 
-func TestMiddleware_NoToken_Returns402(t *testing.T) {
-	handler := l402kit.Middleware(l402kit.Options{
-		PriceSats: 10,
+func makeHandler(priceSats int) http.Handler {
+	return l402kit.Middleware(l402kit.Options{
+		PriceSats: priceSats,
 		Lightning: &mockProvider{},
 	}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
+}
 
+func TestMiddleware_NoToken_Returns402(t *testing.T) {
+	handler := makeHandler(10)
 	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
-
 	if rec.Code != http.StatusPaymentRequired {
 		t.Errorf("expected 402, got %d", rec.Code)
 	}
+}
+
+func TestMiddleware_NoToken_HasWWWAuthenticate(t *testing.T) {
+	handler := makeHandler(10)
+	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
 	if rec.Header().Get("WWW-Authenticate") == "" {
 		t.Error("expected WWW-Authenticate header")
 	}
 }
 
-func TestMiddleware_ValidToken_Passes(t *testing.T) {
-	token := makeToken(t, 3_600_000)
+func TestMiddleware_EmptyAuth_Returns402(t *testing.T) {
+	handler := makeHandler(10)
+	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
+	req.Header.Set("Authorization", "")
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusPaymentRequired {
+		t.Errorf("expected 402, got %d", rec.Code)
+	}
+}
 
-	// Use a unique preimage so replay protection doesn't block it
+func TestMiddleware_BearerScheme_Returns402(t *testing.T) {
+	handler := makeHandler(10)
+	token := makeToken(t, 3_600_000)
+	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusPaymentRequired {
+		t.Errorf("expected 402 for Bearer scheme, got %d", rec.Code)
+	}
+}
+
+func TestMiddleware_GarbageToken_Returns402(t *testing.T) {
+	handler := makeHandler(10)
+	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
+	req.Header.Set("Authorization", "L402 garbage!!!123")
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusPaymentRequired {
+		t.Errorf("expected 402, got %d", rec.Code)
+	}
+}
+
+func TestMiddleware_ValidToken_Returns200(t *testing.T) {
+	handler := l402kit.Middleware(l402kit.Options{
+		PriceSats: 10,
+		Lightning: &mockProvider{},
+		OnPayment: func(_ l402kit.L402Token, _ int) {},
+	}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	token := makeToken(t, 3_600_000)
+	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
+	req.Header.Set("Authorization", "L402 "+token)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rec.Code)
+	}
+}
+
+func TestMiddleware_OnPayment_Called(t *testing.T) {
 	called := false
 	handler := l402kit.Middleware(l402kit.Options{
 		PriceSats: 10,
@@ -175,28 +410,31 @@ func TestMiddleware_ValidToken_Passes(t *testing.T) {
 	}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
-
+	token := makeToken(t, 3_600_000)
 	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
 	req.Header.Set("Authorization", "L402 "+token)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", rec.Code)
-	}
 	if !called {
 		t.Error("OnPayment callback should have been called")
 	}
 }
 
+func TestMiddleware_ExpiredToken_Returns402(t *testing.T) {
+	handler := makeHandler(10)
+	token := makeToken(t, -1000)
+	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
+	req.Header.Set("Authorization", "L402 "+token)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusPaymentRequired {
+		t.Errorf("expected 402 for expired token, got %d", rec.Code)
+	}
+}
+
 func TestMiddleware_ReplayedToken_Returns401(t *testing.T) {
 	token := makeToken(t, 3_600_000)
-	handler := l402kit.Middleware(l402kit.Options{
-		PriceSats: 10,
-		Lightning: &mockProvider{},
-	}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	handler := makeHandler(10)
 
 	makeReq := func() *httptest.ResponseRecorder {
 		req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
@@ -206,12 +444,42 @@ func TestMiddleware_ReplayedToken_Returns401(t *testing.T) {
 		return rec
 	}
 
-	first := makeReq()
-	if first.Code != http.StatusOK {
+	if first := makeReq(); first.Code != http.StatusOK {
 		t.Errorf("first request: expected 200, got %d", first.Code)
 	}
-	second := makeReq()
-	if second.Code != http.StatusUnauthorized {
+	if second := makeReq(); second.Code != http.StatusUnauthorized {
 		t.Errorf("replay: expected 401, got %d", second.Code)
+	}
+}
+
+func TestMiddleware_POST_Returns402_WithoutToken(t *testing.T) {
+	handler := l402kit.Middleware(l402kit.Options{
+		PriceSats: 10,
+		Lightning: &mockProvider{},
+	}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest(http.MethodPost, "/api/data", bytes.NewBufferString(`{"data":"test"}`))
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusPaymentRequired {
+		t.Errorf("expected 402 on POST without token, got %d", rec.Code)
+	}
+}
+
+func TestMiddleware_POST_Returns200_WithValidToken(t *testing.T) {
+	token := makeToken(t, 3_600_000)
+	handler := l402kit.Middleware(l402kit.Options{
+		PriceSats: 10,
+		Lightning: &mockProvider{},
+	}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest(http.MethodPost, "/api/data", bytes.NewBufferString(`{"data":"test"}`))
+	req.Header.Set("Authorization", "L402 "+token)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected 200 on POST with valid token, got %d", rec.Code)
 	}
 }

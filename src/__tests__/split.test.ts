@@ -15,6 +15,22 @@ function mockOk(body: unknown): FetchResponse {
   return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
 }
 
+function mockError(status: number): FetchResponse {
+  return { ok: false, status, json: async () => ({}), text: async () => "Error" };
+}
+
+function queueFullSplit(ownerSats: number) {
+  queueResponse(mockOk({
+    callback: "https://blink.sv/lnurlp/owner/callback",
+    minSendable: 1000,
+    maxSendable: 1_000_000_000,
+  }));
+  queueResponse(mockOk({ pr: `lnbc${ownerSats}n1...` }));
+  queueResponse(mockOk({
+    data: { lnInvoicePaymentSend: { status: "SUCCESS", errors: [] } },
+  }));
+}
+
 beforeEach(() => {
   fetchCalls = [];
   fetchResponses = [];
@@ -30,9 +46,9 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-// ─── splitPayment ─────────────────────────────────────────────────────────────
+// ─── skip conditions ──────────────────────────────────────────────────────────
 
-describe("splitPayment", () => {
+describe("splitPayment — skip conditions", () => {
   const OWNER = "owner@blink.sv";
   const API_KEY = "blink_testkey";
   const WALLET_ID = "wallet-abc";
@@ -47,64 +63,147 @@ describe("splitPayment", () => {
     expect(fetchCalls).toHaveLength(0);
   });
 
-  it("processes payment at MIN_SPLIT_SATS (10)", async () => {
-    // LNURL metadata fetch
-    queueResponse(mockOk({
-      callback: "https://blink.sv/lnurlp/owner/callback",
-      minSendable: 1000,
-      maxSendable: 1_000_000_000,
-    }));
-    // LNURL callback
-    queueResponse(mockOk({ pr: "lnbc9n1..." }));
-    // Blink pay
-    queueResponse(mockOk({
-      data: { lnInvoicePaymentSend: { status: "SUCCESS", errors: [] } },
-    }));
+  it("skips payment at 1 sat", async () => {
+    await splitPayment(1, OWNER, API_KEY, WALLET_ID);
+    expect(fetchCalls).toHaveLength(0);
+  });
 
+  it("skips payment at 9 sats (one below threshold)", async () => {
+    await splitPayment(9, OWNER, API_KEY, WALLET_ID);
+    expect(fetchCalls).toHaveLength(0);
+  });
+
+  it("does not skip payment at exactly MIN_SPLIT_SATS (10)", async () => {
+    queueFullSplit(9);
     await splitPayment(10, OWNER, API_KEY, WALLET_ID);
     expect(fetchCalls).toHaveLength(3);
   });
 
-  it("calculates correct fee split (0.3%, min 1 sat)", async () => {
-    // 100 sats → fee=1 sat (floor(100*0.003)=0, max(1,0)=1), owner=99
-    queueResponse(mockOk({ callback: "https://blink.sv/lnurlp/o/cb", minSendable: 1000, maxSendable: 1_000_000_000 }));
-    queueResponse(mockOk({ pr: "lnbc..." }));
-    queueResponse(mockOk({ data: { lnInvoicePaymentSend: { status: "SUCCESS", errors: [] } } }));
+  it("does not skip payment at 11 sats", async () => {
+    queueFullSplit(10);
+    await splitPayment(11, OWNER, API_KEY, WALLET_ID);
+    expect(fetchCalls).toHaveLength(3);
+  });
+});
 
+// ─── fee calculation ──────────────────────────────────────────────────────────
+
+describe("splitPayment — fee calculation", () => {
+  const OWNER = "owner@blink.sv";
+  const API_KEY = "blink_testkey";
+  const WALLET_ID = "wallet-abc";
+
+  it("100 sats → 1 sat fee (min fee), 99 sats to owner", async () => {
+    queueFullSplit(99);
     await splitPayment(100, OWNER, API_KEY, WALLET_ID);
-
-    // Check the LNURL callback was called with 99000 msats (99 sats)
     const callbackUrl = fetchCalls[1];
-    expect(callbackUrl).toContain("amount=99000");
+    expect(callbackUrl).toContain("amount=99000"); // 99 sats in msats
   });
 
-  it("calculates correct fee split for large amount (1000 sats → 3 sat fee)", async () => {
-    // 1000 sats → fee=3 sats (floor(1000*0.003)=3), owner=997
-    queueResponse(mockOk({ callback: "https://blink.sv/lnurlp/o/cb", minSendable: 1000, maxSendable: 1_000_000_000 }));
-    queueResponse(mockOk({ pr: "lnbc..." }));
-    queueResponse(mockOk({ data: { lnInvoicePaymentSend: { status: "SUCCESS", errors: [] } } }));
-
+  it("1000 sats → 3 sat fee (0.3%), 997 sats to owner", async () => {
+    queueFullSplit(997);
     await splitPayment(1000, OWNER, API_KEY, WALLET_ID);
-
     const callbackUrl = fetchCalls[1];
     expect(callbackUrl).toContain("amount=997000");
   });
 
-  it("does not throw when LNURL fetch fails", async () => {
-    queueResponse({ ok: false, status: 404, json: async () => ({}), text: async () => "Not Found" });
+  it("10000 sats → 30 sat fee, 9970 sats to owner", async () => {
+    queueFullSplit(9970);
+    await splitPayment(10000, OWNER, API_KEY, WALLET_ID);
+    const callbackUrl = fetchCalls[1];
+    expect(callbackUrl).toContain("amount=9970000");
+  });
 
-    // Should not throw — errors are swallowed
+  it("10 sats → 1 sat fee (minimum), 9 sats to owner", async () => {
+    queueFullSplit(9);
+    await splitPayment(10, OWNER, API_KEY, WALLET_ID);
+    const callbackUrl = fetchCalls[1];
+    expect(callbackUrl).toContain("amount=9000");
+  });
+
+  it("333 sats → 1 sat fee (floor(333*0.003)=0, max(1,0)=1), 332 to owner", async () => {
+    queueFullSplit(332);
+    await splitPayment(333, OWNER, API_KEY, WALLET_ID);
+    const callbackUrl = fetchCalls[1];
+    expect(callbackUrl).toContain("amount=332000");
+  });
+
+  it("owner amount is always in msats (multiply by 1000)", async () => {
+    queueFullSplit(99);
+    await splitPayment(100, OWNER, API_KEY, WALLET_ID);
+    const callbackUrl = fetchCalls[1];
+    expect(callbackUrl).toMatch(/amount=\d+000/); // must end in 3 zeros (msats)
+  });
+});
+
+// ─── network error resilience ─────────────────────────────────────────────────
+
+describe("splitPayment — error resilience", () => {
+  const OWNER = "owner@blink.sv";
+  const API_KEY = "blink_testkey";
+  const WALLET_ID = "wallet-abc";
+
+  it("does not throw when LNURL metadata fetch returns 404", async () => {
+    queueResponse(mockError(404));
     await expect(splitPayment(100, OWNER, API_KEY, WALLET_ID)).resolves.toBeUndefined();
   });
 
-  it("does not throw when Blink payment fails", async () => {
+  it("does not throw when LNURL metadata fetch returns 500", async () => {
+    queueResponse(mockError(500));
+    await expect(splitPayment(100, OWNER, API_KEY, WALLET_ID)).resolves.toBeUndefined();
+  });
+
+  it("does not throw when LNURL callback returns error", async () => {
+    queueResponse(mockOk({ callback: "https://blink.sv/lnurlp/o/cb", minSendable: 1000, maxSendable: 1_000_000_000 }));
+    queueResponse(mockError(500));
+    await expect(splitPayment(100, OWNER, API_KEY, WALLET_ID)).resolves.toBeUndefined();
+  });
+
+  it("does not throw when Blink payment fails (status=FAILED)", async () => {
     queueResponse(mockOk({ callback: "https://blink.sv/lnurlp/o/cb", minSendable: 1000, maxSendable: 1_000_000_000 }));
     queueResponse(mockOk({ pr: "lnbc..." }));
-    // Blink errors array
     queueResponse(mockOk({
       data: { lnInvoicePaymentSend: { status: "FAILED", errors: [{ message: "Insufficient balance" }] } },
     }));
-
     await expect(splitPayment(100, OWNER, API_KEY, WALLET_ID)).resolves.toBeUndefined();
+  });
+
+  it("does not throw when Blink returns HTTP error", async () => {
+    queueResponse(mockOk({ callback: "https://blink.sv/lnurlp/o/cb", minSendable: 1000, maxSendable: 1_000_000_000 }));
+    queueResponse(mockOk({ pr: "lnbc..." }));
+    queueResponse(mockError(500));
+    await expect(splitPayment(100, OWNER, API_KEY, WALLET_ID)).resolves.toBeUndefined();
+  });
+
+  it("always returns undefined (fire-and-forget)", async () => {
+    queueFullSplit(99);
+    const result = await splitPayment(100, OWNER, API_KEY, WALLET_ID);
+    expect(result).toBeUndefined();
+  });
+});
+
+// ─── fetch call sequence ──────────────────────────────────────────────────────
+
+describe("splitPayment — fetch call sequence", () => {
+  const OWNER = "owner@blink.sv";
+  const API_KEY = "blink_testkey";
+  const WALLET_ID = "wallet-abc";
+
+  it("makes exactly 3 fetch calls for a successful split", async () => {
+    queueFullSplit(99);
+    await splitPayment(100, OWNER, API_KEY, WALLET_ID);
+    expect(fetchCalls).toHaveLength(3);
+  });
+
+  it("first fetch resolves LNURL metadata for owner address", async () => {
+    queueFullSplit(99);
+    await splitPayment(100, OWNER, API_KEY, WALLET_ID);
+    expect(fetchCalls[0]).toContain("owner");
+  });
+
+  it("third fetch is a POST to Blink GraphQL API", async () => {
+    queueFullSplit(99);
+    await splitPayment(100, OWNER, API_KEY, WALLET_ID);
+    expect(fetchCalls[2]).toContain("blink");
   });
 });

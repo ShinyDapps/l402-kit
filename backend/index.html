@@ -62,7 +62,7 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(247,147,26,0.4); }
 .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e5e5e5; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
 .btn-secondary:hover { border-color: rgba(247,147,26,0.5); color: #f7931a; }
-.hero-network { position: absolute; inset: 0; z-index: 1; opacity: 0.3; pointer-events: none; }
+.hero-network { position: absolute; inset: 0; z-index: 1; opacity: 0.55; pointer-events: none; }
 .hero-network canvas { width: 100%; height: 100%; display: block; }
 .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 40px; }
 .hero-stat { text-align: center; }
@@ -246,7 +246,11 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="hero-network" id="heroNetwork"></div>
   <div class="hero-badge">⚡ Bitcoin Lightning · Pay-per-call · Open Source</div>
   <h1 id="heroTitle">Get Paid. Instantly.<br>No middlemen. <span>Lightning</span>.</h1>
-  <p id="heroSubtitle">Drop-in middleware for APIs. 3 lines of code. No accounts. No banks. No chargebacks.<br><span style="color:var(--orange);font-weight:600">AI agent native</span> <span style="color:#666;font-size:18px">— machines can pay machines.</span> <span style="color:#e5e5e5;font-size:18px;font-weight:600">No human in the loop.</span></p>
+  <p id="heroSubtitle">Drop-in middleware for APIs. 3 lines of code. No accounts. No banks. No chargebacks. Settles in under 1 second, anywhere on Earth.</p>
+  <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.25);border-radius:12px;padding:10px 20px;margin-bottom:20px;margin-top:-8px">
+    <span style="font-size:20px">🤖</span>
+    <span id="heroAiText" style="font-size:14px;color:#e5e5e5;font-weight:600">AI agent native <span style="color:var(--orange)">—</span> machines can pay machines. <span style="color:var(--muted)">No human in the loop.</span></span>
+  </div>
   <div class="hero-actions">
     <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:16px;letter-spacing:-0.5px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:14px;opacity:.8">⚡</span></button>
     <a href="https://l402kit.vercel.app/docs" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Read the docs →</a>
@@ -774,6 +778,7 @@ const I18N = {
     navHow: 'How it works', navPricing: 'Pricing', navWallet: 'Connect wallet', navStart: 'Get started',
     heroTitle: 'Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.',
     heroSubtitle: 'No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.',
+    heroAiText: '🤖 <b>AI agent native</b> <span style="color:var(--orange)">—</span> machines can pay machines. <span style="color:var(--muted)">No human in the loop.</span>',
     heroReadDocs: 'Read the docs →',
     walletTitle: 'Connect your wallet',
     walletSub: 'Use Lightning for payments, and optionally connect an EVM wallet (MetaMask-compatible) for identity and app flows.',
@@ -788,6 +793,7 @@ const I18N = {
     navHow: 'Como funciona', navPricing: 'Precos', navWallet: 'Conectar wallet', navStart: 'Comecar',
     heroTitle: 'Monetize sua API<br>com <span>Bitcoin Lightning</span>.<br>3 linhas de codigo.',
     heroSubtitle: 'Sem cartao. Sem banco. Sem chargeback. Sem minimo. Liquida em menos de 1 segundo.',
+    heroAiText: '🤖 <b>Nativo para agentes de IA</b> <span style="color:var(--orange)">—</span> máquinas pagando máquinas. <span style="color:var(--muted)">Sem humano no loop.</span>',
     heroReadDocs: 'Ler docs →',
     walletTitle: 'Conecte sua wallet',
     walletSub: 'Use Lightning para pagamentos, e opcionalmente conecte uma wallet EVM (MetaMask e similares) para identidade.',
@@ -802,6 +808,7 @@ const I18N = {
     navHow: 'Cómo funciona', navPricing: 'Precios', navWallet: 'Conectar wallet', navStart: 'Empezar',
     heroTitle: 'Cobra por tu API<br>con <span>Bitcoin Lightning</span>.<br>3 líneas de código.',
     heroSubtitle: 'Sin tarjeta. Sin banco. Sin chargeback. Sin mínimo. Liquida en menos de 1 segundo.',
+    heroAiText: '🤖 <b>Nativo para agentes IA</b> <span style="color:var(--orange)">—</span> máquinas pagando a máquinas. <span style="color:var(--muted)">Sin humanos en el flujo.</span>',
     heroReadDocs: 'Leer docs →',
     walletTitle: 'Conecta tu wallet',
     walletSub: 'Usa Lightning para pagos y opcionalmente conecta una wallet EVM para identidad.',
@@ -816,6 +823,7 @@ const I18N = {
     navHow: 'Comment ça marche', navPricing: 'Tarifs', navWallet: 'Connecter wallet', navStart: 'Commencer',
     heroTitle: 'Monétisez votre API<br>avec <span>Bitcoin Lightning</span>.<br>3 lignes de code.',
     heroSubtitle: 'Sans carte. Sans banque. Sans chargeback. Sans minimum. Règlement en moins d\'1 seconde.',
+    heroAiText: '🤖 <b>Natif IA</b> <span style="color:var(--orange)">—</span> les machines paient les machines. <span style="color:var(--muted)">Sans humain dans la boucle.</span>',
     heroReadDocs: 'Lire docs →',
     walletTitle: 'Connectez votre wallet',
     walletSub: 'Utilisez Lightning pour les paiements et connectez optionnellement un wallet EVM pour l\'identité.',
@@ -830,6 +838,7 @@ const I18N = {
     navHow: 'So funktioniert es', navPricing: 'Preise', navWallet: 'Wallet verbinden', navStart: 'Loslegen',
     heroTitle: 'Monetarisiere deine API<br>mit <span>Bitcoin Lightning</span>.<br>3 Zeilen Code.',
     heroSubtitle: 'Keine Kreditkarte. Keine Bank. Kein Chargeback. Kein Minimum. Abrechnung in unter 1 Sekunde.',
+    heroAiText: '🤖 <b>KI-Agent nativ</b> <span style="color:var(--orange)">—</span> Maschinen zahlen an Maschinen. <span style="color:var(--muted)">Kein Mensch im Loop.</span>',
     heroReadDocs: 'Docs lesen →',
     walletTitle: 'Wallet verbinden',
     walletSub: 'Verwende Lightning für Zahlungen und verbinde optional ein EVM-Wallet für Identität.',
@@ -844,6 +853,7 @@ const I18N = {
     navHow: 'Come funziona', navPricing: 'Prezzi', navWallet: 'Connetti wallet', navStart: 'Inizia',
     heroTitle: 'Monetizza la tua API<br>con <span>Bitcoin Lightning</span>.<br>3 righe di codice.',
     heroSubtitle: 'Senza carta. Senza banca. Senza chargeback. Nessun minimo. Si liquida in meno di 1 secondo.',
+    heroAiText: '🤖 <b>Nativo per agenti IA</b> <span style="color:var(--orange)">—</span> le macchine pagano le macchine. <span style="color:var(--muted)">Nessun umano nel loop.</span>',
     heroReadDocs: 'Leggi docs →',
     walletTitle: 'Connetti il tuo wallet',
     walletSub: 'Usa Lightning per i pagamenti e connetti opzionalmente un wallet EVM per l\'identità.',
@@ -858,6 +868,7 @@ const I18N = {
     navHow: '仕組み', navPricing: '料金', navWallet: 'ウォレット接続', navStart: '開始',
     heroTitle: 'APIを<span>Bitcoin Lightning</span>で<br>収益化。3行のコード。',
     heroSubtitle: 'クレジットカード不要。銀行不要。チャージバック不要。最低金額なし。1秒以内に決済。',
+    heroAiText: '🤖 <b>AIエージェント対応</b> <span style="color:var(--orange)">—</span> 機械が機械に支払う。<span style="color:var(--muted)">人間不要。</span>',
     heroReadDocs: 'ドキュメント →',
     walletTitle: 'ウォレットを接続',
     walletSub: 'Lightningで決済し、オプションでEVMウォレットをID用に接続できます。',
@@ -872,6 +883,7 @@ const I18N = {
     navHow: 'Как это работает', navPricing: 'Тарифы', navWallet: 'Подключить кошелёк', navStart: 'Начать',
     heroTitle: 'Монетизируй API<br>через <span>Bitcoin Lightning</span>.<br>3 строки кода.',
     heroSubtitle: 'Без карты. Без банка. Без чарджбека. Без минимума. Расчёт за 1 секунду.',
+    heroAiText: '🤖 <b>Нативно для ИИ-агентов</b> <span style="color:var(--orange)">—</span> машины платят машинам. <span style="color:var(--muted)">Без человека в цепочке.</span>',
     heroReadDocs: 'Документация →',
     walletTitle: 'Подключить кошелёк',
     walletSub: 'Используй Lightning для платежей и при желании подключи EVM-кошелёк для идентификации.',
@@ -886,6 +898,7 @@ const I18N = {
     navHow: '工作原理', navPricing: '定价', navWallet: '连接钱包', navStart: '开始使用',
     heroTitle: '用 <span>Bitcoin Lightning</span><br>收费。3 行代码。',
     heroSubtitle: '无需信用卡。无需银行账户。无退款争议。无最低金额。1秒内结算。',
+    heroAiText: '🤖 <b>AI智能体原生支持</b> <span style="color:var(--orange)">—</span> 机器向机器付款。<span style="color:var(--muted)">无需人工介入。</span>',
     heroReadDocs: '查看文档 →',
     walletTitle: '连接钱包',
     walletSub: '使用 Lightning 付款，可选连接 EVM 钱包用于身份验证。',
@@ -900,6 +913,7 @@ const I18N = {
     navHow: 'कैसे काम करता है', navPricing: 'प्राइसिंग', navWallet: 'वॉलेट कनेक्ट करें', navStart: 'शुरू करें',
     heroTitle: 'अपने API से <span>Bitcoin Lightning</span><br>से कमाई करें। 3 लाइनें।',
     heroSubtitle: 'कोई कार्ड नहीं। कोई बैंक नहीं। कोई चार्जबैक नहीं। 1 सेकंड में भुगतान।',
+    heroAiText: '🤖 <b>AI एजेंट नेटिव</b> <span style="color:var(--orange)">—</span> मशीनें मशीनों को भुगतान करती हैं। <span style="color:var(--muted)">कोई मानव नहीं।</span>',
     heroReadDocs: 'डॉक्स पढ़ें →',
     walletTitle: 'वॉलेट कनेक्ट करें',
     walletSub: 'Lightning से भुगतान लें और वैकल्पिक रूप से पहचान के लिए EVM वॉलेट कनेक्ट करें।',
@@ -914,6 +928,7 @@ const I18N = {
     navHow: 'كيف يعمل', navPricing: 'الأسعار', navWallet: 'ربط المحفظة', navStart: 'ابدأ',
     heroTitle: 'اربح من API الخاص بك<br>عبر <span>Bitcoin Lightning</span>.<br>3 أسطر فقط.',
     heroSubtitle: 'بدون بطاقة. بدون بنك. بدون استرداد. بدون حد أدنى. تسوية في أقل من ثانية.',
+    heroAiText: '🤖 <b>مخصص لوكلاء الذكاء الاصطناعي</b> <span style="color:var(--orange)">—</span> الآلات تدفع للآلات. <span style="color:var(--muted)">بدون تدخل بشري.</span>',
     heroReadDocs: 'اقرأ التوثيق →',
     walletTitle: 'ربط المحفظة',
     walletSub: 'استخدم Lightning للمدفوعات وربط محفظة EVM اختيارياً للهوية.',
@@ -961,7 +976,7 @@ function applyLanguage(lang) {
   Object.keys(merged).forEach((key) => {
     const node = document.querySelector(`[data-i18n="${key}"]`) || document.getElementById(key);
     if (!node) return;
-    if (key === 'heroTitle') node.innerHTML = merged[key];
+    if (key === 'heroTitle' || key === 'heroAiText') node.innerHTML = merged[key];
     else node.textContent = merged[key];
   });
   applyFullPageCopy(lang);
@@ -1647,7 +1662,7 @@ function animateValue(id, start, end, duration) {
   var canvas = document.createElement('canvas');
   container.appendChild(canvas);
   var ctx = canvas.getContext('2d');
-  var N = 38, MAX_D = 170, nodes, raf;
+  var N = 60, MAX_D = 200, nodes, raf;
   function resize() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
@@ -1671,8 +1686,8 @@ function animateValue(id, start, end, duration) {
         var dx = nodes[i].x-nodes[j].x, dy = nodes[i].y-nodes[j].y;
         var d = Math.sqrt(dx*dx+dy*dy);
         if (d < MAX_D) {
-          ctx.strokeStyle = 'rgba(247,147,26,'+((.9-d/MAX_D)*.35)+')';
-          ctx.lineWidth = .6;
+          ctx.strokeStyle = 'rgba(247,147,26,'+((.9-d/MAX_D)*.6)+')';
+          ctx.lineWidth = .8;
           ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y);
           ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
         }

@@ -30,3 +30,5 @@ test-invoice.sh
 phoenixd/
 MASTER.md
 COCKPIT.md
+
+.vercel
