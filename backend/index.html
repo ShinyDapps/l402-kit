@@ -244,11 +244,10 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 <section class="hero">
   <div class="hero-network" id="heroNetwork"></div>
-  <div class="hero-badge">⚡ Bitcoin Lightning · Pay-per-call · Open Source</div>
-  <h1 id="heroTitle">Get Paid. Instantly.<br>No middlemen. <span>Lightning</span>.</h1>
-  <p id="heroSubtitle">Drop-in middleware for APIs. 3 lines of code. No accounts. No banks. No chargebacks. Settles in under 1 second, anywhere on Earth.</p>
+  <div class="hero-badge">⚡ Bitcoin Lightning · AI-native · 0.3% fee · Open Source</div>
+  <h1 id="heroTitle">AI agents pay your API.<br>Instantly. No humans. <span>Lightning</span>.</h1>
+  <p id="heroSubtitle">3 lines of code. An AI agent calls your endpoint, gets a Lightning invoice, pays in under 1 second, retries — fully autonomous. 0.3% fee. No accounts. No banks. No chargebacks.</p>
   <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.25);border-radius:12px;padding:10px 20px;margin-bottom:20px;margin-top:-8px">
-    <span style="font-size:20px">🤖</span>
     <span id="heroAiText" style="font-size:14px;color:#e5e5e5;font-weight:600">AI agent native <span style="color:var(--orange)">—</span> machines can pay machines. <span style="color:var(--muted)">No human in the loop.</span></span>
   </div>
   <div class="hero-actions">
@@ -258,6 +257,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="hero-stats">
     <div class="hero-stat"><div class="stat-num">4</div><div class="stat-label">Languages</div></div>
     <div class="hero-stat"><div class="stat-num">&lt;1s</div><div class="stat-label">Settlement</div></div>
+    <div class="hero-stat"><div class="stat-num">0.3%</div><div class="stat-label">Fee only</div></div>
     <div class="hero-stat"><div class="stat-num">0</div><div class="stat-label">Chargebacks</div></div>
   </div>
 </section>
@@ -776,9 +776,9 @@ function copyInstall() {
 const I18N = {
   en: {
     navHow: 'How it works', navPricing: 'Pricing', navWallet: 'Connect wallet', navStart: 'Get started',
-    heroTitle: 'Charge for your API<br>in <span>Bitcoin Lightning</span>.<br>3 lines of code.',
-    heroSubtitle: 'No credit card. No bank. No chargeback. No minimum. Settles in under 1 second, anywhere on Earth.',
-    heroAiText: '🤖 <b>AI agent native</b> <span style="color:var(--orange)">—</span> machines can pay machines. <span style="color:var(--muted)">No human in the loop.</span>',
+    heroTitle: 'AI agents pay your API.<br>Instantly. No humans. <span>Lightning</span>.',
+    heroSubtitle: '3 lines of code. An AI agent calls your endpoint, gets a Lightning invoice, pays in under 1 second, retries — fully autonomous. 0.3% fee. No accounts. No banks. No chargebacks.',
+    heroAiText: '🤖 <b>Machines pay machines</b> <span style="color:var(--orange)">—</span> no Stripe, no signup, no human required.',
     heroReadDocs: 'Read the docs →',
     walletTitle: 'Connect your wallet',
     walletSub: 'Use Lightning for payments, and optionally connect an EVM wallet (MetaMask-compatible) for identity and app flows.',
@@ -791,9 +791,9 @@ const I18N = {
   },
   pt: {
     navHow: 'Como funciona', navPricing: 'Precos', navWallet: 'Conectar wallet', navStart: 'Comecar',
-    heroTitle: 'Monetize sua API<br>com <span>Bitcoin Lightning</span>.<br>3 linhas de codigo.',
-    heroSubtitle: 'Sem cartao. Sem banco. Sem chargeback. Sem minimo. Liquida em menos de 1 segundo.',
-    heroAiText: '🤖 <b>Nativo para agentes de IA</b> <span style="color:var(--orange)">—</span> máquinas pagando máquinas. <span style="color:var(--muted)">Sem humano no loop.</span>',
+    heroTitle: 'Agentes de IA pagam sua API.<br>Instantâneo. Sem humanos. <span>Lightning</span>.',
+    heroSubtitle: '3 linhas de código. Um agente de IA chama seu endpoint, recebe uma fatura Lightning, paga em menos de 1 segundo e tenta de novo — totalmente autônomo. Taxa de 0,3%. Sem conta. Sem banco. Sem chargeback.',
+    heroAiText: '🤖 <b>Máquinas pagando máquinas</b> <span style="color:var(--orange)">—</span> sem Stripe, sem cadastro, sem humano.',
     heroReadDocs: 'Ler docs →',
     walletTitle: 'Conecte sua wallet',
     walletSub: 'Use Lightning para pagamentos, e opcionalmente conecte uma wallet EVM (MetaMask e similares) para identidade.',
@@ -806,9 +806,9 @@ const I18N = {
   },
   es: {
     navHow: 'Cómo funciona', navPricing: 'Precios', navWallet: 'Conectar wallet', navStart: 'Empezar',
-    heroTitle: 'Cobra por tu API<br>con <span>Bitcoin Lightning</span>.<br>3 líneas de código.',
-    heroSubtitle: 'Sin tarjeta. Sin banco. Sin chargeback. Sin mínimo. Liquida en menos de 1 segundo.',
-    heroAiText: '🤖 <b>Nativo para agentes IA</b> <span style="color:var(--orange)">—</span> máquinas pagando a máquinas. <span style="color:var(--muted)">Sin humanos en el flujo.</span>',
+    heroTitle: 'Agentes IA pagan tu API.<br>Al instante. Sin humanos. <span>Lightning</span>.',
+    heroSubtitle: '3 líneas de código. Un agente IA llama tu endpoint, recibe una factura Lightning, paga en menos de 1 segundo y reintenta — totalmente autónomo. Comisión 0,3%. Sin cuenta. Sin banco. Sin chargeback.',
+    heroAiText: '🤖 <b>Máquinas pagan a máquinas</b> <span style="color:var(--orange)">—</span> sin Stripe, sin registro, sin humano.',
     heroReadDocs: 'Leer docs →',
     walletTitle: 'Conecta tu wallet',
     walletSub: 'Usa Lightning para pagos y opcionalmente conecta una wallet EVM para identidad.',
@@ -821,9 +821,9 @@ const I18N = {
   },
   fr: {
     navHow: 'Comment ça marche', navPricing: 'Tarifs', navWallet: 'Connecter wallet', navStart: 'Commencer',
-    heroTitle: 'Monétisez votre API<br>avec <span>Bitcoin Lightning</span>.<br>3 lignes de code.',
-    heroSubtitle: 'Sans carte. Sans banque. Sans chargeback. Sans minimum. Règlement en moins d\'1 seconde.',
-    heroAiText: '🤖 <b>Natif IA</b> <span style="color:var(--orange)">—</span> les machines paient les machines. <span style="color:var(--muted)">Sans humain dans la boucle.</span>',
+    heroTitle: 'Les agents IA paient votre API.<br>Instantanément. Sans humains. <span>Lightning</span>.',
+    heroSubtitle: '3 lignes de code. Un agent IA appelle votre endpoint, reçoit une facture Lightning, paie en moins d\'1 seconde et réessaie — totalement autonome. Frais 0,3%. Sans compte. Sans banque. Sans chargeback.',
+    heroAiText: '🤖 <b>Les machines paient les machines</b> <span style="color:var(--orange)">—</span> sans Stripe, sans inscription, sans humain.',
     heroReadDocs: 'Lire docs →',
     walletTitle: 'Connectez votre wallet',
     walletSub: 'Utilisez Lightning pour les paiements et connectez optionnellement un wallet EVM pour l\'identité.',
@@ -836,9 +836,9 @@ const I18N = {
   },
   de: {
     navHow: 'So funktioniert es', navPricing: 'Preise', navWallet: 'Wallet verbinden', navStart: 'Loslegen',
-    heroTitle: 'Monetarisiere deine API<br>mit <span>Bitcoin Lightning</span>.<br>3 Zeilen Code.',
-    heroSubtitle: 'Keine Kreditkarte. Keine Bank. Kein Chargeback. Kein Minimum. Abrechnung in unter 1 Sekunde.',
-    heroAiText: '🤖 <b>KI-Agent nativ</b> <span style="color:var(--orange)">—</span> Maschinen zahlen an Maschinen. <span style="color:var(--muted)">Kein Mensch im Loop.</span>',
+    heroTitle: 'KI-Agenten zahlen deine API.<br>Sofort. Ohne Menschen. <span>Lightning</span>.',
+    heroSubtitle: '3 Zeilen Code. Ein KI-Agent ruft deinen Endpoint auf, erhält eine Lightning-Rechnung, zahlt in unter 1 Sekunde und wiederholt — vollständig autonom. Gebühr 0,3%. Kein Konto. Keine Bank. Kein Chargeback.',
+    heroAiText: '🤖 <b>Maschinen zahlen Maschinen</b> <span style="color:var(--orange)">—</span> kein Stripe, keine Anmeldung, kein Mensch.',
     heroReadDocs: 'Docs lesen →',
     walletTitle: 'Wallet verbinden',
     walletSub: 'Verwende Lightning für Zahlungen und verbinde optional ein EVM-Wallet für Identität.',
@@ -851,9 +851,9 @@ const I18N = {
   },
   it: {
     navHow: 'Come funziona', navPricing: 'Prezzi', navWallet: 'Connetti wallet', navStart: 'Inizia',
-    heroTitle: 'Monetizza la tua API<br>con <span>Bitcoin Lightning</span>.<br>3 righe di codice.',
-    heroSubtitle: 'Senza carta. Senza banca. Senza chargeback. Nessun minimo. Si liquida in meno di 1 secondo.',
-    heroAiText: '🤖 <b>Nativo per agenti IA</b> <span style="color:var(--orange)">—</span> le macchine pagano le macchine. <span style="color:var(--muted)">Nessun umano nel loop.</span>',
+    heroTitle: 'Gli agenti IA pagano la tua API.<br>Istantaneamente. Senza umani. <span>Lightning</span>.',
+    heroSubtitle: '3 righe di codice. Un agente IA chiama il tuo endpoint, riceve una fattura Lightning, paga in meno di 1 secondo e riprova — completamente autonomo. Commissione 0,3%. Nessun account. Nessuna banca. Nessun chargeback.',
+    heroAiText: '🤖 <b>Le macchine pagano le macchine</b> <span style="color:var(--orange)">—</span> niente Stripe, niente registrazione, niente umani.',
     heroReadDocs: 'Leggi docs →',
     walletTitle: 'Connetti il tuo wallet',
     walletSub: 'Usa Lightning per i pagamenti e connetti opzionalmente un wallet EVM per l\'identità.',
@@ -866,9 +866,9 @@ const I18N = {
   },
   ja: {
     navHow: '仕組み', navPricing: '料金', navWallet: 'ウォレット接続', navStart: '開始',
-    heroTitle: 'APIを<span>Bitcoin Lightning</span>で<br>収益化。3行のコード。',
-    heroSubtitle: 'クレジットカード不要。銀行不要。チャージバック不要。最低金額なし。1秒以内に決済。',
-    heroAiText: '🤖 <b>AIエージェント対応</b> <span style="color:var(--orange)">—</span> 機械が機械に支払う。<span style="color:var(--muted)">人間不要。</span>',
+    heroTitle: 'AIエージェントがあなたのAPIに支払う。<br>即時。人間不要。<span>Lightning</span>.',
+    heroSubtitle: '3行のコード。AIエージェントがエンドポイントを呼び出し、Lightning請求書を受け取り、1秒以内に支払い、再試行 — 完全自律。手数料0.3%。アカウント不要。銀行不要。チャージバック不要。',
+    heroAiText: '🤖 <b>機械が機械に支払う</b> <span style="color:var(--orange)">—</span> Stripe不要、登録不要、人間不要。',
     heroReadDocs: 'ドキュメント →',
     walletTitle: 'ウォレットを接続',
     walletSub: 'Lightningで決済し、オプションでEVMウォレットをID用に接続できます。',
@@ -881,9 +881,9 @@ const I18N = {
   },
   ru: {
     navHow: 'Как это работает', navPricing: 'Тарифы', navWallet: 'Подключить кошелёк', navStart: 'Начать',
-    heroTitle: 'Монетизируй API<br>через <span>Bitcoin Lightning</span>.<br>3 строки кода.',
-    heroSubtitle: 'Без карты. Без банка. Без чарджбека. Без минимума. Расчёт за 1 секунду.',
-    heroAiText: '🤖 <b>Нативно для ИИ-агентов</b> <span style="color:var(--orange)">—</span> машины платят машинам. <span style="color:var(--muted)">Без человека в цепочке.</span>',
+    heroTitle: 'ИИ-агенты платят твоему API.<br>Мгновенно. Без людей. <span>Lightning</span>.',
+    heroSubtitle: '3 строки кода. ИИ-агент вызывает эндпоинт, получает Lightning-инвойс, платит за 1 секунду и повторяет — полностью автономно. Комиссия 0,3%. Без аккаунта. Без банка. Без чарджбека.',
+    heroAiText: '🤖 <b>Машины платят машинам</b> <span style="color:var(--orange)">—</span> без Stripe, без регистрации, без людей.',
     heroReadDocs: 'Документация →',
     walletTitle: 'Подключить кошелёк',
     walletSub: 'Используй Lightning для платежей и при желании подключи EVM-кошелёк для идентификации.',
@@ -896,9 +896,9 @@ const I18N = {
   },
   zh: {
     navHow: '工作原理', navPricing: '定价', navWallet: '连接钱包', navStart: '开始使用',
-    heroTitle: '用 <span>Bitcoin Lightning</span><br>收费。3 行代码。',
-    heroSubtitle: '无需信用卡。无需银行账户。无退款争议。无最低金额。1秒内结算。',
-    heroAiText: '🤖 <b>AI智能体原生支持</b> <span style="color:var(--orange)">—</span> 机器向机器付款。<span style="color:var(--muted)">无需人工介入。</span>',
+    heroTitle: 'AI智能体为您的API付款。<br>即时。无需人工。<span>Lightning</span>.',
+    heroSubtitle: '3行代码。AI智能体调用您的接口，收到Lightning发票，在1秒内付款并重试 — 完全自主。手续费0.3%。无需账户。无需银行。无退款争议。',
+    heroAiText: '🤖 <b>机器向机器付款</b> <span style="color:var(--orange)">—</span> 无需Stripe，无需注册，无需人工。',
     heroReadDocs: '查看文档 →',
     walletTitle: '连接钱包',
     walletSub: '使用 Lightning 付款，可选连接 EVM 钱包用于身份验证。',
@@ -911,9 +911,9 @@ const I18N = {
   },
   hi: {
     navHow: 'कैसे काम करता है', navPricing: 'प्राइसिंग', navWallet: 'वॉलेट कनेक्ट करें', navStart: 'शुरू करें',
-    heroTitle: 'अपने API से <span>Bitcoin Lightning</span><br>से कमाई करें। 3 लाइनें।',
-    heroSubtitle: 'कोई कार्ड नहीं। कोई बैंक नहीं। कोई चार्जबैक नहीं। 1 सेकंड में भुगतान।',
-    heroAiText: '🤖 <b>AI एजेंट नेटिव</b> <span style="color:var(--orange)">—</span> मशीनें मशीनों को भुगतान करती हैं। <span style="color:var(--muted)">कोई मानव नहीं।</span>',
+    heroTitle: 'AI एजेंट आपकी API को भुगतान करते हैं।<br>तुरंत। बिना इंसान के। <span>Lightning</span>.',
+    heroSubtitle: '3 लाइनें। AI एजेंट आपका endpoint कॉल करता है, Lightning invoice पाता है, 1 सेकंड में भुगतान करता है — पूरी तरह स्वायत्त। शुल्क 0.3%। कोई खाता नहीं। कोई बैंक नहीं। कोई चार्जबैक नहीं।',
+    heroAiText: '🤖 <b>मशीनें मशीनों को भुगतान करती हैं</b> <span style="color:var(--orange)">—</span> Stripe नहीं, साइनअप नहीं, इंसान नहीं।',
     heroReadDocs: 'डॉक्स पढ़ें →',
     walletTitle: 'वॉलेट कनेक्ट करें',
     walletSub: 'Lightning से भुगतान लें और वैकल्पिक रूप से पहचान के लिए EVM वॉलेट कनेक्ट करें।',
@@ -926,9 +926,9 @@ const I18N = {
   },
   ar: {
     navHow: 'كيف يعمل', navPricing: 'الأسعار', navWallet: 'ربط المحفظة', navStart: 'ابدأ',
-    heroTitle: 'اربح من API الخاص بك<br>عبر <span>Bitcoin Lightning</span>.<br>3 أسطر فقط.',
-    heroSubtitle: 'بدون بطاقة. بدون بنك. بدون استرداد. بدون حد أدنى. تسوية في أقل من ثانية.',
-    heroAiText: '🤖 <b>مخصص لوكلاء الذكاء الاصطناعي</b> <span style="color:var(--orange)">—</span> الآلات تدفع للآلات. <span style="color:var(--muted)">بدون تدخل بشري.</span>',
+    heroTitle: 'وكلاء الذكاء الاصطناعي يدفعون لـ API الخاص بك.<br>فوراً. بدون بشر. <span>Lightning</span>.',
+    heroSubtitle: '3 أسطر فقط. وكيل ذكاء اصطناعي يستدعي endpoint، يتلقى فاتورة Lightning، يدفع في أقل من ثانية ويعيد المحاولة — باستقلالية تامة. رسوم 0.3%. بدون حساب. بدون بنك. بدون استرداد.',
+    heroAiText: '🤖 <b>الآلات تدفع للآلات</b> <span style="color:var(--orange)">—</span> بدون Stripe، بدون تسجيل، بدون بشر.',
     heroReadDocs: 'اقرأ التوثيق →',
     walletTitle: 'ربط المحفظة',
     walletSub: 'استخدم Lightning للمدفوعات وربط محفظة EVM اختيارياً للهوية.',
