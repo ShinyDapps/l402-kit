@@ -113,6 +113,26 @@ services:
 
 ---
 
+## User data deletion
+
+Expose a deletion endpoint so users can permanently remove their data. The l402-kit backend includes `/api/delete-data` out of the box:
+
+```http
+POST /api/delete-data
+Content-Type: application/json
+
+{ "lightningAddress": "user@blink.sv" }
+```
+
+```json
+// 200 OK
+{ "deleted": { "payments": 42, "proAccess": true } }
+```
+
+The VS Code extension surfaces this as a **Danger Zone** panel at the bottom of the dashboard — users must type their Lightning address to confirm, then all payment history and Pro access are wiped. The operation uses the Supabase service key server-side; the anon key has no DELETE permission.
+
+---
+
 ## Health check endpoint
 
 Always add a free health check so monitoring tools don't trigger invoice creation:

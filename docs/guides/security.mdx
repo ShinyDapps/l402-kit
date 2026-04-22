@@ -164,6 +164,36 @@ Content-Security-Policy: connect-src 'self' https://api.blink.sv
 
 ---
 
+## Data management — user data deletion
+
+Users can delete all their payment history and Pro subscription from within the VS Code extension at any time (**Settings → Danger Zone**). The extension calls:
+
+```http
+POST /api/delete-data
+Content-Type: application/json
+
+{ "lightningAddress": "user@blink.sv" }
+```
+
+Response:
+
+```json
+{ "deleted": { "payments": 42, "proAccess": true } }
+```
+
+This endpoint uses the Supabase **service role key** server-side to bypass RLS and permanently delete:
+
+- All rows in `payments` where `owner_address = ?`
+- All rows in `pro_access` where `address = ?`
+
+<Note>
+The extension requires the user to type their Lightning address verbatim before the delete button is enabled — GitHub-style confirmation for destructive actions.
+</Note>
+
+If you're building your own dashboard on top of l402-kit, expose a similar endpoint for your users. Never allow deletion via the anon key — always proxy through a server-side function with the service key.
+
+---
+
 ## Checklist
 
 <AccordionGroup>
@@ -173,6 +203,7 @@ Content-Security-Policy: connect-src 'self' https://api.blink.sv
     - [ ] Admin/stats endpoints use header auth, not `?secret=` URL params
     - [ ] Supabase `service_role` key used server-side; `anon` key only on clients
     - [ ] Sensitive Supabase tables have no `anon` SELECT policy
+    - [ ] Data deletion endpoint (`/api/delete-data`) uses service key, never anon
     - [ ] Rate limiter on invoice creation
     - [ ] Replay protection tested (try reusing a preimage → expect 401)
     - [ ] Token expiry tested (set short TTL in dev, confirm 401 after expiry)
