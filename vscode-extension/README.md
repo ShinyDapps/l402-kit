@@ -4,6 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.png)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
 
+> **🌐 [l402kit.vercel.app](https://l402kit.vercel.app)** — docs, demo, and SDK for all languages
+
 ---
 
 ## English
@@ -12,7 +14,7 @@
 
 Real-time Bitcoin Lightning payment dashboard for developers using [l402-kit](https://npmjs.com/package/l402-kit). Every payment your API receives appears instantly: endpoint, amount in sats, USD value, live chart.
 
-![ShinyDapps Lightning Payments — connect wallet, view sats, switch theme and language](./docs/demo.gif)
+![ShinyDapps Lightning Payments — connect wallet, view sats, switch theme and language](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
 
 ### Features
 
@@ -32,6 +34,8 @@ Real-time Bitcoin Lightning payment dashboard for developers using [l402-kit](ht
 
 ### How to use
 
+![Payment flow — API calls your endpoint, gets HTTP 402, pays Lightning invoice, retries with token, receives data](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-en.gif)
+
 **Step 1 — Add l402-kit to your API**
 
 Pick your language and add pay-per-call in 3 lines:
@@ -39,7 +43,7 @@ Pick your language and add pay-per-call in 3 lines:
 ```bash
 npm install l402-kit      # TypeScript / Node.js / Express
 pip install l402kit       # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go@v1.0.1   # Go
+go get github.com/shinydapps/l402-kit/go@v1.1.6   # Go
 cargo add l402kit         # Rust / axum
 ```
 
@@ -120,7 +124,7 @@ Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning 
 
 Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usando [l402-kit](https://npmjs.com/package/l402-kit).
 
-![ShinyDapps Lightning Payments — conecte carteira, veja sats, mude tema e idioma](./docs/demo.gif)
+![ShinyDapps Lightning Payments — conecte carteira, veja sats, mude tema e idioma](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
 
 ### Funcionalidades
 
@@ -140,12 +144,14 @@ Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usa
 
 ### Como usar
 
+![Fluxo de pagamento — API recebe 402, cliente paga Lightning, retorna com token, recebe dados](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-pt.gif)
+
 **Passo 1 — Adicione l402-kit à sua API**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -213,12 +219,14 @@ Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
 
 ### Cómo usar
 
+![Flujo de pago — API devuelve 402, cliente paga Lightning, reintenta con token, recibe datos](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-es.gif)
+
 **Paso 1 — Agrega l402-kit a tu API**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -272,12 +280,14 @@ Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
 
 ### 如何使用
 
+![支付流程 — API 返回 402，客户支付 Lightning，重试带 token，获取数据](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-zh.gif)
+
 **第一步 — 将 l402-kit 添加到您的 API**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -331,12 +341,14 @@ cargo add l402kit         # Rust
 
 ### 使い方
 
+![支払いフロー — API が 402 を返し、クライアントが Lightning で支払い、トークンで再試行、データを受信](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ja.gif)
+
 **ステップ 1 — API に l402-kit を追加**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -390,12 +402,14 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
 
 ### Comment utiliser
 
+![Flux de paiement — API renvoie 402, client paie Lightning, réessaie avec token, reçoit données](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-fr.gif)
+
 **Étape 1 — Ajoutez l402-kit à votre API**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -449,12 +463,14 @@ Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
 
 ### Verwendung
 
+![Zahlungsfluss — API gibt 402 zurück, Client zahlt Lightning, wiederholt mit Token, empfängt Daten](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-de.gif)
+
 **Schritt 1 — l402-kit zu Ihrer API hinzufügen**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -508,12 +524,14 @@ Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
 
 ### Использование
 
+![Поток платежей — API возвращает 402, клиент платит Lightning, повторяет с токеном, получает данные](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ru.gif)
+
 **Шаг 1 — Добавьте l402-kit в ваш API**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -567,12 +585,14 @@ Command Palette (`Ctrl+Shift+P`) →
 
 ### कैसे उपयोग करें
 
+![भुगतान प्रवाह — API 402 देता है, क्लाइंट Lightning से भुगतान करता है, token के साथ retry करता है, डेटा प्राप्त करता है](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-hi.gif)
+
 **चरण 1 — अपनी API में l402-kit जोड़ें**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -626,12 +646,14 @@ Activity bar में ⚡ आइकन क्लिक करें।
 
 ### كيفية الاستخدام
 
+![تدفق الدفع — API ترجع 402، العميل يدفع Lightning، يعيد المحاولة بالرمز، يستلم البيانات](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ar.gif)
+
 **الخطوة 1 — أضف l402-kit إلى API الخاص بك**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
@@ -685,12 +707,14 @@ API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightni
 
 ### Come usare
 
+![Flusso di pagamento — API restituisce 402, client paga Lightning, riprova con token, riceve dati](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-it.gif)
+
 **Passo 1 — Aggiungi l402-kit alla tua API**
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 cargo add l402kit         # Rust
 ```
 
