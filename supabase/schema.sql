@@ -60,10 +60,15 @@ create table if not exists waitlist (
 
 alter table waitlist enable row level security;
 -- Only service role can read/write (backend API uses service key for inserts)
+-- anon key pode inserir emails na waitlist (sem autenticação — captura pública)
+create policy "anon_insert_waitlist" on waitlist for insert to anon with check (true);
+-- service role lê/escreve tudo (backend usa service key para deduplicação)
 create policy "service_full_waitlist" on waitlist for all to service_role using (true);
 
 -- ─── Migrations (run if tables already exist) ────────────────────────────────
 -- Security fix 2026-04-22: remove anon read access to pro_access (address privacy)
+-- ✅ EXECUTADO em 22 Abr 2026 via Supabase Management API.
+-- pro_access tem apenas service_full_pro. Anon key sem acesso. Lightning Addresses protegidas.
 -- DROP POLICY IF EXISTS "anon_select_pro" ON pro_access;
 -- ALTER TABLE pro_access ADD COLUMN IF NOT EXISTS tier text NOT NULL DEFAULT 'pro';
 -- ALTER TABLE payments ADD COLUMN IF NOT EXISTS owner_address text not null default '';

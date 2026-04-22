@@ -203,7 +203,7 @@ class MyProvider implements LightningProvider {
 - SHA256 — unforgeable mathematical proof
 - Anti-replay — each preimage works exactly once
 - Expiry — tokens expire after 1 hour
-- 113 automated tests across 4 languages
+- 139 automated tests across 4 languages
 - Open source — audit everything at [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
 
 ---
