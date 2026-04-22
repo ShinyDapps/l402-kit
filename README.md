@@ -15,8 +15,8 @@
 [![PyPI downloads](https://img.shields.io/pypi/dm/l402kit?color=3776ab&label=pypi%20dls%2Fmo)](https://pypi.org/project/l402kit)
 [![crates.io version](https://img.shields.io/crates/v/l402kit?color=ce422b&label=crates.io)](https://crates.io/crates/l402kit)
 [![crates.io downloads](https://img.shields.io/crates/d/l402kit?color=ce422b&label=crates%20dls)](https://crates.io/crates/l402kit)
-[![VS Code](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?color=007acc&label=vscode)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![VS Code installs](https://img.shields.io/visual-studio-marketplace/i/ShinyDapps.shinydapps-l402?color=007acc&label=vscode%20installs)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![VS Code](https://vsmarketplacebadges.dev/version-short/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![VS Code installs](https://vsmarketplacebadges.dev/installs-short/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.vercel.app/demo)
 
@@ -256,7 +256,7 @@ Token expiry:      macaroons expire after 1 hour
 
 Monitor every sat in real-time without leaving your editor.
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?color=007acc&label=Install%20on%20VS%20Code)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![VS Code Marketplace](https://vsmarketplacebadges.dev/version/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 
 - ⚡ Live payment feed per endpoint
 - 📊 Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)

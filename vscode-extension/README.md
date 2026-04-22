@@ -2,12 +2,12 @@
 
 🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية) · 🇮🇹 [Italiano](#italiano)
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/ShinyDapps.shinydapps-l402)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
-[![npm downloads](https://img.shields.io/npm/dw/l402-kit)](https://npmjs.com/package/l402-kit)
-[![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
+[![VS Code Marketplace](https://vsmarketplacebadges.dev/version/ShinyDapps.shinydapps-l402.png)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![Installs](https://vsmarketplacebadges.dev/installs/ShinyDapps.shinydapps-l402.png)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![npm](https://img.shields.io/npm/v/l402-kit.png)](https://npmjs.com/package/l402-kit)
+[![npm downloads](https://img.shields.io/npm/dw/l402-kit.png)](https://npmjs.com/package/l402-kit)
+[![PyPI](https://img.shields.io/pypi/v/l402kit.png)](https://pypi.org/project/l402kit)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.png)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
 
 ---
 
