@@ -2,11 +2,12 @@
 
 🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية) · 🇮🇹 [Italiano](#italiano)
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/ShinyDapps.shinydapps-l402)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/ShinyDapps.shinydapps-l402)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 [![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
+[![npm downloads](https://img.shields.io/npm/dw/l402-kit)](https://npmjs.com/package/l402-kit)
 [![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
-[![GitHub Stars](https://img.shields.io/github/stars/ShinyDapps/l402-kit)](https://github.com/ShinyDapps/l402-kit)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
 
 ---
 
@@ -16,7 +17,7 @@
 
 This extension is part of the **l402-kit** ecosystem — the simplest way to add Bitcoin Lightning pay-per-call to any API.
 
-![ShinyDapps Lightning Payments — VS Code sidebar showing sats counter, chart and payment history](./docs/screenshot.png)
+![ShinyDapps Lightning Payments — VS Code sidebar showing sats counter, chart and payment history](https://l402kit.vercel.app/extension-preview.png)
 
 ### Features
 

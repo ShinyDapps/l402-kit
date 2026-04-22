@@ -16,7 +16,7 @@
 [![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-139%20passing-brightgreen)](#)
-[![GitHub Stars](https://img.shields.io/github/stars/ShinyDapps/l402-kit)](https://github.com/ShinyDapps/l402-kit)
+[![VS Code](https://img.shields.io/visual-studio-marketplace/v/ShinyDapps.shinydapps-l402?label=vscode)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 [![Live Demo](https://img.shields.io/badge/▶%20live%20demo-end--to--end-f7931a)](https://l402kit.vercel.app/demo)
 
 <p align="center">
