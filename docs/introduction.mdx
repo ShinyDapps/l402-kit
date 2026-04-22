@@ -27,17 +27,17 @@ cargo add l402kit       # Rust / axum
   <Card title="PyPI" icon="python" href="https://pypi.org/project/l402kit">
     l402kit on PyPI
   </Card>
-  <Card title="GitHub" icon="github" href="https://github.com/ShinyDapps/l402-kit">
-    Open source code
-  </Card>
   <Card title="Go" icon="code" href="https://pkg.go.dev/github.com/shinydapps/l402-kit/go">
     Go SDK (net/http)
   </Card>
-  <Card title="Rust" icon="code" href="https://github.com/ShinyDapps/l402-kit/tree/main/rust">
+  <Card title="Rust" icon="code" href="https://crates.io/crates/l402kit">
     Rust SDK (axum)
   </Card>
-  <Card title="llms.txt" icon="robot" href="https://github.com/ShinyDapps/l402-kit/blob/main/llms.txt">
+  <Card title="llms.txt" icon="robot" href="https://l402kit.vercel.app/llms.txt">
     For AI agents
+  </Card>
+  <Card title="Whitepaper" icon="file" href="https://l402kit.vercel.app/docs/whitepaper">
+    Technical design
   </Card>
 </CardGroup>
 
@@ -73,7 +73,7 @@ cargo add l402kit       # Rust / axum
 ```
 
 <Note>
-**Transparência total:** ShinyDapps recebe o pagamento e envia **99.7%** para seu Lightning Address automaticamente. A taxa de **0.3%** é o que mantém o projeto vivo. Você pode auditar cada linha em [`src/split.ts`](https://github.com/ShinyDapps/l402-kit/blob/main/src/split.ts) e [`backend/api/split.ts`](https://github.com/ShinyDapps/l402-kit/blob/main/backend/api/split.ts).
+**Transparência total:** ShinyDapps recebe o pagamento e envia **99.7%** para seu Lightning Address automaticamente. A taxa de **0.3%** é o que mantém o projeto vivo. O split é determinístico e verificável — nenhum segredo, nenhum intermediário.
 </Note>
 
 ---
@@ -185,7 +185,7 @@ SHA256(preimage) == paymentHash
 - Impossible to fake without actually paying
 - Each preimage works exactly once (anti-replay)
 - Tokens expire after 1 hour
-- All code is auditable at [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit)
+- All logic is deterministic and verifiable — no hidden fees, no intermediaries
 
 ---
 

@@ -221,7 +221,6 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <a href="#extension">Extension</a>
     <a href="#pricing" data-i18n="navPricing">Pricing</a>
     <a href="https://l402kit.vercel.app/docs" id="navDocsLink" data-docs-link="1">Docs</a>
-    <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
     <a href="dashboard.html">Dashboard</a>
     <label class="lang-picker" for="languageSelect">
       <span>🌐</span>
@@ -537,7 +536,7 @@ app = <span class="c-fn">FastAPI</span>()
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14.25 0L8 6.25 1.75 0 0 1.75l6.25 6.25L0 14.25 1.75 16l6.25-6.25L14.25 16 16 14.25 9.75 8 16 1.75z"/></svg>
           Install Free on Marketplace
         </a>
-        <a href="https://github.com/ShinyDapps/l402-kit/tree/main/vscode-extension" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:transparent;color:#e5e5e5;border:1px solid #333;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none">View source →</a>
+        <a href="https://l402kit.vercel.app/docs" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:transparent;color:#e5e5e5;border:1px solid #333;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none">Documentation →</a>
       </div>
     </div>
     <div style="position:relative">
@@ -754,7 +753,6 @@ app = <span class="c-fn">FastAPI</span>()
 <footer>
   <div>⚡ <strong>l402-kit</strong> &nbsp;·&nbsp; by <a href="https://github.com/ThiagoDataEngineer" style="color:var(--muted)">ShinyDapps</a> · MIT License</div>
   <div style="display:flex;gap:20px">
-    <a href="https://github.com/ShinyDapps/l402-kit">GitHub</a>
     <a href="https://l402kit.vercel.app/docs" id="footerDocsLink" data-docs-link="1">Docs</a>
     <a href="https://npmjs.com/package/l402-kit">npm</a>
     <a href="https://pypi.org/project/l402kit">PyPI</a>
@@ -858,7 +856,6 @@ const FULL_PAGE_COPY = {
   en: {
     '.nav-links a[href="#extension"]': 'Extension',
     '.nav-links a[href="https://l402kit.vercel.app/docs"]:not(.nav-cta)': 'Docs',
-    '.nav-links a[href="https://github.com/ShinyDapps/l402-kit"]': 'GitHub',
     '.nav-links a[href="dashboard.html"]': 'Dashboard',
 
     '.stats-bar .stat-item:nth-child(1) .stat-label': 'Payments logged',
@@ -905,7 +902,6 @@ const FULL_PAGE_COPY = {
   pt: {
     '.nav-links a[href="#extension"]': 'Extensao',
     '.nav-links a[href="https://l402kit.vercel.app/docs"]:not(.nav-cta)': 'Docs',
-    '.nav-links a[href="https://github.com/ShinyDapps/l402-kit"]': 'GitHub',
     '.nav-links a[href="dashboard.html"]': 'Painel',
 
     '.stats-bar .stat-item:nth-child(1) .stat-label': 'Pagamentos registrados',
@@ -1030,7 +1026,7 @@ function applyFullPageCopy(lang) {
       if (lis[3]) lis[3].textContent = '✓ Tema claro / escuro / automatico';
       if (lis[4]) lis[4].textContent = '✓ Zero config — so definir seu Lightning address';
       if (links[0]) links[0].textContent = 'Instalar gratis no Marketplace';
-      if (links[1]) links[1].textContent = 'Ver codigo-fonte →';
+      if (links[1]) links[1].textContent = 'Documentacao →';
     } else {
       if (badge) badge.textContent = 'VS CODE EXTENSION';
       if (h2) h2.textContent = 'Watch your sats roll in — without leaving your editor';
@@ -1041,7 +1037,7 @@ function applyFullPageCopy(lang) {
       if (lis[3]) lis[3].textContent = '✓ Light / dark / auto theme';
       if (lis[4]) lis[4].textContent = '✓ Zero config — just set your Lightning address';
       if (links[0]) links[0].textContent = 'Install Free on Marketplace';
-      if (links[1]) links[1].textContent = 'View source →';
+      if (links[1]) links[1].textContent = 'Documentation →';
     }
   }
 
