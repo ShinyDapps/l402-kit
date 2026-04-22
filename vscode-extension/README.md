@@ -1,19 +1,13 @@
 # ShinyDapps ⚡ Lightning Payments
 
+<details>
+<summary>🌍 11 languages — click to expand</summary>
+
 🇺🇸 [English](#english) · 🇧🇷 [Português](#português) · 🇪🇸 [Español](#español) · 🇨🇳 [中文](#中文) · 🇯🇵 [日本語](#日本語) · 🇫🇷 [Français](#français) · 🇩🇪 [Deutsch](#deutsch) · 🇷🇺 [Русский](#русский) · 🇮🇳 [हिंदी](#हिंदी) · 🇸🇦 [العربية](#العربية) · 🇮🇹 [Italiano](#italiano)
 
+</details>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.png)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
-
----
-
-### SDK ecosystem — live download stats
-
-| SDK | Install | Version | Downloads |
-|:----|:--------|:-------:|----------:|
-| 📦 **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit.png?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit.png?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
-| 🐍 **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit.png?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit.png?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
-| 🦀 **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit.png?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit.png?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
-| 🦫 **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.0.1-00acd7.png?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7.png)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
 
 ---
 
@@ -21,7 +15,7 @@
 
 **Watch your sats roll in — without leaving VS Code.**
 
-Real-time Bitcoin Lightning payment dashboard built for developers using [l402-kit](https://npmjs.com/package/l402-kit). Every payment your API receives appears instantly: endpoint hit, amount in sats, USD value, and a live chart.
+Real-time Bitcoin Lightning payment dashboard for developers using [l402-kit](https://npmjs.com/package/l402-kit). Every payment your API receives appears instantly: endpoint, amount in sats, USD value, live chart.
 
 ![ShinyDapps Lightning Payments — connect wallet, view sats, switch theme and language](./docs/demo.gif)
 
@@ -57,22 +51,21 @@ cargo add l402kit         # Rust / axum
 Use your Lightning address as the owner:
 
 ```typescript
-// TypeScript example
 app.get("/premium", l402({
   priceSats: 100,
-  ownerLightningAddress: "you@blink.sv",  // ← your Lightning address here
+  ownerLightningAddress: "you@blink.sv",  // ← your Lightning address
 }), handler);
 ```
 
 **Step 2 — Install this extension and configure it**
 
-Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) →  
+Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
-Enter the **same Lightning address** you used in your API (e.g. `you@blink.sv`).  
+Enter the **same Lightning address** you used in your API (e.g. `you@blink.sv`).
 That's it — the extension connects automatically.
 
-> **No Lightning address yet?** Get one free at [dashboard.blink.sv](https://dashboard.blink.sv) — no credit card, instant setup. Your address: `yourname@blink.sv`
+> **No Lightning address yet?** Get one free at [dashboard.blink.sv](https://dashboard.blink.sv) — no credit card, instant setup.
 
 **Step 3 — Watch your payments arrive**
 
@@ -87,20 +80,19 @@ Click the ⚡ icon in the activity bar. The sidebar shows:
 ```
 Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning invoice
                                                   │
-                      Client pays (any Lightning wallet, <1 second)
+                      Client pays (any Lightning wallet, < 1 second)
                                                   │
                       ShinyDapps backend verifies payment
                                  │
-                    99.7% → your Lightning Address
+                    99.7% → your Lightning Address  (instant)
                      0.3% → ShinyDapps (fee)
                                  │
-                    Payment logged to database
-                                 │
-                    This extension reads here ◄── YOU ARE HERE
-                    (polls every 30 seconds)
+                    Payment logged → this extension reads here
+                    (polls every 30 seconds)          ▲
+                                                  YOU ARE HERE
 ```
 
-### vs. the competition
+### Why not Stripe?
 
 |  | Stripe | PayPal | **l402-kit** |
 |--|--------|--------|--------------|
@@ -111,6 +103,15 @@ Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning 
 | Countries blocked | ~50 | ~30 | **0 — global** |
 | Setup time | Hours | Hours | **3 lines of code** |
 | VS Code monitor | No | No | **✓ This extension** |
+
+### SDK ecosystem — live download stats
+
+| SDK | Install | Version | Downloads |
+|:----|:--------|:-------:|----------:|
+| 📦 **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit.png?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit.png?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
+| 🐍 **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit.png?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit.png?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
+| 🦀 **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit.png?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit.png?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
+| 🦫 **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.0.1-00acd7.png?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7.png)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
 
 ### Links
 
@@ -123,6 +124,8 @@ Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning 
 **Veja os sats chegando — sem sair do VS Code.**
 
 Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usando [l402-kit](https://npmjs.com/package/l402-kit).
+
+![ShinyDapps Lightning Payments — conecte carteira, veja sats, mude tema e idioma](./docs/demo.gif)
 
 ### Funcionalidades
 
@@ -137,6 +140,8 @@ Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usa
 🎨 **Tema Claro / Escuro / Auto**
 
 📈 **Intervalos de gráfico** — 1D / 7D (grátis) · 30D / 1Y / ALL (Pro)
+
+🤖 **Nativo para agentes de IA** — TypeScript, Python, Go, Rust
 
 ### Como usar
 
@@ -153,7 +158,7 @@ Use seu Lightning address como `ownerLightningAddress` na configuração.
 
 **Passo 2 — Configure a extensão**
 
-Abra o Command Palette (`Ctrl+Shift+P`) →  
+Abra o Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 Digite o **mesmo Lightning address** que você usou na sua API (ex: `voce@blink.sv`).
@@ -171,19 +176,25 @@ Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
                                   │
                     Cliente paga (< 1 segundo)
                                   │
-                    Backend verifica o pagamento
-                         │
-                99,7% → seu Lightning Address
+                99,7% → seu Lightning Address  (instantâneo)
                  0,3% → ShinyDapps (taxa)
-                         │
-                Pagamento registrado no banco
-                         │
-                Esta extensão lê aqui ◄── VOCÊ ESTÁ AQUI
+                                  │
+                Pagamento registrado → extensão lê aqui  ▲ VOCÊ ESTÁ AQUI
 ```
+
+### Por que não Stripe / Pix?
+
+| | Stripe | Pix | **l402-kit** |
+|--|--------|-----|--------------|
+| Taxa mínima | R$1,50 | R$0,01 | **< 1 sat** |
+| Liquidação | 2–7 dias | Instante | **< 1 segundo** |
+| Chargeback | Sim | Não | **Impossível** |
+| Funciona pra IA | Não | Não | **Sim — nativo** |
+| Global | Não | Só Brasil | **Sim — 0 fronteiras** |
 
 ### Links
 
-[📖 Docs PT](https://l402kit.vercel.app/docs/pt/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [npm](https://npmjs.com/package/l402-kit)
+[📖 Docs PT](https://l402kit.vercel.app/docs/pt/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -216,11 +227,9 @@ go get github.com/shinydapps/l402-kit/go@v1.0.1
 cargo add l402kit         # Rust
 ```
 
-Usa tu Lightning address como `ownerLightningAddress` en la configuración.
-
 **Paso 2 — Configura la extensión**
 
-Abre Command Palette (`Ctrl+Shift+P`) →  
+Abre Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 Ingresa el **mismo Lightning address** que usaste en tu API (ej: `tu@blink.sv`).
@@ -236,15 +245,15 @@ Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
                                  │
                    Cliente paga (< 1 segundo)
                                  │
-              99,7% → tu Lightning Address
+              99,7% → tu Lightning Address  (instantáneo)
                0,3% → ShinyDapps (comisión)
                                  │
-              Esta extensión lee aquí ◄── ESTÁS AQUÍ
+              Esta extensión lee aquí  ▲ ESTÁS AQUÍ
 ```
 
 ### Links
 
-[📖 Docs ES](https://l402kit.vercel.app/docs/es/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
+[📖 Docs ES](https://l402kit.vercel.app/docs/es/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -277,11 +286,9 @@ go get github.com/shinydapps/l402-kit/go@v1.0.1
 cargo add l402kit         # Rust
 ```
 
-在配置中使用您的闪电地址作为 `ownerLightningAddress`。
-
 **第二步 — 配置扩展**
 
-打开命令面板 (`Ctrl+Shift+P`) →  
+打开命令面板 (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 输入与您的 API 中相同的闪电地址（例如：`you@blink.sv`）。
@@ -297,15 +304,15 @@ cargo add l402kit         # Rust
                                    │
                      客户支付（< 1 秒）
                                    │
-                  99.7% → 您的闪电地址
+                  99.7% → 您的闪电地址  （即时）
                    0.3% → ShinyDapps（手续费）
                                    │
-                  此扩展在此读取 ◄── 您在这里
+                  此扩展在此读取  ▲ 您在这里
 ```
 
 ### 链接
 
-[📖 中文文档](https://l402kit.vercel.app/docs/zh/introduction) · [▶ 演示](https://l402kit.vercel.app/demo)
+[📖 中文文档](https://l402kit.vercel.app/docs/zh/introduction) · [▶ 演示](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -338,11 +345,9 @@ go get github.com/shinydapps/l402-kit/go@v1.0.1
 cargo add l402kit         # Rust
 ```
 
-設定で `ownerLightningAddress` にあなたの Lightning アドレスを使用します。
-
 **ステップ 2 — 拡張機能を設定**
 
-コマンドパレット (`Ctrl+Shift+P`) →  
+コマンドパレット (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 API で使用したのと**同じ Lightning アドレス**を入力（例：`you@blink.sv`）。
@@ -358,15 +363,15 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
                                         │
                           クライアントが支払う（< 1秒）
                                         │
-                       99.7% → あなたの Lightning アドレス
+                       99.7% → あなたの Lightning アドレス  （即時）
                         0.3% → ShinyDapps（手数料）
                                         │
-                       この拡張機能がここを読む ◄── ここです
+                       この拡張機能がここを読む  ▲ ここです
 ```
 
 ### リンク
 
-[📖 日本語ドキュメント](https://l402kit.vercel.app/docs/ja/introduction) · [▶ デモ](https://l402kit.vercel.app/demo)
+[📖 日本語ドキュメント](https://l402kit.vercel.app/docs/ja/introduction) · [▶ デモ](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -401,7 +406,7 @@ cargo add l402kit         # Rust
 
 **Étape 2 — Configurez l'extension**
 
-Ouvrez la palette de commandes (`Ctrl+Shift+P`) →  
+Ouvrez la palette de commandes (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 Entrez la **même adresse Lightning** que celle utilisée dans votre API.
@@ -417,15 +422,15 @@ Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
                                     │
                       Le client paie (< 1 seconde)
                                     │
-                   99,7% → votre adresse Lightning
+                   99,7% → votre adresse Lightning  (instantané)
                     0,3% → ShinyDapps (frais)
                                     │
-                   Cette extension lit ici ◄── VOUS ÊTES ICI
+                   Cette extension lit ici  ▲ VOUS ÊTES ICI
 ```
 
 ### Liens
 
-[📖 Docs FR](https://l402kit.vercel.app/docs/fr/introduction) · [▶ Démo](https://l402kit.vercel.app/demo)
+[📖 Docs FR](https://l402kit.vercel.app/docs/fr/introduction) · [▶ Démo](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -460,7 +465,7 @@ cargo add l402kit         # Rust
 
 **Schritt 2 — Erweiterung konfigurieren**
 
-Command Palette (`Ctrl+Shift+P`) →  
+Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 Geben Sie dieselbe Lightning-Adresse ein, die Sie in Ihrer API verwendet haben.
@@ -476,15 +481,15 @@ Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
                                    │
                      Client zahlt (< 1 Sekunde)
                                    │
-                  99,7% → Ihre Lightning-Adresse
+                  99,7% → Ihre Lightning-Adresse  (sofort)
                    0,3% → ShinyDapps (Gebühr)
                                    │
-                  Diese Erweiterung liest hier ◄── SIE SIND HIER
+                  Diese Erweiterung liest hier  ▲ SIE SIND HIER
 ```
 
 ### Links
 
-[📖 Docs DE](https://l402kit.vercel.app/docs/de/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
+[📖 Docs DE](https://l402kit.vercel.app/docs/de/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -519,7 +524,7 @@ cargo add l402kit         # Rust
 
 **Шаг 2 — Настройте расширение**
 
-Command Palette (`Ctrl+Shift+P`) →  
+Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 Введите тот же Lightning-адрес, что использовали в API.
@@ -535,15 +540,15 @@ Command Palette (`Ctrl+Shift+P`) →
                                   │
                     Клиент платит (< 1 секунды)
                                   │
-                 99,7% → ваш Lightning-адрес
+                 99,7% → ваш Lightning-адрес  (мгновенно)
                   0,3% → ShinyDapps (комиссия)
                                   │
-                 Расширение читает здесь ◄── ВЫ ЗДЕСЬ
+                 Расширение читает здесь  ▲ ВЫ ЗДЕСЬ
 ```
 
 ### Ссылки
 
-[📖 Docs RU](https://l402kit.vercel.app/docs/ru/introduction) · [▶ Демо](https://l402kit.vercel.app/demo)
+[📖 Docs RU](https://l402kit.vercel.app/docs/ru/introduction) · [▶ Демо](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -578,7 +583,7 @@ cargo add l402kit         # Rust
 
 **चरण 2 — एक्सटेंशन कॉन्फ़िगर करें**
 
-Command Palette (`Ctrl+Shift+P`) →  
+Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 वही Lightning address डालें जो आपने API में उपयोग किया था।
@@ -594,15 +599,15 @@ Activity bar में ⚡ आइकन क्लिक करें।
                                     │
                       Client भुगतान करता है (< 1 सेकंड)
                                     │
-                   99.7% → आपका Lightning Address
+                   99.7% → आपका Lightning Address  (तुरंत)
                     0.3% → ShinyDapps (शुल्क)
                                     │
-                   यह एक्सटेंशन यहाँ पढ़ता है ◄── आप यहाँ हैं
+                   यह एक्सटेंशन यहाँ पढ़ता है  ▲ आप यहाँ हैं
 ```
 
 ### लिंक
 
-[📖 Docs HI](https://l402kit.vercel.app/docs/hi/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
+[📖 Docs HI](https://l402kit.vercel.app/docs/hi/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -637,7 +642,7 @@ cargo add l402kit         # Rust
 
 **الخطوة 2 — قم بتهيئة الإضافة**
 
-افتح Command Palette (`Ctrl+Shift+P`) →  
+افتح Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 أدخل نفس عنوان Lightning الذي استخدمته في API الخاص بك.
@@ -653,15 +658,15 @@ API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightni
                                          │
                            العميل يدفع (< ثانية واحدة)
                                          │
-                        99.7% → عنوان Lightning الخاص بك
+                        99.7% → عنوان Lightning الخاص بك  (فوري)
                          0.3% → ShinyDapps (رسوم)
                                          │
-                        هذه الإضافة تقرأ هنا ◄── أنت هنا
+                        هذه الإضافة تقرأ هنا  ▲ أنت هنا
 ```
 
 ### الروابط
 
-[📖 Docs AR](https://l402kit.vercel.app/docs/ar/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
+[📖 Docs AR](https://l402kit.vercel.app/docs/ar/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -696,7 +701,7 @@ cargo add l402kit         # Rust
 
 **Passo 2 — Configura l'estensione**
 
-Apri Command Palette (`Ctrl+Shift+P`) →  
+Apri Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
 Inserisci lo stesso Lightning address usato nella tua API.
@@ -712,15 +717,15 @@ La tua API ──► l402-kit ──► HTTP 402 + fattura Lightning
                                       │
                         Il client paga (< 1 secondo)
                                       │
-                     99,7% → il tuo Lightning address
+                     99,7% → il tuo Lightning address  (istantaneo)
                       0,3% → ShinyDapps (commissione)
                                       │
-                     Questa estensione legge qui ◄── SEI QUI
+                     Questa estensione legge qui  ▲ SEI QUI
 ```
 
 ### Link
 
-[📖 Docs IT](https://l402kit.vercel.app/docs/it/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
+[📖 Docs IT](https://l402kit.vercel.app/docs/it/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
@@ -730,6 +735,6 @@ Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps) · MIT License
 
 **Bitcoin has no borders.**
 
-[Docs](https://l402kit.vercel.app/docs) · [Demo](https://l402kit.vercel.app/demo) · [npm](https://npmjs.com/package/l402-kit) · [PyPI](https://pypi.org/project/l402kit)
+[Docs](https://l402kit.vercel.app/docs) · [Demo](https://l402kit.vercel.app/demo) · [npm](https://npmjs.com/package/l402-kit) · [PyPI](https://pypi.org/project/l402kit) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 </div>

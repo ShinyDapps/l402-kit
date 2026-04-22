@@ -2,7 +2,7 @@
   "name": "shinydapps-l402",
   "displayName": "ShinyDapps Lightning Payments",
   "description": "Real-time Bitcoin Lightning payment dashboard in VS Code. Monitor API micropayments per endpoint, live charts, CSV export. Works with l402-kit (TypeScript, Python, Go, Rust). Zero config.",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "publisher": "ShinyDapps",
   "icon": "icon.png",
   "engines": { "vscode": "^1.85.0" },
