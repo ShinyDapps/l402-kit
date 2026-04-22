@@ -12,8 +12,9 @@
 🇯🇵 **Bitcoin Lightningで APIを3行で収益化。**
 🇮🇹 **Monetizza la tua API con Bitcoin Lightning. 3 righe di codice.**
 
-[![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
-[![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
+[![PyPI version](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=pypi)](https://pypi.org/project/l402kit)
+[![PyPI downloads](https://img.shields.io/pypi/dm/l402kit?color=3776ab&label=downloads%2Fmo)](https://pypi.org/project/l402kit)
+[![Python](https://img.shields.io/pypi/pyversions/l402kit?color=3776ab)](https://pypi.org/project/l402kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
 
 ```bash
@@ -268,9 +269,9 @@ Your address: `yourname@blink.sv`
 
 | | |
 |---|---|
-| Docs (11 languages) | [shinydapps.mintlify.app](https://l402kit.vercel.app/docs) |
+| Docs (11 languages) | [l402kit.vercel.app/docs](https://l402kit.vercel.app/docs) |
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
-| npm (TypeScript) | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
+| Python SDK docs | [l402kit.vercel.app/docs/sdk/python](https://l402kit.vercel.app/docs/sdk/python) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
 | Creator | [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer) |
 | Lightning | shinydapps@blink.sv |

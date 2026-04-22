@@ -1,15 +1,21 @@
 # l402kit — Rust SDK
 
+**Add Bitcoin Lightning pay-per-call to any Rust API. 3 lines of code.**
+
+[![crates.io](https://img.shields.io/crates/v/l402kit?color=ce422b&label=crates.io)](https://crates.io/crates/l402kit)
+[![downloads](https://img.shields.io/crates/d/l402kit?color=ce422b&label=downloads)](https://crates.io/crates/l402kit)
+[![docs.rs](https://img.shields.io/docsrs/l402kit?label=docs.rs)](https://docs.rs/l402kit)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
+
 L402 (HTTP 402 + Lightning Network) middleware for Rust. Supports **axum**.
+
+📖 **Docs:** [l402kit.vercel.app/docs/sdk/rust](https://l402kit.vercel.app/docs/sdk/rust)
 
 ## Install
 
-```toml
-[dependencies]
-l402kit = "0.1.0"
+```bash
+cargo add l402kit
 ```
-
-Published on [crates.io](https://crates.io/crates/l402kit).
 
 ## Usage (axum)
 
