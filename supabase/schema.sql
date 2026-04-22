@@ -65,6 +65,14 @@ create policy "anon_insert_waitlist" on waitlist for insert to anon with check (
 -- service role lê/escreve tudo (backend usa service key para deduplicação)
 create policy "service_full_waitlist" on waitlist for all to service_role using (true);
 
+-- ─── Migration 2026-04-22b: email tracking ───────────────────────────────────
+-- ✅ EXECUTADO em 22 Abr 2026 via Supabase Management API.
+-- ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS resend_id text;
+-- ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS email_status text NOT NULL DEFAULT 'pending';
+-- CREATE INDEX IF NOT EXISTS idx_waitlist_resend_id ON waitlist(resend_id);
+-- CREATE INDEX IF NOT EXISTS idx_waitlist_email_status ON waitlist(email_status);
+-- email_status values: 'pending' | 'sending' | 'delivered' | 'bounced' | 'complained'
+
 -- ─── Migrations (run if tables already exist) ────────────────────────────────
 -- Security fix 2026-04-22: remove anon read access to pro_access (address privacy)
 -- ✅ EXECUTADO em 22 Abr 2026 via Supabase Management API.

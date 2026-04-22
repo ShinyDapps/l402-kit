@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY ?? "";
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
 const DASHBOARD_SECRET = process.env.DASHBOARD_SECRET ?? "";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,15 +14,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/payments?select=*&order=paid_at.desc`, {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-      },
-    });
-    const payments = (await r.json()) as {
+    const [paymentsRes, waitlistRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/payments?select=*&order=paid_at.desc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      }),
+      fetch(`${SUPABASE_URL}/rest/v1/waitlist?select=email,email_status,resend_id,created_at&order=created_at.desc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      }),
+    ]);
+
+    const payments = (await paymentsRes.json()) as {
       id: string; endpoint: string; preimage: string;
       amount_sats: number; owner_address: string; paid_at: string;
+    }[];
+
+    const waitlist = (await waitlistRes.json()) as {
+      email: string; email_status: string; resend_id: string | null; created_at: string;
     }[];
 
     const totalPayments = payments.length;
@@ -36,12 +44,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       byOwner[k].sats += p.amount_sats;
     }
 
+    const emailStats = {
+      total:      waitlist.length,
+      pending:    waitlist.filter(w => w.email_status === "pending").length,
+      sending:    waitlist.filter(w => w.email_status === "sending").length,
+      delivered:  waitlist.filter(w => w.email_status === "delivered").length,
+      bounced:    waitlist.filter(w => w.email_status === "bounced").length,
+      complained: waitlist.filter(w => w.email_status === "complained").length,
+    };
+
     res.json({
       totalPayments,
       totalSats,
       shinydappsFee,
       byOwner,
       recent: payments.slice(0, 20),
+      emailStats,
+      recentWaitlist: waitlist.slice(0, 50),
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch stats" });

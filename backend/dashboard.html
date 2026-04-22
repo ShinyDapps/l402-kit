@@ -50,6 +50,13 @@
   .refresh:hover { border-color: #f7931a; color: #f7931a; }
 
   .lightning { color: #f7931a; }
+
+  .status-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .status-pending    { background: #1e1e2e; color: #666; }
+  .status-sending    { background: #1a2a1a; color: #4ade80; }
+  .status-delivered  { background: #1a2a1a; color: #22c55e; }
+  .status-bounced    { background: #2a1a1a; color: #f87171; }
+  .status-complained { background: #2a1a00; color: #fb923c; }
 </style>
 </head>
 <body>
@@ -99,6 +106,35 @@
     </div>
   </div>
 
+  <!-- Email Stats -->
+  <div class="cards" id="emailCards">
+    <div class="card">
+      <div class="card-label">Waitlist Total</div>
+      <div class="card-value" id="emailTotal">—</div>
+      <div class="card-sub">emails capturados</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Entregues</div>
+      <div class="card-value green" id="emailDelivered">—</div>
+      <div class="card-sub">confirmed delivery</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Em trânsito</div>
+      <div class="card-value orange" id="emailSending">—</div>
+      <div class="card-sub">sending + pending</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Bounced / Spam</div>
+      <div class="card-value" id="emailBounced" style="color:#f87171">—</div>
+      <div class="card-sub">bounced + complained</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Waitlist — emails recentes</h2>
+    <div id="waitlistTable"><div class="empty"><span>📧</span>Sem dados ainda</div></div>
+  </div>
+
   <div class="section">
     <h2>Por Lightning Address</h2>
     <div id="byOwnerTable"><div class="empty"><span>⚡</span>Sem dados ainda</div></div>
@@ -142,6 +178,38 @@ async function loadStats() {
     document.getElementById("totalSats").textContent = data.totalSats.toLocaleString() + " sats";
     document.getElementById("shinydappsFee").textContent = data.shinydappsFee.toLocaleString() + " sats";
     document.getElementById("activeDevs").textContent = Object.keys(data.byOwner).length;
+
+    // Email stats
+    if (data.emailStats) {
+      const es = data.emailStats;
+      document.getElementById("emailTotal").textContent = es.total.toLocaleString();
+      document.getElementById("emailDelivered").textContent = es.delivered.toLocaleString();
+      document.getElementById("emailSending").textContent = (es.sending + es.pending).toLocaleString();
+      document.getElementById("emailBounced").textContent = (es.bounced + es.complained).toLocaleString();
+    }
+
+    // Waitlist table
+    const wl = data.recentWaitlist || [];
+    if (wl.length === 0) {
+      document.getElementById("waitlistTable").innerHTML = '<div class="empty"><span>📧</span>Nenhum signup ainda</div>';
+    } else {
+      const statusLabel = s => {
+        const map = { pending: "pending", sending: "sending", delivered: "delivered", bounced: "bounced", complained: "spam" };
+        return `<span class="status-pill status-${s}">${map[s] || s}</span>`;
+      };
+      document.getElementById("waitlistTable").innerHTML = `
+        <table>
+          <tr><th>Email</th><th>Status</th><th>Resend ID</th><th>Cadastro</th></tr>
+          ${wl.map(w => `
+            <tr>
+              <td>${w.email}</td>
+              <td>${statusLabel(w.email_status)}</td>
+              <td class="mono">${w.resend_id ? w.resend_id.slice(0,12) + "…" : "—"}</td>
+              <td>${new Date(w.created_at).toLocaleString("pt-BR")}</td>
+            </tr>
+          `).join("")}
+        </table>`;
+    }
 
     // By owner table
     const owners = Object.entries(data.byOwner).sort((a, b) => b[1].sats - a[1].sats);

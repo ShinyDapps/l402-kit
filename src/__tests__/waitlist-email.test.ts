@@ -81,14 +81,26 @@ describe("waitlist handler — email dispatch logic", () => {
     expect(res.calls[0].status).toBe(200);
     expect((res.calls[0].body as any).ok).toBe(true);
 
-    const supabaseCalls = fetchCalls.filter(([u]) => (u as string).includes("supabase"));
+    const supabasePOST = fetchCalls.filter(([u, o]) => (u as string).includes("supabase") && o?.method === "POST");
+    const supabasePATCH = fetchCalls.filter(([u, o]) => (u as string).includes("supabase") && o?.method === "PATCH");
     const resendCalls = fetchCalls.filter(([u]) => (u as string).includes("resend"));
-    expect(supabaseCalls).toHaveLength(1);
-    expect(resendCalls).toHaveLength(1);
+    expect(supabasePOST).toHaveLength(1);   // INSERT email
+    expect(resendCalls).toHaveLength(1);     // send email
+    expect(supabasePATCH).toHaveLength(1);  // save resend_id
 
     const resendBody = JSON.parse((resendCalls[0][1]?.body as string) ?? "{}");
     expect(resendBody.to).toBe("user@example.com");
     expect(resendBody.from).toContain("resend.dev");
+
+    // deve fazer PATCH no Supabase com o resend_id retornado
+    await new Promise((r) => setTimeout(r, 100));
+    const patchCalls = fetchCalls.filter(
+      ([u, opts]) => (u as string).includes("supabase") && opts?.method === "PATCH"
+    );
+    expect(patchCalls).toHaveLength(1);
+    const patchBody = JSON.parse(patchCalls[0][1]?.body as string);
+    expect(patchBody.resend_id).toBe("resend_mock_id");
+    expect(patchBody.email_status).toBe("sending");
   });
 
   it("email duplicado (409): retorna 200 mas Resend NÃO é chamado", async () => {
