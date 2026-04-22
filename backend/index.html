@@ -46,13 +46,13 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .nav-cta:hover { background: #e8841a; text-decoration: none !important; }
 
 /* HERO */
-.hero { text-align: center; padding: 72px 24px 64px; max-width: 1200px; margin: 0 auto; position: relative; overflow: hidden; background: linear-gradient(135deg, #060608 0%, #0a0a0c 50%, #060608 100%); }
-.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 30%, rgba(247,147,26,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(138,43,226,0.1) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(0,191,255,0.05) 0%, transparent 50%); z-index: 1; }
+.hero { text-align: center; padding: 72px 24px 64px; max-width: 1200px; margin: 0 auto; position: relative; overflow: hidden; background: linear-gradient(160deg, #0a0808 0%, #0c0b09 40%, #080808 100%); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 20%, rgba(247,147,26,0.12) 0%, transparent 45%), radial-gradient(circle at 80% 80%, rgba(247,147,26,0.07) 0%, transparent 40%); z-index: 1; }
 .hero > * { position: relative; z-index: 2; }
 .hero-network { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; opacity: 0.3; }
 .hero-network canvas { width: 100%; height: 100%; }
 .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(247,147,26,0.1); border: 1px solid rgba(247,147,26,0.3); color: var(--orange); padding: 8px 20px; border-radius: 24px; font-size: 14px; margin-bottom: 40px; backdrop-filter: blur(10px); }
-.hero h1 { font-size: clamp(48px, 8vw, 80px); font-weight: 900; line-height: 1.1; margin-bottom: 32px; letter-spacing: -2px; background: linear-gradient(135deg, #ffffff 0%, #f7931a 50%, #00bfff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero h1 { font-size: clamp(48px, 8vw, 80px); font-weight: 900; line-height: 1.1; margin-bottom: 32px; letter-spacing: -2px; background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 30%, #f7931a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .hero h1 span { background: linear-gradient(135deg, #f7931a 0%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .hero p { font-size: 22px; color: #b8b8b8; max-width: 600px; margin: 0 auto 50px; line-height: 1.4; }
 .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
@@ -241,13 +241,12 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 <section class="hero">
   <div class="hero-network" id="heroNetwork"></div>
-  <div class="hero-badge">⚡ <strong>l402-kit</strong> &nbsp;·&nbsp; Bitcoin Lightning · TypeScript · Python · Go · Rust · v1.0.0 · <a href="https://github.com/ShinyDapps/l402-kit" style="color:inherit">Open Source</a></div>
-  <h1 id="heroTitle">Get Paid. Instantly.<br>On-chain. <span>Lightning</span>.</h1>
-  <p id="heroSubtitle">Pay walls that actually work. Finally. Drop-in middleware for APIs. 3 lines of code. No accounts. No banks. No chargebacks.</p>
+  <div class="hero-badge">⚡ Bitcoin Lightning · Pay-per-call · Open Source</div>
+  <h1 id="heroTitle">Get Paid. Instantly.<br>No middlemen. <span>Lightning</span>.</h1>
+  <p id="heroSubtitle">Paywalls that actually work. Finally. Drop-in middleware for APIs. 3 lines of code. No accounts. No banks. No chargebacks.</p>
   <div class="hero-actions">
     <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:16px;letter-spacing:-0.5px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:14px;opacity:.8">⚡</span></button>
     <a href="https://l402kit.vercel.app/docs" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Read the docs →</a>
-    <a href="https://github.com/ShinyDapps/l402-kit" class="btn-secondary">GitHub</a>
   </div>
   <div class="hero-stats">
     <div class="hero-stat"><div class="stat-num">4</div><div class="stat-label">Languages</div></div>
