@@ -397,8 +397,8 @@ app = <span class="c-fn">FastAPI</span>()
 <div class="stats-bar">
   <div class="stat-item"><div class="stat-num" id="stat-payments">—</div><div class="stat-label">Payments logged</div></div>
   <div class="stat-item"><div class="stat-num" id="stat-stars">—</div><div class="stat-label">GitHub Stars</div></div>
-  <div class="stat-item"><div class="stat-num" id="stat-npm">—</div><div class="stat-label">npm downloads/wk</div></div>
-  <div class="stat-item"><div class="stat-num" id="stat-pypi">—</div><div class="stat-label">PyPI downloads/mo</div></div>
+  <div class="stat-item"><div class="stat-num" id="stat-npm">—</div><div class="stat-label">npm downloads</div></div>
+  <div class="stat-item"><div class="stat-num" id="stat-pypi">—</div><div class="stat-label">PyPI downloads</div></div>
   <div class="stat-item"><div class="stat-num">&lt;1s</div><div class="stat-label">Settlement</div></div>
   <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">Countries blocked</div></div>
 </div>
@@ -987,7 +987,7 @@ function applyLanguage(lang) {
 const T = {
   en: {
     nav: ['Extension','Dashboard'],
-    stats: ['Payments logged','GitHub stars','npm downloads/wk','PyPI downloads/mo','Settlement time','Countries blocked'],
+    stats: ['Payments logged','GitHub stars','npm downloads','PyPI downloads','Settlement time','Countries blocked'],
     flowTitle: 'How it works',
     flow: [['Client calls API','GET /premium'],['402 + Invoice','BOLT11 Lightning invoice returned'],['Client pays','Any Lightning wallet, <1 second'],['Proof verified','SHA256(preimage) == hash'],['200 OK + data','You get 99.7% of every sat']],
     compareTitle: 'Why not legacy payments?', compareCols: ['Card processors','PayPal / legacy'],
@@ -1005,7 +1005,7 @@ const T = {
   },
   pt: {
     nav: ['Extensao','Painel'],
-    stats: ['Pagamentos registrados','Stars no GitHub','Downloads npm/sem','Downloads PyPI/mês','Tempo de liquidacao','Paises bloqueados'],
+    stats: ['Pagamentos registrados','Stars no GitHub','Downloads npm','Downloads PyPI','Tempo de liquidacao','Paises bloqueados'],
     flowTitle: 'Como funciona',
     flow: [['Cliente chama a API','GET /premium'],['402 + Fatura','Retorna invoice Lightning BOLT11'],['Cliente paga','Qualquer wallet Lightning, <1 segundo'],['Prova verificada','SHA256(preimage) == hash'],['200 OK + dados','Voce recebe 99.7% de cada sat']],
     compareTitle: 'Por que nao pagamentos tradicionais?', compareCols: ['Processadores de cartao','PayPal / legacy'],
@@ -1023,7 +1023,7 @@ const T = {
   },
   es: {
     nav: ['Extensión','Panel'],
-    stats: ['Pagos registrados','Estrellas GitHub','Descargas npm/sem','Descargas PyPI/mes','Tiempo de liquidación','Países bloqueados'],
+    stats: ['Pagos registrados','Estrellas GitHub','Descargas npm','Descargas PyPI','Tiempo de liquidación','Países bloqueados'],
     flowTitle: 'Cómo funciona',
     flow: [['Cliente llama API','GET /premium'],['402 + Factura','Factura Lightning BOLT11 devuelta'],['Cliente paga','Cualquier wallet Lightning, <1 segundo'],['Prueba verificada','SHA256(preimage) == hash'],['200 OK + datos','Recibes el 99.7% de cada sat']],
     compareTitle: '¿Por qué no los pagos tradicionales?', compareCols: ['Procesadores de tarjetas','PayPal / legacy'],
@@ -1041,7 +1041,7 @@ const T = {
   },
   fr: {
     nav: ['Extension','Tableau de bord'],
-    stats: ['Paiements enregistrés','Étoiles GitHub','Téléch. npm/sem','Téléch. PyPI/mois','Délai de règlement','Pays bloqués'],
+    stats: ['Paiements enregistrés','Étoiles GitHub','Téléch. npm','Téléch. PyPI','Délai de règlement','Pays bloqués'],
     flowTitle: 'Comment ça marche',
     flow: [['Client appelle l\'API','GET /premium'],['402 + Facture','Facture Lightning BOLT11 renvoyée'],['Client paie','N\'importe quel wallet Lightning, <1 seconde'],['Preuve vérifiée','SHA256(preimage) == hash'],['200 OK + données','Vous recevez 99.7% de chaque sat']],
     compareTitle: 'Pourquoi pas les paiements traditionnels ?', compareCols: ['Processeurs de carte','PayPal / legacy'],
@@ -1059,7 +1059,7 @@ const T = {
   },
   de: {
     nav: ['Erweiterung','Dashboard'],
-    stats: ['Zahlungen','GitHub-Sterne','npm-Downloads/Wo','PyPI-Downloads/Mo','Abrechnungszeit','Gesperrte Länder'],
+    stats: ['Zahlungen','GitHub-Sterne','npm-Downloads','PyPI-Downloads','Abrechnungszeit','Gesperrte Länder'],
     flowTitle: 'So funktioniert es',
     flow: [['Client ruft API auf','GET /premium'],['402 + Rechnung','BOLT11 Lightning-Rechnung zurückgegeben'],['Client zahlt','Jedes Lightning-Wallet, <1 Sekunde'],['Beweis verifiziert','SHA256(preimage) == hash'],['200 OK + Daten','Du bekommst 99.7% jedes Sats']],
     compareTitle: 'Warum keine herkömmlichen Zahlungen?', compareCols: ['Kartenprozessoren','PayPal / legacy'],
@@ -1077,7 +1077,7 @@ const T = {
   },
   it: {
     nav: ['Estensione','Dashboard'],
-    stats: ['Pagamenti registrati','Stelle GitHub','Download npm/sett','Download PyPI/mese','Tempo di liquidazione','Paesi bloccati'],
+    stats: ['Pagamenti registrati','Stelle GitHub','Download npm','Download PyPI','Tempo di liquidazione','Paesi bloccati'],
     flowTitle: 'Come funziona',
     flow: [['Il client chiama l\'API','GET /premium'],['402 + Fattura','Fattura Lightning BOLT11 restituita'],['Il client paga','Qualsiasi wallet Lightning, <1 secondo'],['Prova verificata','SHA256(preimage) == hash'],['200 OK + dati','Ricevi il 99.7% di ogni sat']],
     compareTitle: 'Perché non i pagamenti tradizionali?', compareCols: ['Processori di carta','PayPal / legacy'],
@@ -1095,7 +1095,7 @@ const T = {
   },
   ja: {
     nav: ['拡張機能','ダッシュボード'],
-    stats: ['記録済み支払い','GitHubスター','npm DL/週','PyPI DL/月','決済時間','ブロック国数'],
+    stats: ['記録済み支払い','GitHubスター','npm DL 合計','PyPI DL 合計','決済時間','ブロック国数'],
     flowTitle: '仕組み',
     flow: [['クライアントがAPIを呼ぶ','GET /premium'],['402 + インボイス','BOLT11 Lightningインボイスが返される'],['クライアントが支払う','任意のLightningウォレット、1秒未満'],['証明を検証','SHA256(preimage) == hash'],['200 OK + データ','各satの99.7%を受け取る']],
     compareTitle: '従来の決済が不向きな理由', compareCols: ['カード処理業者','PayPal / legacy'],
@@ -1113,7 +1113,7 @@ const T = {
   },
   ru: {
     nav: ['Расширение','Дашборд'],
-    stats: ['Платежи','Звёзды GitHub','Загр. npm/нед','Загр. PyPI/мес','Время расчёта','Заблокировано стран'],
+    stats: ['Платежи','Звёзды GitHub','Загр. npm','Загр. PyPI','Время расчёта','Заблокировано стран'],
     flowTitle: 'Как это работает',
     flow: [['Клиент вызывает API','GET /premium'],['402 + Счёт','Возвращён BOLT11 Lightning-инвойс'],['Клиент платит','Любой Lightning-кошелёк, <1 секунды'],['Доказательство проверено','SHA256(preimage) == hash'],['200 OK + данные','Вы получаете 99.7% каждого сата']],
     compareTitle: 'Почему не традиционные платежи?', compareCols: ['Карточные процессоры','PayPal / legacy'],
@@ -1131,7 +1131,7 @@ const T = {
   },
   zh: {
     nav: ['扩展','仪表盘'],
-    stats: ['已记录支付','GitHub 星标','npm 下载/周','PyPI 下载/月','结算时间','封锁国家'],
+    stats: ['已记录支付','GitHub 星标','npm 下载总量','PyPI 下载总量','结算时间','封锁国家'],
     flowTitle: '工作原理',
     flow: [['客户端调用 API','GET /premium'],['402 + 发票','返回 BOLT11 Lightning 发票'],['客户端付款','任意 Lightning 钱包，<1 秒'],['验证证明','SHA256(preimage) == hash'],['200 OK + 数据','获得每笔支付的 99.7%']],
     compareTitle: '为什么不用传统支付？', compareCols: ['信用卡处理商','PayPal / 传统支付'],
@@ -1149,7 +1149,7 @@ const T = {
   },
   hi: {
     nav: ['एक्सटेंशन','डैशबोर्ड'],
-    stats: ['भुगतान दर्ज','GitHub स्टार','npm डाउनलोड/सप्ताह','PyPI डाउनलोड/माह','निपटान समय','अवरुद्ध देश'],
+    stats: ['भुगतान दर्ज','GitHub स्टार','npm डाउनलोड','PyPI डाउनलोड','निपटान समय','अवरुद्ध देश'],
     flowTitle: 'कैसे काम करता है',
     flow: [['क्लाइंट API बुलाता है','GET /premium'],['402 + इनवॉइस','BOLT11 Lightning इनवॉइस वापस मिलता है'],['क्लाइंट भुगतान करता है','कोई भी Lightning वॉलेट, <1 सेकंड'],['प्रमाण सत्यापित','SHA256(preimage) == hash'],['200 OK + डेटा','हर sat का 99.7% आपको मिलता है']],
     compareTitle: 'पारंपरिक भुगतान क्यों नहीं?', compareCols: ['कार्ड प्रोसेसर','PayPal / legacy'],
@@ -1167,7 +1167,7 @@ const T = {
   },
   ar: {
     nav: ['الإضافة','لوحة التحكم'],
-    stats: ['المدفوعات المسجلة','نجوم GitHub','تحميلات npm/أسبوع','تحميلات PyPI/شهر','وقت التسوية','الدول المحظورة'],
+    stats: ['المدفوعات المسجلة','نجوم GitHub','تحميلات npm','تحميلات PyPI','وقت التسوية','الدول المحظورة'],
     flowTitle: 'كيف يعمل',
     flow: [['العميل يستدعي API','GET /premium'],['402 + فاتورة','إرجاع فاتورة BOLT11 Lightning'],['العميل يدفع','أي محفظة Lightning، أقل من ثانية'],['التحقق من الإثبات','SHA256(preimage) == hash'],['200 OK + بيانات','تحصل على 99.7% من كل sat']],
     compareTitle: 'لماذا ليس المدفوعات التقليدية؟', compareCols: ['معالجات البطاقات','PayPal / legacy'],
@@ -1581,15 +1581,15 @@ document.getElementById('proModal').addEventListener('click', function(e) {
   }
 })();
 
-// npm weekly downloads
+// npm total downloads
 (async () => {
   try {
-    const r = await fetch('https://api.npmjs.org/downloads/point/last-week/l402-kit');
+    const r = await fetch('https://api.npmjs.org/downloads/point/2020-01-01:2030-01-01/l402-kit');
     const d = await r.json();
     const n = d.downloads;
     if (typeof n === 'number') {
       const el = document.getElementById('stat-npm');
-      if (el) el.textContent = n.toLocaleString();
+      if (el) el.textContent = n >= 1000 ? (n/1000).toFixed(1)+'k' : n.toLocaleString();
     }
   } catch {
     const el = document.getElementById('stat-npm');
@@ -1597,19 +1597,19 @@ document.getElementById('proModal').addEventListener('click', function(e) {
   }
 })();
 
-// PyPI monthly downloads
+// PyPI total downloads (pepy.tech has open CORS)
 (async () => {
   try {
-    const r = await fetch('https://pypistats.org/api/packages/l402kit/recent?period=month');
+    const r = await fetch('https://api.pepy.tech/api/v2/projects/l402kit');
     const d = await r.json();
-    const n = d.data?.last_month;
+    const n = d.total_downloads;
     if (typeof n === 'number') {
       const el = document.getElementById('stat-pypi');
-      if (el) el.textContent = n.toLocaleString();
+      if (el) el.textContent = n >= 1000 ? (n/1000).toFixed(1)+'k' : n.toLocaleString();
     }
   } catch {
     const el = document.getElementById('stat-pypi');
-    if (el && (el.textContent === '—' || el.textContent === '')) el.textContent = '—';
+    if (el && (el.textContent === '—' || el.textContent === '')) el.textContent = '0';
   }
 })();
 
