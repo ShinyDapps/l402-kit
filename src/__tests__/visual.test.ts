@@ -265,6 +265,59 @@ describe("[Visual] resend-webhook — estrutura do código", () => {
   });
 });
 
+// ─── checkout.html — QR code e UI ────────────────────────────────────────────
+
+describe("[Visual] checkout — backend/checkout.html", () => {
+  let html: string;
+  beforeAll(() => { html = readHtml("checkout.html"); });
+
+  it("QR size é 200 (reduzido de 240)", () => {
+    expect(html).toMatch(/size:\s*200/);
+    expect(html).not.toMatch(/size:\s*240/);
+  });
+
+  it("tem label 'Scan with your Lightning wallet'", () => {
+    expect(html).toMatch(/Scan with your Lightning wallet/i);
+  });
+
+  it("tem classe .scan-label definida no CSS", () => {
+    expect(html).toMatch(/\.scan-label/);
+  });
+
+  it("qr-wrap tem frame CSS (background:#fff e border)", () => {
+    expect(html).toMatch(/\.qr-wrap\{[^}]*background:#fff/);
+    expect(html).toMatch(/\.qr-wrap\{[^}]*border:/);
+  });
+
+  it("tem estados: loading, checkout, success, expired", () => {
+    expect(html).toMatch(/id="loadingView"/);
+    expect(html).toMatch(/id="checkoutView"/);
+    expect(html).toMatch(/id="successView"/);
+    expect(html).toMatch(/id="expiredView"/);
+  });
+
+  it("usa QRious para renderizar QR", () => {
+    expect(html).toMatch(/qrious/i);
+    expect(html).toMatch(/id="qrCanvas"/);
+  });
+
+  it("tem botão Copy Lightning Invoice", () => {
+    expect(html).toMatch(/Copy Lightning Invoice/);
+    expect(html).toMatch(/copyInvoice/);
+  });
+
+  it("não tem credenciais expostas", () => {
+    expect(html).not.toMatch(/re_[A-Za-z0-9]{20,}/);
+    expect(html).not.toMatch(/whsec_/);
+    expect(html).not.toMatch(/blink_[A-Za-z0-9]{20,}/);
+  });
+
+  it("tem countdown timer e polling a cada 3 segundos", () => {
+    expect(html).toMatch(/setInterval.*poll.*3000/s);
+    expect(html).toMatch(/Invoice expires in/);
+  });
+});
+
 // ─── OG PNG — arquivo existe e tem tamanho mínimo ─────────────────────────────
 
 describe("[Visual] OG image — backend/logos/og-1200x630.png", () => {

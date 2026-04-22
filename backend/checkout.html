@@ -18,9 +18,10 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 .price-meta{text-align:left}
 .price-meta span{display:block;font-size:12px;color:var(--muted)}
 .price-meta strong{font-size:14px;color:var(--text)}
-.qr-wrap{position:relative;display:inline-block;margin-bottom:20px;cursor:pointer}
-.qr-wrap canvas{border-radius:12px;display:block}
-.qr-copy{position:absolute;inset:0;background:rgba(0,0,0,.7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;opacity:0;transition:opacity .2s}
+.qr-wrap{position:relative;display:inline-block;margin-bottom:6px;cursor:pointer;border-radius:14px;padding:6px;background:#fff;border:1px solid #e0e0e0;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+.qr-wrap canvas{border-radius:8px;display:block}
+.qr-copy{position:absolute;inset:0;background:rgba(0,0,0,.65);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;opacity:0;transition:opacity .2s}
+.scan-label{font-size:12px;color:var(--muted);margin-bottom:18px;letter-spacing:.02em}
 .qr-wrap:hover .qr-copy{opacity:1}
 .invoice-box{background:#0a0a0a;border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:11px;font-family:monospace;color:var(--muted);word-break:break-all;text-align:left;margin-bottom:16px;cursor:pointer;transition:border-color .2s}
 .invoice-box:hover{border-color:var(--orange)}
@@ -72,8 +73,9 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
 
     <div class="qr-wrap" id="qrWrap" onclick="copyInvoice()">
       <canvas id="qrCanvas"></canvas>
-      <div class="qr-copy">Click to copy</div>
+      <div class="qr-copy">📋 Click to copy</div>
     </div>
+    <p class="scan-label">⚡ Scan with your Lightning wallet</p>
 
     <div class="invoice-box" id="invoiceBox" onclick="copyInvoice()"></div>
 
@@ -235,10 +237,10 @@ async function init() {
     new QRious({
       element: document.getElementById('qrCanvas'),
       value: paymentRequest,
-      size: 240,
+      size: 200,
       background: '#ffffff',
       foreground: '#000000',
-      padding: 8
+      padding: 10
     });
 
     show('checkoutView');
