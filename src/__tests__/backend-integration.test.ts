@@ -272,4 +272,13 @@ describe("smoke tests — landing e links públicos", () => {
     const d = await json(r);
     expect(d.info.name).toBe("l402kit");
   });
+
+  it_live("OG image PNG acessível em /logos/og-1200x630.png", async () => {
+    const r = await fetch(`${BASE}/logos/og-1200x630.png`);
+    expect(r.status).toBe(200);
+    const ct = r.headers.get("content-type") ?? "";
+    expect(ct).toMatch(/image\/png/);
+    const buf = await r.arrayBuffer();
+    expect(buf.byteLength).toBeGreaterThan(50_000);
+  });
 });
