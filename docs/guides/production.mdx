@@ -12,7 +12,8 @@ Never hardcode keys. Always use environment variables:
 BLINK_API_KEY=blink_xxx
 BLINK_WALLET_ID=your-wallet-id
 SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_xxx
+SUPABASE_ANON_KEY=sb_publishable_xxx    # safe to expose to clients
+SUPABASE_SERVICE_KEY=sb_secret_xxx      # server-side only — never expose to clients
 ```
 
 ```typescript

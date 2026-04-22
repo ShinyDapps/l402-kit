@@ -115,6 +115,45 @@ Use a secrets manager in production: AWS Secrets Manager, Doppler, Vault, or `.e
 
 ---
 
+## Admin endpoint authentication
+
+If you expose admin or stats endpoints, **never accept secrets via URL query parameters**. URLs are logged in full by reverse proxies, CDNs, and cloud providers — including the query string.
+
+```typescript
+// ❌ Never — secret visible in Vercel/CloudFlare access logs
+GET /api/stats?secret=my-secret
+
+// ✅ Correct — header is not logged by default
+GET /api/stats
+x-dashboard-secret: my-secret
+```
+
+```typescript
+// Enforce header-only in your handler
+const token = req.headers["x-dashboard-secret"];
+if (!SECRET || token !== SECRET) return res.status(401).json({ error: "Unauthorized" });
+```
+
+---
+
+## Supabase key hygiene
+
+Use `SUPABASE_SERVICE_KEY` (server-side only) vs `SUPABASE_ANON_KEY` (safe to expose to clients) correctly:
+
+| Key | Use | Bypasses RLS? |
+|---|---|---|
+| `anon` | VS Code extension, browser clients | No |
+| `service_role` | Server-side API functions | Yes |
+
+Server-side Vercel functions that read sensitive tables (e.g. `pro_access`) must use the service key — never the anon key. RLS policies on sensitive tables should not grant anon access.
+
+```typescript
+// ✅ Server-side endpoint
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
+```
+
+---
+
 ## Content Security Policy
 
 If you serve a frontend alongside your API, ensure your CSP doesn't block the L402 flow:
@@ -131,6 +170,9 @@ Content-Security-Policy: connect-src 'self' https://api.blink.sv
   <Accordion title="Before going live">
     - [ ] HTTPS enforced on all endpoints
     - [ ] API keys in environment variables, not source code
+    - [ ] Admin/stats endpoints use header auth, not `?secret=` URL params
+    - [ ] Supabase `service_role` key used server-side; `anon` key only on clients
+    - [ ] Sensitive Supabase tables have no `anon` SELECT policy
     - [ ] Rate limiter on invoice creation
     - [ ] Replay protection tested (try reusing a preimage → expect 401)
     - [ ] Token expiry tested (set short TTL in dev, confirm 401 after expiry)
@@ -139,5 +181,6 @@ Content-Security-Policy: connect-src 'self' https://api.blink.sv
     - [ ] Redis-backed replay store (shared across instances)
     - [ ] Monitoring on 402 response rates (spike = potential DoS)
     - [ ] Lightning provider failover (BlinkProvider → LNbitsProvider fallback)
+    - [ ] Status page monitoring for your Lightning provider (e.g. status.blink.sv)
   </Accordion>
 </AccordionGroup>
