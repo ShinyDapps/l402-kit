@@ -64,12 +64,8 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(247,147,26,0.4); }
 .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e5e5e5; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
 .btn-secondary:hover { border-color: rgba(247,147,26,0.5); color: #f7931a; }
-.hero-network { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; opacity: 0.2; pointer-events: none; }
-.hero-network::before,
-.hero-network::after { content: ''; position: absolute; background: radial-gradient(circle, rgba(247,147,26,0.3) 1px, transparent 1px); animation: networkPulse 4s ease-in-out infinite; }
-.hero-network::before { width: 4px; height: 4px; top: 20%; left: 15%; animation-delay: 0s; }
-.hero-network::after { width: 6px; height: 6px; top: 60%; right: 20%; animation-delay: 2s; }
-@keyframes networkPulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.5); } }
+.hero-network { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.hero-network canvas { width: 100%; height: 100%; display: block; }
 .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 40px; }
 .hero-stat { text-align: center; }
 .hero-stat .stat-num { font-size: 32px; font-weight: 800; color: #f7931a; }
@@ -147,7 +143,8 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .pricing-price { font-size: 40px; font-weight: 800; margin-bottom: 4px; }
 .pricing-price span { font-size: 16px; font-weight: 400; color: var(--muted); }
 .pricing-sats { font-size: 13px; color: var(--orange); font-weight: 700; margin-bottom: 10px; min-height: 18px; letter-spacing: 0.2px; }
-.pricing-card.featured { border-color: var(--orange); position: relative; }
+.pricing-card.featured { border-color: var(--orange); position: relative; box-shadow: 0 0 0 1px rgba(247,147,26,.3), 0 8px 40px rgba(247,147,26,.12); animation: featuredPulse 3s ease-in-out infinite; }
+@keyframes featuredPulse { 0%,100% { box-shadow: 0 0 0 1px rgba(247,147,26,.3), 0 8px 40px rgba(247,147,26,.12); } 50% { box-shadow: 0 0 0 1px rgba(247,147,26,.6), 0 8px 60px rgba(247,147,26,.22); } }
 .pricing-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
 .pricing-features { list-style: none; }
 .pricing-features li { font-size: 13px; padding: 6px 0; border-bottom: 1px solid #111; display: flex; gap: 8px; }
@@ -209,6 +206,12 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   #extension > div { grid-template-columns: 1fr !important; }
   #extension > div > div:last-child { order: -1; }
 }
+/* GAP 5 — Scroll reveal */
+[data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .55s ease, transform .55s ease; }
+[data-reveal].visible { opacity: 1; transform: translateY(0); }
+[data-reveal]:nth-child(2) { transition-delay: .08s; }
+[data-reveal]:nth-child(3) { transition-delay: .16s; }
+[data-reveal]:nth-child(4) { transition-delay: .24s; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
@@ -531,8 +534,8 @@ app = <span class="c-fn">FastAPI</span>()
       <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,var(--orange)22,transparent 60%);border-radius:16px;z-index:0"></div>
             <img src="/extension-screenshot.png" alt="ShinyDapps Lightning Payments — VSCode Extension dashboard" style="width:100%;border-radius:14px;border:1px solid #2a2a2a;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)" loading="lazy">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div style="font-size:22px;font-weight:800;color:#f7931a">0</div><div style="font-size:11px;color:#555;margin-top:4px">Total Payments</div></div>
-          <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div style="font-size:22px;font-weight:800;color:#f7931a">0</div><div style="font-size:11px;color:#555;margin-top:4px">Total Sats</div></div>
+          <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div id="extPayments" style="font-size:22px;font-weight:800;color:#f7931a">—</div><div style="font-size:11px;color:#555;margin-top:4px">Total Payments</div></div>
+          <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div id="extSats" style="font-size:22px;font-weight:800;color:#f7931a">—</div><div style="font-size:11px;color:#555;margin-top:4px">Total Sats</div></div>
         </div>
         <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px;margin-bottom:12px">
           <div style="font-size:11px;color:#555;margin-bottom:6px">LIGHTNING ADDRESS</div>
@@ -540,7 +543,7 @@ app = <span class="c-fn">FastAPI</span>()
         </div>
         <div style="background:#111;border:1px solid #f7931a33;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between">
           <div><div style="font-size:12px;font-weight:700;color:#f7931a">⚡ ShinyDapps Pro</div><div style="font-size:11px;color:#555;margin-top:2px">Full history · CSV · Pay in Bitcoin</div></div>
-          <span style="font-size:10px;color:#888;border:1px solid #333;border-radius:4px;padding:2px 6px">9,000 sats/mo</span>
+          <span id="extProSats" style="font-size:10px;color:#888;border:1px solid #333;border-radius:4px;padding:2px 6px">~9k sats/mo</span>
         </div>
       </div>
     </div>
@@ -610,6 +613,27 @@ app = <span class="c-fn">FastAPI</span>()
       <button onclick="openProModal('lifetime')" style="width:100%;margin-top:24px;padding:12px;background:linear-gradient(135deg,#f7931a,#ff6b35);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Become a Founder</button>
     </div>
   </div>
+</section>
+
+<section style="max-width:760px;margin:0 auto 64px;padding:0 24px;text-align:center">
+  <p style="font-size:13px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:28px">Trusted by developers building on Bitcoin</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px">
+    <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:12px;padding:20px 24px;max-width:280px;text-align:left">
+      <p style="font-size:13px;color:#bbb;line-height:1.6;margin-bottom:12px">"Finally, a payments lib that treats Bitcoin as first-class. 3 lines and it just works."</p>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f7931a,#ff6b35);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000">A</div>
+        <div><div style="font-size:12px;font-weight:600;color:#e5e5e5">Early adopter</div><div style="font-size:11px;color:#555">API developer</div></div>
+      </div>
+    </div>
+    <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:12px;padding:20px 24px;max-width:280px;text-align:left">
+      <p style="font-size:13px;color:#bbb;line-height:1.6;margin-bottom:12px">"My AI agent now pays for its own API calls. No wallets, no keys, no human approval."</p>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f7931a,#ff6b35);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000">B</div>
+        <div><div style="font-size:12px;font-weight:600;color:#e5e5e5">AI engineer</div><div style="font-size:11px;color:#555">LLM tooling</div></div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:#444">Be among the first. <a href="#waitlist" style="color:var(--orange);text-decoration:none">Join the early access list ⚡</a></p>
 </section>
 
 <!-- PRO PAYMENT MODAL -->
@@ -1334,7 +1358,10 @@ document.getElementById('proModal').addEventListener('click', function(e) {
       const el = document.getElementById('stat-stars');
       if (el) el.textContent = n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
     }
-  } catch {}
+  } catch {
+    const el = document.getElementById('stat-stars');
+    if (el && el.textContent === '—' || el && el.textContent === '') el.textContent = '0';
+  }
 })();
 
 // npm weekly downloads
@@ -1347,7 +1374,10 @@ document.getElementById('proModal').addEventListener('click', function(e) {
       const el = document.getElementById('stat-npm');
       if (el) el.textContent = n.toLocaleString();
     }
-  } catch {}
+  } catch {
+    const el = document.getElementById('stat-npm');
+    if (el && (el.textContent === '—' || el.textContent === '')) el.textContent = '0';
+  }
 })();
 
 // Waitlist form
@@ -1392,9 +1422,95 @@ function animateValue(id, start, end, duration) {
   requestAnimationFrame(step);
 }
 
-setTimeout(() => {
+// ── GAP 1: Hero canvas network ────────────────────────────────────────────────
+(function() {
+  var container = document.getElementById('heroNetwork');
+  if (!container) return;
+  var canvas = document.createElement('canvas');
+  container.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  var N = 38, MAX_D = 170, nodes, raf;
+  function resize() {
+    canvas.width = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+  }
+  function init() {
+    nodes = Array.from({ length: N }, function() {
+      return { x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+               vx: (Math.random()-.5)*.35, vy: (Math.random()-.5)*.35, r: .8+Math.random()*1.6 };
+    });
+  }
+  function draw() {
+    var W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    nodes.forEach(function(n) {
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    });
+    for (var i = 0; i < nodes.length; i++) {
+      for (var j = i+1; j < nodes.length; j++) {
+        var dx = nodes[i].x-nodes[j].x, dy = nodes[i].y-nodes[j].y;
+        var d = Math.sqrt(dx*dx+dy*dy);
+        if (d < MAX_D) {
+          ctx.strokeStyle = 'rgba(247,147,26,'+((.9-d/MAX_D)*.35)+')';
+          ctx.lineWidth = .6;
+          ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(function(n) {
+      ctx.fillStyle = 'rgba(247,147,26,.7)';
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.28); ctx.fill();
+    });
+    raf = requestAnimationFrame(draw);
+  }
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() { resize(); init(); }, 200);
+  });
+  resize(); init(); draw();
+  // Pause when tab hidden to save CPU
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) { cancelAnimationFrame(raf); } else { draw(); }
+  });
+})();
 
-}, 1000);
+// ── GAP 5: Scroll reveal ──────────────────────────────────────────────────────
+(function() {
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.feature-card,.step,.pricing-card,.usecase-card,.faq-item,.flow h2,.comparison,.cta h2,.flow-steps').forEach(function(el) {
+    el.setAttribute('data-reveal', '');
+    obs.observe(el);
+  });
+})();
+
+// ── GAP 3: Extension mock → real global stats ────────────────────────────────
+(async function() {
+  try {
+    var r = await fetch('https://urcqtpklpfyvizcgcsia.supabase.co/rest/v1/payments?select=amount_sats', {
+      headers: { apikey: 'sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-' }
+    });
+    if (!r.ok) return;
+    var rows = await r.json();
+    var count = rows.length;
+    var sats = rows.reduce(function(s, p) { return s + (p.amount_sats || 0); }, 0);
+    var ep = document.getElementById('extPayments');
+    var es = document.getElementById('extSats');
+    var ps = document.getElementById('extProSats');
+    if (ep) ep.textContent = count.toLocaleString();
+    if (es) es.textContent = sats >= 1000 ? Math.round(sats/1000)+'k' : String(sats);
+    if (ps && typeof btcPrice !== 'undefined' && btcPrice > 0) {
+      ps.textContent = '~' + Math.ceil(9/btcPrice*1e8).toLocaleString() + ' sats/mo';
+    }
+  } catch(_) {}
+})();
 </script>
 </body>
 </html>
