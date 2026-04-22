@@ -5,6 +5,9 @@
     { "source": "/docs/:path*", "destination": "https://shinydapps-bd9fa40b.mintlify.app/:path*", "permanent": false }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/checkout", "destination": "/checkout.html" },
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/dev", "destination": "/dev.html" }
   ]
 }

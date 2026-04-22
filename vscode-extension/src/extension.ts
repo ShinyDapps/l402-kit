@@ -584,7 +584,8 @@ function renderContent(rows) {
   // pro banner
   if (!isPro) {
     html += '<div class="pro-banner">';
-    html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">9,000 sats / mo</span></div>';
+    const proSats = btcPrice > 0 ? Math.ceil(9 / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
+    html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
     html += '<div class="pro-features">Full history · CSV export · Pay in Bitcoin · Cancel anytime</div>';
     html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
     html += '</div>';
@@ -710,8 +711,9 @@ async function load() {
   setContent('<div class="loading">⚡ ' + t('loading') + '</div>');
   await checkPro();
   try {
+    const cutoff = isPro ? '' : '&paid_at=gte.' + new Date(Date.now() - 30 * 86400_000).toISOString();
     const res = await fetch(
-      SB_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(ADDR) + '&order=paid_at.desc&limit=500',
+      SB_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(ADDR) + '&order=paid_at.desc&limit=500' + cutoff,
       { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
     );
     if (!res.ok) {

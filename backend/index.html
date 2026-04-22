@@ -243,7 +243,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="hero-network" id="heroNetwork"></div>
   <div class="hero-badge">⚡ Bitcoin Lightning · Pay-per-call · Open Source</div>
   <h1 id="heroTitle">Get Paid. Instantly.<br>No middlemen. <span>Lightning</span>.</h1>
-  <p id="heroSubtitle">Paywalls that actually work. Finally. Drop-in middleware for APIs. 3 lines of code. No accounts. No banks. No chargebacks.</p>
+  <p id="heroSubtitle">Drop-in middleware for APIs. 3 lines of code. No accounts. No banks. No chargebacks.<br><span style="color:var(--orange);font-weight:600">AI agent native</span> <span style="color:#666;font-size:18px">— machines can pay machines.</span> <span style="color:#e5e5e5;font-size:18px;font-weight:600">No human in the loop.</span></p>
   <div class="hero-actions">
     <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:16px;letter-spacing:-0.5px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:14px;opacity:.8">⚡</span></button>
     <a href="https://l402kit.vercel.app/docs" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Read the docs →</a>
@@ -296,13 +296,14 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 
 <section class="demo">
-    <div class="demo-tabs">
-    <div class="tab active" onclick="showTab('ts')">TypeScript</div>
-    <div class="tab" onclick="showTab('py')">Python</div>
-    <div class="tab" onclick="showTab('go')">Go</div>
-    <div class="tab" onclick="showTab('rs')">Rust</div>
+  <div class="demo-tabs">
+    <div class="tab active" onclick="showTab('ts')">TS</div>
+    <div class="tab" onclick="showTab('py')">PY</div>
+    <div class="tab" onclick="showTab('go')">GO</div>
+    <div class="tab" onclick="showTab('rs')">RS</div>
   </div>
-  <div class="code-block">
+  <div class="code-block" style="position:relative">
+    <button id="copyCodeBtn" onclick="copyCode()" style="position:absolute;top:14px;right:14px;background:#1a1a1a;border:1px solid #333;color:#888;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;z-index:10;transition:all .2s" onmouseenter="this.style.borderColor='#f7931a';this.style.color='#f7931a'" onmouseleave="this.style.borderColor='#333';this.style.color='#888'">copy</button>
     <div class="code-pane active" id="tab-ts"><pre>
 <span class="c-comment">// npm install l402-kit</span>
 <span class="c-keyword">import</span> express <span class="c-keyword">from</span> <span class="c-string">"express"</span>;
@@ -311,7 +312,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 <span class="c-keyword">const</span> app = <span class="c-fn">express</span>();
 
 app.<span class="c-fn">get</span>(<span class="c-string">"/premium"</span>, <span class="c-fn">l402</span>({
-  priceSats: <span class="c-num">100</span>,                          <span class="c-comment">// ~$0.10 per call</span>
+  priceSats: <span class="c-num">100</span>,
   ownerLightningAddress: <span class="c-string">"you@blink.sv"</span>,  <span class="c-comment">// receives 99.7%</span>
 }), (req, res) => {
   res.<span class="c-fn">json</span>({ data: <span class="c-string">"Payment confirmed ⚡"</span> });
@@ -524,7 +525,7 @@ app = <span class="c-fn">FastAPI</span>()
     </div>
     <div style="position:relative">
       <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,var(--orange)22,transparent 60%);border-radius:16px;z-index:0"></div>
-            <img src="/vscode-extension/docs/screenshot.png" alt="ShinyDapps Lightning Payments — VSCode Extension dashboard" style="width:100%;border-radius:14px;border:1px solid #2a2a2a;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)" loading="lazy">
+            <img src="/extension-screenshot.png" alt="ShinyDapps Lightning Payments — VSCode Extension dashboard" style="width:100%;border-radius:14px;border:1px solid #2a2a2a;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)" loading="lazy">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
           <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div style="font-size:22px;font-weight:800;color:#f7931a">0</div><div style="font-size:11px;color:#555;margin-top:4px">Total Payments</div></div>
           <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div style="font-size:22px;font-weight:800;color:#f7931a">0</div><div style="font-size:11px;color:#555;margin-top:4px">Total Sats</div></div>
@@ -545,7 +546,7 @@ app = <span class="c-fn">FastAPI</span>()
 <section class="pricing" id="pricing">
   <h2>Simple pricing</h2>
   <p class="pricing-sub">Pay with Bitcoin Lightning. No credit card. No account. Instant.</p>
-  <div class="pricing-cards" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+  <div class="pricing-cards" style="grid-template-columns:repeat(2,1fr);max-width:760px;margin:0 auto">
     <div class="pricing-card">
       <div class="pricing-name">Free</div>
       <div class="pricing-price">$0 <span>forever</span></div>
@@ -553,55 +554,56 @@ app = <span class="c-fn">FastAPI</span>()
       <div class="pricing-desc">0.3% fee on payments received</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> TypeScript, Python, Go, Rust</li>
-        <li><span class="check">✓</span> Managed Lightning (no node)</li>
+        <li><span class="check">✓</span> Managed Lightning — no node needed</li>
         <li><span class="check">✓</span> Unlimited API calls</li>
-        <li><span class="check">✓</span> 30-day payment history</li>
-        <li><span class="check">✓</span> Open source &mdash; self-host anytime</li>
+        <li><span class="check">✓</span> Payment history (last 30 days)</li>
+        <li><span class="check">✓</span> 1D / 7D / 30D charts</li>
+        <li><span class="check">✓</span> Open source — self-host anytime</li>
       </ul>
-      <a href="https://l402kit.vercel.app/docs" style="display:block;margin-top:24px;text-align:center;padding:10px;background:#1a1a1a;border-radius:8px;font-size:13px;font-weight:600">Get started →</a>
+      <a href="https://l402kit.vercel.app/docs" style="display:block;margin-top:24px;text-align:center;padding:10px;background:#1a1a1a;border-radius:8px;font-size:13px;font-weight:600">Get started free →</a>
     </div>
     <div class="pricing-card featured">
       <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:#000;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px">POPULAR</div>
       <div class="pricing-name">Pro</div>
       <div class="pricing-price">$9 <span>/month</span></div>
       <div class="pricing-sats" id="tier-pro-sats">calculating&hellip;</div>
-      <div class="pricing-desc">Pay with Lightning &mdash; instant activation</div>
+      <div class="pricing-desc">Pay with Bitcoin — activates in seconds</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> Everything in Free</li>
-        <li><span class="check">✓</span> All chart ranges (1D / 7D / 30D / 1Y / ALL)</li>
+        <li><span class="check">✓</span> Full history — no 30-day limit</li>
+        <li><span class="check">✓</span> All chart ranges (1Y / ALL)</li>
         <li><span class="check">✓</span> CSV export</li>
-        <li><span class="check">✓</span> Pro badge in VS Code extension</li>
-        <li><span class="check">✓</span> Priority support</li>
+        <li><span class="check">✓</span> Lightning receipt — verifiable proof</li>
       </ul>
-      <button onclick="openProModal('pro')" style="width:100%;margin-top:24px;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Subscribe with Lightning</button>
+      <button onclick="openProModal('pro')" style="width:100%;margin-top:24px;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Subscribe with Bitcoin</button>
     </div>
     <div class="pricing-card">
-      <div class="pricing-name">Business</div>
+      <div class="pricing-name">Builder</div>
       <div class="pricing-price">$99 <span>/month</span></div>
       <div class="pricing-sats" id="tier-business-sats">calculating&hellip;</div>
-      <div class="pricing-desc">For teams and high-volume APIs</div>
+      <div class="pricing-desc">For devs shipping production APIs</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> Everything in Pro</li>
-        <li><span class="check">✓</span> Dedicated onboarding &amp; setup</li>
-        <li><span class="check">✓</span> Custom Lightning provider integration</li>
-        <li><span class="check">✓</span> SLA + priority Slack support</li>
-        <li><span class="check">✓</span> Invoice for accounting</li>
+        <li><span class="check">✓</span> Monitor up to 5 Lightning addresses</li>
+        <li><span class="check">✓</span> Webhook on every payment received</li>
+        <li><span class="check">✓</span> Programmatic API access to your data</li>
+        <li><span class="check">✓</span> 0% fee — bring your own provider</li>
       </ul>
-      <button onclick="openProModal('business')" style="width:100%;margin-top:24px;padding:12px;background:#1a1a1a;border:1px solid var(--orange);color:var(--orange);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Subscribe with Lightning</button>
+      <button onclick="openProModal('business')" style="width:100%;margin-top:24px;padding:12px;background:#1a1a1a;border:1px solid var(--orange);color:var(--orange);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Subscribe with Bitcoin</button>
     </div>
     <div class="pricing-card">
-      <div class="pricing-name">Lifetime</div>
+      <div class="pricing-name">Founder</div>
       <div class="pricing-price">$999 <span>one-time</span></div>
       <div class="pricing-sats" id="tier-lifetime-sats">calculating&hellip;</div>
-      <div class="pricing-desc">Pay once. Use forever.</div>
+      <div class="pricing-desc">Pay once in Bitcoin. Yours forever.</div>
       <ul class="pricing-features">
-        <li><span class="check">✓</span> Everything in Business</li>
-        <li><span class="check">✓</span> Lifetime access &mdash; no renewals</li>
-        <li><span class="check">✓</span> White-label option</li>
-        <li><span class="check">✓</span> Custom provider integration</li>
-        <li><span class="check">✓</span> Direct founder access</li>
+        <li><span class="check">✓</span> Everything in Builder — forever</li>
+        <li><span class="check">✓</span> Early access to DCA agent</li>
+        <li><span class="check">✓</span> Listed as founding supporter</li>
+        <li><span class="check">✓</span> Input on the roadmap</li>
+        <li><span class="check">✓</span> No renewal. Ever.</li>
       </ul>
-      <button onclick="openProModal('lifetime')" style="width:100%;margin-top:24px;padding:12px;background:#1a1a1a;border:1px solid #555;color:#aaa;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Buy Lifetime Access</button>
+      <button onclick="openProModal('lifetime')" style="width:100%;margin-top:24px;padding:12px;background:linear-gradient(135deg,#f7931a,#ff6b35);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Become a Founder</button>
     </div>
   </div>
 </section>
@@ -634,7 +636,7 @@ app = <span class="c-fn">FastAPI</span>()
     <div id="proModal-step3" style="display:none;text-align:center">
       <div style="font-size:48px;margin-bottom:12px">✅</div>
       <h3 style="color:#22c55e;margin-bottom:8px">You&rsquo;re Pro!</h3>
-      <p style="color:#888;font-size:13px;margin-bottom:16px">Payment confirmed. Open VS Code to see your Pro dashboard.</p>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Payment confirmed. Your access is active — reload ShinyDapps in VS Code to unlock Pro.</p>
       <div style="background:#0a0a0a;border:1px solid #1a3a1a;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
         <div style="font-size:11px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Lightning Receipt</div>
         <div id="proReceiptHash" style="font-size:10px;font-family:monospace;color:#22c55e;word-break:break-all;margin-bottom:8px"></div>
@@ -649,7 +651,7 @@ app = <span class="c-fn">FastAPI</span>()
 <section class="faq" id="faq">
   <h2>Common questions</h2>
   <div class="faq-item">
-    <div class="faq-q">Do my users need a Lightning wallet?</div>
+    <div class="faq-q">Does my API require users to have a Lightning wallet?</div>
     <div class="faq-a">Yes &mdash; they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.</div>
   </div>
   <div class="faq-item">
@@ -684,8 +686,8 @@ app = <span class="c-fn">FastAPI</span>()
 </section>
 
 <section id="waitlist" style="max-width:580px;margin:0 auto 80px;padding:0 24px;text-align:center">
-  <h2 style="font-size:28px; font-weight: 700; margin-bottom: 12px;">Stay in the loop</h2>
-  <p style="color: var(--muted); font-size: 15px; margin-bottom: 28px;">Get notified about major releases, new providers, and security patches. No spam, only important updates.</p>
+  <h2 style="font-size:28px;font-weight:700;margin-bottom:12px">Early access list</h2>
+  <p style="color:var(--muted);font-size:15px;margin-bottom:28px">New providers, protocol upgrades, and the DCA agent when it launches. One email per milestone — no noise.</p>
   <form id="waitlistForm" onsubmit="submitWaitlist(event)" style="display:flex;gap:8px;max-width:400px;margin:0 auto 12px">
     <input type="email" id="waitlistEmail" placeholder="you@example.com" required
       style="flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;min-width:0"
@@ -1145,6 +1147,19 @@ function showTab(lang) {
   document.getElementById('tab-' + lang).classList.add('active');
   event.target.classList.add('active');
 }
+function copyCode() {
+  const active = document.querySelector('.code-pane.active pre');
+  if (!active) return;
+  const text = active.innerText;
+  const btn = document.getElementById('copyCodeBtn');
+  const done = () => { btn.textContent = '✓ copied'; btn.style.color = '#4ade80'; btn.style.borderColor = '#4ade80'; setTimeout(() => { btn.textContent = 'copy'; btn.style.color = '#888'; btn.style.borderColor = '#333'; }, 2000); };
+  navigator.clipboard.writeText(text).then(done).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); done();
+  });
+}
 document.querySelectorAll('.faq-item').forEach(item => {
   item.addEventListener('click', () => item.classList.toggle('open'));
 });
@@ -1170,9 +1185,14 @@ initLanguageSelector();
 initWalletPrefs();
 
 // Live BTC price
+// Show loading state immediately
+['strip-btc-price','strip-sat-usd','strip-sat100-usd','strip-sat1k-usd','strip-sat1m-usd'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = '...'; el.style.opacity = '0.4'; }
+});
 (async () => {
   try {
-    const r = await fetch('https://mempool.space/api/v1/prices');
+    const r = await fetch('https://mempool.space/api/v1/prices', { signal: AbortSignal.timeout(6000) });
     const d = await r.json();
     const btc = d.USD;
     if (!btc) return;
@@ -1180,6 +1200,7 @@ initWalletPrefs();
     const fmtSat = v => v < 0.001 ? '$' + v.toFixed(6) : (v < 0.01 ? '$' + v.toFixed(5) : '$' + v.toFixed(4));
     const strip = document.getElementById('btcLiveStrip');
     if (strip) {
+      ['strip-btc-price','strip-sat-usd','strip-sat100-usd','strip-sat1k-usd','strip-sat1m-usd'].forEach(id => { const e = document.getElementById(id); if(e) e.style.opacity = '1'; });
       document.getElementById('strip-btc-price').textContent = '$' + btc.toLocaleString();
       document.getElementById('strip-sat-usd').textContent = fmtSat(satUsd);
       document.getElementById('strip-sat100-usd').textContent = fmtSat(satUsd * 100);
@@ -1202,14 +1223,14 @@ initWalletPrefs();
     if (proSats) proSats.textContent = satsFmt(9) + '/mo';
     if (bizSats) bizSats.textContent = satsFmt(99) + '/mo';
     if (lifeSats) {
-      const s = Math.ceil(9999 / btc * 100_000_000);
+      const s = Math.ceil(999 / btc * 100_000_000);
       lifeSats.textContent = '\u2248 ' + (s >= 1_000_000 ? (s/1_000_000).toFixed(2)+'M' : Math.round(s/1000)+'k') + ' sats — one-time';
     }
   } catch {}
 })();
 
 // Pro payment modal
-const TIER_LABELS = { pro: 'Pro \u2014 $9/month', business: 'Business \u2014 $99/month', lifetime: 'Lifetime \u2014 $9,999 one-time' };
+const TIER_LABELS = { pro: 'Pro — $9/month', business: 'Builder — $99/month', lifetime: 'Founder — $999 one-time' };
 let proCurrentTier = 'pro', proPaymentHash = '', proInvoiceStr = '', proPollTimer = null, proCountdownTimer = null, proExpiresAt = 0;
 
 function openProModal(tier) {
