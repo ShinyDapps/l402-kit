@@ -99,7 +99,18 @@ h1{font-size:20px;font-weight:700;margin-bottom:4px}
   <div class="success" id="successView">
     <div class="success-icon">✅</div>
     <h2>You're Pro!</h2>
-    <p>Payment confirmed. Your subscription is active.<br>Close this tab and reload the extension.</p>
+    <p style="margin-bottom:20px">Payment confirmed. Your subscription is active.</p>
+
+    <div style="background:#0a0a0a;border:1px solid #1a3a1a;border-radius:10px;padding:16px;margin-bottom:20px;text-align:left">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Lightning Receipt</div>
+      <div id="receiptHash" style="font-size:11px;font-family:monospace;color:var(--green);word-break:break-all;margin-bottom:10px"></div>
+      <a id="receiptVerifyLink" href="#" target="_blank" style="font-size:12px;color:var(--muted)">Verify independently →</a>
+    </div>
+
+    <p style="font-size:12px;color:var(--muted);margin-bottom:20px">
+      This hash is your permanent proof of payment.<br>Verifiable on the Lightning Network at any time.
+    </p>
+
     <a href="vscode://shinydapps.l402-payments" class="back-btn">← Back to VS Code</a>
   </div>
 
@@ -170,6 +181,9 @@ async function poll() {
       clearInterval(countdownTimer);
       document.getElementById('statusDot').className = 'dot paid';
       document.getElementById('statusText').textContent = 'Payment confirmed!';
+      document.getElementById('receiptHash').textContent = paymentHash;
+      const verifyUrl = 'https://l402kit.vercel.app/api/verify?paymentHash=' + encodeURIComponent(paymentHash);
+      document.getElementById('receiptVerifyLink').href = verifyUrl;
       setTimeout(() => show('successView'), 800);
     }
   } catch (_) { /* network hiccup — try again next poll */ }
