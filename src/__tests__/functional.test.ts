@@ -227,7 +227,108 @@ describe("[Waitlist] endpoint /api/waitlist com Resend integrado", () => {
   });
 });
 
-// ─── 5. VERCEL — ambiente de produção ─────────────────────────────────────────
+// ─── 5. RESEND WEBHOOK — endpoint em produção ─────────────────────────────────
+// Delta: novo endpoint /api/resend-webhook com verificação Svix.
+
+describe("[Resend Webhook] /api/resend-webhook em produção", () => {
+  it_live("GET → 405 (só aceita POST)", async () => {
+    const r = await fetch(`${BASE}/api/resend-webhook`);
+    expect(r.status).toBe(405);
+  });
+
+  it_live("POST sem headers Svix → 400", async () => {
+    const r = await fetch(`${BASE}/api/resend-webhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "email.delivered", data: { email_id: "x" } }),
+    });
+    expect(r.status).toBe(400);
+  });
+
+  it_live("POST com assinatura inválida → 401", async () => {
+    const r = await fetch(`${BASE}/api/resend-webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "svix-id": "msg_fake",
+        "svix-timestamp": String(Math.floor(Date.now() / 1000)),
+        "svix-signature": "v1,invalidsignature==",
+      },
+      body: JSON.stringify({ type: "email.delivered", data: { email_id: "x" } }),
+    });
+    expect(r.status).toBe(401);
+  });
+
+  it_live("response não vaza internal state em nenhum erro", async () => {
+    const r = await fetch(`${BASE}/api/resend-webhook`, { method: "POST",
+      headers: { "Content-Type": "application/json",
+        "svix-id": "msg_fake", "svix-timestamp": "123", "svix-signature": "v1,bad==" },
+      body: JSON.stringify({}),
+    });
+    const text = await r.text();
+    expect(text).not.toMatch(/supabase/i);
+    expect(text).not.toMatch(/stack/i);
+    expect(text).not.toMatch(/whsec_/i);
+  });
+});
+
+// ─── 6. STATS — emailStats no response ────────────────────────────────────────
+// Delta: stats.ts agora retorna emailStats + recentWaitlist.
+
+describe("[Stats] /api/stats — emailStats e waitlist", () => {
+  const DASHBOARD_SECRET = process.env.DASHBOARD_SECRET ?? "shdp_dash_mK9pL2xQwRtNvJ4eHcBfUu3YsA7dZiXo";
+
+  it_live("retorna emailStats com campos esperados", async () => {
+    const r = await fetch(`${BASE}/api/stats`, {
+      headers: { "x-dashboard-secret": DASHBOARD_SECRET },
+    });
+    expect(r.status).toBe(200);
+    const d = await r.json() as any;
+    expect(d).toHaveProperty("emailStats");
+    expect(typeof d.emailStats.total).toBe("number");
+    expect(typeof d.emailStats.delivered).toBe("number");
+    expect(typeof d.emailStats.bounced).toBe("number");
+    expect(typeof d.emailStats.sending).toBe("number");
+    expect(typeof d.emailStats.pending).toBe("number");
+    expect(typeof d.emailStats.complained).toBe("number");
+  });
+
+  it_live("retorna recentWaitlist como array", async () => {
+    const r = await fetch(`${BASE}/api/stats`, {
+      headers: { "x-dashboard-secret": DASHBOARD_SECRET },
+    });
+    const d = await r.json() as any;
+    expect(Array.isArray(d.recentWaitlist)).toBe(true);
+  });
+
+  it_live("recentWaitlist items têm campos: email, email_status, resend_id, created_at", async () => {
+    const r = await fetch(`${BASE}/api/stats`, {
+      headers: { "x-dashboard-secret": DASHBOARD_SECRET },
+    });
+    const d = await r.json() as any;
+    if (d.recentWaitlist.length > 0) {
+      const item = d.recentWaitlist[0];
+      expect(item).toHaveProperty("email");
+      expect(item).toHaveProperty("email_status");
+      expect(item).toHaveProperty("resend_id");
+      expect(item).toHaveProperty("created_at");
+    }
+  });
+
+  it_live("sem secret → 401", async () => {
+    const r = await fetch(`${BASE}/api/stats`);
+    expect(r.status).toBe(401);
+  });
+
+  it_live("secret errado → 401", async () => {
+    const r = await fetch(`${BASE}/api/stats`, {
+      headers: { "x-dashboard-secret": "wrong" },
+    });
+    expect(r.status).toBe(401);
+  });
+});
+
+// ─── 7. VERCEL — ambiente de produção ─────────────────────────────────────────
 
 describe("[Vercel] ambiente de produção", () => {
   it_live("deploy atual retorna 200 na landing", async () => {
@@ -242,5 +343,13 @@ describe("[Vercel] ambiente de produção", () => {
       body: JSON.stringify({}),
     });
     expect(r.status).toBe(400);
+  });
+
+  it_live("dashboard.html acessível em /dashboard", async () => {
+    const r = await fetch(`${BASE}/dashboard`);
+    expect(r.status).toBe(200);
+    const html = await r.text();
+    expect(html).toMatch(/emailTotal/);
+    expect(html).toMatch(/waitlistTable/);
   });
 });
