@@ -273,7 +273,7 @@ Your address: `yourname@blink.sv`
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
 | Python SDK docs | [l402kit.vercel.app/docs/sdk/python](https://l402kit.vercel.app/docs/sdk/python) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
-| Creator | [github.com/ThiagoDataEngineer](https://github.com/ThiagoDataEngineer) |
+| GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
 | Lightning | shinydapps@blink.sv |
 
 ---

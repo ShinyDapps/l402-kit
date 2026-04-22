@@ -303,7 +303,7 @@ MIT — use freely, build freely.
 
 <br/>
 
-Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps) · [Thiago Yoshiaki](https://github.com/ThiagoDataEngineer)
+Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps)
 
 <br/>
 
