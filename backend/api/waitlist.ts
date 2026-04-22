@@ -77,7 +77,7 @@ async function sendWelcomeEmail(email: string): Promise<string | null> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "l402-kit <onboarding@resend.dev>",
+      from: "l402-kit <hello@l402kit.com>",
       to: email,
       subject: "⚡ You're on the l402-kit waitlist",
       html: WELCOME_HTML,
