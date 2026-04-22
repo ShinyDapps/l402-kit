@@ -3,6 +3,7 @@ from .providers.blink import BlinkProvider
 from .providers.opennode import OpenNodeProvider
 from .providers.lnbits import LNbitsProvider
 from .types import LightningProvider, Invoice
+from .replay import MemoryReplayAdapter, RedisReplayAdapter
 
 __version__ = "0.4.0"
 __all__ = [
@@ -12,4 +13,6 @@ __all__ = [
     "LNbitsProvider",
     "LightningProvider",
     "Invoice",
+    "MemoryReplayAdapter",
+    "RedisReplayAdapter",
 ]

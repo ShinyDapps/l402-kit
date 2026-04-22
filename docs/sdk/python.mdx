@@ -111,15 +111,41 @@ is_valid = verify_token(token)  # True / False
 
 ---
 
-## `check_and_mark_preimage(preimage)` — replay protection
+## Replay protection
+
+### In-memory (default — single process)
 
 ```python
 from l402kit.replay import check_and_mark_preimage
 
 is_first_use = check_and_mark_preimage(preimage)
 # True  → first use, marked as spent
-# False → already used
+# False → already used (replay attack)
 ```
+
+Resets on process restart. Suitable for development and single-instance deployments.
+
+### Redis (production — multi-instance)
+
+For multiple workers or instances, use `RedisReplayAdapter` so every instance shares the same spent-token store:
+
+```python
+import os, redis
+from l402kit import l402_required, RedisReplayAdapter
+from l402kit.providers.blink import BlinkProvider
+
+r = redis.Redis.from_url(os.environ["REDIS_URL"])
+replay = RedisReplayAdapter(r, ttl_seconds=86400)
+
+blink = BlinkProvider(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"])
+
+@app.get("/api/data")
+@l402_required(price_sats=10, lightning=blink, replay=replay)
+async def get_data(request: Request):
+    return {"data": "premium content"}
+```
+
+`RedisReplayAdapter.check_and_mark` uses `SET key 1 NX EX ttl` — atomic, race-condition free.
 
 ---
 

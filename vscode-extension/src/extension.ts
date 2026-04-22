@@ -665,8 +665,11 @@ function renderContent(rows) {
     // resize observer
     try {
       if (window._cRo) window._cRo.disconnect();
+      if (window._cRoTimer) clearTimeout(window._cRoTimer);
       window._cRo = new ResizeObserver(function() {
-        if (lastRows !== null) drawChart(lastRows, chartRange);
+        if (lastRows === null) return;
+        if (window._cRoTimer) clearTimeout(window._cRoTimer);
+        window._cRoTimer = setTimeout(function() { drawChart(lastRows, chartRange); }, 120);
       });
       const cw = document.querySelector('.chart-wrap');
       if (cw) window._cRo.observe(cw);
