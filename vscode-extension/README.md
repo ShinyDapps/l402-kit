@@ -16,8 +16,6 @@
 
 Real-time Bitcoin Lightning payment dashboard for developers using [l402-kit](https://npmjs.com/package/l402-kit). Every payment your API receives appears instantly: endpoint, amount in sats, USD value, live chart.
 
-![ShinyDapps Lightning Payments — connect wallet, view sats, switch theme and language](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
-
 ### Features
 
 ⚡ **Live sats counter** in the status bar — updates every 30 seconds
@@ -111,10 +109,10 @@ Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning 
 
 | SDK | Install | Version | Downloads |
 |:----|:--------|:-------:|----------:|
-| ![npm](./docs/logos/npm.png) **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit.png?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit.png?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
-| ![python](./docs/logos/python.png) **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit.png?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit.png?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
-| ![rust](./docs/logos/rust.png) **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit.png?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit.png?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
-| ![go](./docs/logos/go.png) **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.0.1-00acd7.png?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7.png)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
+| ![npm](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/logos/npm.png) **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit.png?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit.png?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
+| ![python](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/logos/python.png) **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit.png?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit.png?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
+| ![rust](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/logos/rust.png) **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit.png?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit.png?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
+| ![go](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/logos/go.png) **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.1.6-00acd7.png?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7.png)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
 
 ### Links
 
@@ -127,8 +125,6 @@ Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning 
 **Veja os sats chegando — sem sair do VS Code.**
 
 Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usando [l402-kit](https://npmjs.com/package/l402-kit).
-
-![ShinyDapps Lightning Payments — conecte carteira, veja sats, mude tema e idioma](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/vscode-extension/docs/demo.gif)
 
 ### Funcionalidades
 
