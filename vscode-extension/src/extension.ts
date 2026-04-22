@@ -449,6 +449,18 @@ td { padding: 5px 4px; border-bottom: 1px solid #181818; font-size: 11px; color:
 <div id="ticker"></div>
 <div id="content"><div class="loading">⚡ Loading…</div></div>
 
+<div style="text-align:center;padding:8px 12px;border-top:1px solid #1a1a1a;background:#0e0e0e">
+  <a href="https://l402kit.vercel.app" target="_blank"
+     style="font-size:10px;color:#555;text-decoration:none;letter-spacing:.3px">
+    ⚡ l402kit.vercel.app
+  </a>
+  <span style="color:#2a2a2a;margin:0 6px">·</span>
+  <a href="https://l402kit.vercel.app/docs" target="_blank"
+     style="font-size:10px;color:#555;text-decoration:none">
+    docs
+  </a>
+</div>
+
 <script>
 (function () {
 'use strict';
