@@ -600,7 +600,7 @@ function renderContent(rows) {
     html += '<div class="pro-banner">';
     html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">9,000 sats / mo</span></div>';
     html += '<div class="pro-features">Full history · CSV export · Pay in Bitcoin · Cancel anytime</div>';
-    html += '<a href="https://l402kit.vercel.app/docs#pricing" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
+    html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
     html += '</div>';
   }
 
@@ -645,7 +645,7 @@ function renderContent(rows) {
       btn.addEventListener('click', function() {
         const r = btn.getAttribute('data-r');
         if ((r === '1Y' || r === 'ALL') && !isPro) {
-          window.open('https://l402kit.vercel.app/docs#pricing', '_blank');
+          window.open('https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
           return;
         }
         chartRange = r;
