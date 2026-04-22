@@ -798,15 +798,132 @@ const I18N = {
     evmConnectBtn: 'Conectar wallet EVM', lnSaveBtn: 'Salvar endereco', lnClearBtn: 'Limpar',
     langConsoleLabel: 'Idioma', langConsoleHint: 'Aplica na pagina inteira'
   },
-  es: { navHow: 'Como funciona', navPricing: 'Precios', navWallet: 'Conectar wallet', navStart: 'Empezar', heroReadDocs: 'Leer docs →' },
-  fr: { navHow: 'Comment ca marche', navPricing: 'Tarifs', navWallet: 'Connecter wallet', navStart: 'Commencer', heroReadDocs: 'Lire docs →' },
-  de: { navHow: 'So funktioniert es', navPricing: 'Preise', navWallet: 'Wallet verbinden', navStart: 'Loslegen', heroReadDocs: 'Docs lesen →' },
-  it: { navHow: 'Come funziona', navPricing: 'Prezzi', navWallet: 'Connetti wallet', navStart: 'Inizia', heroReadDocs: 'Leggi docs →' },
-  ja: { navHow: '仕組み', navPricing: '料金', navWallet: 'ウォレット接続', navStart: '開始', heroReadDocs: 'ドキュメント →' },
-  ru: { navHow: 'Как это работает', navPricing: 'Тарифы', navWallet: 'Подключить кошелек', navStart: 'Начать', heroReadDocs: 'Документация →' },
-  zh: { navHow: '工作原理', navPricing: '定价', navWallet: '连接钱包', navStart: '开始使用', heroReadDocs: '查看文档 →' },
-  hi: { navHow: 'कैसे काम करता है', navPricing: 'प्राइसिंग', navWallet: 'वॉलेट कनेक्ट करें', navStart: 'शुरू करें', heroReadDocs: 'डॉक्स पढ़ें →' },
-  ar: { navHow: 'كيف يعمل', navPricing: 'الاسعار', navWallet: 'ربط المحفظة', navStart: 'ابدأ', heroReadDocs: 'اقرا التوثيق →' }
+  es: {
+    navHow: 'Cómo funciona', navPricing: 'Precios', navWallet: 'Conectar wallet', navStart: 'Empezar',
+    heroTitle: 'Cobra por tu API<br>con <span>Bitcoin Lightning</span>.<br>3 líneas de código.',
+    heroSubtitle: 'Sin tarjeta. Sin banco. Sin chargeback. Sin mínimo. Liquida en menos de 1 segundo.',
+    heroReadDocs: 'Leer docs →',
+    walletTitle: 'Conecta tu wallet',
+    walletSub: 'Usa Lightning para pagos y opcionalmente conecta una wallet EVM para identidad.',
+    walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX, etc.)',
+    walletEvmDesc: 'Opcional para identidad en dApps. Los pagos L402 permanecen en Bitcoin Lightning.',
+    walletLnTitle: 'Wallet Lightning',
+    walletLnDesc: 'Configura tu Lightning Address para recibir sats vía l402-kit.',
+    evmConnectBtn: 'Conectar wallet EVM', lnSaveBtn: 'Guardar dirección', lnClearBtn: 'Borrar',
+    langConsoleLabel: 'Idioma', langConsoleHint: 'Se aplica a toda la página'
+  },
+  fr: {
+    navHow: 'Comment ça marche', navPricing: 'Tarifs', navWallet: 'Connecter wallet', navStart: 'Commencer',
+    heroTitle: 'Monétisez votre API<br>avec <span>Bitcoin Lightning</span>.<br>3 lignes de code.',
+    heroSubtitle: 'Sans carte. Sans banque. Sans chargeback. Sans minimum. Règlement en moins d\'1 seconde.',
+    heroReadDocs: 'Lire docs →',
+    walletTitle: 'Connectez votre wallet',
+    walletSub: 'Utilisez Lightning pour les paiements et connectez optionnellement un wallet EVM pour l\'identité.',
+    walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX, etc.)',
+    walletEvmDesc: 'Optionnel pour l\'identité dApp. Les paiements L402 restent sur Bitcoin Lightning.',
+    walletLnTitle: 'Wallet Lightning',
+    walletLnDesc: 'Définissez votre Lightning Address pour recevoir des sats via l402-kit.',
+    evmConnectBtn: 'Connecter wallet EVM', lnSaveBtn: 'Enregistrer', lnClearBtn: 'Effacer',
+    langConsoleLabel: 'Langue', langConsoleHint: 'S\'applique à toute la page'
+  },
+  de: {
+    navHow: 'So funktioniert es', navPricing: 'Preise', navWallet: 'Wallet verbinden', navStart: 'Loslegen',
+    heroTitle: 'Monetarisiere deine API<br>mit <span>Bitcoin Lightning</span>.<br>3 Zeilen Code.',
+    heroSubtitle: 'Keine Kreditkarte. Keine Bank. Kein Chargeback. Kein Minimum. Abrechnung in unter 1 Sekunde.',
+    heroReadDocs: 'Docs lesen →',
+    walletTitle: 'Wallet verbinden',
+    walletSub: 'Verwende Lightning für Zahlungen und verbinde optional ein EVM-Wallet für Identität.',
+    walletEvmTitle: 'EVM-Wallet (MetaMask, Rabby, OKX, etc.)',
+    walletEvmDesc: 'Optional für dApp-Identität. L402-Zahlungen bleiben auf Bitcoin Lightning.',
+    walletLnTitle: 'Lightning-Wallet',
+    walletLnDesc: 'Setze deine Lightning-Adresse, um Sats über l402-kit zu empfangen.',
+    evmConnectBtn: 'EVM-Wallet verbinden', lnSaveBtn: 'Speichern', lnClearBtn: 'Löschen',
+    langConsoleLabel: 'Sprache', langConsoleHint: 'Gilt für die gesamte Seite'
+  },
+  it: {
+    navHow: 'Come funziona', navPricing: 'Prezzi', navWallet: 'Connetti wallet', navStart: 'Inizia',
+    heroTitle: 'Monetizza la tua API<br>con <span>Bitcoin Lightning</span>.<br>3 righe di codice.',
+    heroSubtitle: 'Senza carta. Senza banca. Senza chargeback. Nessun minimo. Si liquida in meno di 1 secondo.',
+    heroReadDocs: 'Leggi docs →',
+    walletTitle: 'Connetti il tuo wallet',
+    walletSub: 'Usa Lightning per i pagamenti e connetti opzionalmente un wallet EVM per l\'identità.',
+    walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX, ecc.)',
+    walletEvmDesc: 'Opzionale per identità dApp. I pagamenti L402 restano su Bitcoin Lightning.',
+    walletLnTitle: 'Wallet Lightning',
+    walletLnDesc: 'Imposta il tuo Lightning Address per ricevere sats tramite l402-kit.',
+    evmConnectBtn: 'Connetti wallet EVM', lnSaveBtn: 'Salva', lnClearBtn: 'Cancella',
+    langConsoleLabel: 'Lingua', langConsoleHint: 'Si applica all\'intera pagina'
+  },
+  ja: {
+    navHow: '仕組み', navPricing: '料金', navWallet: 'ウォレット接続', navStart: '開始',
+    heroTitle: 'APIを<span>Bitcoin Lightning</span>で<br>収益化。3行のコード。',
+    heroSubtitle: 'クレジットカード不要。銀行不要。チャージバック不要。最低金額なし。1秒以内に決済。',
+    heroReadDocs: 'ドキュメント →',
+    walletTitle: 'ウォレットを接続',
+    walletSub: 'Lightningで決済し、オプションでEVMウォレットをID用に接続できます。',
+    walletEvmTitle: 'EVMウォレット（MetaMask、Rabby、OKXなど）',
+    walletEvmDesc: 'dAppのID用オプション。L402決済はBitcoin Lightningで処理されます。',
+    walletLnTitle: 'Lightningウォレット',
+    walletLnDesc: 'l402-kit経由でsatを受け取るためにLightningアドレスを設定してください。',
+    evmConnectBtn: 'EVMウォレットを接続', lnSaveBtn: '保存', lnClearBtn: 'クリア',
+    langConsoleLabel: '言語', langConsoleHint: 'ページ全体に適用されます'
+  },
+  ru: {
+    navHow: 'Как это работает', navPricing: 'Тарифы', navWallet: 'Подключить кошелёк', navStart: 'Начать',
+    heroTitle: 'Монетизируй API<br>через <span>Bitcoin Lightning</span>.<br>3 строки кода.',
+    heroSubtitle: 'Без карты. Без банка. Без чарджбека. Без минимума. Расчёт за 1 секунду.',
+    heroReadDocs: 'Документация →',
+    walletTitle: 'Подключить кошелёк',
+    walletSub: 'Используй Lightning для платежей и при желании подключи EVM-кошелёк для идентификации.',
+    walletEvmTitle: 'EVM-кошелёк (MetaMask, Rabby, OKX и др.)',
+    walletEvmDesc: 'Опционально для dApp-идентификации. Платежи L402 остаются на Bitcoin Lightning.',
+    walletLnTitle: 'Lightning-кошелёк',
+    walletLnDesc: 'Задай свой Lightning-адрес для получения сатошей через l402-kit.',
+    evmConnectBtn: 'Подключить EVM-кошелёк', lnSaveBtn: 'Сохранить', lnClearBtn: 'Очистить',
+    langConsoleLabel: 'Язык', langConsoleHint: 'Применяется ко всей странице'
+  },
+  zh: {
+    navHow: '工作原理', navPricing: '定价', navWallet: '连接钱包', navStart: '开始使用',
+    heroTitle: '用 <span>Bitcoin Lightning</span><br>收费。3 行代码。',
+    heroSubtitle: '无需信用卡。无需银行账户。无退款争议。无最低金额。1秒内结算。',
+    heroReadDocs: '查看文档 →',
+    walletTitle: '连接钱包',
+    walletSub: '使用 Lightning 付款，可选连接 EVM 钱包用于身份验证。',
+    walletEvmTitle: 'EVM 钱包（MetaMask、Rabby、OKX 等）',
+    walletEvmDesc: '可选用于 dApp 身份。L402 付款仍在 Bitcoin Lightning 上处理。',
+    walletLnTitle: 'Lightning 钱包',
+    walletLnDesc: '设置你的 Lightning 地址，通过 l402-kit 接收 sats。',
+    evmConnectBtn: '连接 EVM 钱包', lnSaveBtn: '保存地址', lnClearBtn: '清除',
+    langConsoleLabel: '语言', langConsoleHint: '应用于整个页面'
+  },
+  hi: {
+    navHow: 'कैसे काम करता है', navPricing: 'प्राइसिंग', navWallet: 'वॉलेट कनेक्ट करें', navStart: 'शुरू करें',
+    heroTitle: 'अपने API से <span>Bitcoin Lightning</span><br>से कमाई करें। 3 लाइनें।',
+    heroSubtitle: 'कोई कार्ड नहीं। कोई बैंक नहीं। कोई चार्जबैक नहीं। 1 सेकंड में भुगतान।',
+    heroReadDocs: 'डॉक्स पढ़ें →',
+    walletTitle: 'वॉलेट कनेक्ट करें',
+    walletSub: 'Lightning से भुगतान लें और वैकल्पिक रूप से पहचान के लिए EVM वॉलेट कनेक्ट करें।',
+    walletEvmTitle: 'EVM वॉलेट (MetaMask, Rabby, OKX आदि)',
+    walletEvmDesc: 'dApp पहचान के लिए वैकल्पिक। L402 भुगतान Bitcoin Lightning पर ही रहते हैं।',
+    walletLnTitle: 'Lightning वॉलेट',
+    walletLnDesc: 'l402-kit के ज़रिए sats प्राप्त करने के लिए अपना Lightning Address सेट करें।',
+    evmConnectBtn: 'EVM वॉलेट कनेक्ट करें', lnSaveBtn: 'सेव करें', lnClearBtn: 'साफ़ करें',
+    langConsoleLabel: 'भाषा', langConsoleHint: 'पूरे पेज पर लागू होता है'
+  },
+  ar: {
+    navHow: 'كيف يعمل', navPricing: 'الأسعار', navWallet: 'ربط المحفظة', navStart: 'ابدأ',
+    heroTitle: 'اربح من API الخاص بك<br>عبر <span>Bitcoin Lightning</span>.<br>3 أسطر فقط.',
+    heroSubtitle: 'بدون بطاقة. بدون بنك. بدون استرداد. بدون حد أدنى. تسوية في أقل من ثانية.',
+    heroReadDocs: 'اقرأ التوثيق →',
+    walletTitle: 'ربط المحفظة',
+    walletSub: 'استخدم Lightning للمدفوعات وربط محفظة EVM اختيارياً للهوية.',
+    walletEvmTitle: 'محفظة EVM (MetaMask, Rabby, OKX إلخ)',
+    walletEvmDesc: 'اختياري لهوية dApp. مدفوعات L402 تبقى على Bitcoin Lightning.',
+    walletLnTitle: 'محفظة Lightning',
+    walletLnDesc: 'حدد عنوان Lightning الخاص بك لتلقي sats عبر l402-kit.',
+    evmConnectBtn: 'ربط محفظة EVM', lnSaveBtn: 'حفظ العنوان', lnClearBtn: 'مسح',
+    langConsoleLabel: 'اللغة', langConsoleHint: 'يطبق على الصفحة بالكامل'
+  }
 };
 
 const LANG_INFO = {
@@ -852,252 +969,315 @@ function applyLanguage(lang) {
   localStorage.setItem('l402_lang', lang);
 }
 
-const FULL_PAGE_COPY = {
+const T = {
   en: {
-    '.nav-links a[href="#extension"]': 'Extension',
-    '.nav-links a[href="https://l402kit.vercel.app/docs"]:not(.nav-cta)': 'Docs',
-    '.nav-links a[href="dashboard.html"]': 'Dashboard',
-
-    '.stats-bar .stat-item:nth-child(1) .stat-label': 'Payments logged',
-    '.stats-bar .stat-item:nth-child(2) .stat-label': 'GitHub stars',
-    '.stats-bar .stat-item:nth-child(3) .stat-label': 'npm downloads/wk',
-    '.stats-bar .stat-item:nth-child(4) .stat-label': 'Languages supported',
-    '.stats-bar .stat-item:nth-child(5) .stat-label': 'Settlement time',
-    '.stats-bar .stat-item:nth-child(6) .stat-label': 'Countries blocked',
-
-    '.flow h2': 'How it works',
-    '.flow-step:nth-child(1) .step-title': 'Client calls API',
-    '.flow-step:nth-child(1) .step-desc': 'GET /premium',
-    '.flow-step:nth-child(2) .step-title': '402 + Invoice',
-    '.flow-step:nth-child(2) .step-desc': 'BOLT11 Lightning invoice returned',
-    '.flow-step:nth-child(3) .step-title': 'Client pays',
-    '.flow-step:nth-child(3) .step-desc': 'Any Lightning wallet, <1 second',
-    '.flow-step:nth-child(4) .step-title': 'Proof verified',
-    '.flow-step:nth-child(4) .step-desc': 'SHA256(preimage) == hash',
-    '.flow-step:nth-child(5) .step-title': '200 OK + data',
-    '.flow-step:nth-child(5) .step-desc': 'You get 99.7% of every sat',
-
-    '.compare h2': 'Why not legacy payments?',
-    '.compare tr:nth-child(1) th:nth-child(2)': 'Card processors',
-    '.compare tr:nth-child(1) th:nth-child(3)': 'PayPal / legacy',
-
-
-    '.features h2': 'Everything you need',
-    '.usecases h2': 'What will you build?',
-
-    '.pricing h2': 'Simple pricing',
-    '.pricing-sub': 'Pay with Bitcoin Lightning. No credit card. No account. Instant.',
-
-    '.faq h2': 'Common questions',
-
-    '#waitlist h2': 'Stay in the loop',
-    '#waitlist > p': 'Get notified about major releases, new providers, and security patches.',
-    '#waitlistBtn': 'Notify me ⚡',
-
-    '.cta h2': 'Start in 2 minutes',
-    '.cta > p': 'No account. No credit card. Just Bitcoin.',
-    '.cta .btn-secondary[href="https://crates.io/crates/l402kit"]': 'cargo add l402kit',
-    '.cta p:last-child': 'or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a>'
+    nav: ['Extension','Dashboard'],
+    stats: ['Payments logged','GitHub stars','npm downloads/wk','Languages supported','Settlement time','Countries blocked'],
+    flowTitle: 'How it works',
+    flow: [['Client calls API','GET /premium'],['402 + Invoice','BOLT11 Lightning invoice returned'],['Client pays','Any Lightning wallet, <1 second'],['Proof verified','SHA256(preimage) == hash'],['200 OK + data','You get 99.7% of every sat']],
+    compareTitle: 'Why not legacy payments?', compareCols: ['Card processors','PayPal / legacy'],
+    featuresTitle: 'Everything you need',
+    features: [['Zero setup','Just set your Lightning Address. No node, no wallet setup, no config files.'],['4 languages','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Same protocol, any stack.'],['AI agent native','Machines can pay machines. No human in the loop. Perfect for autonomous AI agents.'],['Cryptographic proof','SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.'],['Payment logging','Every payment logged to Supabase automatically. See who paid, when, and how much.'],['Provider agnostic','Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.']],
+    usecasesTitle: 'What will you build?',
+    usecases: [['AI / Agents','Monetize your AI tool','Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.'],['Data APIs','Pay-per-query data','Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.'],['Content','Paywalled endpoints','Articles, research papers, PDFs, audio. No account creation required from your users.'],['Compute','Serverless billing','Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.']],
+    ext: {badge:'VS CODE EXTENSION',h2:'Watch your sats roll in — without leaving your editor',p:'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart.',lis:['✓ Live payment feed with amount & endpoint','✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Light / dark / auto theme','✓ Zero config — just set your Lightning address'],links:['Install Free on Marketplace','Documentation →']},
+    pricingTitle: 'Simple pricing', pricingSub: 'Pay with Bitcoin Lightning. No credit card. No account. Instant.',
+    pricing: [['Free','0.3% fee on payments received','Get started →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning'],[null,'For teams and high-volume APIs','⚡ Subscribe with Lightning'],[null,'Pay once. Use forever.','⚡ Buy Lifetime Access']],
+    faqTitle: 'Common questions',
+    faq: [['Do my users need a Lightning wallet?','Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.'],['What happens if the Lightning network is down?','Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.'],['Is this production-ready?','Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.'],['How does the 0.3% fee work?','When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.'],['Can I use it without Blink?','Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.']],
+    waitlistTitle: 'Stay in the loop', waitlistSub: 'Get notified about major releases, new providers, and security patches.', waitlistBtn: 'Notify me ⚡',
+    ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a>'
   },
   pt: {
-    '.nav-links a[href="#extension"]': 'Extensao',
-    '.nav-links a[href="https://l402kit.vercel.app/docs"]:not(.nav-cta)': 'Docs',
-    '.nav-links a[href="dashboard.html"]': 'Painel',
-
-    '.stats-bar .stat-item:nth-child(1) .stat-label': 'Pagamentos registrados',
-    '.stats-bar .stat-item:nth-child(2) .stat-label': 'Stars no GitHub',
-    '.stats-bar .stat-item:nth-child(3) .stat-label': 'Downloads npm/sem',
-    '.stats-bar .stat-item:nth-child(4) .stat-label': 'Linguagens suportadas',
-    '.stats-bar .stat-item:nth-child(5) .stat-label': 'Tempo de liquidacao',
-    '.stats-bar .stat-item:nth-child(6) .stat-label': 'Paises bloqueados',
-
-    '.flow h2': 'Como funciona',
-    '.flow-step:nth-child(1) .step-title': 'Cliente chama a API',
-    '.flow-step:nth-child(1) .step-desc': 'GET /premium',
-    '.flow-step:nth-child(2) .step-title': '402 + Fatura',
-    '.flow-step:nth-child(2) .step-desc': 'Retorna invoice Lightning BOLT11',
-    '.flow-step:nth-child(3) .step-title': 'Cliente paga',
-    '.flow-step:nth-child(3) .step-desc': 'Qualquer wallet Lightning, <1 segundo',
-    '.flow-step:nth-child(4) .step-title': 'Prova verificada',
-    '.flow-step:nth-child(4) .step-desc': 'SHA256(preimage) == hash',
-    '.flow-step:nth-child(5) .step-title': '200 OK + dados',
-    '.flow-step:nth-child(5) .step-desc': 'Voce recebe 99.7% de cada sat',
-
-    '.compare tr:nth-child(1) th:nth-child(2)': 'Card processors',
-    '.compare tr:nth-child(1) th:nth-child(3)': 'PayPal / legacy',
-
-
-    '.features h2': 'Tudo o que voce precisa',
-    '.usecases h2': 'O que voce vai construir?',
-
-    '.pricing h2': 'Precos simples',
-    '.pricing-sub': 'Pague com Bitcoin Lightning. Sem cartao. Sem conta. Instantaneo.',
-
-    '.faq h2': 'Perguntas comuns',
-
-    '#waitlist h2': 'Fique por dentro',
-    '#waitlist > p': 'Receba aviso de releases importantes, novos providers e patches de seguranca.',
-    '#waitlistBtn': 'Me avise ⚡',
-
-    '.cta h2': 'Comece em 2 minutos',
-    '.cta > p': 'Sem conta. Sem cartao. So Bitcoin.',
-    '.cta .btn-secondary[href="https://crates.io/crates/l402kit"]': 'cargo add l402kit',
-    '.cta p:last-child': 'ou <a href="https://l402kit.vercel.app/docs/pt/introduction">leia a documentacao &rarr;</a>'
+    nav: ['Extensao','Painel'],
+    stats: ['Pagamentos registrados','Stars no GitHub','Downloads npm/sem','Linguagens suportadas','Tempo de liquidacao','Paises bloqueados'],
+    flowTitle: 'Como funciona',
+    flow: [['Cliente chama a API','GET /premium'],['402 + Fatura','Retorna invoice Lightning BOLT11'],['Cliente paga','Qualquer wallet Lightning, <1 segundo'],['Prova verificada','SHA256(preimage) == hash'],['200 OK + dados','Voce recebe 99.7% de cada sat']],
+    compareTitle: 'Por que nao pagamentos tradicionais?', compareCols: ['Processadores de cartao','PayPal / legacy'],
+    featuresTitle: 'Tudo o que voce precisa',
+    features: [['Configuracao zero','Defina seu Lightning Address. Sem node, sem setup de wallet, sem arquivos de config.'],['4 linguagens','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Mesmo protocolo em qualquer stack.'],['Nativo para agentes de IA','Maquinas pagando maquinas. Sem humano no meio. Perfeito para agentes autonomos.'],['Prova criptografica','SHA256(preimage) == paymentHash. Matematicamente infalsificavel. Sem chargeback.'],['Logs de pagamento','Cada pagamento e registrado no Supabase automaticamente. Veja quem pagou, quando e quanto.'],['Provider-agnostic','Blink, OpenNode, LNbits ou o seu provider. Implemente LightningProvider em poucas linhas.']],
+    usecasesTitle: 'O que voce vai construir?',
+    usecases: [['IA / Agentes','Monetize sua ferramenta de IA','Cobre por chamada de inferencia. Wrappers de LLM, geracao de imagem, OCR APIs. Funciona com agentes LangChain e AutoGPT.'],['APIs de Dados','Dados por consulta','Clima, financas, esportes, mapas. Sem assinatura: usuarios pagam so pelo uso.'],['Conteudo','Endpoints com paywall','Artigos, pesquisas, PDFs, audio. Sem exigir criacao de conta do usuario.'],['Computacao','Billing serverless','Cobre por tarefas pesadas: render, transcricao, compressao. 100% por uso.']],
+    ext: {badge:'EXTENSAO VS CODE',h2:'Veja os sats entrando sem sair do editor',p:'Dashboard de pagamentos Lightning em tempo real dentro do VS Code. Veja cada pagamento no instante em que cai.',lis:['✓ Feed de pagamentos ao vivo com valor e endpoint','✓ Grafico de barras — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Tema claro / escuro / automatico','✓ Zero config — so definir seu Lightning address'],links:['Instalar gratis no Marketplace','Documentacao →']},
+    pricingTitle: 'Precos simples', pricingSub: 'Pague com Bitcoin Lightning. Sem cartao. Sem conta. Instantaneo.',
+    pricing: [['Gratis','Taxa de 0.3% nos pagamentos recebidos','Comecar →'],[null,'Pague com Lightning — ativacao instantanea','⚡ Assinar com Lightning'],[null,'Para times e APIs de alto volume','⚡ Assinar com Lightning'],[null,'Pague uma vez. Use para sempre.','⚡ Comprar acesso vitalicio']],
+    faqTitle: 'Perguntas comuns',
+    faq: [['Meus usuarios precisam de wallet Lightning?','Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.'],['E se a Lightning ficar fora do ar?','A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.'],['Ja esta pronto para producao?','Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.'],['Como funciona a taxa de 0.3%?','No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.'],['Posso usar sem Blink?','Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.']],
+    waitlistTitle: 'Fique por dentro', waitlistSub: 'Receba aviso de releases importantes, novos providers e patches de seguranca.', waitlistBtn: 'Me avise ⚡',
+    ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/pt/introduction">leia a documentacao &rarr;</a>'
+  },
+  es: {
+    nav: ['Extensión','Panel'],
+    stats: ['Pagos registrados','Estrellas GitHub','Descargas npm/sem','Idiomas soportados','Tiempo de liquidación','Países bloqueados'],
+    flowTitle: 'Cómo funciona',
+    flow: [['Cliente llama API','GET /premium'],['402 + Factura','Factura Lightning BOLT11 devuelta'],['Cliente paga','Cualquier wallet Lightning, <1 segundo'],['Prueba verificada','SHA256(preimage) == hash'],['200 OK + datos','Recibes el 99.7% de cada sat']],
+    compareTitle: '¿Por qué no los pagos tradicionales?', compareCols: ['Procesadores de tarjetas','PayPal / legacy'],
+    featuresTitle: 'Todo lo que necesitas',
+    features: [['Configuración cero','Solo configura tu Lightning Address. Sin nodo, sin wallet, sin archivos de configuración.'],['4 idiomas','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. El mismo protocolo en cualquier stack.'],['Nativo para IA','Las máquinas pagan a máquinas. Sin humanos en el flujo. Perfecto para agentes autónomos.'],['Prueba criptográfica','SHA256(preimage) == paymentHash. Matemáticamente infalsificable. Sin chargebacks.'],['Registro de pagos','Cada pago se registra en Supabase automáticamente. Ve quién pagó, cuándo y cuánto.'],['Agnóstico de proveedor','Blink, OpenNode, LNbits — o el tuyo. Implementa LightningProvider en 5 líneas.']],
+    usecasesTitle: '¿Qué vas a construir?',
+    usecases: [['IA / Agentes','Monetiza tu herramienta de IA','Cobra por llamada de inferencia. Wrappers de LLM, generación de imágenes, APIs OCR. Compatible con LangChain y AutoGPT.'],['APIs de datos','Datos por consulta','Clima, finanzas, deportes, mapas. Sin suscripción: los usuarios pagan solo por lo que usan.'],['Contenido','Endpoints con paywall','Artículos, papers, PDFs, audio. Sin requerir creación de cuenta.'],['Cómputo','Facturación serverless','Cobra por tareas pesadas: renderizado, transcripción, compresión. 100% por uso.']],
+    ext: {badge:'EXTENSIÓN VS CODE',h2:'Mira cómo llegan tus sats — sin salir del editor',p:'Dashboard de pagos Lightning en tiempo real dentro de VS Code. Ve cada pago en el instante en que llega.',lis:['✓ Feed de pagos en vivo con monto y endpoint','✓ Gráfico de barras — 1D / 7D (gratis) · 30D / 1Y / ALL (Pro)','✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Tema claro / oscuro / automático','✓ Zero config — solo define tu Lightning address'],links:['Instalar gratis en Marketplace','Documentación →']},
+    pricingTitle: 'Precios simples', pricingSub: 'Paga con Bitcoin Lightning. Sin tarjeta. Sin cuenta. Instantáneo.',
+    pricing: [['Gratis','Comisión del 0.3% en pagos recibidos','Empezar →'],[null,'Paga con Lightning — activación instantánea','⚡ Suscribirse con Lightning'],[null,'Para equipos y APIs de alto volumen','⚡ Suscribirse con Lightning'],[null,'Paga una vez. Usa para siempre.','⚡ Comprar acceso de por vida']],
+    faqTitle: 'Preguntas frecuentes',
+    faq: [['¿Mis usuarios necesitan una wallet Lightning?','Sí — necesitan una wallet Lightning para pagar. Apps como Strike, Cash App, Blink y Phoenix se configuran en menos de 60 segundos.'],['¿Qué pasa si la red Lightning cae?','Lightning es una red descentralizada con casi 100% de disponibilidad. Si tu proveedor falla, cambias en una línea de código.'],['¿Está listo para producción?','Sí. Prueba criptográfica (SHA256), protección anti-replay y registro en Supabase están integrados.'],['¿Cómo funciona la comisión del 0.3%?','En modo gestionado, se deduce automáticamente el 0.3%. En self-host con tu propio nodo, no hay comisión.'],['¿Puedo usarlo sin Blink?','Sí. OpenNode, LNbits o cualquier proveedor que implemente LightningProvider.']],
+    waitlistTitle: 'Mantente al día', waitlistSub: 'Recibe notificaciones sobre versiones importantes, nuevos providers y parches de seguridad.', waitlistBtn: 'Notifícame ⚡',
+    ctaTitle: 'Empieza en 2 minutos', ctaDesc: 'Sin cuenta. Sin tarjeta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/es/introduction">lee los docs &rarr;</a>'
+  },
+  fr: {
+    nav: ['Extension','Tableau de bord'],
+    stats: ['Paiements enregistrés','Étoiles GitHub','Téléch. npm/sem','Langues supportées','Délai de règlement','Pays bloqués'],
+    flowTitle: 'Comment ça marche',
+    flow: [['Client appelle l\'API','GET /premium'],['402 + Facture','Facture Lightning BOLT11 renvoyée'],['Client paie','N\'importe quel wallet Lightning, <1 seconde'],['Preuve vérifiée','SHA256(preimage) == hash'],['200 OK + données','Vous recevez 99.7% de chaque sat']],
+    compareTitle: 'Pourquoi pas les paiements traditionnels ?', compareCols: ['Processeurs de carte','PayPal / legacy'],
+    featuresTitle: 'Tout ce dont vous avez besoin',
+    features: [['Zéro configuration','Définissez juste votre Lightning Address. Aucun nœud, pas de setup de wallet.'],['4 langages','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Même protocole, n\'importe quelle stack.'],['Natif IA','Les machines paient les machines. Sans humain dans la boucle. Parfait pour les agents autonomes.'],['Preuve cryptographique','SHA256(preimage) == paymentHash. Mathématiquement infalsifiable. Aucun chargeback.'],['Journalisation des paiements','Chaque paiement enregistré dans Supabase automatiquement.'],['Agnostique fournisseur','Blink, OpenNode, LNbits — ou le vôtre. Implémentez LightningProvider en 5 lignes.']],
+    usecasesTitle: 'Qu\'allez-vous construire ?',
+    usecases: [['IA / Agents','Monétisez votre outil IA','Facturez par appel d\'inférence. Wrappers LLM, génération d\'images, APIs OCR. Compatible LangChain et AutoGPT.'],['APIs de données','Données à la requête','Météo, finance, sport, cartes. Sans abonnement — les utilisateurs paient uniquement ce qu\'ils consomment.'],['Contenu','Endpoints avec paywall','Articles, papers, PDFs, audio. Aucune création de compte requise.'],['Calcul','Facturation serverless','Facturez les tâches intensives : rendu, transcription, compression. 100% à l\'usage.']],
+    ext: {badge:'EXTENSION VS CODE',h2:'Regardez vos sats arriver — sans quitter votre éditeur',p:'Tableau de bord de paiements Lightning en temps réel dans VS Code. Voyez chaque paiement à l\'instant où il arrive.',lis:['✓ Flux de paiements en direct avec montant et endpoint','✓ Graphique en barres — 1D / 7D (gratuit) · 30D / 1Y / ALL (Pro)','✓ 11 langues (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Thème clair / sombre / automatique','✓ Zéro config — juste définir votre Lightning address'],links:['Installer gratuitement sur le Marketplace','Documentation →']},
+    pricingTitle: 'Tarification simple', pricingSub: 'Payez avec Bitcoin Lightning. Sans carte. Sans compte. Instantané.',
+    pricing: [['Gratuit','Frais de 0.3% sur les paiements reçus','Commencer →'],[null,'Payez avec Lightning — activation instantanée','⚡ S\'abonner avec Lightning'],[null,'Pour les équipes et APIs à fort volume','⚡ S\'abonner avec Lightning'],[null,'Payez une fois. Utilisez pour toujours.','⚡ Acheter l\'accès à vie']],
+    faqTitle: 'Questions fréquentes',
+    faq: [['Mes utilisateurs ont-ils besoin d\'un wallet Lightning ?','Oui — ils ont besoin d\'un wallet Lightning pour payer. Des apps comme Strike, Cash App, Blink et Phoenix se configurent en moins de 60 secondes.'],['Que se passe-t-il si le réseau Lightning tombe ?','Lightning est un réseau décentralisé avec une disponibilité proche de 100%. Si votre fournisseur tombe, changez-en en une ligne de code.'],['Est-ce prêt pour la production ?','Oui. Preuve cryptographique (SHA256), protection anti-replay et journalisation Supabase sont intégrés.'],['Comment fonctionnent les frais de 0.3% ?','En mode géré, une commission de 0.3% est déduite automatiquement. En self-host, pas de frais.'],['Puis-je l\'utiliser sans Blink ?','Oui. OpenNode, LNbits ou tout fournisseur implémentant l\'interface LightningProvider.']],
+    waitlistTitle: 'Restez informé', waitlistSub: 'Soyez notifié des sorties majeures, nouveaux fournisseurs et correctifs de sécurité.', waitlistBtn: 'Me notifier ⚡',
+    ctaTitle: 'Démarrez en 2 minutes', ctaDesc: 'Sans compte. Sans carte. Juste Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/fr/introduction">lisez les docs &rarr;</a>'
+  },
+  de: {
+    nav: ['Erweiterung','Dashboard'],
+    stats: ['Zahlungen','GitHub-Sterne','npm-Downloads/Wo','Unterstützte Sprachen','Abrechnungszeit','Gesperrte Länder'],
+    flowTitle: 'So funktioniert es',
+    flow: [['Client ruft API auf','GET /premium'],['402 + Rechnung','BOLT11 Lightning-Rechnung zurückgegeben'],['Client zahlt','Jedes Lightning-Wallet, <1 Sekunde'],['Beweis verifiziert','SHA256(preimage) == hash'],['200 OK + Daten','Du bekommst 99.7% jedes Sats']],
+    compareTitle: 'Warum keine herkömmlichen Zahlungen?', compareCols: ['Kartenprozessoren','PayPal / legacy'],
+    featuresTitle: 'Alles was du brauchst',
+    features: [['Kein Setup','Einfach Lightning-Adresse setzen. Kein Node, kein Wallet-Setup, keine Config-Dateien.'],['4 Sprachen','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Gleiches Protokoll, jeder Stack.'],['KI-Agent-nativ','Maschinen zahlen Maschinen. Kein Mensch im Loop. Perfekt für autonome KI-Agenten.'],['Kryptografischer Beweis','SHA256(preimage) == paymentHash. Mathematisch fälschungssicher. Keine Chargebacks.'],['Zahlungsprotokoll','Jede Zahlung automatisch in Supabase protokolliert.'],['Provider-agnostisch','Blink, OpenNode, LNbits — oder deiner. LightningProvider in 5 Zeilen implementieren.']],
+    usecasesTitle: 'Was wirst du bauen?',
+    usecases: [['KI / Agenten','Monetarisiere dein KI-Tool','Pro Inferenzaufruf abrechnen. LLM-Wrapper, Bildgenerierung, OCR-APIs. Funktioniert nativ mit LangChain und AutoGPT.'],['Daten-APIs','Pay-per-Query-Daten','Wetter, Finanzen, Sport, Karten. Kein Abo — Nutzer zahlen genau für das, was sie nutzen.'],['Inhalte','Paywall-Endpunkte','Artikel, Forschungsarbeiten, PDFs, Audio. Keine Kontoerstellung erforderlich.'],['Compute','Serverless-Abrechnung','Berechne CPU-intensive Aufgaben: Rendering, Transkription, Kompression. Rein nutzungsbasiert.']],
+    ext: {badge:'VS CODE ERWEITERUNG',h2:'Sieh zu, wie deine Sats eintreffen — ohne den Editor zu verlassen',p:'Echtzeit-Lightning-Zahlungs-Dashboard in VS Code. Sieh jede Zahlung sofort wenn sie eintrifft.',lis:['✓ Live-Zahlungsfeed mit Betrag & Endpunkt','✓ Balkendiagramm — 1D / 7D (kostenlos) · 30D / 1Y / ALL (Pro)','✓ 11 Sprachen (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Helles / dunkles / automatisches Theme','✓ Kein Setup — einfach Lightning-Adresse setzen'],links:['Kostenlos im Marketplace installieren','Dokumentation →']},
+    pricingTitle: 'Einfache Preise', pricingSub: 'Zahle mit Bitcoin Lightning. Keine Kreditkarte. Kein Konto. Sofort.',
+    pricing: [['Kostenlos','0.3% Gebühr auf empfangene Zahlungen','Loslegen →'],[null,'Mit Lightning zahlen — sofortige Aktivierung','⚡ Mit Lightning abonnieren'],[null,'Für Teams und APIs mit hohem Volumen','⚡ Mit Lightning abonnieren'],[null,'Einmal zahlen. Für immer nutzen.','⚡ Lebenslangen Zugang kaufen']],
+    faqTitle: 'Häufige Fragen',
+    faq: [['Brauchen meine Nutzer ein Lightning-Wallet?','Ja — sie brauchen ein Lightning-Wallet zum Bezahlen. Apps wie Strike, Cash App, Blink und Phoenix sind in unter 60 Sekunden eingerichtet.'],['Was passiert, wenn das Lightning-Netzwerk ausfällt?','Lightning ist ein dezentrales Netzwerk mit nahezu 100% Verfügbarkeit. Wenn dein Provider ausfällt, wechselst du in einer Zeile Code.'],['Ist das produktionsreif?','Ja. Kryptografischer Beweis (SHA256), Replay-Schutz und Supabase-Zahlungsprotokoll sind eingebaut.'],['Wie funktioniert die 0.3%-Gebühr?','Im verwalteten Modus wird automatisch 0.3% abgezogen. Im Self-Host-Modus gibt es keine Gebühr.'],['Kann ich es ohne Blink verwenden?','Ja. OpenNode, LNbits oder jeder Provider, der LightningProvider implementiert.']],
+    waitlistTitle: 'Bleib informiert', waitlistSub: 'Werde über wichtige Releases, neue Provider und Sicherheits-Patches benachrichtigt.', waitlistBtn: 'Benachrichtige mich ⚡',
+    ctaTitle: 'In 2 Minuten starten', ctaDesc: 'Kein Konto. Keine Karte. Nur Bitcoin.', ctaDocs: 'oder <a href="https://l402kit.vercel.app/docs/de/introduction">Docs lesen &rarr;</a>'
+  },
+  it: {
+    nav: ['Estensione','Dashboard'],
+    stats: ['Pagamenti registrati','Stelle GitHub','Download npm/sett','Lingue supportate','Tempo di liquidazione','Paesi bloccati'],
+    flowTitle: 'Come funziona',
+    flow: [['Il client chiama l\'API','GET /premium'],['402 + Fattura','Fattura Lightning BOLT11 restituita'],['Il client paga','Qualsiasi wallet Lightning, <1 secondo'],['Prova verificata','SHA256(preimage) == hash'],['200 OK + dati','Ricevi il 99.7% di ogni sat']],
+    compareTitle: 'Perché non i pagamenti tradizionali?', compareCols: ['Processori di carta','PayPal / legacy'],
+    featuresTitle: 'Tutto ciò di cui hai bisogno',
+    features: [['Zero configurazione','Imposta solo il tuo Lightning Address. Nessun nodo, nessun setup di wallet.'],['4 linguaggi','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Stesso protocollo, qualsiasi stack.'],['Nativo per IA','Le macchine pagano le macchine. Nessun umano nel loop. Perfetto per agenti autonomi.'],['Prova crittografica','SHA256(preimage) == paymentHash. Matematicamente inforgiabile. Nessun chargeback.'],['Registro pagamenti','Ogni pagamento registrato su Supabase automaticamente.'],['Agnostico al provider','Blink, OpenNode, LNbits — o il tuo. Implementa LightningProvider in 5 righe.']],
+    usecasesTitle: 'Cosa costruirai?',
+    usecases: [['IA / Agenti','Monetizza il tuo tool IA','Addebita per chiamata di inferenza. Wrapper LLM, generazione immagini, API OCR. Compatibile con LangChain e AutoGPT.'],['API dati','Dati pay-per-query','Meteo, finanza, sport, mappe. Nessun abbonamento — gli utenti pagano esattamente per ciò che usano.'],['Contenuti','Endpoint con paywall','Articoli, paper, PDF, audio. Nessuna creazione di account richiesta.'],['Calcolo','Fatturazione serverless','Addebita task intensivi: rendering, trascrizione, compressione. Puramente basato sull\'uso.']],
+    ext: {badge:'ESTENSIONE VS CODE',h2:'Guarda i tuoi sats arrivare — senza lasciare l\'editor',p:'Dashboard pagamenti Lightning in tempo reale dentro VS Code. Vedi ogni pagamento nell\'istante in cui arriva.',lis:['✓ Feed pagamenti live con importo ed endpoint','✓ Grafico a barre — 1D / 7D (gratuito) · 30D / 1Y / ALL (Pro)','✓ 11 lingue (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Tema chiaro / scuro / automatico','✓ Zero config — imposta solo il tuo Lightning address'],links:['Installa gratis sul Marketplace','Documentazione →']},
+    pricingTitle: 'Prezzi semplici', pricingSub: 'Paga con Bitcoin Lightning. Senza carta. Senza account. Istantaneo.',
+    pricing: [['Gratuito','Commissione 0.3% sui pagamenti ricevuti','Inizia →'],[null,'Paga con Lightning — attivazione istantanea','⚡ Abbonati con Lightning'],[null,'Per team e API ad alto volume','⚡ Abbonati con Lightning'],[null,'Paga una volta. Usa per sempre.','⚡ Acquista accesso a vita']],
+    faqTitle: 'Domande frequenti',
+    faq: [['I miei utenti hanno bisogno di un wallet Lightning?','Sì — hanno bisogno di un wallet Lightning per pagare. App come Strike, Cash App, Blink e Phoenix si configurano in meno di 60 secondi.'],['Cosa succede se la rete Lightning è giù?','Lightning è una rete decentralizzata con disponibilità vicina al 100%. Se il tuo provider ha un downtime, cambi in una riga di codice.'],['È pronto per la produzione?','Sì. Prova crittografica (SHA256), protezione anti-replay e logging Supabase sono integrati.'],['Come funziona la commissione dello 0.3%?','In modalità gestita, lo 0.3% viene dedotto automaticamente. In self-host con il tuo nodo, non c\'è commissione.'],['Posso usarlo senza Blink?','Sì. OpenNode, LNbits o qualsiasi provider che implementi l\'interfaccia LightningProvider.']],
+    waitlistTitle: 'Rimani aggiornato', waitlistSub: 'Ricevi notifiche su rilasci importanti, nuovi provider e patch di sicurezza.', waitlistBtn: 'Avvisami ⚡',
+    ctaTitle: 'Inizia in 2 minuti', ctaDesc: 'Senza account. Senza carta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/it/introduction">leggi i docs &rarr;</a>'
+  },
+  ja: {
+    nav: ['拡張機能','ダッシュボード'],
+    stats: ['記録済み支払い','GitHubスター','npm DL/週','対応言語','決済時間','ブロック国数'],
+    flowTitle: '仕組み',
+    flow: [['クライアントがAPIを呼ぶ','GET /premium'],['402 + インボイス','BOLT11 Lightningインボイスが返される'],['クライアントが支払う','任意のLightningウォレット、1秒未満'],['証明を検証','SHA256(preimage) == hash'],['200 OK + データ','各satの99.7%を受け取る']],
+    compareTitle: '従来の決済が不向きな理由', compareCols: ['カード処理業者','PayPal / legacy'],
+    featuresTitle: '必要なものが全部揃っている',
+    features: [['ゼロセットアップ','Lightning Addressを設定するだけ。ノード不要、ウォレット設定不要。'],['4言語対応','TypeScript、Python、Go、Rust。Express、FastAPI、Flask、Axum。同じプロトコル。'],['AIエージェント対応','マシンがマシンに支払う。人間不要。自律型AIエージェントに最適。'],['暗号学的証明','SHA256(preimage) == paymentHash。数学的に偽造不可能。チャージバックなし。'],['支払いログ','すべての支払いが自動的にSupabaseに記録されます。'],['プロバイダー非依存','Blink、OpenNode、LNbits、または独自プロバイダー。5行でLightningProviderを実装。']],
+    usecasesTitle: '何を作りますか？',
+    usecases: [['AI / エージェント','AIツールを収益化','推論呼び出しごとに課金。LLMラッパー、画像生成、OCR API。LangChainやAutoGPTと動作。'],['データAPI','クエリ課金データ','天気、金融、スポーツ、地図。サブスクリプション不要。'],['コンテンツ','ペイウォール付きエンドポイント','記事、論文、PDF、音声。アカウント登録不要。'],['コンピュート','サーバーレス課金','レンダリング、文字起こし、圧縮などの重いタスクに課金。完全使用量ベース。']],
+    ext: {badge:'VS CODE 拡張機能',h2:'エディタを離れずにsatが入ってくるのを見守ろう',p:'VS Code内のリアルタイムLightning支払いダッシュボード。すべての支払いを即座に確認できます。',lis:['✓ 金額とエンドポイント付きのライブ支払いフィード','✓ 棒グラフ — 1D / 7D (無料) · 30D / 1Y / ALL (Pro)','✓ 11言語対応 (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ ライト / ダーク / 自動テーマ','✓ ゼロ設定 — Lightning addressを設定するだけ'],links:['Marketplaceで無料インストール','ドキュメント →']},
+    pricingTitle: 'シンプルな料金', pricingSub: 'Bitcoin Lightningで支払い。クレジットカード不要。アカウント不要。即時。',
+    pricing: [['無料','受信した支払いの0.3%手数料','始める →'],[null,'Lightningで支払い — 即時有効化','⚡ Lightningでサブスクライブ'],[null,'チームと高ボリュームAPI向け','⚡ Lightningでサブスクライブ'],[null,'一度支払って永遠に使う。','⚡ 生涯アクセスを購入']],
+    faqTitle: 'よくある質問',
+    faq: [['ユーザーはLightningウォレットが必要ですか？','はい。支払いにはLightningウォレットが必要です。Strike、Cash App、Blink、Phoenixなどは60秒以内に設定できます。'],['Lightningネットワークがダウンした場合は？','Lightningはほぼ100%の稼働時間を持つ分散型ネットワークです。プロバイダーに問題が生じても、1行のコードで切り替えられます。'],['本番環境で使用できますか？','はい。暗号学的証明(SHA256)、リプレイ攻撃防御、Supabaseによるログが組み込まれています。'],['0.3%手数料の仕組みは？','マネージドモードでは0.3%が自動的に差し引かれます。自己ホストの場合は手数料なし。'],['Blinkなしで使えますか？','はい。OpenNode、LNbits、またはLightningProviderインターフェースを実装する任意のプロバイダーが使えます。']],
+    waitlistTitle: '最新情報を受け取る', waitlistSub: 'メジャーリリース、新プロバイダー、セキュリティパッチの通知を受け取ります。', waitlistBtn: '通知を受け取る ⚡',
+    ctaTitle: '2分で始める', ctaDesc: 'アカウント不要。クレジットカード不要。Bitcoinだけ。', ctaDocs: 'または <a href="https://l402kit.vercel.app/docs/ja/introduction">ドキュメントを読む &rarr;</a>'
+  },
+  ru: {
+    nav: ['Расширение','Дашборд'],
+    stats: ['Платежи','Звёзды GitHub','Загр. npm/нед','Языков поддержано','Время расчёта','Заблокировано стран'],
+    flowTitle: 'Как это работает',
+    flow: [['Клиент вызывает API','GET /premium'],['402 + Счёт','Возвращён BOLT11 Lightning-инвойс'],['Клиент платит','Любой Lightning-кошелёк, <1 секунды'],['Доказательство проверено','SHA256(preimage) == hash'],['200 OK + данные','Вы получаете 99.7% каждого сата']],
+    compareTitle: 'Почему не традиционные платежи?', compareCols: ['Карточные процессоры','PayPal / legacy'],
+    featuresTitle: 'Всё необходимое',
+    features: [['Нет настройки','Просто задай Lightning-адрес. Никаких нод, кошельков, конфиг-файлов.'],['4 языка','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Единый протокол.'],['Нативно для ИИ','Машины платят машинам. Без человека в цепочке. Идеально для автономных агентов.'],['Криптодоказательство','SHA256(preimage) == paymentHash. Математически неподделываемо. Без чарджбеков.'],['Лог платежей','Каждый платёж автоматически записывается в Supabase.'],['Независимость от провайдера','Blink, OpenNode, LNbits — или свой. LightningProvider в 5 строк.']],
+    usecasesTitle: 'Что ты построишь?',
+    usecases: [['ИИ / Агенты','Монетизируй свой ИИ-инструмент','Плата за каждый вызов инференса. LLM-обёртки, генерация изображений, OCR API.'],['Дата-API','Данные за запрос','Погода, финансы, спорт, карты. Без подписки.'],['Контент','Эндпоинты с пейволом','Статьи, PDF, аудио. Без регистрации аккаунта.'],['Вычисления','Serverless-биллинг','Берите плату за рендеринг, транскрипцию, сжатие. Чистая модель «по использованию».']],
+    ext: {badge:'РАСШИРЕНИЕ VS CODE',h2:'Наблюдай за поступлением сатошей — не выходя из редактора',p:'Дашборд Lightning-платежей в реальном времени прямо в VS Code.',lis:['✓ Живая лента платежей с суммой и эндпоинтом','✓ Столбчатый график — 1D / 7D (бесплатно) · 30D / 1Y / ALL (Pro)','✓ 11 языков (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Светлая / тёмная / авто тема','✓ Нет настройки — просто задай Lightning-адрес'],links:['Установить бесплатно в Marketplace','Документация →']},
+    pricingTitle: 'Простые тарифы', pricingSub: 'Платите Bitcoin Lightning. Без карты. Без аккаунта. Мгновенно.',
+    pricing: [['Бесплатно','Комиссия 0.3% от полученных платежей','Начать →'],[null,'Платите Lightning — мгновенная активация','⚡ Подписаться через Lightning'],[null,'Для команд и высоконагруженных API','⚡ Подписаться через Lightning'],[null,'Оплатите раз. Используйте всегда.','⚡ Купить пожизненный доступ']],
+    faqTitle: 'Частые вопросы',
+    faq: [['Нужен ли моим пользователям Lightning-кошелёк?','Да — им нужен Lightning-кошелёк для оплаты. Приложения Strike, Cash App, Blink, Phoenix настраиваются менее чем за 60 секунд.'],['Что будет, если сеть Lightning упадёт?','Lightning — децентрализованная сеть с почти 100% аптаймом. Смена провайдера — одна строка кода.'],['Готово ли к продакшену?','Да. Криптодоказательство (SHA256), защита от реплей-атак и лог Supabase — всё встроено.'],['Как работает комиссия 0.3%?','В managed-режиме 0.3% вычитается автоматически. В self-host нет никакой комиссии.'],['Можно ли без Blink?','Да. OpenNode, LNbits или любой провайдер, реализующий интерфейс LightningProvider.']],
+    waitlistTitle: 'Будь в курсе', waitlistSub: 'Получай уведомления о крупных релизах, новых провайдерах и патчах безопасности.', waitlistBtn: 'Уведомить меня ⚡',
+    ctaTitle: 'Начни за 2 минуты', ctaDesc: 'Без аккаунта. Без карты. Только Bitcoin.', ctaDocs: 'или <a href="https://l402kit.vercel.app/docs/ru/introduction">читай документацию &rarr;</a>'
+  },
+  zh: {
+    nav: ['扩展','仪表盘'],
+    stats: ['已记录支付','GitHub 星标','npm 下载/周','支持语言','结算时间','封锁国家'],
+    flowTitle: '工作原理',
+    flow: [['客户端调用 API','GET /premium'],['402 + 发票','返回 BOLT11 Lightning 发票'],['客户端付款','任意 Lightning 钱包，<1 秒'],['验证证明','SHA256(preimage) == hash'],['200 OK + 数据','获得每笔支付的 99.7%']],
+    compareTitle: '为什么不用传统支付？', compareCols: ['信用卡处理商','PayPal / 传统支付'],
+    featuresTitle: '一切所需',
+    features: [['零配置','只需设置你的 Lightning Address。无需节点，无需钱包设置。'],['4种语言','TypeScript、Python、Go、Rust。Express、FastAPI、Flask、Axum。同一协议，任意技术栈。'],['原生 AI 支持','机器向机器付款。无需人工干预。完美适配自主 AI 代理。'],['密码学证明','SHA256(preimage) == paymentHash。数学上无法伪造。永无退款争议。'],['支付日志','每笔支付自动记录到 Supabase。'],['提供商无关','Blink、OpenNode、LNbits — 或自带。5行代码实现 LightningProvider。']],
+    usecasesTitle: '你将构建什么？',
+    usecases: [['AI / 代理','将你的 AI 工具变现','按推理调用收费。LLM 包装器、图像生成、OCR API。原生兼容 LangChain 和 AutoGPT。'],['数据 API','按查询付费的数据','天气、金融、体育、地图。无需订阅。'],['内容','付费端点','文章、论文、PDF、音频。无需用户创建账户。'],['计算','Serverless 计费','对渲染、转录、压缩等高 CPU 任务收费。纯粹按使用量计费。']],
+    ext: {badge:'VS CODE 扩展',h2:'看着你的 sats 滚滚而来 — 无需离开编辑器',p:'VS Code 内置实时 Lightning 支付仪表盘。即时看到每笔支付。',lis:['✓ 包含金额和端点的实时支付流','✓ 柱状图 — 1D / 7D（免费）· 30D / 1Y / ALL（Pro）','✓ 11 种语言（EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT）','✓ 亮色 / 暗色 / 自动主题','✓ 零配置 — 只需设置你的 Lightning address'],links:['在 Marketplace 免费安装','文档 →']},
+    pricingTitle: '简单定价', pricingSub: '使用 Bitcoin Lightning 支付。无需信用卡。无需账户。即时到账。',
+    pricing: [['免费','收到支付的 0.3% 手续费','立即开始 →'],[null,'使用 Lightning 支付 — 即时激活','⚡ 使用 Lightning 订阅'],[null,'适合团队和高流量 API','⚡ 使用 Lightning 订阅'],[null,'一次付款，永久使用。','⚡ 购买终身访问']],
+    faqTitle: '常见问题',
+    faq: [['我的用户需要 Lightning 钱包吗？','是的——他们需要 Lightning 钱包来付款。Strike、Cash App、Blink 和 Phoenix 等应用可在 60 秒内设置完成。'],['如果 Lightning 网络宕机怎么办？','Lightning 是一个去中心化网络，正常运行时间接近 100%。如果你的提供商宕机，一行代码即可切换。'],['这是否可用于生产环境？','是的。密码学证明（SHA256）、防重放保护和 Supabase 支付日志都已内置。'],['0.3% 手续费如何运作？','使用托管模式时，自动扣除 0.3% 路由费。自托管时，无任何费用。'],['可以不用 Blink 吗？','可以。OpenNode、LNbits 或任何实现 LightningProvider 接口的提供商都可以。']],
+    waitlistTitle: '保持关注', waitlistSub: '获取重大版本发布、新提供商和安全补丁的通知。', waitlistBtn: '通知我 ⚡',
+    ctaTitle: '2分钟内开始', ctaDesc: '无需账户。无需信用卡。只需 Bitcoin。', ctaDocs: '或 <a href="https://l402kit.vercel.app/docs/zh/introduction">查看文档 &rarr;</a>'
+  },
+  hi: {
+    nav: ['एक्सटेंशन','डैशबोर्ड'],
+    stats: ['भुगतान दर्ज','GitHub स्टार','npm डाउनलोड/सप्ताह','समर्थित भाषाएं','निपटान समय','अवरुद्ध देश'],
+    flowTitle: 'कैसे काम करता है',
+    flow: [['क्लाइंट API बुलाता है','GET /premium'],['402 + इनवॉइस','BOLT11 Lightning इनवॉइस वापस मिलता है'],['क्लाइंट भुगतान करता है','कोई भी Lightning वॉलेट, <1 सेकंड'],['प्रमाण सत्यापित','SHA256(preimage) == hash'],['200 OK + डेटा','हर sat का 99.7% आपको मिलता है']],
+    compareTitle: 'पारंपरिक भुगतान क्यों नहीं?', compareCols: ['कार्ड प्रोसेसर','PayPal / legacy'],
+    featuresTitle: 'सब कुछ जो आपको चाहिए',
+    features: [['शून्य सेटअप','बस अपना Lightning Address सेट करें। कोई नोड नहीं, कोई वॉलेट सेटअप नहीं।'],['4 भाषाएं','TypeScript, Python, Go, Rust। Express, FastAPI, Flask, Axum। समान प्रोटोकॉल।'],['AI एजेंट नेटिव','मशीनें मशीनों को भुगतान करती हैं। स्वायत्त AI एजेंट के लिए परफेक्ट।'],['क्रिप्टोग्राफिक प्रमाण','SHA256(preimage) == paymentHash। गणितीय रूप से अजेय। कोई चार्जबैक नहीं।'],['भुगतान लॉग','हर भुगतान Supabase में स्वचालित रूप से दर्ज होता है।'],['प्रदाता-अज्ञेय','Blink, OpenNode, LNbits — या अपना। 5 लाइनों में LightningProvider लागू करें।']],
+    usecasesTitle: 'आप क्या बनाएंगे?',
+    usecases: [['AI / एजेंट','अपने AI टूल से कमाई करें','प्रति इनफरेंस कॉल चार्ज करें। LangChain और AutoGPT के साथ काम करता है।'],['डेटा API','प्रति-क्वेरी डेटा','मौसम, वित्त, खेल, मानचित्र। कोई सदस्यता नहीं।'],['कंटेंट','पेवॉल्ड एंडपॉइंट','लेख, शोध पत्र, PDF, ऑडियो। खाता बनाने की जरूरत नहीं।'],['कंप्यूट','सर्वरलेस बिलिंग','रेंडरिंग, ट्रांसक्रिप्शन, कंप्रेशन के लिए चार्ज करें। शुद्ध उपयोग-आधारित।']],
+    ext: {badge:'VS CODE एक्सटेंशन',h2:'अपने sats को एडिटर छोड़े बिना आते देखें',p:'VS Code के अंदर रियल-टाइम Lightning पेमेंट डैशबोर्ड।',lis:['✓ राशि और endpoint के साथ लाइव भुगतान फीड','✓ बार चार्ट — 1D / 7D (फ्री) · 30D / 1Y / ALL (Pro)','✓ 11 भाषाएं (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ लाइट / डार्क / ऑटो थीम','✓ जीरो कॉन्फिग — बस अपना Lightning address सेट करें'],links:['Marketplace पर मुफ्त इंस्टॉल करें','दस्तावेज़ →']},
+    pricingTitle: 'सरल मूल्य निर्धारण', pricingSub: 'Bitcoin Lightning से भुगतान करें। कोई क्रेडिट कार्ड नहीं। कोई खाता नहीं। तत्काल।',
+    pricing: [['मुफ्त','प्राप्त भुगतानों पर 0.3% शुल्क','शुरू करें →'],[null,'Lightning से भुगतान — तत्काल सक्रियण','⚡ Lightning से सब्सक्राइब करें'],[null,'टीम और उच्च-वॉल्यूम API के लिए','⚡ Lightning से सब्सक्राइब करें'],[null,'एक बार भुगतान करें। हमेशा के लिए उपयोग करें।','⚡ आजीवन एक्सेस खरीदें']],
+    faqTitle: 'सामान्य प्रश्न',
+    faq: [['क्या मेरे उपयोगकर्ताओं को Lightning वॉलेट चाहिए?','हां — भुगतान के लिए Lightning वॉलेट की जरूरत है। Strike, Cash App, Blink, Phoenix 60 सेकंड में सेट हो जाते हैं।'],['अगर Lightning नेटवर्क डाउन हो तो?','Lightning एक विकेंद्रीकृत नेटवर्क है जिसमें लगभग 100% अपटाइम है। एक लाइन कोड से प्रदाता बदला जा सकता है।'],['क्या यह प्रोडक्शन के लिए तैयार है?','हां। SHA256 क्रिप्टोग्राफिक प्रमाण, रिप्ले सुरक्षा और Supabase लॉगिंग बिल्ट-इन हैं।'],['0.3% शुल्क कैसे काम करता है?','मैनेज्ड मोड में 0.3% स्वचालित रूप से काटा जाता है। सेल्फ-होस्ट में कोई शुल्क नहीं।'],['क्या मैं Blink के बिना इस्तेमाल कर सकता हूं?','हां। OpenNode, LNbits या कोई भी LightningProvider लागू करने वाला प्रदाता।']],
+    waitlistTitle: 'अपडेट रहें', waitlistSub: 'प्रमुख रिलीज़, नए प्रदाताओं और सुरक्षा पैच की सूचना पाएं।', waitlistBtn: 'मुझे सूचित करें ⚡',
+    ctaTitle: '2 मिनट में शुरू करें', ctaDesc: 'कोई खाता नहीं। कोई कार्ड नहीं। सिर्फ Bitcoin।', ctaDocs: 'या <a href="https://l402kit.vercel.app/docs/hi/introduction">डॉक्स पढ़ें &rarr;</a>'
+  },
+  ar: {
+    nav: ['الإضافة','لوحة التحكم'],
+    stats: ['المدفوعات المسجلة','نجوم GitHub','تحميلات npm/أسبوع','اللغات المدعومة','وقت التسوية','الدول المحظورة'],
+    flowTitle: 'كيف يعمل',
+    flow: [['العميل يستدعي API','GET /premium'],['402 + فاتورة','إرجاع فاتورة BOLT11 Lightning'],['العميل يدفع','أي محفظة Lightning، أقل من ثانية'],['التحقق من الإثبات','SHA256(preimage) == hash'],['200 OK + بيانات','تحصل على 99.7% من كل sat']],
+    compareTitle: 'لماذا ليس المدفوعات التقليدية؟', compareCols: ['معالجات البطاقات','PayPal / legacy'],
+    featuresTitle: 'كل ما تحتاجه',
+    features: [['إعداد صفري','فقط حدد Lightning Address. لا حاجة لعقدة أو إعداد محفظة.'],['4 لغات','TypeScript، Python، Go، Rust. Express، FastAPI، Flask، Axum. نفس البروتوكول.'],['نشوء لـ AI','الآلات تدفع للآلات. لا بشر في الحلقة. مثالي للوكلاء المستقلين.'],['إثبات تشفيري','SHA256(preimage) == paymentHash. مستحيل التزوير رياضياً. لا استرداد أموال.'],['سجل المدفوعات','كل مدفوعة تُسجَّل تلقائياً في Supabase.'],['مستقل عن المزود','Blink، OpenNode، LNbits — أو مزودك. نفذ LightningProvider في 5 أسطر.']],
+    usecasesTitle: 'ماذا ستبني؟',
+    usecases: [['AI / وكلاء','حقق عوائد من أداة AI','احسب رسوماً لكل استدعاء استنتاج. يعمل مع LangChain وAutoGPT.'],['APIs البيانات','بيانات بالدفع مقابل الاستعلام','طقس، مالية، رياضة، خرائط. بدون اشتراك.'],['المحتوى','نقاط نهاية مدفوعة','مقالات، بحوث، PDFs، صوت. لا إنشاء حساب مطلوب.'],['الحوسبة','فوترة serverless','احسب رسوماً للمهام الثقيلة: التصيير، النسخ، الضغط. مبني على الاستخدام فقط.']],
+    ext: {badge:'إضافة VS CODE',h2:'شاهد الـ sats تتدفق — دون مغادرة المحرر',p:'لوحة مدفوعات Lightning في الوقت الفعلي داخل VS Code.',lis:['✓ تغذية مدفوعات مباشرة مع المبلغ والنقطة النهائية','✓ مخطط أعمدة — 1D / 7D (مجاني) · 30D / 1Y / ALL (Pro)','✓ 11 لغة (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ ثيم فاتح / داكن / تلقائي','✓ إعداد صفري — فقط حدد Lightning address'],links:['تثبيت مجاناً على Marketplace','التوثيق →']},
+    pricingTitle: 'تسعير بسيط', pricingSub: 'ادفع بـ Bitcoin Lightning. بدون بطاقة. بدون حساب. فوري.',
+    pricing: [['مجاني','رسوم 0.3% على المدفوعات المستلمة','ابدأ →'],[null,'ادفع بـ Lightning — تفعيل فوري','⚡ اشترك بـ Lightning'],[null,'للفرق وAPIs عالية الحجم','⚡ اشترك بـ Lightning'],[null,'ادفع مرة واحدة. استخدم للأبد.','⚡ شراء وصول مدى الحياة']],
+    faqTitle: 'أسئلة شائعة',
+    faq: [['هل يحتاج مستخدمي محفظة Lightning؟','نعم — يحتاجون محفظة Lightning للدفع. تطبيقات مثل Strike وCash App وBlink وPhoenix تُعدّ في أقل من 60 ثانية.'],['ماذا يحدث إذا توقفت شبكة Lightning؟','Lightning شبكة لامركزية بوقت تشغيل يقارب 100%. إذا تعطل مزودك، يمكنك التبديل بسطر كود واحد.'],['هل هو جاهز للإنتاج؟','نعم. الإثبات التشفيري (SHA256)، الحماية من إعادة التشغيل، وتسجيل Supabase مدمجة.'],['كيف تعمل رسوم 0.3%؟','في الوضع المُدار، يُخصم 0.3% تلقائياً. في التثبيت الذاتي، لا توجد رسوم.'],['هل يمكن الاستخدام بدون Blink؟','نعم. OpenNode وLNbits أو أي مزود ينفذ واجهة LightningProvider.']],
+    waitlistTitle: 'ابقَ على اطلاع', waitlistSub: 'احصل على إشعارات حول الإصدارات الكبرى، المزودين الجدد، وتصحيحات الأمان.', waitlistBtn: 'أخبرني ⚡',
+    ctaTitle: 'ابدأ في دقيقتين', ctaDesc: 'بدون حساب. بدون بطاقة. فقط Bitcoin.', ctaDocs: 'أو <a href="https://l402kit.vercel.app/docs/ar/introduction">اقرأ التوثيق &rarr;</a>'
   }
 };
 
 function applyFullPageCopy(lang) {
-  const selected = FULL_PAGE_COPY[lang] ? lang : 'en';
-  const copy = FULL_PAGE_COPY[selected];
-  Object.entries(copy).forEach(([selector, text]) => {
-    const node = document.querySelector(selector);
-    if (!node) return;
-    if (/<[a-z][\s\S]*>/i.test(text)) {
-      node.innerHTML = text;
-    } else {
-      node.textContent = text;
-    }
+  const d = T[lang] || T.en;
+
+  // Nav links
+  const navExt = document.querySelector('.nav-links a[href="#extension"]');
+  const navDash = document.querySelector('.nav-links a[href="dashboard.html"]');
+  if (navExt) navExt.textContent = d.nav[0];
+  if (navDash) navDash.textContent = d.nav[1];
+
+  // Stats bar
+  document.querySelectorAll('.stats-bar .stat-item').forEach((item, i) => {
+    const lbl = item.querySelector('.stat-label');
+    if (lbl && d.stats[i]) lbl.textContent = d.stats[i];
   });
 
-  // Feature cards
-  const featureCards = document.querySelectorAll('.features-grid .feature-card');
-  if (featureCards.length === 6) {
-    const data = selected === 'pt'
-      ? [
-          ['Configuracao zero', 'Defina seu Lightning Address. Sem node, sem setup de wallet, sem arquivos de config.'],
-          ['4 linguagens', 'TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Mesmo protocolo em qualquer stack.'],
-          ['Nativo para agentes de IA', 'Maquinas pagando maquinas. Sem humano no meio. Perfeito para agentes autonomos.'],
-          ['Prova criptografica', 'SHA256(preimage) == paymentHash. Matematicamente infalsificavel. Sem chargeback.'],
-          ['Logs de pagamento', 'Cada pagamento e registrado no Supabase automaticamente. Veja quem pagou, quando e quanto.'],
-          ['Provider-agnostic', 'Blink, OpenNode, LNbits ou o seu provider. Implemente LightningProvider em poucas linhas.']
-        ]
-      : [
-          ['Zero setup', 'Just set your Lightning Address. No node, no wallet setup, no config files.'],
-          ['4 languages', 'TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Same protocol, any stack.'],
-          ['AI agent native', 'Machines can pay machines. No human in the loop. Perfect for autonomous AI agents.'],
-          ['Cryptographic proof', 'SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.'],
-          ['Payment logging', 'Every payment logged to Supabase automatically. See who paid, when, and how much.'],
-          ['Provider agnostic', 'Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.']
-        ];
-    featureCards.forEach((card, idx) => {
-      card.querySelector('.feature-title').textContent = data[idx][0];
-      card.querySelector('.feature-desc').textContent = data[idx][1];
-    });
-  }
+  // Flow section
+  const flowH2 = document.querySelector('.flow h2');
+  if (flowH2) flowH2.textContent = d.flowTitle;
+  document.querySelectorAll('.flow-step').forEach((step, i) => {
+    if (!d.flow[i]) return;
+    const t = step.querySelector('.step-title'), ds = step.querySelector('.step-desc');
+    if (t) t.textContent = d.flow[i][0];
+    if (ds) ds.textContent = d.flow[i][1];
+  });
+
+  // Compare
+  const compareH2 = document.querySelector('.compare h2');
+  if (compareH2) compareH2.textContent = d.compareTitle;
+  const compareThs = document.querySelectorAll('.compare tr:nth-child(1) th');
+  if (compareThs[1]) compareThs[1].textContent = d.compareCols[0];
+  if (compareThs[2]) compareThs[2].textContent = d.compareCols[1];
+
+  // Features
+  const featH2 = document.querySelector('.features h2');
+  if (featH2) featH2.textContent = d.featuresTitle;
+  document.querySelectorAll('.features-grid .feature-card').forEach((card, i) => {
+    if (!d.features[i]) return;
+    const ft = card.querySelector('.feature-title'), fd = card.querySelector('.feature-desc');
+    if (ft) ft.textContent = d.features[i][0];
+    if (fd) fd.textContent = d.features[i][1];
+  });
 
   // Use cases
-  const usecases = document.querySelectorAll('.usecase-grid .usecase-card');
-  if (usecases.length === 4) {
-    const uc = selected === 'pt'
-      ? [
-          ['IA / Agentes', 'Monetize sua ferramenta de IA', 'Cobre por chamada de inferencia. Wrappers de LLM, geracao de imagem, OCR APIs. Funciona com agentes LangChain e AutoGPT.'],
-          ['APIs de Dados', 'Dados por consulta', 'Clima, financas, esportes, mapas. Sem assinatura: usuarios pagam so pelo uso.'],
-          ['Conteudo', 'Endpoints com paywall', 'Artigos, pesquisas, PDFs, audio. Sem exigir criacao de conta do usuario.'],
-          ['Computacao', 'Billing serverless', 'Cobre por tarefas pesadas: render, transcricao, compressao. 100% por uso.']
-        ]
-      : [
-          ['AI / Agents', 'Monetize your AI tool', 'Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.'],
-          ['Data APIs', 'Pay-per-query data', 'Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.'],
-          ['Content', 'Paywalled endpoints', 'Articles, research papers, PDFs, audio. No account creation required from your users.'],
-          ['Compute', 'Serverless billing', 'Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.']
-        ];
-    usecases.forEach((card, idx) => {
-      card.querySelector('.usecase-tag').textContent = uc[idx][0];
-      card.querySelector('.usecase-title').textContent = uc[idx][1];
-      card.querySelector('.usecase-desc').textContent = uc[idx][2];
-    });
-  }
+  const ucH2 = document.querySelector('.usecases h2');
+  if (ucH2) ucH2.textContent = d.usecasesTitle;
+  document.querySelectorAll('.usecase-grid .usecase-card').forEach((card, i) => {
+    if (!d.usecases[i]) return;
+    const tag = card.querySelector('.usecase-tag'), tit = card.querySelector('.usecase-title'), desc = card.querySelector('.usecase-desc');
+    if (tag) tag.textContent = d.usecases[i][0];
+    if (tit) tit.textContent = d.usecases[i][1];
+    if (desc) desc.textContent = d.usecases[i][2];
+  });
 
   // Extension block
-  const ext = document.querySelector('#extension');
-  if (ext) {
-    const badge = ext.querySelector('div[style*="letter-spacing:1px"]');
-    const h2 = ext.querySelector('h2');
-    const p = ext.querySelector('p');
-    const lis = ext.querySelectorAll('li');
-    const links = ext.querySelectorAll('a');
-    if (selected === 'pt') {
-      if (badge) badge.textContent = 'EXTENSAO VS CODE';
-      if (h2) h2.textContent = 'Veja os sats entrando sem sair do editor';
-      if (p) p.textContent = 'Dashboard de pagamentos Lightning em tempo real dentro do VS Code. Veja cada pagamento no instante em que cai.';
-      if (lis[0]) lis[0].textContent = '✓ Feed de pagamentos ao vivo com valor e endpoint';
-      if (lis[1]) lis[1].textContent = '✓ Grafico de barras — 1D / 7D (free) · 30D / 1Y / ALL (Pro)';
-      if (lis[2]) lis[2].textContent = '✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)';
-      if (lis[3]) lis[3].textContent = '✓ Tema claro / escuro / automatico';
-      if (lis[4]) lis[4].textContent = '✓ Zero config — so definir seu Lightning address';
-      if (links[0]) links[0].textContent = 'Instalar gratis no Marketplace';
-      if (links[1]) links[1].textContent = 'Documentacao →';
-    } else {
-      if (badge) badge.textContent = 'VS CODE EXTENSION';
-      if (h2) h2.textContent = 'Watch your sats roll in — without leaving your editor';
-      if (p) p.textContent = 'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart. Works in any language.';
-      if (lis[0]) lis[0].textContent = '✓ Live payment feed with amount & endpoint';
-      if (lis[1]) lis[1].textContent = '✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)';
-      if (lis[2]) lis[2].textContent = '✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)';
-      if (lis[3]) lis[3].textContent = '✓ Light / dark / auto theme';
-      if (lis[4]) lis[4].textContent = '✓ Zero config — just set your Lightning address';
-      if (links[0]) links[0].textContent = 'Install Free on Marketplace';
-      if (links[1]) links[1].textContent = 'Documentation →';
-    }
+  const extEl = document.querySelector('#extension');
+  if (extEl) {
+    const badge = extEl.querySelector('div[style*="letter-spacing:1px"]');
+    const h2 = extEl.querySelector('h2');
+    const p = extEl.querySelector('p');
+    const lis = extEl.querySelectorAll('li');
+    const links = extEl.querySelectorAll('a');
+    if (badge) badge.textContent = d.ext.badge;
+    if (h2) h2.textContent = d.ext.h2;
+    if (p) p.textContent = d.ext.p;
+    d.ext.lis.forEach((txt, i) => { if (lis[i]) lis[i].textContent = txt; });
+    d.ext.links.forEach((txt, i) => { if (links[i]) links[i].textContent = txt; });
   }
 
-  // Pricing cards
-  const pricingCards = document.querySelectorAll('.pricing-card');
-  if (pricingCards.length >= 4) {
-    if (selected === 'pt') {
-      pricingCards[0].querySelector('.pricing-name').textContent = 'Gratis';
-      pricingCards[0].querySelector('.pricing-desc').textContent = 'Taxa de 0.3% nos pagamentos recebidos';
-      pricingCards[0].querySelector('a').textContent = 'Comecar →';
-
-      pricingCards[1].querySelector('.pricing-desc').textContent = 'Pague com Lightning — ativacao instantanea';
-      pricingCards[1].querySelector('button').textContent = '⚡ Assinar com Lightning';
-
-      pricingCards[2].querySelector('.pricing-desc').textContent = 'Para times e APIs de alto volume';
-      pricingCards[2].querySelector('button').textContent = '⚡ Assinar com Lightning';
-
-      pricingCards[3].querySelector('.pricing-desc').textContent = 'Pague uma vez. Use para sempre.';
-      pricingCards[3].querySelector('button').textContent = '⚡ Comprar acesso vitalicio';
-    } else {
-      pricingCards[0].querySelector('.pricing-name').textContent = 'Free';
-      pricingCards[0].querySelector('.pricing-desc').textContent = '0.3% fee on payments received';
-      pricingCards[0].querySelector('a').textContent = 'Get started →';
-
-      pricingCards[1].querySelector('.pricing-desc').textContent = 'Pay with Lightning — instant activation';
-      pricingCards[1].querySelector('button').textContent = '⚡ Subscribe with Lightning';
-
-      pricingCards[2].querySelector('.pricing-desc').textContent = 'For teams and high-volume APIs';
-      pricingCards[2].querySelector('button').textContent = '⚡ Subscribe with Lightning';
-
-      pricingCards[3].querySelector('.pricing-desc').textContent = 'Pay once. Use forever.';
-      pricingCards[3].querySelector('button').textContent = '⚡ Buy Lifetime Access';
-    }
-  }
+  // Pricing
+  const pricH2 = document.querySelector('.pricing h2');
+  const pricSub = document.querySelector('.pricing-sub');
+  if (pricH2) pricH2.textContent = d.pricingTitle;
+  if (pricSub) pricSub.textContent = d.pricingSub;
+  document.querySelectorAll('.pricing-card').forEach((card, i) => {
+    if (!d.pricing[i]) return;
+    const name = card.querySelector('.pricing-name');
+    const desc = card.querySelector('.pricing-desc');
+    const btn = card.querySelector('button') || card.querySelector('a');
+    if (name && d.pricing[i][0]) name.textContent = d.pricing[i][0];
+    if (desc && d.pricing[i][1]) desc.textContent = d.pricing[i][1];
+    if (btn && d.pricing[i][2]) btn.textContent = d.pricing[i][2];
+  });
 
   // FAQ
-  const faqItems = document.querySelectorAll('.faq-item');
-  if (faqItems.length === 5 && selected === 'pt') {
-    faqItems[0].querySelector('.faq-q').textContent = 'Meus usuarios precisam de wallet Lightning?';
-    faqItems[0].querySelector('.faq-a').textContent = 'Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.';
-    faqItems[1].querySelector('.faq-q').textContent = 'E se a Lightning ficar fora do ar?';
-    faqItems[1].querySelector('.faq-a').textContent = 'A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.';
-    faqItems[2].querySelector('.faq-q').textContent = 'Ja esta pronto para producao?';
-    faqItems[2].querySelector('.faq-a').textContent = 'Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.';
-    faqItems[3].querySelector('.faq-q').textContent = 'Como funciona a taxa de 0.3%?';
-    faqItems[3].querySelector('.faq-a').textContent = 'No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.';
-    faqItems[4].querySelector('.faq-q').textContent = 'Posso usar sem Blink?';
-    faqItems[4].querySelector('.faq-a').textContent = 'Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.';
-  } else if (faqItems.length === 5) {
-    faqItems[0].querySelector('.faq-q').textContent = 'Do my users need a Lightning wallet?';
-    faqItems[0].querySelector('.faq-a').textContent = 'Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.';
-    faqItems[1].querySelector('.faq-q').textContent = 'What happens if the Lightning network is down?';
-    faqItems[1].querySelector('.faq-a').textContent = 'Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.';
-    faqItems[2].querySelector('.faq-q').textContent = 'Is this production-ready?';
-    faqItems[2].querySelector('.faq-a').textContent = 'Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.';
-    faqItems[3].querySelector('.faq-q').textContent = 'How does the 0.3% fee work?';
-    faqItems[3].querySelector('.faq-a').textContent = 'When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.';
-    faqItems[4].querySelector('.faq-q').textContent = 'Can I use it without Blink?';
-    faqItems[4].querySelector('.faq-a').textContent = 'Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.';
-  }
+  const faqH2 = document.querySelector('.faq h2');
+  if (faqH2) faqH2.textContent = d.faqTitle;
+  document.querySelectorAll('.faq-item').forEach((item, i) => {
+    if (!d.faq[i]) return;
+    const q = item.querySelector('.faq-q'), a = item.querySelector('.faq-a');
+    if (q) q.textContent = d.faq[i][0];
+    if (a) a.textContent = d.faq[i][1];
+  });
+
+  // Waitlist
+  const wlH2 = document.querySelector('#waitlist h2');
+  const wlP = document.querySelector('#waitlist > p');
+  const wlBtn = document.getElementById('waitlistBtn');
+  if (wlH2) wlH2.textContent = d.waitlistTitle;
+  if (wlP) wlP.textContent = d.waitlistSub;
+  if (wlBtn) wlBtn.textContent = d.waitlistBtn;
+
+  // CTA
+  const ctaH2 = document.querySelector('.cta h2');
+  const ctaP = document.querySelector('.cta > p');
+  const ctaDocs = document.querySelector('.cta p:last-child');
+  if (ctaH2) ctaH2.textContent = d.ctaTitle;
+  if (ctaP) ctaP.textContent = d.ctaDesc;
+  if (ctaDocs) ctaDocs.innerHTML = d.ctaDocs;
 }
 
 function initLanguageSelector() {
