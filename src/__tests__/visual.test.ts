@@ -416,6 +416,109 @@ describe("[Visual] checkout — backend/checkout.html", () => {
 
 // ─── OG PNG — arquivo existe e tem tamanho mínimo ─────────────────────────────
 
+// ─── Under the hood section ───────────────────────────────────────────────────
+
+describe("[Visual] landing — seção 'Under the hood'", () => {
+  let html: string;
+  beforeAll(() => { html = readHtml("index.html"); });
+
+  it("tem seção .hood com h2", () => {
+    expect(html).toMatch(/class="hood"/);
+    expect(html).toMatch(/Under the hood/);
+  });
+
+  it("tem subtítulo .hood-sub mencionando HTTP 402", () => {
+    expect(html).toMatch(/hood-sub/);
+    expect(html).toMatch(/HTTP 402/);
+  });
+
+  it("tem 5 .hood-row (um por etapa do protocolo)", () => {
+    const matches = html.match(/class="hood-row"/g);
+    expect(matches).not.toBeNull();
+    expect(matches!.length).toBe(5);
+  });
+
+  it("mostra os 5 hood-box-label com 'Step'", () => {
+    expect(html).toMatch(/Step 1/);
+    expect(html).toMatch(/Step 2/);
+    expect(html).toMatch(/Step 3/);
+    expect(html).toMatch(/Step 4/);
+    expect(html).toMatch(/Step 5/);
+  });
+
+  it("contém headers HTTP reais (WWW-Authenticate, Authorization)", () => {
+    expect(html).toMatch(/WWW-Authenticate/);
+    expect(html).toMatch(/Authorization/);
+  });
+
+  it("contém token anatomy (.hood-token) com separador ':'", () => {
+    expect(html).toMatch(/hood-token/);
+    expect(html).toMatch(/hood-token-sep/);
+    expect(html).toMatch(/Macaroon/i);
+    expect(html).toMatch(/Preimage/i);
+  });
+
+  it("tem i18n: hoodTitle e hoodSteps no T object", () => {
+    expect(html).toMatch(/hoodTitle/);
+    expect(html).toMatch(/hoodSteps/);
+    expect(html).toMatch(/hoodSub/);
+  });
+
+  it("tem traduções para PT e ES", () => {
+    expect(html).toMatch(/Por dentro/);
+    expect(html).toMatch(/Sous le capot/);
+    expect(html).toMatch(/Unter der Haube/);
+  });
+});
+
+// ─── Problem section ──────────────────────────────────────────────────────────
+
+describe("[Visual] landing — seção 'Why credit cards fail'", () => {
+  let html: string;
+  beforeAll(() => { html = readHtml("index.html"); });
+
+  it("tem seção .problem com h2", () => {
+    expect(html).toMatch(/class="problem"/);
+    expect(html).toMatch(/Why credit cards fail for APIs/);
+  });
+
+  it("tem subtítulo .problem-sub", () => {
+    expect(html).toMatch(/problem-sub/);
+    expect(html).toMatch(/Stripe was built for humans/);
+  });
+
+  it("tem 4 .problem-card", () => {
+    const matches = html.match(/class="problem-card"/g);
+    expect(matches).not.toBeNull();
+    expect(matches!.length).toBe(4);
+  });
+
+  it("menciona os 4 problemas core", () => {
+    expect(html).toMatch(/\$0\.30 minimum fee/);
+    expect(html).toMatch(/AI agents can't hold cards/);
+    expect(html).toMatch(/APIs can't be.*returned/);
+    expect(html).toMatch(/50\+ countries blocked/);
+  });
+
+  it("tem .problem-footer com menção ao HTTP 402", () => {
+    expect(html).toMatch(/problem-footer/);
+    expect(html).toMatch(/HTTP 402/);
+  });
+
+  it("tem i18n: problemTitle e problemCards no T object", () => {
+    expect(html).toMatch(/problemTitle/);
+    expect(html).toMatch(/problemCards/);
+    expect(html).toMatch(/problemFooter/);
+  });
+
+  it("tem traduções para PT, ES, JA, AR", () => {
+    expect(html).toMatch(/Por que cart[oõ]es falham/);
+    expect(html).toMatch(/tarjetas fallan/);
+    expect(html).toMatch(/クレジットカードがAPIに向かない/);
+    expect(html).toMatch(/لماذا تفشل بطاقات الائتمان/);
+  });
+});
+
 describe("[Visual] OG image — backend/logos/og-1200x630.png", () => {
   const PNG_PATH = path.resolve(__dirname, "../../backend/logos/og-1200x630.png");
 

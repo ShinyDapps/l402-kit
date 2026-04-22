@@ -1239,7 +1239,14 @@ const T = {
     faqTitle: 'Common questions',
     faq: [['Do my users need a Lightning wallet?','Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.'],['What happens if the Lightning network is down?','Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.'],['Is this production-ready?','Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.'],['How does the 0.3% fee work?','When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.'],['Can I use it without Blink?','Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.']],
     waitlistTitle: 'Stay in the loop', waitlistSub: 'Get notified about major releases, new providers, and security patches.', waitlistBtn: 'Notify me ⚡',
-    ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a>'
+    ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a>',
+    hoodTitle: 'Under the hood',
+    hoodSub: 'L402 is built on HTTP 402 — a status code reserved since 1996 for "Payment Required". Here\'s every step, in full.',
+    hoodSteps: [['Step 1 — Request (no token)','Client calls your API normally'],['Step 2 — 402 Payment Required','Server returns a Lightning invoice — no payment taken yet'],['Step 3 — Lightning payment','Client pays the invoice → Lightning Network returns a preimage (proof of payment)'],['Step 4 — Retry with proof','Client attaches the token + preimage in the Authorization header'],['Step 5 — Local verification (<1ms, no DB)','Server checks one equation. No network call, no database — pure cryptography.']],
+    problemTitle: 'Why credit cards fail for APIs',
+    problemSub: 'Stripe was built for humans buying products. APIs charge per-call — and that breaks everything.',
+    problemCards: [['$0.30 minimum fee','A 1-cent API call costs $0.30 in card fees. You lose money on every request under that threshold.'],['AI agents can\'t hold cards','Autonomous agents have no billing address, no CVV, no human to click "confirm". Card payment fails.'],['APIs can\'t be "returned"','You already delivered the data. A chargeback lets the caller take it for free — and you pay the fee.'],['50+ countries blocked','Stripe and PayPal don\'t operate everywhere. Your API is global — your payment processor shouldn\'t decide who gets in.']],
+    problemFooter: 'l402-kit uses the HTTP 402 standard + Bitcoin Lightning to eliminate all four problems at once — no accounts, no minimums, no chargebacks, no borders.'
   },
   pt: {
     nav: ['Extensao','Painel'],
@@ -1257,7 +1264,14 @@ const T = {
     faqTitle: 'Perguntas comuns',
     faq: [['Meus usuarios precisam de wallet Lightning?','Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.'],['E se a Lightning ficar fora do ar?','A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.'],['Ja esta pronto para producao?','Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.'],['Como funciona a taxa de 0.3%?','No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.'],['Posso usar sem Blink?','Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.']],
     waitlistTitle: 'Fique por dentro', waitlistSub: 'Receba aviso de releases importantes, novos providers e patches de seguranca.', waitlistBtn: 'Me avise ⚡',
-    ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/pt/introduction">leia a documentacao &rarr;</a>'
+    ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/pt/introduction">leia a documentacao &rarr;</a>',
+    hoodTitle: 'Por dentro',
+    hoodSub: 'L402 é construído sobre HTTP 402 — um código de status reservado desde 1996 para "Pagamento Necessário". Veja cada etapa em detalhes.',
+    hoodSteps: [['Etapa 1 — Requisição (sem token)','Cliente chama sua API normalmente'],['Etapa 2 — 402 Pagamento Necessário','Servidor retorna um invoice Lightning — sem cobrar ainda'],['Etapa 3 — Pagamento Lightning','Cliente paga o invoice → Lightning Network retorna uma preimage (prova de pagamento)'],['Etapa 4 — Nova tentativa com prova','Cliente envia token + preimage no header Authorization'],['Etapa 5 — Verificação local (<1ms, sem DB)','Servidor confere uma equação. Sem chamada de rede, sem banco de dados — pura criptografia.']],
+    problemTitle: 'Por que cartões falham para APIs',
+    problemSub: 'Stripe foi construído para humanos comprando produtos. APIs cobram por chamada — e isso quebra tudo.',
+    problemCards: [['Taxa mínima de $0,30','Uma chamada de 1 centavo custa $0,30 em taxas de cartão. Você perde dinheiro em cada requisição abaixo desse limite.'],['Agentes de IA não têm cartão','Agentes autônomos não têm endereço de cobrança, CVV ou humano para clicar "confirmar". O pagamento falha.'],['APIs não podem ser "devolvidas"','Você já entregou os dados. Um chargeback permite que o chamador os pegue de graça — e você paga a taxa.'],['50+ países bloqueados','Stripe e PayPal não operam em todo lugar. Sua API é global — seu processador não deveria decidir quem tem acesso.']],
+    problemFooter: 'l402-kit usa o padrão HTTP 402 + Bitcoin Lightning para eliminar os quatro problemas de uma vez — sem contas, sem mínimos, sem chargebacks, sem fronteiras.'
   },
   es: {
     nav: ['Extensión','Panel'],
@@ -1275,7 +1289,14 @@ const T = {
     faqTitle: 'Preguntas frecuentes',
     faq: [['¿Mis usuarios necesitan una wallet Lightning?','Sí — necesitan una wallet Lightning para pagar. Apps como Strike, Cash App, Blink y Phoenix se configuran en menos de 60 segundos.'],['¿Qué pasa si la red Lightning cae?','Lightning es una red descentralizada con casi 100% de disponibilidad. Si tu proveedor falla, cambias en una línea de código.'],['¿Está listo para producción?','Sí. Prueba criptográfica (SHA256), protección anti-replay y registro en Supabase están integrados.'],['¿Cómo funciona la comisión del 0.3%?','En modo gestionado, se deduce automáticamente el 0.3%. En self-host con tu propio nodo, no hay comisión.'],['¿Puedo usarlo sin Blink?','Sí. OpenNode, LNbits o cualquier proveedor que implemente LightningProvider.']],
     waitlistTitle: 'Mantente al día', waitlistSub: 'Recibe notificaciones sobre versiones importantes, nuevos providers y parches de seguridad.', waitlistBtn: 'Notifícame ⚡',
-    ctaTitle: 'Empieza en 2 minutos', ctaDesc: 'Sin cuenta. Sin tarjeta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/es/introduction">lee los docs &rarr;</a>'
+    ctaTitle: 'Empieza en 2 minutos', ctaDesc: 'Sin cuenta. Sin tarjeta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/es/introduction">lee los docs &rarr;</a>',
+    hoodTitle: 'Por dentro',
+    hoodSub: 'L402 está construido sobre HTTP 402 — un código de estado reservado desde 1996 para "Pago Requerido". Aquí está cada paso en detalle.',
+    hoodSteps: [['Paso 1 — Solicitud (sin token)','El cliente llama a tu API normalmente'],['Paso 2 — 402 Pago Requerido','El servidor devuelve una factura Lightning — sin cobrar aún'],['Paso 3 — Pago Lightning','El cliente paga la factura → Lightning Network devuelve una preimage (prueba de pago)'],['Paso 4 — Reintento con prueba','El cliente adjunta token + preimage en el header Authorization'],['Paso 5 — Verificación local (<1ms, sin DB)','El servidor comprueba una ecuación. Sin llamada de red, sin base de datos — criptografía pura.']],
+    problemTitle: 'Por qué las tarjetas fallan para APIs',
+    problemSub: 'Stripe fue diseñado para humanos comprando productos. Las APIs cobran por llamada — y eso rompe todo.',
+    problemCards: [['Tarifa mínima de $0,30','Una llamada de 1 centavo cuesta $0,30 en comisiones de tarjeta. Pierdes dinero en cada solicitud bajo ese umbral.'],['Los agentes IA no tienen tarjetas','Los agentes autónomos no tienen dirección de facturación, CVV ni humano que confirme. El pago falla.'],['Las APIs no se pueden "devolver"','Ya entregaste los datos. Un chargeback permite al cliente tomarlos gratis — y tú pagas la comisión.'],['Más de 50 países bloqueados','Stripe y PayPal no operan en todas partes. Tu API es global — tu procesador no debería decidir quién accede.']],
+    problemFooter: 'l402-kit usa el estándar HTTP 402 + Bitcoin Lightning para eliminar los cuatro problemas a la vez — sin cuentas, sin mínimos, sin chargebacks, sin fronteras.'
   },
   fr: {
     nav: ['Extension','Tableau de bord'],
@@ -1293,7 +1314,14 @@ const T = {
     faqTitle: 'Questions fréquentes',
     faq: [['Mes utilisateurs ont-ils besoin d\'un wallet Lightning ?','Oui — ils ont besoin d\'un wallet Lightning pour payer. Des apps comme Strike, Cash App, Blink et Phoenix se configurent en moins de 60 secondes.'],['Que se passe-t-il si le réseau Lightning tombe ?','Lightning est un réseau décentralisé avec une disponibilité proche de 100%. Si votre fournisseur tombe, changez-en en une ligne de code.'],['Est-ce prêt pour la production ?','Oui. Preuve cryptographique (SHA256), protection anti-replay et journalisation Supabase sont intégrés.'],['Comment fonctionnent les frais de 0.3% ?','En mode géré, une commission de 0.3% est déduite automatiquement. En self-host, pas de frais.'],['Puis-je l\'utiliser sans Blink ?','Oui. OpenNode, LNbits ou tout fournisseur implémentant l\'interface LightningProvider.']],
     waitlistTitle: 'Restez informé', waitlistSub: 'Soyez notifié des sorties majeures, nouveaux fournisseurs et correctifs de sécurité.', waitlistBtn: 'Me notifier ⚡',
-    ctaTitle: 'Démarrez en 2 minutes', ctaDesc: 'Sans compte. Sans carte. Juste Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/fr/introduction">lisez les docs &rarr;</a>'
+    ctaTitle: 'Démarrez en 2 minutes', ctaDesc: 'Sans compte. Sans carte. Juste Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/fr/introduction">lisez les docs &rarr;</a>',
+    hoodTitle: 'Sous le capot',
+    hoodSub: 'L402 est construit sur HTTP 402 — un code de statut réservé depuis 1996 pour "Paiement Requis". Voici chaque étape en détail.',
+    hoodSteps: [['Étape 1 — Requête (sans token)','Le client appelle votre API normalement'],['Étape 2 — 402 Paiement Requis','Le serveur renvoie une facture Lightning — aucun paiement prélevé encore'],['Étape 3 — Paiement Lightning','Le client paie la facture → Lightning Network renvoie une preimage (preuve de paiement)'],['Étape 4 — Nouvelle tentative avec preuve','Le client joint token + preimage dans le header Authorization'],['Étape 5 — Vérification locale (<1ms, sans DB)','Le serveur vérifie une équation. Aucun appel réseau, aucune base de données — cryptographie pure.']],
+    problemTitle: 'Pourquoi les cartes échouent pour les APIs',
+    problemSub: 'Stripe a été conçu pour des humains achetant des produits. Les APIs facturent par appel — et ça brise tout.',
+    problemCards: [['Frais minimum de 0,30$','Un appel API à 1 centime coûte 0,30$ en frais de carte. Vous perdez de l\'argent sur chaque requête sous ce seuil.'],['Les agents IA n\'ont pas de carte','Les agents autonomes n\'ont ni adresse de facturation, ni CVV, ni humain pour cliquer "confirmer". Le paiement échoue.'],['Les APIs ne peuvent pas être "retournées"','Vous avez déjà livré les données. Un chargeback permet au client de les prendre gratuitement — et vous payez les frais.'],['Plus de 50 pays bloqués','Stripe et PayPal ne fonctionnent pas partout. Votre API est mondiale — votre processeur ne devrait pas décider qui y accède.']],
+    problemFooter: 'l402-kit utilise le standard HTTP 402 + Bitcoin Lightning pour éliminer les quatre problèmes en une seule fois — sans comptes, sans minimums, sans chargebacks, sans frontières.'
   },
   de: {
     nav: ['Erweiterung','Dashboard'],
@@ -1311,7 +1339,14 @@ const T = {
     faqTitle: 'Häufige Fragen',
     faq: [['Brauchen meine Nutzer ein Lightning-Wallet?','Ja — sie brauchen ein Lightning-Wallet zum Bezahlen. Apps wie Strike, Cash App, Blink und Phoenix sind in unter 60 Sekunden eingerichtet.'],['Was passiert, wenn das Lightning-Netzwerk ausfällt?','Lightning ist ein dezentrales Netzwerk mit nahezu 100% Verfügbarkeit. Wenn dein Provider ausfällt, wechselst du in einer Zeile Code.'],['Ist das produktionsreif?','Ja. Kryptografischer Beweis (SHA256), Replay-Schutz und Supabase-Zahlungsprotokoll sind eingebaut.'],['Wie funktioniert die 0.3%-Gebühr?','Im verwalteten Modus wird automatisch 0.3% abgezogen. Im Self-Host-Modus gibt es keine Gebühr.'],['Kann ich es ohne Blink verwenden?','Ja. OpenNode, LNbits oder jeder Provider, der LightningProvider implementiert.']],
     waitlistTitle: 'Bleib informiert', waitlistSub: 'Werde über wichtige Releases, neue Provider und Sicherheits-Patches benachrichtigt.', waitlistBtn: 'Benachrichtige mich ⚡',
-    ctaTitle: 'In 2 Minuten starten', ctaDesc: 'Kein Konto. Keine Karte. Nur Bitcoin.', ctaDocs: 'oder <a href="https://l402kit.vercel.app/docs/de/introduction">Docs lesen &rarr;</a>'
+    ctaTitle: 'In 2 Minuten starten', ctaDesc: 'Kein Konto. Keine Karte. Nur Bitcoin.', ctaDocs: 'oder <a href="https://l402kit.vercel.app/docs/de/introduction">Docs lesen &rarr;</a>',
+    hoodTitle: 'Unter der Haube',
+    hoodSub: 'L402 basiert auf HTTP 402 — einem seit 1996 reservierten Statuscode für "Zahlung erforderlich". Hier ist jeder Schritt im Detail.',
+    hoodSteps: [['Schritt 1 — Anfrage (kein Token)','Client ruft deine API normal auf'],['Schritt 2 — 402 Zahlung erforderlich','Server gibt eine Lightning-Rechnung zurück — noch keine Zahlung'],['Schritt 3 — Lightning-Zahlung','Client bezahlt die Rechnung → Lightning Network gibt ein Preimage zurück (Zahlungsnachweis)'],['Schritt 4 — Wiederholung mit Nachweis','Client fügt Token + Preimage im Authorization-Header hinzu'],['Schritt 5 — Lokale Verifizierung (<1ms, keine DB)','Server prüft eine Gleichung. Kein Netzwerkaufruf, keine Datenbank — reine Kryptographie.']],
+    problemTitle: 'Warum Karten für APIs versagen',
+    problemSub: 'Stripe wurde für Menschen entwickelt, die Produkte kaufen. APIs berechnen pro Aufruf — und das bricht alles.',
+    problemCards: [['Mindestgebühr von 0,30$','Ein 1-Cent-API-Aufruf kostet 0,30$ an Kartengebühren. Du verlierst bei jeder Anfrage darunter Geld.'],['KI-Agenten haben keine Karten','Autonome Agenten haben keine Rechnungsadresse, kein CVV und keinen Menschen, der auf "Bestätigen" klickt. Zahlung schlägt fehl.'],['APIs können nicht "zurückgegeben" werden','Du hast die Daten bereits geliefert. Ein Chargeback erlaubt dem Aufrufer, sie gratis zu nehmen — und du zahlst die Gebühr.'],['50+ Länder gesperrt','Stripe und PayPal operieren nicht überall. Deine API ist global — dein Zahlungsanbieter sollte nicht entscheiden, wer Zugang hat.']],
+    problemFooter: 'l402-kit nutzt den HTTP 402-Standard + Bitcoin Lightning, um alle vier Probleme auf einmal zu lösen — keine Konten, keine Mindestbeträge, keine Chargebacks, keine Grenzen.'
   },
   it: {
     nav: ['Estensione','Dashboard'],
@@ -1329,7 +1364,14 @@ const T = {
     faqTitle: 'Domande frequenti',
     faq: [['I miei utenti hanno bisogno di un wallet Lightning?','Sì — hanno bisogno di un wallet Lightning per pagare. App come Strike, Cash App, Blink e Phoenix si configurano in meno di 60 secondi.'],['Cosa succede se la rete Lightning è giù?','Lightning è una rete decentralizzata con disponibilità vicina al 100%. Se il tuo provider ha un downtime, cambi in una riga di codice.'],['È pronto per la produzione?','Sì. Prova crittografica (SHA256), protezione anti-replay e logging Supabase sono integrati.'],['Come funziona la commissione dello 0.3%?','In modalità gestita, lo 0.3% viene dedotto automaticamente. In self-host con il tuo nodo, non c\'è commissione.'],['Posso usarlo senza Blink?','Sì. OpenNode, LNbits o qualsiasi provider che implementi l\'interfaccia LightningProvider.']],
     waitlistTitle: 'Rimani aggiornato', waitlistSub: 'Ricevi notifiche su rilasci importanti, nuovi provider e patch di sicurezza.', waitlistBtn: 'Avvisami ⚡',
-    ctaTitle: 'Inizia in 2 minuti', ctaDesc: 'Senza account. Senza carta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/it/introduction">leggi i docs &rarr;</a>'
+    ctaTitle: 'Inizia in 2 minuti', ctaDesc: 'Senza account. Senza carta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/it/introduction">leggi i docs &rarr;</a>',
+    hoodTitle: 'Sotto il cofano',
+    hoodSub: 'L402 è costruito su HTTP 402 — un codice di stato riservato dal 1996 per "Pagamento Richiesto". Ecco ogni passaggio in dettaglio.',
+    hoodSteps: [['Passo 1 — Richiesta (senza token)','Il client chiama la tua API normalmente'],['Passo 2 — 402 Pagamento Richiesto','Il server restituisce una fattura Lightning — nessun pagamento ancora'],['Passo 3 — Pagamento Lightning','Il client paga la fattura → Lightning Network restituisce una preimage (prova di pagamento)'],['Passo 4 — Nuovo tentativo con prova','Il client allega token + preimage nell\'header Authorization'],['Passo 5 — Verifica locale (<1ms, senza DB)','Il server verifica un\'equazione. Nessuna chiamata di rete, nessun database — crittografia pura.']],
+    problemTitle: 'Perché le carte falliscono per le API',
+    problemSub: 'Stripe è stato progettato per persone che acquistano prodotti. Le API addebitano per chiamata — e questo rompe tutto.',
+    problemCards: [['Commissione minima di $0,30','Una chiamata da 1 centesimo costa $0,30 in commissioni di carta. Perdi soldi su ogni richiesta sotto questa soglia.'],['Gli agenti IA non hanno carte','Gli agenti autonomi non hanno indirizzo di fatturazione, CVV né umano che confermi. Il pagamento fallisce.'],['Le API non possono essere "restituite"','Hai già consegnato i dati. Un chargeback permette al chiamante di prenderli gratis — e tu paghi la commissione.'],['50+ paesi bloccati','Stripe e PayPal non operano ovunque. La tua API è globale — il tuo processore non dovrebbe decidere chi può accedere.']],
+    problemFooter: 'l402-kit usa lo standard HTTP 402 + Bitcoin Lightning per eliminare tutti e quattro i problemi in una volta — niente account, niente minimi, niente chargeback, niente confini.'
   },
   ja: {
     nav: ['拡張機能','ダッシュボード'],
@@ -1347,7 +1389,14 @@ const T = {
     faqTitle: 'よくある質問',
     faq: [['ユーザーはLightningウォレットが必要ですか？','はい。支払いにはLightningウォレットが必要です。Strike、Cash App、Blink、Phoenixなどは60秒以内に設定できます。'],['Lightningネットワークがダウンした場合は？','Lightningはほぼ100%の稼働時間を持つ分散型ネットワークです。プロバイダーに問題が生じても、1行のコードで切り替えられます。'],['本番環境で使用できますか？','はい。暗号学的証明(SHA256)、リプレイ攻撃防御、Supabaseによるログが組み込まれています。'],['0.3%手数料の仕組みは？','マネージドモードでは0.3%が自動的に差し引かれます。自己ホストの場合は手数料なし。'],['Blinkなしで使えますか？','はい。OpenNode、LNbits、またはLightningProviderインターフェースを実装する任意のプロバイダーが使えます。']],
     waitlistTitle: '最新情報を受け取る', waitlistSub: 'メジャーリリース、新プロバイダー、セキュリティパッチの通知を受け取ります。', waitlistBtn: '通知を受け取る ⚡',
-    ctaTitle: '2分で始める', ctaDesc: 'アカウント不要。クレジットカード不要。Bitcoinだけ。', ctaDocs: 'または <a href="https://l402kit.vercel.app/docs/ja/introduction">ドキュメントを読む &rarr;</a>'
+    ctaTitle: '2分で始める', ctaDesc: 'アカウント不要。クレジットカード不要。Bitcoinだけ。', ctaDocs: 'または <a href="https://l402kit.vercel.app/docs/ja/introduction">ドキュメントを読む &rarr;</a>',
+    hoodTitle: '技術的な仕組み',
+    hoodSub: 'L402はHTTP 402の上に構築されています — 1996年から「支払いが必要」のために予約されたステータスコード。全ステップを詳しく説明します。',
+    hoodSteps: [['ステップ1 — リクエスト（トークンなし）','クライアントがAPIを通常通り呼び出す'],['ステップ2 — 402 支払いが必要','サーバーがLightningインボイスを返す — まだ支払いは取られない'],['ステップ3 — Lightning支払い','クライアントがインボイスを支払う → Lightning NetworkがPreimage（支払い証明）を返す'],['ステップ4 — 証明付き再試行','クライアントがAuthorizationヘッダーにトークン + Preimageを添付して再送'],['ステップ5 — ローカル検証（<1ms、DBなし）','サーバーが1つの式を確認。ネットワーク呼び出しなし、DBなし — 純粋な暗号学。']],
+    problemTitle: 'クレジットカードがAPIに向かない理由',
+    problemSub: 'Stripeは製品を購入する人間向けに作られました。APIは呼び出しごとに課金します — それが全てを壊します。',
+    problemCards: [['最低手数料$0.30','1セントのAPI呼び出しにカード手数料$0.30がかかります。この閾値以下のリクエストは赤字です。'],['AIエージェントはカードを持てない','自律エージェントには請求先住所、CVV、確認する人間がいません。支払いが失敗します。'],['APIは「返品」できない','データはすでに提供済みです。チャージバックで呼び出し元が無料で取得できます — 手数料はあなたが払います。'],['50以上の国がブロック','StripeとPayPalは世界中で使えません。あなたのAPIはグローバル — 決済業者がアクセスを決めるべきではありません。']],
+    problemFooter: 'l402-kitはHTTP 402標準 + Bitcoin Lightningを使用して4つの問題を一度に解決します — アカウント不要、最低額なし、チャージバックなし、国境なし。'
   },
   ru: {
     nav: ['Расширение','Дашборд'],
@@ -1365,7 +1414,14 @@ const T = {
     faqTitle: 'Частые вопросы',
     faq: [['Нужен ли моим пользователям Lightning-кошелёк?','Да — им нужен Lightning-кошелёк для оплаты. Приложения Strike, Cash App, Blink, Phoenix настраиваются менее чем за 60 секунд.'],['Что будет, если сеть Lightning упадёт?','Lightning — децентрализованная сеть с почти 100% аптаймом. Смена провайдера — одна строка кода.'],['Готово ли к продакшену?','Да. Криптодоказательство (SHA256), защита от реплей-атак и лог Supabase — всё встроено.'],['Как работает комиссия 0.3%?','В managed-режиме 0.3% вычитается автоматически. В self-host нет никакой комиссии.'],['Можно ли без Blink?','Да. OpenNode, LNbits или любой провайдер, реализующий интерфейс LightningProvider.']],
     waitlistTitle: 'Будь в курсе', waitlistSub: 'Получай уведомления о крупных релизах, новых провайдерах и патчах безопасности.', waitlistBtn: 'Уведомить меня ⚡',
-    ctaTitle: 'Начни за 2 минуты', ctaDesc: 'Без аккаунта. Без карты. Только Bitcoin.', ctaDocs: 'или <a href="https://l402kit.vercel.app/docs/ru/introduction">читай документацию &rarr;</a>'
+    ctaTitle: 'Начни за 2 минуты', ctaDesc: 'Без аккаунта. Без карты. Только Bitcoin.', ctaDocs: 'или <a href="https://l402kit.vercel.app/docs/ru/introduction">читай документацию &rarr;</a>',
+    hoodTitle: 'Под капотом',
+    hoodSub: 'L402 построен на HTTP 402 — коде статуса, зарезервированном с 1996 года для «Требуется оплата». Вот каждый шаг в деталях.',
+    hoodSteps: [['Шаг 1 — Запрос (без токена)','Клиент обращается к вашему API как обычно'],['Шаг 2 — 402 Требуется оплата','Сервер возвращает Lightning-инвойс — деньги ещё не списаны'],['Шаг 3 — Оплата Lightning','Клиент оплачивает инвойс → Lightning Network возвращает preimage (доказательство оплаты)'],['Шаг 4 — Повторный запрос с доказательством','Клиент прикладывает токен + preimage в заголовке Authorization'],['Шаг 5 — Локальная верификация (<1мс, без БД)','Сервер проверяет одно уравнение. Без сетевых вызовов, без базы данных — чистая криптография.']],
+    problemTitle: 'Почему карты не работают для API',
+    problemSub: 'Stripe создан для людей, покупающих товары. API берут плату за каждый вызов — и это всё ломает.',
+    problemCards: [['Минимальная комиссия $0,30','Вызов API за 1 цент стоит $0,30 в карточных комиссиях. Вы теряете деньги на каждом запросе ниже этого порога.'],['ИИ-агенты не могут держать карты','Автономные агенты не имеют платёжного адреса, CVV и человека для нажатия «подтвердить». Оплата не проходит.'],['API нельзя «вернуть»','Данные уже доставлены. Чарджбек позволяет вызывающей стороне получить их бесплатно — а вы платите комиссию.'],['50+ стран заблокировано','Stripe и PayPal работают не везде. Ваш API глобален — провайдер платежей не должен решать, кто получит доступ.']],
+    problemFooter: 'l402-kit использует стандарт HTTP 402 + Bitcoin Lightning для устранения всех четырёх проблем сразу — без аккаунтов, без минимумов, без чарджбеков, без границ.'
   },
   zh: {
     nav: ['扩展','仪表盘'],
@@ -1383,7 +1439,14 @@ const T = {
     faqTitle: '常见问题',
     faq: [['我的用户需要 Lightning 钱包吗？','是的——他们需要 Lightning 钱包来付款。Strike、Cash App、Blink 和 Phoenix 等应用可在 60 秒内设置完成。'],['如果 Lightning 网络宕机怎么办？','Lightning 是一个去中心化网络，正常运行时间接近 100%。如果你的提供商宕机，一行代码即可切换。'],['这是否可用于生产环境？','是的。密码学证明（SHA256）、防重放保护和 Supabase 支付日志都已内置。'],['0.3% 手续费如何运作？','使用托管模式时，自动扣除 0.3% 路由费。自托管时，无任何费用。'],['可以不用 Blink 吗？','可以。OpenNode、LNbits 或任何实现 LightningProvider 接口的提供商都可以。']],
     waitlistTitle: '保持关注', waitlistSub: '获取重大版本发布、新提供商和安全补丁的通知。', waitlistBtn: '通知我 ⚡',
-    ctaTitle: '2分钟内开始', ctaDesc: '无需账户。无需信用卡。只需 Bitcoin。', ctaDocs: '或 <a href="https://l402kit.vercel.app/docs/zh/introduction">查看文档 &rarr;</a>'
+    ctaTitle: '2分钟内开始', ctaDesc: '无需账户。无需信用卡。只需 Bitcoin。', ctaDocs: '或 <a href="https://l402kit.vercel.app/docs/zh/introduction">查看文档 &rarr;</a>',
+    hoodTitle: '技术原理',
+    hoodSub: 'L402基于HTTP 402构建 — 这是自1996年起为"付款必须"保留的状态码。以下是每个步骤的完整说明。',
+    hoodSteps: [['步骤1 — 请求（无令牌）','客户端正常调用您的API'],['步骤2 — 402 需要付款','服务器返回Lightning发票 — 尚未收款'],['步骤3 — Lightning付款','客户端支付发票 → Lightning Network返回preimage（付款证明）'],['步骤4 — 携带证明重试','客户端在Authorization请求头中附加令牌 + preimage'],['步骤5 — 本地验证（<1ms，无数据库）','服务器验证一个等式。无网络调用，无数据库 — 纯密码学。']],
+    problemTitle: '为什么信用卡不适合API',
+    problemSub: 'Stripe是为人类购买商品而设计的。API按调用收费 — 这使一切都崩溃了。',
+    problemCards: [['最低$0.30手续费','一个1分钱的API调用需要$0.30的卡片手续费。低于该阈值的每个请求您都在亏钱。'],['AI智能体无法持有信用卡','自主智能体没有账单地址、CVV或人来点击"确认"。支付失败。'],['API无法"退货"','数据已经交付。退款允许调用方免费获取数据 — 而您支付手续费。'],['50+个国家被封锁','Stripe和PayPal并非在所有地方都可用。您的API是全球性的 — 支付处理商不应决定谁可以访问。']],
+    problemFooter: 'l402-kit使用HTTP 402标准 + Bitcoin Lightning一次性消除所有四个问题 — 无需账户、无最低金额、无退款、无边界。'
   },
   hi: {
     nav: ['एक्सटेंशन','डैशबोर्ड'],
@@ -1401,7 +1464,14 @@ const T = {
     faqTitle: 'सामान्य प्रश्न',
     faq: [['क्या मेरे उपयोगकर्ताओं को Lightning वॉलेट चाहिए?','हां — भुगतान के लिए Lightning वॉलेट की जरूरत है। Strike, Cash App, Blink, Phoenix 60 सेकंड में सेट हो जाते हैं।'],['अगर Lightning नेटवर्क डाउन हो तो?','Lightning एक विकेंद्रीकृत नेटवर्क है जिसमें लगभग 100% अपटाइम है। एक लाइन कोड से प्रदाता बदला जा सकता है।'],['क्या यह प्रोडक्शन के लिए तैयार है?','हां। SHA256 क्रिप्टोग्राफिक प्रमाण, रिप्ले सुरक्षा और Supabase लॉगिंग बिल्ट-इन हैं।'],['0.3% शुल्क कैसे काम करता है?','मैनेज्ड मोड में 0.3% स्वचालित रूप से काटा जाता है। सेल्फ-होस्ट में कोई शुल्क नहीं।'],['क्या मैं Blink के बिना इस्तेमाल कर सकता हूं?','हां। OpenNode, LNbits या कोई भी LightningProvider लागू करने वाला प्रदाता।']],
     waitlistTitle: 'अपडेट रहें', waitlistSub: 'प्रमुख रिलीज़, नए प्रदाताओं और सुरक्षा पैच की सूचना पाएं।', waitlistBtn: 'मुझे सूचित करें ⚡',
-    ctaTitle: '2 मिनट में शुरू करें', ctaDesc: 'कोई खाता नहीं। कोई कार्ड नहीं। सिर्फ Bitcoin।', ctaDocs: 'या <a href="https://l402kit.vercel.app/docs/hi/introduction">डॉक्स पढ़ें &rarr;</a>'
+    ctaTitle: '2 मिनट में शुरू करें', ctaDesc: 'कोई खाता नहीं। कोई कार्ड नहीं। सिर्फ Bitcoin।', ctaDocs: 'या <a href="https://l402kit.vercel.app/docs/hi/introduction">डॉक्स पढ़ें &rarr;</a>',
+    hoodTitle: 'तकनीकी विवरण',
+    hoodSub: 'L402, HTTP 402 पर बनाया गया है — 1996 से "Payment Required" के लिए आरक्षित एक स्टेटस कोड। यहाँ हर कदम विस्तार से है।',
+    hoodSteps: [['चरण 1 — अनुरोध (बिना टोकन)','Client सामान्य रूप से API को कॉल करता है'],['चरण 2 — 402 Payment Required','Server Lightning invoice वापस करता है — अभी पैसे नहीं लिए गए'],['चरण 3 — Lightning भुगतान','Client invoice का भुगतान करता है → Lightning Network preimage (भुगतान का प्रमाण) वापस करता है'],['चरण 4 — प्रमाण के साथ पुनः प्रयास','Client Authorization header में token + preimage भेजता है'],['चरण 5 — स्थानीय सत्यापन (<1ms, कोई DB नहीं)','Server एक समीकरण की जाँच करता है। कोई नेटवर्क कॉल नहीं, कोई database नहीं — शुद्ध क्रिप्टोग्राफी।']],
+    problemTitle: 'क्रेडिट कार्ड API के लिए क्यों काम नहीं करते',
+    problemSub: 'Stripe को उन लोगों के लिए बनाया गया था जो उत्पाद खरीदते हैं। API प्रति-कॉल चार्ज करती है — और यह सब कुछ तोड़ देता है।',
+    problemCards: [['$0.30 न्यूनतम शुल्क','1 सेंट की API कॉल पर $0.30 की कार्ड फीस लगती है। इस सीमा से नीचे हर अनुरोध पर आप घाटे में रहते हैं।'],['AI एजेंट कार्ड नहीं रख सकते','स्वायत्त एजेंटों के पास billing address, CVV या confirm करने वाला इंसान नहीं होता। भुगतान विफल हो जाता है।'],['API को "वापस" नहीं किया जा सकता','आपने data पहले ही दे दिया है। Chargeback से caller इसे मुफ्त में ले सकता है — और आप शुल्क भरते हैं।'],['50+ देश अवरुद्ध','Stripe और PayPal हर जगह काम नहीं करते। आपकी API global है — payment processor को नहीं तय करना चाहिए कि कौन access करे।']],
+    problemFooter: 'l402-kit HTTP 402 मानक + Bitcoin Lightning का उपयोग करके एक साथ चारों समस्याओं को समाप्त करता है — कोई account नहीं, कोई न्यूनतम राशि नहीं, कोई chargeback नहीं, कोई सीमा नहीं।'
   },
   ar: {
     nav: ['الإضافة','لوحة التحكم'],
@@ -1419,7 +1489,14 @@ const T = {
     faqTitle: 'أسئلة شائعة',
     faq: [['هل يحتاج مستخدمي محفظة Lightning؟','نعم — يحتاجون محفظة Lightning للدفع. تطبيقات مثل Strike وCash App وBlink وPhoenix تُعدّ في أقل من 60 ثانية.'],['ماذا يحدث إذا توقفت شبكة Lightning؟','Lightning شبكة لامركزية بوقت تشغيل يقارب 100%. إذا تعطل مزودك، يمكنك التبديل بسطر كود واحد.'],['هل هو جاهز للإنتاج؟','نعم. الإثبات التشفيري (SHA256)، الحماية من إعادة التشغيل، وتسجيل Supabase مدمجة.'],['كيف تعمل رسوم 0.3%؟','في الوضع المُدار، يُخصم 0.3% تلقائياً. في التثبيت الذاتي، لا توجد رسوم.'],['هل يمكن الاستخدام بدون Blink؟','نعم. OpenNode وLNbits أو أي مزود ينفذ واجهة LightningProvider.']],
     waitlistTitle: 'ابقَ على اطلاع', waitlistSub: 'احصل على إشعارات حول الإصدارات الكبرى، المزودين الجدد، وتصحيحات الأمان.', waitlistBtn: 'أخبرني ⚡',
-    ctaTitle: 'ابدأ في دقيقتين', ctaDesc: 'بدون حساب. بدون بطاقة. فقط Bitcoin.', ctaDocs: 'أو <a href="https://l402kit.vercel.app/docs/ar/introduction">اقرأ التوثيق &rarr;</a>'
+    ctaTitle: 'ابدأ في دقيقتين', ctaDesc: 'بدون حساب. بدون بطاقة. فقط Bitcoin.', ctaDocs: 'أو <a href="https://l402kit.vercel.app/docs/ar/introduction">اقرأ التوثيق &rarr;</a>',
+    hoodTitle: 'تحت الغطاء',
+    hoodSub: 'يُبنى L402 على HTTP 402 — رمز حالة محجوز منذ عام 1996 لـ "الدفع مطلوب". إليك كل خطوة بالتفصيل.',
+    hoodSteps: [['الخطوة 1 — الطلب (بدون رمز)','يستدعي العميل API الخاص بك بشكل طبيعي'],['الخطوة 2 — 402 الدفع مطلوب','يُرجع الخادم فاتورة Lightning — لم يُؤخذ أي دفع بعد'],['الخطوة 3 — دفع Lightning','يدفع العميل الفاتورة → تُرجع شبكة Lightning preimage (إثبات الدفع)'],['الخطوة 4 — إعادة المحاولة مع الإثبات','يرفق العميل رمز + preimage في رأس Authorization'],['الخطوة 5 — التحقق المحلي (<1ms، بدون DB)','يتحقق الخادم من معادلة واحدة. بدون استدعاء شبكة، بدون قاعدة بيانات — تشفير خالص.']],
+    problemTitle: 'لماذا تفشل بطاقات الائتمان في APIs',
+    problemSub: 'صُمم Stripe للبشر الذين يشترون المنتجات. تفرض APIs رسوماً لكل استدعاء — وهذا يكسر كل شيء.',
+    problemCards: [['رسوم أدنى $0.30','تكلف مكالمة API بقيمة 1 سنت $0.30 في رسوم البطاقة. تخسر المال في كل طلب دون هذا الحد.'],['وكلاء الذكاء الاصطناعي لا يملكون بطاقات','لا تملك الوكلاء المستقلون عنوان فوترة، ولا CVV، ولا إنساناً للنقر على "تأكيد". يفشل الدفع.'],['لا يمكن "إعادة" APIs','لقد سلّمت البيانات بالفعل. يتيح الاسترداد للمتصل أخذها مجاناً — وأنت تدفع الرسوم.'],['أكثر من 50 دولة محظورة','Stripe وPayPal لا يعملان في كل مكان. API الخاص بك عالمي — لا يجب أن يقرر معالج الدفع من يصل إليه.']],
+    problemFooter: 'يستخدم l402-kit معيار HTTP 402 + Bitcoin Lightning للقضاء على المشكلات الأربع دفعة واحدة — بدون حسابات، بدون حدود دنيا، بدون استردادات، بدون حدود.'
   }
 };
 
@@ -1437,6 +1514,32 @@ function applyFullPageCopy(lang) {
     const lbl = item.querySelector('.stat-label');
     if (lbl && d.stats[i]) lbl.textContent = d.stats[i];
   });
+
+  // Under the hood
+  const hoodH2 = document.querySelector('.hood h2');
+  const hoodSubEl = document.querySelector('.hood .hood-sub');
+  if (hoodH2) hoodH2.textContent = d.hoodTitle;
+  if (hoodSubEl) hoodSubEl.textContent = d.hoodSub;
+  document.querySelectorAll('.hood-row').forEach((row, i) => {
+    if (!d.hoodSteps || !d.hoodSteps[i]) return;
+    const lbl = row.querySelector('.hood-box-label'), tit = row.querySelector('.hood-box-title');
+    if (lbl) lbl.textContent = d.hoodSteps[i][0];
+    if (tit) tit.textContent = d.hoodSteps[i][1];
+  });
+
+  // Problem section
+  const probH2 = document.querySelector('.problem h2');
+  const probSub = document.querySelector('.problem .problem-sub');
+  const probFooter = document.querySelector('.problem .problem-footer');
+  if (probH2) probH2.textContent = d.problemTitle;
+  if (probSub) probSub.textContent = d.problemSub;
+  document.querySelectorAll('.problem-card').forEach((card, i) => {
+    if (!d.problemCards || !d.problemCards[i]) return;
+    const tit = card.querySelector('.pc-title'), desc = card.querySelector('.pc-desc');
+    if (tit) tit.textContent = d.problemCards[i][0];
+    if (desc) desc.textContent = d.problemCards[i][1];
+  });
+  if (probFooter) probFooter.textContent = d.problemFooter;
 
   // Flow section
   const flowH2 = document.querySelector('.flow h2');
