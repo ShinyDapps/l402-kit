@@ -2,11 +2,15 @@ import * as vscode from "vscode";
 
 const SD_SUPABASE_URL = "https://urcqtpklpfyvizcgcsia.supabase.co";
 const SD_SUPABASE_KEY = "sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-";
+const CMD_OPEN_CONFIGURE = "openConfigure";
+const CMD_DOWNLOAD_CSV = "downloadCsv";
+const MONTHLY_FEE_USD = 9;
 
 let statusBar: vscode.StatusBarItem;
 let pollInterval: ReturnType<typeof setInterval> | undefined;
 let sidebarProvider: PaymentsDashboardProvider | undefined;
 let activePanel: vscode.WebviewPanel | undefined;
+let csvDownloadPending = false;
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N: Record<string, Record<string, string>> = {
@@ -144,6 +148,15 @@ const I18N: Record<string, Record<string, string>> = {
   },
 };
 
+// ── Shared webview message handler ───────────────────────────────────────────
+function handleWebviewMessage(msg: { command: string; data?: string }) {
+  if (msg.command === CMD_OPEN_CONFIGURE) {
+    vscode.commands.executeCommand("shinydapps.configure");
+  } else if (msg.command === CMD_DOWNLOAD_CSV) {
+    handleCsvDownload(msg.data as string);
+  }
+}
+
 // ── Provider ──────────────────────────────────────────────────────────────────
 class PaymentsDashboardProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -153,13 +166,7 @@ class PaymentsDashboardProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = getDashboardHtml();
-    webviewView.webview.onDidReceiveMessage(msg => {
-      if (msg.command === "openConfigure") {
-        vscode.commands.executeCommand("shinydapps.configure");
-      } else if (msg.command === "downloadCsv") {
-        handleCsvDownload(msg.data as string);
-      }
-    });
+    webviewView.webview.onDidReceiveMessage(handleWebviewMessage);
   }
 
   refresh() {
@@ -189,13 +196,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.ViewColumn.One, { enableScripts: true }
       );
       activePanel.webview.html = getDashboardHtml();
-      activePanel.webview.onDidReceiveMessage(msg => {
-        if (msg.command === "openConfigure") {
-          vscode.commands.executeCommand("shinydapps.configure");
-        } else if (msg.command === "downloadCsv") {
-          handleCsvDownload(msg.data as string);
-        }
-      });
+      activePanel.webview.onDidReceiveMessage(handleWebviewMessage);
       activePanel.onDidDispose(() => { activePanel = undefined; });
     })
   );
@@ -252,13 +253,19 @@ function startPolling() {
 
 // ── CSV download ──────────────────────────────────────────────────────────────
 async function handleCsvDownload(csvData: string) {
-  const uri = await vscode.window.showSaveDialog({
-    defaultUri: vscode.Uri.file("payments.csv"),
-    filters: { "CSV": ["csv"] },
-  });
-  if (!uri) return;
-  await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(csvData));
-  vscode.window.showInformationMessage(`⚡ Payments exported to ${uri.fsPath}`);
+  if (csvDownloadPending) return;
+  csvDownloadPending = true;
+  try {
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.file("payments.csv"),
+      filters: { "CSV": ["csv"] },
+    });
+    if (!uri) return;
+    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(csvData));
+    vscode.window.showInformationMessage(`⚡ Payments exported to ${uri.fsPath}`);
+  } finally {
+    csvDownloadPending = false;
+  }
 }
 
 // ── Webview HTML ──────────────────────────────────────────────────────────────
@@ -603,7 +610,7 @@ function renderContent(rows) {
   // pro banner
   if (!isPro) {
     html += '<div class="pro-banner">';
-    const proSats = btcPrice > 0 ? Math.ceil(9 / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
+    const proSats = btcPrice > 0 ? Math.ceil(${MONTHLY_FEE_USD} / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
     html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
     html += '<div class="pro-features">Full history · CSV export · Pay in Bitcoin · Cancel anytime</div>';
     html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">Upgrade with Bitcoin →</a>';
