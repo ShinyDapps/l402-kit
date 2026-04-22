@@ -9,16 +9,9 @@
 
 **Add Bitcoin Lightning pay-per-call to any API. 3 lines of code.**
 
-[![npm version](https://img.shields.io/npm/v/l402-kit?color=f7931a&label=npm)](https://npmjs.com/package/l402-kit)
-[![npm downloads](https://img.shields.io/npm/dw/l402-kit?color=f7931a&label=npm%20dls%2Fwk)](https://npmjs.com/package/l402-kit)
-[![PyPI version](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=pypi)](https://pypi.org/project/l402kit)
-[![PyPI downloads](https://img.shields.io/pypi/dm/l402kit?color=3776ab&label=pypi%20dls%2Fmo)](https://pypi.org/project/l402kit)
-[![crates.io version](https://img.shields.io/crates/v/l402kit?color=ce422b&label=crates.io)](https://crates.io/crates/l402kit)
-[![crates.io downloads](https://img.shields.io/crates/d/l402kit?color=ce422b&label=crates%20dls)](https://crates.io/crates/l402kit)
-[![VS Code](https://vsmarketplacebadges.dev/version-short/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
-[![VS Code installs](https://vsmarketplacebadges.dev/installs-short/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.vercel.app/demo)
+[![139 tests](https://img.shields.io/badge/tests-139_passing-22c55e)](https://github.com/ShinyDapps/l402-kit)
 
 <br/>
 
@@ -32,7 +25,19 @@
 
 <br/>
 
-> ⚡ **1,200+ npm downloads/week** · 4 languages · 4 SDKs · 139 tests · AI-agent native · MIT
+---
+
+### Live traction
+
+| SDK | Version | Downloads |
+|:----|:-------:|----------:|
+| 📦 **TypeScript** · [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) | [![npm](https://img.shields.io/npm/v/l402-kit?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm dls/wk](https://img.shields.io/npm/dw/l402-kit?color=f7931a&label=dls%2Fwk)](https://npmjs.com/package/l402-kit) |
+| 🐍 **Python** · [pypi.org/project/l402kit](https://pypi.org/project/l402kit) | [![pypi](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi dls/mo](https://img.shields.io/pypi/dm/l402kit?color=3776ab&label=dls%2Fmo)](https://pypi.org/project/l402kit) |
+| 🦀 **Rust** · [crates.io/crates/l402kit](https://crates.io/crates/l402kit) | [![crates](https://img.shields.io/crates/v/l402kit?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit?color=ce422b&label=total%20dls)](https://crates.io/crates/l402kit) |
+| 🔌 **VS Code Extension** · [marketplace](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) | [![vscode ver](https://vsmarketplacebadges.dev/version-short/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) | [![vscode installs](https://vsmarketplacebadges.dev/installs-short/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) |
+| 🦫 **Go** · [pkg.go.dev](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go](https://img.shields.io/badge/go-v1.0.1-00acd7)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go report](https://img.shields.io/badge/go%20report-A+-00acd7)](https://goreportcard.com/report/github.com/shinydapps/l402-kit/go) |
+
+---
 
 </div>
 

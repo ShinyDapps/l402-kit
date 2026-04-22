@@ -13,9 +13,9 @@
 
 ## English
 
-**Monitor your Bitcoin Lightning API earnings in real-time — right inside VS Code.**
+**Watch your sats roll in — without leaving VS Code.**
 
-This extension is part of the **l402-kit** ecosystem — the simplest way to add Bitcoin Lightning pay-per-call to any API.
+Real-time Bitcoin Lightning payment dashboard built for developers using [l402-kit](https://npmjs.com/package/l402-kit). Every payment your API receives appears instantly: endpoint hit, amount in sats, USD value, and a live chart.
 
 ![ShinyDapps Lightning Payments — VS Code sidebar showing sats counter, chart and payment history](./docs/screenshot.png)
 
@@ -23,433 +23,707 @@ This extension is part of the **l402-kit** ecosystem — the simplest way to add
 
 ⚡ **Live sats counter** in the status bar — updates every 30 seconds
 
-📊 **Payment sidebar** with real-time chart — click the ⚡ icon in the activity bar
+📊 **Payment sidebar** with real-time bar chart — click the ⚡ icon in the activity bar
 
-🌍 **Multilingual panel** — switch between 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵 🇫🇷 🇩🇪 🇷🇺 🇮🇳 🇸🇦 🇮🇹 inside the sidebar
+📋 **Full payment history** — endpoint, amount, timestamp, USD value
 
-🎨 **Light / Dark / Auto theme** — selector built into the panel
+🌍 **11 languages built-in** — switch inside the sidebar: 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵 🇫🇷 🇩🇪 🇷🇺 🇮🇳 🇸🇦 🇮🇹
 
-📈 **7-day bar chart** — see your sats per day at a glance
+🎨 **Light / Dark / Auto theme** — follows your VS Code theme or set manually
 
-🔐 **Cryptographic verification** — SHA256 proof of payment, no chargebacks
+📈 **Chart ranges** — 1D / 7D (free) · 30D / 1Y / ALL (Pro)
 
-🤖 **AI agent native** — machines paying machines, no human needed
+🤖 **AI-agent native** — works with any l402-kit powered API: TypeScript, Python, Go, Rust
 
 ### How to use
 
-**1. Add l402-kit to your API**
+**Step 1 — Add l402-kit to your API**
+
+Pick your language and add pay-per-call in 3 lines:
 
 ```bash
-npm install l402-kit        # TypeScript / Node.js
-pip install l402kit         # Python
+npm install l402-kit      # TypeScript / Node.js / Express
+pip install l402kit       # Python / FastAPI / Flask
+go get github.com/shinydapps/l402-kit/go@v1.0.1   # Go
+cargo add l402kit         # Rust / axum
 ```
 
-**2. Configure the extension**
+Use your Lightning address as the owner:
 
-Open Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+```typescript
+// TypeScript example
+app.get("/premium", l402({
+  priceSats: 100,
+  ownerLightningAddress: "you@blink.sv",  // ← your Lightning address here
+}), handler);
+```
 
-Enter your Lightning Address (e.g. `you@blink.sv`) and press Enter. Done.
+**Step 2 — Install this extension and configure it**
 
-**Or set all three values in VS Code Settings (`Ctrl+,` → search "shinydapps"):**
+Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
 
-| Setting | What to put |
-|---|---|
-| `shinydapps.lightningAddress` | Your Lightning address, e.g. `you@blink.sv` |
-| `shinydapps.supabaseUrl` | Your Supabase project URL — found at supabase.com → Project → Settings → API |
-| `shinydapps.supabaseKey` | Your Supabase **anon** key — same page, under "Project API keys" |
+Enter the **same Lightning address** you used in your API (e.g. `you@blink.sv`).  
+That's it — the extension connects automatically.
 
-> **Getting Supabase keys:** Go to [supabase.com](https://supabase.com) → open your project → Settings → API → copy the **Project URL** and the **anon public** key.
+> **No Lightning address yet?** Get one free at [dashboard.blink.sv](https://dashboard.blink.sv) — no credit card, instant setup. Your address: `yourname@blink.sv`
 
-**3. Watch the sats come in**
+**Step 3 — Watch your payments arrive**
 
-The **⚡ sidebar icon** shows your payment chart and history. The **status bar** shows total sats received.
+Click the ⚡ icon in the activity bar. The sidebar shows:
+- Total sats received
+- Payment history per endpoint
+- Live bar chart (day by day)
+- Status bar counter in the bottom left
+
+### How it works
+
+```
+Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning invoice
+                                                  │
+                      Client pays (any Lightning wallet, <1 second)
+                                                  │
+                      ShinyDapps backend verifies payment
+                                 │
+                    99.7% → your Lightning Address
+                     0.3% → ShinyDapps (fee)
+                                 │
+                    Payment logged to database
+                                 │
+                    This extension reads here ◄── YOU ARE HERE
+                    (polls every 30 seconds)
+```
 
 ### vs. the competition
 
-| | Stripe | PayPal | **l402-kit** |
-|---|---|---|---|
-| Minimum fee | $0.30 | $0.30 | **< 1 sat (~$0.00003)** |
+|  | Stripe | PayPal | **l402-kit** |
+|--|--------|--------|--------------|
+| Minimum fee | $0.30 | $0.30 | **< 1 sat (~$0.0003)** |
 | Settlement | 2–7 days | 1–3 days | **< 1 second** |
 | Chargebacks | Yes | Yes | **Impossible** |
-| AI agent support | No | No | **Yes** |
-| Countries blocked | ~50 | ~30 | **0** |
+| AI agent support | No | No | **Yes — native** |
+| Countries blocked | ~50 | ~30 | **0 — global** |
 | Setup time | Hours | Hours | **3 lines of code** |
-| VS Code monitor | No | No | **Yes — this extension** |
+| VS Code monitor | No | No | **✓ This extension** |
 
-### The full ecosystem
+### Links
 
-```
-l402-kit (npm + PyPI)     ← add to your API
-    │
-    ├── TypeScript / Express
-    ├── Python / FastAPI / Flask
-    │
-    └── ShinyDapps backend
-            │
-            ├── Creates Lightning invoices
-            ├── Sends 99.7% to your Lightning Address
-            ├── Keeps 0.3% fee
-            └── Logs to Supabase
-                    │
-                    └── This VS Code extension reads here ← YOU ARE HERE
-```
+[📖 Docs](https://l402kit.vercel.app/docs) · [▶ Live demo](https://l402kit.vercel.app/demo) · [npm](https://npmjs.com/package/l402-kit) · [PyPI](https://pypi.org/project/l402kit) · [GitHub](https://github.com/ShinyDapps/l402-kit)
 
 ---
 
 ## Português
 
-**Monitore seus ganhos em Bitcoin Lightning em tempo real — dentro do VS Code.**
+**Veja os sats chegando — sem sair do VS Code.**
 
-Esta extensão faz parte do ecossistema **l402-kit** — a forma mais simples de adicionar pagamentos Bitcoin Lightning por chamada de API.
+Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usando [l402-kit](https://npmjs.com/package/l402-kit).
 
 ### Funcionalidades
 
-⚡ **Contador de sats ao vivo** na barra de status — atualiza a cada 30 segundos
+⚡ **Contador de sats ao vivo** na barra de status
 
-📊 **Painel lateral com gráfico** — clique no ícone ⚡ na barra de atividades
+📊 **Painel lateral** com gráfico de barras em tempo real
 
-🌍 **Painel multilíngue** — troque entre 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵 dentro da barra lateral
+📋 **Histórico completo** — endpoint, valor, timestamp, valor em USD
 
-🎨 **Tema Claro / Escuro / Auto** — seletor embutido no painel
+🌍 **11 idiomas embutidos** — troque dentro da barra lateral
 
-📈 **Gráfico de barras 7 dias** — veja seus sats por dia de relance
+🎨 **Tema Claro / Escuro / Auto**
 
-🔐 **Verificação criptográfica** — prova de pagamento SHA256, sem chargebacks
-
-🤖 **Nativo para agentes de IA** — máquinas pagando máquinas, sem humano no meio
+📈 **Intervalos de gráfico** — 1D / 7D (grátis) · 30D / 1Y / ALL (Pro)
 
 ### Como usar
 
-**1. Adicione l402-kit à sua API**
+**Passo 1 — Adicione l402-kit à sua API**
 
 ```bash
-npm install l402-kit        # TypeScript / Node.js
-pip install l402kit         # Python
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-**2. Configure a extensão**
+Use seu Lightning address como `ownerLightningAddress` na configuração.
 
-Abra o Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+**Passo 2 — Configure a extensão**
 
-Digite seu Lightning Address (ex: `voce@blink.sv`) e pressione Enter.
+Abra o Command Palette (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
 
-**Ou configure manualmente nas Configurações do VS Code (`Ctrl+,` → pesquise "shinydapps"):**
+Digite o **mesmo Lightning address** que você usou na sua API (ex: `voce@blink.sv`).
 
-| Configuração | O que colocar |
-|---|---|
-| `shinydapps.lightningAddress` | Seu endereço Lightning, ex: `voce@blink.sv` |
-| `shinydapps.supabaseUrl` | URL do projeto Supabase — em supabase.com → Projeto → Settings → API |
-| `shinydapps.supabaseKey` | Chave **anon** do Supabase — mesma página, em "Project API keys" |
+> **Não tem Lightning address?** Crie grátis em [dashboard.blink.sv](https://dashboard.blink.sv) — sem cartão, instantâneo.
 
-> **Obtendo as chaves Supabase:** Acesse [supabase.com](https://supabase.com) → abra seu projeto → Settings → API → copie a **Project URL** e a chave **anon public**.
+**Passo 3 — Veja os pagamentos chegarem**
 
-**3. Veja os sats chegando**
+Clique no ícone ⚡ na barra de atividades. O painel mostra sats recebidos, histórico por endpoint e gráfico ao vivo.
 
-O **ícone ⚡ na barra lateral** mostra seu gráfico e histórico de pagamentos.
+### Como funciona
 
-### vs. a concorrência
+```
+Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
+                                  │
+                    Cliente paga (< 1 segundo)
+                                  │
+                    Backend verifica o pagamento
+                         │
+                99,7% → seu Lightning Address
+                 0,3% → ShinyDapps (taxa)
+                         │
+                Pagamento registrado no banco
+                         │
+                Esta extensão lê aqui ◄── VOCÊ ESTÁ AQUI
+```
 
-| | Stripe | PayPal | **l402-kit** |
-|---|---|---|---|
-| Taxa mínima | $0,30 | $0,30 | **< 1 sat (~$0,00003)** |
-| Liquidação | 2–7 dias | 1–3 dias | **< 1 segundo** |
-| Chargebacks | Sim | Sim | **Impossível** |
-| Suporte a agentes IA | Não | Não | **Sim** |
-| Países bloqueados | ~50 | ~30 | **0** |
-| Tempo de setup | Horas | Horas | **3 linhas de código** |
+### Links
+
+[📖 Docs PT](https://l402kit.vercel.app/docs/pt/introduction) · [▶ Demo](https://l402kit.vercel.app/demo) · [npm](https://npmjs.com/package/l402-kit)
 
 ---
 
 ## Español
 
-**Monitorea tus ganancias en Bitcoin Lightning en tiempo real — dentro de VS Code.**
+**Mira cómo llegan tus sats — sin salir de VS Code.**
 
 ### Características
 
 ⚡ **Contador de sats en vivo** en la barra de estado
 
-📊 **Panel lateral con gráfico** — haz clic en el icono ⚡
+📊 **Panel lateral** con gráfico de barras en tiempo real
 
-🌍 **Panel multilingüe** — cambia entre 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵
+📋 **Historial completo** — endpoint, monto, timestamp, valor USD
+
+🌍 **11 idiomas integrados**
 
 🎨 **Tema Claro / Oscuro / Auto**
 
-📈 **Gráfico de barras 7 días**
-
-🔐 **Verificación criptográfica** — SHA256, sin contracargos
-
-🤖 **Nativo para agentes IA**
+📈 **Rangos de gráfico** — 1D / 7D (gratis) · 30D / 1Y / ALL (Pro)
 
 ### Cómo usar
 
+**Paso 1 — Agrega l402-kit a tu API**
+
 ```bash
-npm install l402-kit        # TypeScript
-pip install l402kit         # Python
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-Abre Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+Usa tu Lightning address como `ownerLightningAddress` en la configuración.
 
-**O configura manualmente en Configuración VS Code (`Ctrl+,` → busca "shinydapps"):**
+**Paso 2 — Configura la extensión**
 
-| Ajuste | Valor |
-|---|---|
-| `shinydapps.lightningAddress` | Tu dirección Lightning, ej: `tu@blink.sv` |
-| `shinydapps.supabaseUrl` | URL del proyecto Supabase — supabase.com → Proyecto → Settings → API |
-| `shinydapps.supabaseKey` | Clave **anon** de Supabase — misma página |
+Abre Command Palette (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+Ingresa el **mismo Lightning address** que usaste en tu API (ej: `tu@blink.sv`).
+
+**Paso 3 — Observa los pagos en tiempo real**
+
+Haz clic en el icono ⚡ en la barra de actividades.
+
+### Cómo funciona
+
+```
+Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
+                                 │
+                   Cliente paga (< 1 segundo)
+                                 │
+              99,7% → tu Lightning Address
+               0,3% → ShinyDapps (comisión)
+                                 │
+              Esta extensión lee aquí ◄── ESTÁS AQUÍ
+```
+
+### Links
+
+[📖 Docs ES](https://l402kit.vercel.app/docs/es/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
 
 ---
 
 ## 中文
 
-**在 VS Code 中实时监控您的比特币闪电网络 API 收入。**
+**在 VS Code 中实时查看您的 sats 收入。**
 
 ### 功能特点
 
-⚡ **状态栏实时 sats 计数器** — 每30秒更新
+⚡ **状态栏实时 sats 计数器**
 
-📊 **带图表的支付侧边栏**
+📊 **带实时柱状图的支付侧边栏**
 
-🌍 **多语言面板** — 支持 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵 切换
+📋 **完整支付历史** — 端点、金额、时间戳、USD 价值
+
+🌍 **内置 11 种语言**
 
 🎨 **亮色 / 暗色 / 自动主题**
 
-📈 **7天柱状图**
-
-🔐 **密码学验证** — SHA256，无拒付
-
-🤖 **AI 智能体原生支持**
+📈 **图表范围** — 1D / 7D（免费）· 30D / 1Y / ALL（Pro）
 
 ### 如何使用
 
+**第一步 — 将 l402-kit 添加到您的 API**
+
 ```bash
-npm install l402-kit        # TypeScript
-pip install l402kit         # Python
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-打开命令面板 (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+在配置中使用您的闪电地址作为 `ownerLightningAddress`。
 
-**或在 VS Code 设置中手动配置 (`Ctrl+,` → 搜索 "shinydapps")：**
+**第二步 — 配置扩展**
 
-| 设置项 | 填写内容 |
-|---|---|
-| `shinydapps.lightningAddress` | 您的闪电地址，如 `you@blink.sv` |
-| `shinydapps.supabaseUrl` | Supabase 项目 URL — supabase.com → 项目 → Settings → API |
-| `shinydapps.supabaseKey` | Supabase **anon** 密钥 — 同一页面 |
+打开命令面板 (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+输入与您的 API 中相同的闪电地址（例如：`you@blink.sv`）。
+
+**第三步 — 实时查看支付**
+
+点击活动栏中的 ⚡ 图标查看实时图表和支付历史。
+
+### 工作原理
+
+```
+您的 API ──► l402-kit ──► HTTP 402 + 闪电发票
+                                   │
+                     客户支付（< 1 秒）
+                                   │
+                  99.7% → 您的闪电地址
+                   0.3% → ShinyDapps（手续费）
+                                   │
+                  此扩展在此读取 ◄── 您在这里
+```
+
+### 链接
+
+[📖 中文文档](https://l402kit.vercel.app/docs/zh/introduction) · [▶ 演示](https://l402kit.vercel.app/demo)
 
 ---
 
 ## 日本語
 
-**VS Code内でBitcoin Lightning API収益をリアルタイムで監視。**
+**VS Code を離れずに sats の収入をリアルタイムで確認。**
 
 ### 機能
 
-⚡ **ステータスバーのリアルタイムsatsカウンター**
+⚡ **ステータスバーのリアルタイム sats カウンター**
 
-📊 **グラフ付き支払いサイドバー**
+📊 **リアルタイム棒グラフ付き支払いサイドバー**
 
-🌍 **多言語パネル** — 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵 切替対応
+📋 **完全な支払い履歴** — エンドポイント、金額、タイムスタンプ、USD 値
+
+🌍 **11言語内蔵**
 
 🎨 **ライト / ダーク / 自動テーマ**
 
-📈 **7日間棒グラフ**
-
-🔐 **暗号学的検証** — SHA256、チャージバック不可
-
-🤖 **AIエージェントネイティブ**
+📈 **グラフ範囲** — 1D / 7D（無料）· 30D / 1Y / ALL（Pro）
 
 ### 使い方
 
+**ステップ 1 — API に l402-kit を追加**
+
 ```bash
-npm install l402-kit        # TypeScript
-pip install l402kit         # Python
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-コマンドパレット (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+設定で `ownerLightningAddress` にあなたの Lightning アドレスを使用します。
 
-**または VS Code 設定で手動設定 (`Ctrl+,` → "shinydapps" で検索)：**
+**ステップ 2 — 拡張機能を設定**
 
-| 設定 | 入力内容 |
-|---|---|
-| `shinydapps.lightningAddress` | Lightningアドレス (例: `you@blink.sv`) |
-| `shinydapps.supabaseUrl` | Supabase プロジェクト URL — supabase.com → プロジェクト → Settings → API |
-| `shinydapps.supabaseKey` | Supabase **anon** キー — 同ページ |
+コマンドパレット (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+API で使用したのと**同じ Lightning アドレス**を入力（例：`you@blink.sv`）。
+
+**ステップ 3 — リアルタイムで支払いを確認**
+
+アクティビティバーの ⚡ アイコンをクリック。
+
+### 仕組み
+
+```
+あなたの API ──► l402-kit ──► HTTP 402 + Lightning インボイス
+                                        │
+                          クライアントが支払う（< 1秒）
+                                        │
+                       99.7% → あなたの Lightning アドレス
+                        0.3% → ShinyDapps（手数料）
+                                        │
+                       この拡張機能がここを読む ◄── ここです
+```
+
+### リンク
+
+[📖 日本語ドキュメント](https://l402kit.vercel.app/docs/ja/introduction) · [▶ デモ](https://l402kit.vercel.app/demo)
 
 ---
 
 ## Français
 
-**Surveillez vos gains en Bitcoin Lightning en temps réel — directement dans VS Code.**
+**Regardez vos sats arriver — sans quitter VS Code.**
 
 ### Fonctionnalités
 
-⚡ **Compteur de sats en direct**
+⚡ **Compteur de sats en direct** dans la barre d'état
 
-📊 **Panneau latéral avec graphique**
+📊 **Panneau latéral** avec graphique en barres en temps réel
 
-🌍 **Panneau multilingue** — 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵
+📋 **Historique complet** — endpoint, montant, horodatage, valeur USD
+
+🌍 **11 langues intégrées**
 
 🎨 **Thème Clair / Sombre / Auto**
 
-📈 **Graphique à barres 7 jours**
-
-🔐 **Vérification cryptographique** — SHA256, sans rétrofacturation
-
-🤖 **Natif pour les agents IA**
+📈 **Plages de graphique** — 1D / 7D (gratuit) · 30D / 1Y / ALL (Pro)
 
 ### Comment utiliser
 
+**Étape 1 — Ajoutez l402-kit à votre API**
+
 ```bash
-npm install l402-kit
-pip install l402kit
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-Ouvrez le Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+**Étape 2 — Configurez l'extension**
 
-**Ou configurez dans les Paramètres VS Code (`Ctrl+,` → recherchez "shinydapps").**
+Ouvrez la palette de commandes (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+Entrez la **même adresse Lightning** que celle utilisée dans votre API.
+
+**Étape 3 — Observez vos paiements en temps réel**
+
+Cliquez sur l'icône ⚡ dans la barre d'activités.
+
+### Comment ça marche
+
+```
+Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
+                                    │
+                      Le client paie (< 1 seconde)
+                                    │
+                   99,7% → votre adresse Lightning
+                    0,3% → ShinyDapps (frais)
+                                    │
+                   Cette extension lit ici ◄── VOUS ÊTES ICI
+```
+
+### Liens
+
+[📖 Docs FR](https://l402kit.vercel.app/docs/fr/introduction) · [▶ Démo](https://l402kit.vercel.app/demo)
 
 ---
 
 ## Deutsch
 
-**Überwachen Sie Ihre Bitcoin-Lightning-API-Einnahmen in Echtzeit — direkt in VS Code.**
+**Sehen Sie Ihre Sats in Echtzeit — ohne VS Code zu verlassen.**
 
 ### Funktionen
 
 ⚡ **Live-Sats-Zähler** in der Statusleiste
 
-📊 **Zahlungs-Seitenleiste mit Diagramm**
+📊 **Seitenleiste** mit Echtzeit-Balkendiagramm
 
-🌍 **Mehrsprachiges Panel** — 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵
+📋 **Vollständige Zahlungshistorie** — Endpoint, Betrag, Zeitstempel, USD-Wert
+
+🌍 **11 Sprachen integriert**
 
 🎨 **Hell / Dunkel / Auto-Theme**
 
-📈 **7-Tage-Balkendiagramm**
-
-🔐 **Kryptografische Verifizierung** — SHA256, keine Rückbuchungen
-
-🤖 **KI-Agenten-nativ**
+📈 **Diagramm-Bereiche** — 1D / 7D (kostenlos) · 30D / 1Y / ALL (Pro)
 
 ### Verwendung
 
+**Schritt 1 — l402-kit zu Ihrer API hinzufügen**
+
 ```bash
-npm install l402-kit
-pip install l402kit
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+**Schritt 2 — Erweiterung konfigurieren**
 
-**Oder manuell in den VS Code-Einstellungen (`Ctrl+,` → "shinydapps" suchen).**
+Command Palette (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+Geben Sie dieselbe Lightning-Adresse ein, die Sie in Ihrer API verwendet haben.
+
+**Schritt 3 — Zahlungen in Echtzeit beobachten**
+
+Klicken Sie auf das ⚡-Symbol in der Aktivitätsleiste.
+
+### So funktioniert es
+
+```
+Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
+                                   │
+                     Client zahlt (< 1 Sekunde)
+                                   │
+                  99,7% → Ihre Lightning-Adresse
+                   0,3% → ShinyDapps (Gebühr)
+                                   │
+                  Diese Erweiterung liest hier ◄── SIE SIND HIER
+```
+
+### Links
+
+[📖 Docs DE](https://l402kit.vercel.app/docs/de/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
 
 ---
 
 ## Русский
 
-**Отслеживайте заработок в Bitcoin Lightning API в реальном времени — прямо в VS Code.**
+**Наблюдайте за поступлением сатошей — не выходя из VS Code.**
 
 ### Возможности
 
 ⚡ **Живой счётчик сатошей** в строке состояния
 
-📊 **Боковая панель с графиком**
+📊 **Боковая панель** с графиком в реальном времени
 
-🌍 **Многоязычная панель** — 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵
+📋 **Полная история платежей** — endpoint, сумма, время, стоимость в USD
+
+🌍 **11 языков встроено**
 
 🎨 **Светлая / Тёмная / Авто тема**
 
-📈 **Столбчатая диаграмма за 7 дней**
-
-🔐 **Криптографическая верификация** — SHA256, без чарджбэков
-
-🤖 **Нативная поддержка ИИ-агентов**
+📈 **Диапазоны графика** — 1D / 7D (бесплатно) · 30D / 1Y / ALL (Pro)
 
 ### Использование
 
+**Шаг 1 — Добавьте l402-kit в ваш API**
+
 ```bash
-npm install l402-kit
-pip install l402kit
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+**Шаг 2 — Настройте расширение**
 
-**Или вручную в настройках VS Code (`Ctrl+,` → поиск "shinydapps").**
+Command Palette (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+Введите тот же Lightning-адрес, что использовали в API.
+
+**Шаг 3 — Наблюдайте за платежами в реальном времени**
+
+Нажмите на иконку ⚡ в панели активности.
+
+### Как это работает
+
+```
+Ваш API ──► l402-kit ──► HTTP 402 + Lightning-инвойс
+                                  │
+                    Клиент платит (< 1 секунды)
+                                  │
+                 99,7% → ваш Lightning-адрес
+                  0,3% → ShinyDapps (комиссия)
+                                  │
+                 Расширение читает здесь ◄── ВЫ ЗДЕСЬ
+```
+
+### Ссылки
+
+[📖 Docs RU](https://l402kit.vercel.app/docs/ru/introduction) · [▶ Демо](https://l402kit.vercel.app/demo)
 
 ---
 
 ## हिंदी
 
-**VS Code के अंदर ही अपनी Bitcoin Lightning API कमाई को रियल-टाइम में मॉनिटर करें।**
+**VS Code से बाहर निकले बिना अपने sats को रियल-टाइम में देखें।**
 
 ### विशेषताएं
 
 ⚡ **स्टेटस बार में लाइव sats काउंटर**
 
-📊 **चार्ट के साथ पेमेंट साइडबार**
+📊 **रियल-टाइम बार चार्ट के साथ पेमेंट साइडबार**
 
-🌍 **बहुभाषी पैनल** — 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵
+📋 **पूरी पेमेंट हिस्ट्री** — endpoint, राशि, समय, USD मूल्य
+
+🌍 **11 भाषाएं बिल्ट-इन**
 
 🎨 **लाइट / डार्क / ऑटो थीम**
 
-📈 **7 दिन का बार चार्ट**
-
-🔐 **क्रिप्टोग्राफिक वेरिफिकेशन** — SHA256
-
-🤖 **AI एजेंट नेटिव**
+📈 **चार्ट रेंज** — 1D / 7D (मुफ्त) · 30D / 1Y / ALL (Pro)
 
 ### कैसे उपयोग करें
 
+**चरण 1 — अपनी API में l402-kit जोड़ें**
+
 ```bash
-npm install l402-kit
-pip install l402kit
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+**चरण 2 — एक्सटेंशन कॉन्फ़िगर करें**
+
+Command Palette (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+वही Lightning address डालें जो आपने API में उपयोग किया था।
+
+**चरण 3 — पेमेंट देखें**
+
+Activity bar में ⚡ आइकन क्लिक करें।
+
+### यह कैसे काम करता है
+
+```
+आपकी API ──► l402-kit ──► HTTP 402 + Lightning invoice
+                                    │
+                      Client भुगतान करता है (< 1 सेकंड)
+                                    │
+                   99.7% → आपका Lightning Address
+                    0.3% → ShinyDapps (शुल्क)
+                                    │
+                   यह एक्सटेंशन यहाँ पढ़ता है ◄── आप यहाँ हैं
+```
+
+### लिंक
+
+[📖 Docs HI](https://l402kit.vercel.app/docs/hi/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
 
 ---
 
 ## العربية
 
-**راقب أرباحك من Bitcoin Lightning API في الوقت الفعلي — داخل VS Code مباشرةً.**
+**شاهد الـ sats تتدفق — دون مغادرة VS Code.**
 
 ### المميزات
 
 ⚡ **عداد sats مباشر** في شريط الحالة
 
-📊 **لوحة جانبية مع رسم بياني**
+📊 **لوحة جانبية** مع رسم بياني في الوقت الفعلي
 
-🌍 **لوحة متعددة اللغات** — 🇺🇸 🇧🇷 🇪🇸 🇨🇳 🇯🇵
+📋 **سجل كامل للمدفوعات** — النقطة النهائية، المبلغ، التوقيت، قيمة USD
+
+🌍 **11 لغة مدمجة**
 
 🎨 **ثيم فاتح / داكن / تلقائي**
 
-📈 **مخطط شريطي لـ 7 أيام**
-
-🔐 **تحقق تشفيري** — SHA256، لا استردادات
-
-🤖 **مصمم لوكلاء الذكاء الاصطناعي**
+📈 **نطاقات الرسم البياني** — 1D / 7D (مجاني) · 30D / 1Y / ALL (Pro)
 
 ### كيفية الاستخدام
 
+**الخطوة 1 — أضف l402-kit إلى API الخاص بك**
+
 ```bash
-npm install l402-kit
-pip install l402kit
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
 ```
 
-افتح Command Palette (`Ctrl+Shift+P`) → **ShinyDapps: Configure Lightning Address**
+**الخطوة 2 — قم بتهيئة الإضافة**
+
+افتح Command Palette (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+أدخل نفس عنوان Lightning الذي استخدمته في API الخاص بك.
+
+**الخطوة 3 — شاهد المدفوعات في الوقت الفعلي**
+
+انقر على أيقونة ⚡ في شريط النشاط.
+
+### كيف يعمل
+
+```
+API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightning
+                                         │
+                           العميل يدفع (< ثانية واحدة)
+                                         │
+                        99.7% → عنوان Lightning الخاص بك
+                         0.3% → ShinyDapps (رسوم)
+                                         │
+                        هذه الإضافة تقرأ هنا ◄── أنت هنا
+```
+
+### الروابط
+
+[📖 Docs AR](https://l402kit.vercel.app/docs/ar/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
 
 ---
 
-🇺🇸 [English Docs](https://l402kit.vercel.app/docs) ·
-🇧🇷 [Português](https://l402kit.vercel.app/docs/pt/introduction) ·
-🇪🇸 [Español](https://l402kit.vercel.app/docs/es/introduction) ·
-🇨🇳 [中文](https://l402kit.vercel.app/docs/zh/introduction) ·
-🇮🇳 [हिंदी](https://l402kit.vercel.app/docs/hi/introduction) ·
-🇸🇦 [العربية](https://l402kit.vercel.app/docs/ar/introduction) ·
-🇫🇷 [Français](https://l402kit.vercel.app/docs/fr/introduction) ·
-🇩🇪 [Deutsch](https://l402kit.vercel.app/docs/de/introduction) ·
-🇷🇺 [Русский](https://l402kit.vercel.app/docs/ru/introduction) ·
-🇯🇵 [日本語](https://l402kit.vercel.app/docs/ja/introduction) ·
-🇮🇹 [Italiano](https://l402kit.vercel.app/docs/it/introduction)
+## Italiano
+
+**Guarda i tuoi sats arrivare — senza lasciare VS Code.**
+
+### Funzionalità
+
+⚡ **Contatore sats live** nella barra di stato
+
+📊 **Pannello laterale** con grafico a barre in tempo reale
+
+📋 **Cronologia completa** — endpoint, importo, timestamp, valore USD
+
+🌍 **11 lingue integrate**
+
+🎨 **Tema Chiaro / Scuro / Auto**
+
+📈 **Intervalli grafico** — 1D / 7D (gratuito) · 30D / 1Y / ALL (Pro)
+
+### Come usare
+
+**Passo 1 — Aggiungi l402-kit alla tua API**
+
+```bash
+npm install l402-kit      # TypeScript / Node.js
+pip install l402kit       # Python
+go get github.com/shinydapps/l402-kit/go@v1.0.1
+cargo add l402kit         # Rust
+```
+
+**Passo 2 — Configura l'estensione**
+
+Apri Command Palette (`Ctrl+Shift+P`) →  
+**ShinyDapps: Configure Lightning Address**
+
+Inserisci lo stesso Lightning address usato nella tua API.
+
+**Passo 3 — Osserva i pagamenti in tempo reale**
+
+Clicca sull'icona ⚡ nella barra delle attività.
+
+### Come funziona
+
+```
+La tua API ──► l402-kit ──► HTTP 402 + fattura Lightning
+                                      │
+                        Il client paga (< 1 secondo)
+                                      │
+                     99,7% → il tuo Lightning address
+                      0,3% → ShinyDapps (commissione)
+                                      │
+                     Questa estensione legge qui ◄── SEI QUI
+```
+
+### Link
+
+[📖 Docs IT](https://l402kit.vercel.app/docs/it/introduction) · [▶ Demo](https://l402kit.vercel.app/demo)
 
 ---
 
-Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps) · MIT License · Bitcoin has no borders.
+<div align="center">
+
+Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps) · MIT License
+
+**Bitcoin has no borders.**
+
+[Docs](https://l402kit.vercel.app/docs) · [Demo](https://l402kit.vercel.app/demo) · [npm](https://npmjs.com/package/l402-kit) · [PyPI](https://pypi.org/project/l402kit)
+
+</div>
