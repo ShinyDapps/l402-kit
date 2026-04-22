@@ -1,0 +1,175 @@
+---
+title: "Payment Layer"
+description: "How l402-kit processes Bitcoin Lightning payments — BOLT11, L402, Supabase, and the 0.3% fee flow."
+---
+
+# Payment Layer
+
+l402-kit is a **managed middleware** that adds a Bitcoin Lightning paywall to any HTTP endpoint in 3 lines of code. This page explains every layer of the payment stack.
+
+---
+
+## Protocol: L402
+
+L402 is an open standard that extends HTTP/1.1 with a native payment handshake:
+
+```
+Client → GET /api/data
+Server ← 402 Payment Required
+         WWW-Authenticate: L402 <macaroon>, invoice="<BOLT11>"
+
+Client pays invoice via Lightning wallet
+Client → GET /api/data
+         Authorization: L402 <macaroon>:<preimage>
+Server ← 200 OK + data
+```
+
+The **macaroon** is a capability token bound to the invoice's `paymentHash`. The **preimage** is the cryptographic secret released by the Lightning node when payment settles. The server verifies:
+
+```
+SHA256(preimage) == paymentHash ✓
+```
+
+No account, no session, no JWT — the preimage **is** the proof of payment.
+
+---
+
+## Invoice Creation Flow
+
+```
+Your API receives a request without valid Authorization
+     │
+     ▼
+l402-kit middleware calls POST /api/invoice
+     │  { endpoint, priceSats, ownerAddress }
+     ▼
+ShinyDapps backend calls Blink API
+     │  POST https://api.blink.sv/graphql
+     │  mutation lnInvoiceCreate
+     ▼
+Blink returns BOLT11 invoice + paymentHash
+     │
+     ▼
+Backend stores pending payment in Supabase
+     │  payments { preimage, amount_sats, owner_address, endpoint }
+     ▼
+Your API returns 402 + invoice to client
+```
+
+---
+
+## Payment Settlement Flow
+
+```
+Client pays BOLT11 invoice via any Lightning wallet
+     │
+     ▼
+Blink Lightning node settles payment, releases preimage
+     │
+     ▼
+Blink calls your configured webhook endpoint
+     │  POST /api/blink-webhook
+     │  { paymentHash, preimage, amount }
+     ▼
+ShinyDapps backend verifies HMAC signature
+     │  HMAC-SHA256(secret, body) == X-Blink-Signature
+     ▼
+Supabase payments row updated: paid_at = now()
+     │
+     ▼
+Client sends Authorization: L402 <macaroon>:<preimage>
+     │
+     ▼
+Middleware verifies SHA256(preimage) == paymentHash
+     │
+     ▼
+Request passes through to your API handler → 200 OK
+```
+
+---
+
+## Fee Model
+
+l402-kit uses a **0.3% pass-through fee**. No monthly subscription, no per-call overhead for the developer.
+
+| Party | What they receive |
+|---|---|
+| Your Lightning address | 99.7% of every payment |
+| ShinyDapps | 0.3% fee |
+
+The split is enforced at the Blink API level via multi-part payment routing before funds are forwarded to your address.
+
+**Example:** A user pays 1,000 sats to call your `/api/data` endpoint.
+- You receive **997 sats**
+- ShinyDapps receives **3 sats**
+
+---
+
+## Data Storage (Supabase)
+
+Payments are persisted in a Supabase PostgreSQL table:
+
+```sql
+create table payments (
+  id           uuid primary key default gen_random_uuid(),
+  endpoint     text not null,
+  preimage     text not null unique,   -- cryptographic proof, never exposed via API
+  amount_sats  integer not null,
+  owner_address text not null,         -- your Lightning address
+  paid_at      timestamptz not null default now()
+);
+```
+
+**Row Level Security:**
+- `anon` key: can INSERT new pending rows and SELECT rows filtered by `owner_address` (used by VS Code extension)
+- `service_role` key: unrestricted — used only by server-side `/api/*` endpoints
+- `preimage` field: never returned to the anon key layer
+
+---
+
+## Verification (Client Side)
+
+When the client re-calls your endpoint with the `Authorization: L402 <macaroon>:<preimage>` header, l402-kit verifies locally — **no network call required**:
+
+```typescript
+import { l402Middleware } from 'l402-kit';
+
+app.use('/api/data', l402Middleware({
+  priceSats: 100,
+  lightningAddress: 'you@blink.sv',
+}));
+```
+
+Under the hood:
+1. Parse `macaroon` and `preimage` from the header
+2. `SHA256(preimage)` → compare to `paymentHash` embedded in macaroon
+3. Verify macaroon signature with the shared secret
+4. If valid → call `next()`, else → `401 Unauthorized`
+
+This verification is **O(1)** — pure cryptography, no database lookup on the hot path.
+
+---
+
+## Lightning Providers
+
+l402-kit is provider-agnostic. The current managed backend uses **Blink** (formerly Bitcoin Jungle). Self-hosted deployments can use:
+
+| Provider | Protocol | Notes |
+|---|---|---|
+| [Blink](https://blink.sv) | GraphQL + webhooks | Default managed |
+| [LNbits](https://lnbits.com) | REST | Self-hosted friendly |
+| [OpenNode](https://opennode.com) | REST | Custodial, no setup |
+
+See the [Providers](/providers) page for integration details.
+
+---
+
+## Security Guarantees
+
+| Threat | Mitigation |
+|---|---|
+| Replay attack | `preimage` is unique per payment; Supabase `UNIQUE` constraint rejects reuse |
+| Fake preimage | `SHA256(preimage) == paymentHash` is cryptographically unforgeable |
+| Webhook spoofing | `HMAC-SHA256(secret, body)` verified before any DB write |
+| Anon data exposure | Supabase RLS: `pro_access` table has zero anon SELECT; payments filtered by `owner_address` |
+| Secret URL leak | API secret never returned to client; stored only in environment variables |

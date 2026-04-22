@@ -3,3 +3,5 @@ tsconfig.json
 icon.svg
 node_modules/**
 .vscode/**
+test-preview.html
+docs/screenshot.svg

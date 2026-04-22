@@ -6,6 +6,7 @@ const SD_SUPABASE_KEY = "sb_publishable_v_dOX1JVgEm_vlT-Qr5lsw_EQHc-av-";
 let statusBar: vscode.StatusBarItem;
 let pollInterval: ReturnType<typeof setInterval> | undefined;
 let sidebarProvider: PaymentsDashboardProvider | undefined;
+let activePanel: vscode.WebviewPanel | undefined;
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N: Record<string, Record<string, string>> = {
@@ -155,6 +156,8 @@ class PaymentsDashboardProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage(msg => {
       if (msg.command === "openConfigure") {
         vscode.commands.executeCommand("shinydapps.configure");
+      } else if (msg.command === "downloadCsv") {
+        handleCsvDownload(msg.data as string);
       }
     });
   }
@@ -180,16 +183,20 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("shinydapps.showDashboard", () => {
-      const panel = vscode.window.createWebviewPanel(
+      if (activePanel) { activePanel.reveal(); return; }
+      activePanel = vscode.window.createWebviewPanel(
         "shinydappsDashboard", "⚡ ShinyDapps Payments",
         vscode.ViewColumn.One, { enableScripts: true }
       );
-      panel.webview.html = getDashboardHtml();
-      panel.webview.onDidReceiveMessage(msg => {
+      activePanel.webview.html = getDashboardHtml();
+      activePanel.webview.onDidReceiveMessage(msg => {
         if (msg.command === "openConfigure") {
           vscode.commands.executeCommand("shinydapps.configure");
+        } else if (msg.command === "downloadCsv") {
+          handleCsvDownload(msg.data as string);
         }
       });
+      activePanel.onDidDispose(() => { activePanel = undefined; });
     })
   );
 
@@ -207,6 +214,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage(`⚡ ShinyDapps ready! Monitoring: ${address}`);
       startPolling();
       sidebarProvider?.refresh();
+      if (activePanel) activePanel.webview.html = getDashboardHtml();
     })
   );
 
@@ -240,6 +248,17 @@ function startPolling() {
   };
   poll();
   pollInterval = setInterval(poll, 30_000);
+}
+
+// ── CSV download ──────────────────────────────────────────────────────────────
+async function handleCsvDownload(csvData: string) {
+  const uri = await vscode.window.showSaveDialog({
+    defaultUri: vscode.Uri.file("payments.csv"),
+    filters: { "CSV": ["csv"] },
+  });
+  if (!uri) return;
+  await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(csvData));
+  vscode.window.showInformationMessage(`⚡ Payments exported to ${uri.fsPath}`);
 }
 
 // ── Webview HTML ──────────────────────────────────────────────────────────────
@@ -643,7 +662,7 @@ function renderContent(rows) {
       });
     });
 
-    // csv
+    // csv — postMessage to host (blob downloads blocked in VSCode webviews)
     const csvBtn = el('csvBtn');
     if (csvBtn) {
       csvBtn.addEventListener('click', function() {
@@ -651,10 +670,7 @@ function renderContent(rows) {
         const body = (lastRows || []).map(function(r) {
           return new Date(r.paid_at).toISOString() + ',' + (r.endpoint || '') + ',' + (r.amount_sats || 0);
         }).join('\\n');
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([header + body], {type:'text/csv'}));
-        a.download = 'payments.csv';
-        a.click();
+        vsc.postMessage({ command: 'downloadCsv', data: header + body });
       });
     }
 

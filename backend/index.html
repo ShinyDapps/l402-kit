@@ -53,8 +53,6 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .hero { text-align: center; padding: 72px 24px 64px; max-width: 1200px; margin: 0 auto; position: relative; overflow: hidden; background: linear-gradient(160deg, #0a0808 0%, #0c0b09 40%, #080808 100%); }
 .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 20%, rgba(247,147,26,0.12) 0%, transparent 45%), radial-gradient(circle at 80% 80%, rgba(247,147,26,0.07) 0%, transparent 40%); z-index: 1; }
 .hero > * { position: relative; z-index: 2; }
-.hero-network { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; opacity: 0.3; }
-.hero-network canvas { width: 100%; height: 100%; }
 .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(247,147,26,0.1); border: 1px solid rgba(247,147,26,0.3); color: var(--orange); padding: 8px 20px; border-radius: 24px; font-size: 14px; margin-bottom: 40px; backdrop-filter: blur(10px); }
 .hero h1 { font-size: clamp(48px, 8vw, 80px); font-weight: 900; line-height: 1.1; margin-bottom: 32px; letter-spacing: -2px; background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 30%, #f7931a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .hero h1 span { background: linear-gradient(135deg, #f7931a 0%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
@@ -64,7 +62,7 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(247,147,26,0.4); }
 .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e5e5e5; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
 .btn-secondary:hover { border-color: rgba(247,147,26,0.5); color: #f7931a; }
-.hero-network { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.hero-network { position: absolute; inset: 0; z-index: 1; opacity: 0.3; pointer-events: none; }
 .hero-network canvas { width: 100%; height: 100%; display: block; }
 .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 40px; }
 .hero-stat { text-align: center; }
@@ -138,7 +136,6 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .pricing-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 .pricing-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; position: relative; }
 .pricing-card.featured { border-color: var(--orange); }
-.pricing-sats { font-size: 11px; color: var(--orange); opacity: 0.75; margin: 2px 0 10px; font-family: "SF Mono", "Fira Code", monospace; letter-spacing: 0.3px; min-height: 14px; }
 .pricing-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
 .pricing-price { font-size: 40px; font-weight: 800; margin-bottom: 4px; }
 .pricing-price span { font-size: 16px; font-weight: 400; color: var(--muted); }
@@ -261,8 +258,6 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <div class="hero-stat"><div class="stat-num">0</div><div class="stat-label">Chargebacks</div></div>
   </div>
 </section>
-  
-</section>
 
 
 
@@ -379,15 +374,16 @@ app = <span class="c-fn">FastAPI</span>()
     <span class="c-keyword">let</span> listener = tokio::net::TcpListener::<span class="c-fn">bind</span>(<span class="c-string">"0.0.0.0:3000"</span>).<span class="c-keyword">await</span>.unwrap();
     axum::<span class="c-fn">serve</span>(listener, app).<span class="c-keyword">await</span>.unwrap();
 }</pre></div>
+  </div>
 </section>
 
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-num">4</div><div class="stat-label">Languages</div></div>
-  <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">Chargebacks ever</div></div>
-  <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">Open source</div></div>
-  <div class="stat-item"><div class="stat-num">&lt;1s</div><div class="stat-label">Settlement</div></div>
+  <div class="stat-item"><div class="stat-num" id="stat-payments">—</div><div class="stat-label">Payments logged</div></div>
   <div class="stat-item"><div class="stat-num" id="stat-stars">—</div><div class="stat-label">GitHub Stars</div></div>
   <div class="stat-item"><div class="stat-num" id="stat-npm">—</div><div class="stat-label">npm downloads/wk</div></div>
+  <div class="stat-item"><div class="stat-num">4</div><div class="stat-label">Languages</div></div>
+  <div class="stat-item"><div class="stat-num">&lt;1s</div><div class="stat-label">Settlement</div></div>
+  <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">Countries blocked</div></div>
 </div>
 
 <section class="flow" id="how">
@@ -532,8 +528,18 @@ app = <span class="c-fn">FastAPI</span>()
     </div>
     <div style="position:relative">
       <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,var(--orange)22,transparent 60%);border-radius:16px;z-index:0"></div>
-            <img src="/extension-screenshot.png" alt="ShinyDapps Lightning Payments — VSCode Extension dashboard" style="width:100%;border-radius:14px;border:1px solid #2a2a2a;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)" loading="lazy">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:#0e0e0e;border:1px solid #222;border-radius:14px;padding:16px;position:relative;z-index:1;box-shadow:0 24px 60px rgba(0,0,0,.6)">
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid #1a1a1a;margin-bottom:14px">
+          <span style="font-size:11px;color:#444;text-transform:uppercase;letter-spacing:.5px">Lang</span>
+          <span style="flex:1;background:#1a1a1a;border:1px solid #2e2e2e;border-radius:5px;color:#b0b0b0;font-size:11px;padding:3px 8px">English (EN)</span>
+          <span style="background:none;border:1px solid #2e2e2e;border-radius:4px;color:#666;padding:2px 8px;font-size:13px">↺</span>
+        </div>
+        <div style="font-size:11px;color:#888;background:#0b0906;border-bottom:1px solid #1a1208;padding:5px 0;margin-bottom:14px;display:flex;gap:6px;align-items:center">
+          <span style="color:#f7931a">⚡</span> <strong style="color:#f7931a">BTC</strong> $<span id="extBtc">—</span>
+          <span style="color:#2a2a2a">·</span> 1 sat = <strong style="color:#c97000" id="extSat1">$—</strong>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:#f7931a;margin-bottom:14px">⚡ ShinyDapps Payments</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div id="extPayments" style="font-size:22px;font-weight:800;color:#f7931a">—</div><div style="font-size:11px;color:#555;margin-top:4px">Total Payments</div></div>
           <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px"><div id="extSats" style="font-size:22px;font-weight:800;color:#f7931a">—</div><div style="font-size:11px;color:#555;margin-top:4px">Total Sats</div></div>
         </div>
@@ -545,8 +551,8 @@ app = <span class="c-fn">FastAPI</span>()
           <div><div style="font-size:12px;font-weight:700;color:#f7931a">⚡ ShinyDapps Pro</div><div style="font-size:11px;color:#555;margin-top:2px">Full history · CSV · Pay in Bitcoin</div></div>
           <span id="extProSats" style="font-size:10px;color:#888;border:1px solid #333;border-radius:4px;padding:2px 6px">~9k sats/mo</span>
         </div>
-      </div>
-    </div>
+      </div><!-- end mockup inner -->
+    </div><!-- end position:relative -->
   </div>
 </section>
 
@@ -618,18 +624,22 @@ app = <span class="c-fn">FastAPI</span>()
 <section style="max-width:760px;margin:0 auto 64px;padding:0 24px;text-align:center">
   <p style="font-size:13px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:28px">Trusted by developers building on Bitcoin</p>
   <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px">
-    <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:12px;padding:20px 24px;max-width:280px;text-align:left">
+    <!-- TESTIMONIAL A — placeholder. Substituir quando tiver usuário confirmado.
+         Rastreado em COCKPIT.md → Pendentes técnicos.
+         Campos: citação, inicial do avatar, nome (data-name), role (data-role). -->
+    <div data-testimonial="A" style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:12px;padding:20px 24px;max-width:280px;text-align:left">
       <p style="font-size:13px;color:#bbb;line-height:1.6;margin-bottom:12px">"Finally, a payments lib that treats Bitcoin as first-class. 3 lines and it just works."</p>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f7931a,#ff6b35);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000">A</div>
-        <div><div style="font-size:12px;font-weight:600;color:#e5e5e5">Early adopter</div><div style="font-size:11px;color:#555">API developer</div></div>
+        <div><div data-name style="font-size:12px;font-weight:600;color:#e5e5e5">Early adopter</div><div data-role style="font-size:11px;color:#555">API developer</div></div>
       </div>
     </div>
-    <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:12px;padding:20px 24px;max-width:280px;text-align:left">
+    <!-- TESTIMONIAL B — placeholder. Substituir quando tiver usuário confirmado. -->
+    <div data-testimonial="B" style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:12px;padding:20px 24px;max-width:280px;text-align:left">
       <p style="font-size:13px;color:#bbb;line-height:1.6;margin-bottom:12px">"My AI agent now pays for its own API calls. No wallets, no keys, no human approval."</p>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f7931a,#ff6b35);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000">B</div>
-        <div><div style="font-size:12px;font-weight:600;color:#e5e5e5">AI engineer</div><div style="font-size:11px;color:#555">LLM tooling</div></div>
+        <div><div data-name style="font-size:12px;font-weight:600;color:#e5e5e5">AI engineer</div><div data-role style="font-size:11px;color:#555">LLM tooling</div></div>
       </div>
     </div>
   </div>
@@ -932,10 +942,11 @@ function applyFullPageCopy(lang) {
   Object.entries(copy).forEach(([selector, text]) => {
     const node = document.querySelector(selector);
     if (!node) return;
+    if (/<[a-z][\s\S]*>/i.test(text)) {
       node.innerHTML = text;
-      return;
+    } else {
+      node.textContent = text;
     }
-    node.textContent = text;
   });
 
   // Feature cards
@@ -1081,20 +1092,13 @@ function applyFullPageCopy(lang) {
 
 function initLanguageSelector() {
   const select = document.getElementById('languageSelect');
-  const heroSelect = document.getElementById('heroLanguageSelect');
-  if (!select || !heroSelect) return;
+  if (!select) return;
   const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
   const saved = localStorage.getItem('l402_lang');
   const lang = I18N[saved] ? saved : (I18N[browser] ? browser : 'en');
   select.value = lang;
-  heroSelect.value = lang;
   applyLanguage(lang);
   select.addEventListener('change', (e) => {
-    heroSelect.value = e.target.value;
-    applyLanguage(e.target.value);
-  });
-  heroSelect.addEventListener('change', (e) => {
-    select.value = e.target.value;
     applyLanguage(e.target.value);
   });
 }
@@ -1224,6 +1228,7 @@ initWalletPrefs();
     const d = await r.json();
     const btc = d.USD;
     if (!btc) return;
+    window.btcPrice = btc;
     const satUsd = btc / 100_000_000;
     const fmtSat = v => v < 0.001 ? '$' + v.toFixed(6) : (v < 0.01 ? '$' + v.toFixed(5) : '$' + v.toFixed(4));
     const strip = document.getElementById('btcLiveStrip');
@@ -1254,6 +1259,12 @@ initWalletPrefs();
       const s = Math.ceil(999 / btc * 100_000_000);
       lifeSats.textContent = '\u2248 ' + (s >= 1_000_000 ? (s/1_000_000).toFixed(2)+'M' : Math.round(s/1000)+'k') + ' sats — one-time';
     }
+    const extProSatsEl = document.getElementById('extProSats');
+    if (extProSatsEl) extProSatsEl.textContent = '~' + Math.ceil(9/btc*1e8).toLocaleString() + ' sats/mo';
+    const extBtcEl = document.getElementById('extBtc');
+    if (extBtcEl) extBtcEl.textContent = btc.toLocaleString();
+    const extSat1El = document.getElementById('extSat1');
+    if (extSat1El) extSat1El.textContent = (btc / 1e8).toFixed(6);
   } catch {}
 })();
 
@@ -1506,8 +1517,8 @@ function animateValue(id, start, end, duration) {
     var ps = document.getElementById('extProSats');
     if (ep) ep.textContent = count.toLocaleString();
     if (es) es.textContent = sats >= 1000 ? Math.round(sats/1000)+'k' : String(sats);
-    if (ps && typeof btcPrice !== 'undefined' && btcPrice > 0) {
-      ps.textContent = '~' + Math.ceil(9/btcPrice*1e8).toLocaleString() + ' sats/mo';
+    if (ps && window.btcPrice > 0) {
+      ps.textContent = '~' + Math.ceil(9/window.btcPrice*1e8).toLocaleString() + ' sats/mo';
     }
   } catch(_) {}
 })();

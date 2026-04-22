@@ -15,10 +15,8 @@
 [![npm](https://img.shields.io/npm/v/l402-kit)](https://npmjs.com/package/l402-kit)
 [![PyPI](https://img.shields.io/pypi/v/l402kit)](https://pypi.org/project/l402kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-113%20passing-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-139%20passing-brightgreen)](#)
 [![GitHub Stars](https://img.shields.io/github/stars/ShinyDapps/l402-kit)](https://github.com/ShinyDapps/l402-kit)
-
-![l402-kit demo](docs/demo.svg)
 
 <p align="center">
   <img src="vscode-extension/docs/screenshot.png" width="520" alt="ShinyDapps VS Code extension — real-time sats dashboard" />
