@@ -88,7 +88,7 @@ describe("waitlist handler — email dispatch logic", () => {
 
     const resendBody = JSON.parse((resendCalls[0][1]?.body as string) ?? "{}");
     expect(resendBody.to).toBe("user@example.com");
-    expect(resendBody.from).toContain("resend.dev");
+    expect(resendBody.from).toContain("l402kit.com");
   });
 
   it("email duplicado (409): retorna 200 mas Resend NÃO é chamado", async () => {
