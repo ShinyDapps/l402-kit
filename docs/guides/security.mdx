@@ -258,15 +258,26 @@ const emailHash = createHash('sha256').update(email.toLowerCase()).digest('hex')
 
 The `/api/delete-data` endpoint should only accept requests from the actual owner of the Lightning address. Use **LNURL-auth** to prove ownership cryptographically — the user signs a server challenge with their Lightning wallet private key, with no password or account required:
 
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as /api/lnurl-auth
+    participant W as Lightning Wallet
+    participant D as /api/delete-data
+
+    C->>S: GET ?lightningAddress=you@blink.sv
+    S-->>C: {k1, lnurl} — display as QR
+    W->>S: GET ?tag=login&k1=…&sig=…&key=…
+    Note over S: secp256k1.verify(sig, k1, pubkey) ✓
+    S-->>W: {status: "OK"}
+    C->>S: GET ?poll=<k1>
+    S-->>C: {verified: true, token: "abc…"}
+    C->>D: POST {lightningAddress, token}
+    Note over D: validate + revoke token (single-use)
+    D-->>C: {deleted: {payments: N, proAccess: true}}
 ```
-1. Client calls GET /api/lnurl-auth → server returns {k1, lnurl}
-2. User scans the LNURL-auth QR with their wallet
-3. Wallet signs k1 with the secp256k1 key derived for this domain
-4. Wallet calls GET /api/lnurl-auth?k1=...&sig=...&key=...
-5. Server verifies the signature → issues a short-lived deletion token
-6. Client sends POST /api/delete-data with {lightningAddress, token}
-7. Server validates token → deletes data → revokes token
-```
+
+See the [complete flow diagram](/guides/flows#5-lnurl-auth--wallet-ownership-proof-delete-data) for the full sequence with Supabase state.
 
 This ensures no one can delete another user's records, even if they know the Lightning address.
 

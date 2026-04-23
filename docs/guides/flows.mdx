@@ -1,0 +1,249 @@
+---
+title: System Flows
+description: Visual diagrams of every flow in the l402-kit platform — payment, authentication, subscription, email, and infrastructure.
+---
+
+## 1. Core L402 Payment Flow
+
+The fundamental request cycle. No accounts, no passwords — just a cryptographic receipt.
+
+```mermaid
+sequenceDiagram
+    participant C as Client / AI Agent
+    participant S as Your API Server
+    participant L as Lightning Network
+    participant B as Blink (provider)
+
+    C->>S: GET /api/data (no token)
+    S-->>C: 402 Payment Required<br/>WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+
+    Note over C,L: Client pays the Lightning invoice
+    C->>L: pay(invoice)
+    L-->>C: preimage (32-byte proof of payment)
+
+    C->>S: GET /api/data<br/>Authorization: L402 <macaroon>:<preimage>
+    Note over S: SHA256(preimage) === macaroon.hash?<br/>Verified in <1ms locally. No DB call.
+    S-->>C: 200 OK + data
+```
+
+**Key properties:**
+- Verification is fully local — no network call, no database lookup
+- `preimage` = cryptographic proof of payment (Lightning receipt)
+- `macaroon` = base64 JSON `{hash, exp}` signed with SHA-256
+
+---
+
+## 2. Token Anatomy
+
+```mermaid
+flowchart LR
+    T["Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;"]
+    T --> M["macaroon\nbase64({ hash, exp })\nSigned by SHA-256"]
+    T --> P["preimage\n32-byte hex secret\nSHA256(preimage) = hash"]
+    M --> V["Server verifies:\nSHA256(preimage) === hash\nexp > now()"]
+```
+
+---
+
+## 3. Managed Mode — Fee Split Flow
+
+When you set `ownerLightningAddress`, ShinyDapps creates the invoice, receives the payment, and forwards 99.7% to you automatically.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant V as Vercel Backend<br/>/api/invoice
+    participant B as Blink API<br/>(ShinyDapps wallet)
+    participant S as Supabase
+    participant O as Owner wallet<br/>(you@blink.sv)
+
+    C->>V: POST /api/invoice<br/>{priceSats, ownerAddress}
+    V->>B: lnInvoiceCreate(priceSats)
+    B-->>V: {paymentRequest, paymentHash}
+    V-->>C: 402 + invoice
+
+    Note over C,B: Client pays invoice
+    C->>B: pay(invoice)
+    B-->>C: preimage
+
+    C->>V: GET /api/data + L402 token
+    V->>S: INSERT payments<br/>{payment_hash, endpoint, amount_sats}
+    V->>V: POST /api/split<br/>(fire-and-forget)
+    V->>B: sendPayment(owner, 99.7%)
+    B-->>O: ⚡ sats received
+    V-->>C: 200 OK + data
+```
+
+---
+
+## 4. Pro Subscription Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User (VS Code)
+    participant V as Vercel Backend
+    participant B as Blink API
+    participant S as Supabase
+    participant W as Blink Webhook
+
+    U->>V: POST /api/pro-subscribe<br/>{lightningAddress, tier}
+    V->>B: lnInvoiceCreate(amountSats)
+    B-->>V: {paymentRequest, paymentHash}
+    V->>S: INSERT pro_access<br/>{address, payment_hash, expires_at: null}
+    V-->>U: {paymentRequest, paymentHash}
+
+    Note over U,B: User pays invoice in their wallet
+    U->>B: pay(invoice)
+
+    alt Webhook path (fast)
+        B->>W: POST /api/blink-webhook<br/>{type: "transaction.ln.invoice.paid"}
+        W->>S: PATCH pro_access<br/>SET expires_at = now + 30d
+    else Poll path (fallback)
+        U->>V: GET /api/pro-poll?paymentHash=...
+        V->>B: lnInvoice(paymentHash) → status
+        V->>S: PATCH pro_access SET expires_at
+        V-->>U: {active: true, expires_at}
+    end
+
+    U->>V: GET /api/pro-check?address=...
+    V->>S: SELECT expires_at WHERE address=?
+    V-->>U: {active: true, tier: "pro"}
+```
+
+---
+
+## 5. LNURL-auth — Wallet Ownership Proof (Delete Data)
+
+Proves you own a Lightning wallet without a password. Required before deleting account data.
+
+```mermaid
+sequenceDiagram
+    participant U as User (VS Code)
+    participant V as Vercel<br/>/api/lnurl-auth
+    participant W as Lightning Wallet<br/>(Phoenix, Blink…)
+    participant S as Supabase<br/>lnurl_challenges
+    participant D as Vercel<br/>/api/delete-data
+
+    U->>V: GET /api/lnurl-auth<br/>?lightningAddress=you@blink.sv
+    V->>V: k1 = randomBytes(32)
+    V->>S: INSERT {k1, lightning_address, expires_at: +5min}
+    V-->>U: {k1, lnurl} — show as QR code
+
+    Note over U,W: User scans QR with Lightning wallet
+    W->>W: Sign k1 with secp256k1<br/>key derived for this domain
+    W->>V: GET /api/lnurl-auth<br/>?tag=login&k1=…&sig=…&key=…
+    V->>V: secp256k1.verify(sig, k1, pubkey)
+    V->>V: token = randomBytes(32), TTL 10min
+    V->>S: PATCH {verified: true, pubkey, token}
+    V-->>W: {status: "OK"}
+
+    loop Poll every 2s
+        U->>V: GET /api/lnurl-auth?poll=<k1>
+        V->>S: SELECT verified, token WHERE k1=?
+        V-->>U: {verified: true, token: "abc…"}
+    end
+
+    U->>D: POST /api/delete-data<br/>{lightningAddress, token}
+    D->>S: SELECT WHERE token=? → verified? expired?
+    D->>S: PATCH token = null (revoke — single use)
+    D->>S: DELETE payments WHERE owner_address=?
+    D->>S: DELETE pro_access WHERE address=?
+    D-->>U: {deleted: {payments: N, proAccess: true}}
+```
+
+---
+
+## 6. Waitlist & Email Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User (browser)
+    participant V as Vercel<br/>/api/waitlist
+    participant S as Supabase<br/>waitlist table
+    participant R as Resend API
+    participant RW as Vercel<br/>/api/resend-webhook
+
+    U->>V: POST /api/waitlist<br/>{email: "user@example.com"}
+    V->>V: Validate email format
+    V->>V: encryptEmail(AES-256-GCM)
+    V->>S: INSERT {email: encrypted, status: pending}
+    Note over S: 409 if already signed up → idempotent
+    V-->>U: {ok: true}
+
+    Note over V,R: fire-and-forget async
+    V->>R: POST /emails<br/>from: hello@l402kit.com<br/>to: user@example.com
+    R-->>V: {id: "resend_abc…"}
+    V->>S: PATCH WHERE id=rowId<br/>SET resend_id, status: sending
+
+    Note over R,RW: Resend fires webhook on delivery event
+    R->>RW: POST /api/resend-webhook<br/>{type: "email.delivered", data.email_id}
+    RW->>RW: Verify Svix HMAC signature
+    RW->>S: PATCH WHERE resend_id=?<br/>SET email_status: delivered
+```
+
+---
+
+## 7. Infrastructure Overview
+
+```mermaid
+flowchart TB
+    subgraph CF["Cloudflare DNS (l402kit.com)"]
+        DNS["l402kit.com\nCNAME → cname.vercel-dns.com\nMX → inbound-smtp.us-east-1.amazonaws.com\nDKIM + SPF records"]
+    end
+
+    subgraph VCL["Vercel (l402kit project)"]
+        LAND["Landing Page\nbackend/index.html"]
+        API["Backend API\n/api/invoice\n/api/waitlist\n/api/delete-data\n/api/lnurl-auth\n/api/pro-subscribe\n/api/stats"]
+        HOOK["Webhooks\n/api/blink-webhook\n/api/resend-webhook"]
+    end
+
+    subgraph SB["Supabase (PostgreSQL)"]
+        PAY["payments\npayment_hash · amount_sats\nowner_address · endpoint"]
+        PRO["pro_access\naddress · tier\nexpires_at · payment_hash"]
+        WAIT["waitlist\nemail (AES-256-GCM)\nresend_id · email_status"]
+        LNURL["lnurl_challenges\nk1 · verified · token\ntoken_expires_at"]
+    end
+
+    subgraph EXT["External Services"]
+        BLINK["Blink Lightning\napi.blink.sv"]
+        RESEND["Resend Email\nhello@l402kit.com"]
+    end
+
+    CF --> VCL
+    API --> SB
+    HOOK --> SB
+    API --> BLINK
+    API --> RESEND
+    BLINK --> HOOK
+    RESEND --> HOOK
+```
+
+---
+
+## 8. SHA-256 Preimage Security
+
+Why we store `SHA256(preimage)` instead of the raw preimage:
+
+```mermaid
+flowchart LR
+    subgraph Lightning["Lightning Network (public)"]
+        INV["BOLT11 Invoice\ncontains payment_hash = SHA256(preimage)"]
+    end
+
+    subgraph Client["Client (private)"]
+        PRE["preimage\n32-byte secret\nproof of payment"]
+    end
+
+    subgraph DB["Supabase payments table"]
+        STORED["payment_hash\n= SHA256(preimage)\nsafe to store"]
+    end
+
+    PRE -->|"SHA256()"| STORED
+    INV -->|"already public"| STORED
+    PRE -.->|"❌ never store raw"| DB
+
+    style PRE fill:#ff4444,color:#fff
+    style STORED fill:#22c55e,color:#fff
+```
+
+**Why it's safe:** The `payment_hash` is already embedded in every BOLT11 invoice — it's public by design. Only the `preimage` is secret. Storing the hash gives you replay protection with zero additional exposure.

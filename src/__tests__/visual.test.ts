@@ -698,6 +698,87 @@ describe("[Visual] waitlist — AES-256-GCM email encryption", () => {
   });
 });
 
+// ─── docs/guides/flows.mdx — diagramas de fluxo ──────────────────────────────
+
+describe("[Visual] flows.mdx — diagramas Mermaid de todos os fluxos", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../../docs/guides/flows.mdx"), "utf-8"
+    );
+  });
+
+  it("tem frontmatter com title e description", () => {
+    expect(src).toMatch(/title: System Flows/);
+    expect(src).toMatch(/description:/);
+  });
+
+  it("tem 8 seções numeradas de fluxo", () => {
+    expect(src).toMatch(/## 1\./);
+    expect(src).toMatch(/## 8\./);
+  });
+
+  it("todos os blocos são diagramas Mermaid válidos", () => {
+    const mermaidBlocks = src.match(/```mermaid[\s\S]*?```/g);
+    expect(mermaidBlocks).not.toBeNull();
+    expect(mermaidBlocks!.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("core L402 flow: sequenceDiagram com 402 + preimage + 200", () => {
+    expect(src).toMatch(/402 Payment Required/);
+    expect(src).toMatch(/preimage/);
+    expect(src).toMatch(/200 OK/);
+  });
+
+  it("token anatomy: flowchart com macaroon e preimage", () => {
+    expect(src).toMatch(/Token Anatomy/i);
+    expect(src).toMatch(/macaroon/);
+    expect(src).toMatch(/SHA256.*preimage.*hash|SHA256\(preimage\)/);
+  });
+
+  it("managed mode: fee split 99.7% aparece no diagrama", () => {
+    expect(src).toMatch(/99\.7%/);
+    expect(src).toMatch(/\/api\/split/);
+  });
+
+  it("pro subscription: webhook path e poll path documentados", () => {
+    expect(src).toMatch(/Webhook path/i);
+    expect(src).toMatch(/Poll path/i);
+    expect(src).toMatch(/\/api\/pro-subscribe/);
+  });
+
+  it("LNURL-auth: secp256k1.verify no diagrama", () => {
+    expect(src).toMatch(/secp256k1\.verify/);
+    expect(src).toMatch(/single.use|single use/i);
+    expect(src).toMatch(/\/api\/lnurl-auth/);
+  });
+
+  it("waitlist flow: AES-256-GCM e Resend no diagrama", () => {
+    expect(src).toMatch(/AES-256-GCM/);
+    expect(src).toMatch(/hello@l402kit\.com/);
+    expect(src).toMatch(/Svix HMAC/);
+  });
+
+  it("infrastructure: Cloudflare → Vercel → Supabase", () => {
+    expect(src).toMatch(/Cloudflare/);
+    expect(src).toMatch(/cname\.vercel-dns\.com/);
+    expect(src).toMatch(/lnurl_challenges/);
+  });
+
+  it("SHA-256 preimage: explica por que é seguro armazenar hash", () => {
+    expect(src).toMatch(/payment_hash/);
+    expect(src).toMatch(/never store raw|❌ never store raw/i);
+    expect(src).toMatch(/BOLT11/);
+  });
+
+  it("está registrado no mint.json navigation", () => {
+    const mintSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../docs/mint.json"), "utf-8"
+    );
+    expect(mintSrc).toMatch(/guides\/flows/);
+  });
+});
+
 describe("[Visual] OG image — backend/logos/og-1200x630.png", () => {
   const PNG_PATH = path.resolve(__dirname, "../../backend/logos/og-1200x630.png");
 
