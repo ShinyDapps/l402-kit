@@ -55,18 +55,6 @@
   }
   .login-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
   .login-card p  { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
-  .login-card input {
-    width: 100%;
-    padding: 13px 16px;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 14px;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-  }
-  .login-card input:focus { outline: none; border-color: var(--orange); }
   .btn-login {
     width: 100%;
     padding: 13px;
@@ -79,9 +67,56 @@
     cursor: pointer;
     letter-spacing: 0.3px;
     transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .btn-login:hover { opacity: 0.9; }
+  .btn-login:disabled { opacity: 0.5; cursor: default; }
   .login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 18px; }
+
+  /* LNURL-auth QR step */
+  .lnurl-step { display: none; text-align: center; }
+  .qr-wrap {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    display: inline-block;
+    margin: 16px auto;
+  }
+  .qr-wrap img { display: block; width: 180px; height: 180px; }
+  .lnurl-text {
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--muted);
+    word-break: break-all;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    margin: 8px 0;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .lnurl-text:hover { border-color: var(--orange); }
+  .deeplink-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--border2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .pulse { animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   /* ── APP SHELL ───────────────────────────────────────── */
   .app { display: none; }
@@ -291,9 +326,30 @@
     <div class="login-logo">⚡</div>
     <h1>l402-kit</h1>
     <p>Dashboard de pagamentos Lightning — acesso restrito</p>
-    <input type="password" id="secretInput" placeholder="Dashboard secret" autocomplete="current-password" />
-    <button class="btn-login" onclick="login()">Entrar</button>
-    <div class="login-error" id="loginError"></div>
+
+    <!-- Step 1: connect button -->
+    <div id="loginStep1">
+      <button class="btn-login" id="connectBtn" onclick="startLnurlAuth()">
+        ⚡ Connect Lightning Wallet
+      </button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+
+    <!-- Step 2: QR + poll -->
+    <div class="lnurl-step" id="loginStep2">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:4px">Scan with your Lightning wallet</p>
+      <div class="qr-wrap">
+        <img id="qrImg" src="" alt="LNURL QR" />
+      </div>
+      <div class="lnurl-text" id="lnurlText" onclick="copyLnurl()" title="Click to copy"></div>
+      <a class="deeplink-btn" id="deeplinkBtn" href="#">
+        📱 Open in wallet app
+      </a>
+      <p style="margin-top:16px;font-size:12px;color:var(--muted)" class="pulse" id="pollStatus">
+        Waiting for wallet signature…
+      </p>
+      <div class="login-error" id="loginError2"></div>
+    </div>
   </div>
 </div>
 
@@ -376,25 +432,71 @@
     </div>
 
   </div><!-- /main -->
-  <div class="footer">l402-kit v1.2.1 · ShinyDapps · <span id="lastUpdated"></span></div>
+  <div class="footer">l402-kit v1.3.0 · ShinyDapps · <span id="lastUpdated"></span></div>
 </div><!-- /app -->
 
 <script>
-let secret = "";
+let lnurlToken = "";
+let pollInterval = null;
 let activePeriod = 7;
 let chartMode = "sats";
 let currentData = null;
 
-// ── LOGIN ─────────────────────────────────────────────────
-function login() {
-  secret = document.getElementById("secretInput").value.trim();
-  if (!secret) return;
-  document.getElementById("loginError").textContent = "";
-  loadStats();
+// ── LNURL-AUTH LOGIN ──────────────────────────────────────
+async function startLnurlAuth() {
+  const btn = document.getElementById("connectBtn");
+  const err = document.getElementById("loginError");
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+  err.textContent = "";
+  try {
+    const r = await fetch("/api/lnurl-auth?dashboard=1");
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      err.textContent = d.error || "Erro ao gerar desafio.";
+      btn.disabled = false;
+      btn.innerHTML = "⚡ Connect Lightning Wallet";
+      return;
+    }
+    const { k1, lnurl } = await r.json();
+    // Show QR step
+    document.getElementById("loginStep1").style.display = "none";
+    document.getElementById("loginStep2").style.display = "block";
+    document.getElementById("qrImg").src =
+      "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
+      encodeURIComponent("lightning:" + lnurl);
+    document.getElementById("lnurlText").textContent = lnurl;
+    document.getElementById("deeplinkBtn").href = "lightning:" + lnurl;
+    // Poll
+    startPolling(k1);
+  } catch {
+    err.textContent = "Erro de rede. Tente novamente.";
+    btn.disabled = false;
+    btn.innerHTML = "⚡ Connect Lightning Wallet";
+  }
 }
-document.getElementById("secretInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") login();
-});
+
+function copyLnurl() {
+  const text = document.getElementById("lnurlText").textContent;
+  navigator.clipboard?.writeText(text);
+  document.getElementById("lnurlText").title = "Copied!";
+  setTimeout(() => { document.getElementById("lnurlText").title = "Click to copy"; }, 1500);
+}
+
+function startPolling(k1) {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    try {
+      const r = await fetch("/api/lnurl-auth?poll=" + k1);
+      const d = await r.json();
+      if (d.verified && d.token) {
+        clearInterval(pollInterval);
+        lnurlToken = d.token;
+        loadStats();
+      }
+    } catch {}
+  }, 2000);
+}
 
 // ── PERIOD ────────────────────────────────────────────────
 function setPeriod(days) {
@@ -417,10 +519,14 @@ function switchChart(mode) {
 async function loadStats() {
   try {
     const res = await fetch("/api/stats", {
-      headers: { "x-dashboard-secret": secret }
+      headers: { "x-lnurl-token": lnurlToken }
     });
     if (res.status === 401) {
-      document.getElementById("loginError").textContent = "Secret incorreto.";
+      document.getElementById("loginError2").textContent = "Token inválido ou expirado.";
+      document.getElementById("loginStep2").style.display = "none";
+      document.getElementById("loginStep1").style.display = "block";
+      document.getElementById("connectBtn").disabled = false;
+      document.getElementById("connectBtn").innerHTML = "⚡ Connect Lightning Wallet";
       return;
     }
     const data = await res.json();
@@ -431,7 +537,7 @@ async function loadStats() {
     document.getElementById("lastUpdated").textContent =
       "Atualizado " + new Date().toLocaleTimeString("pt-BR");
   } catch {
-    document.getElementById("loginError").textContent = "Erro ao conectar.";
+    document.getElementById("loginError2").textContent = "Erro ao conectar.";
   }
 }
 

@@ -285,6 +285,141 @@ describe("lnurl-auth — Mode 2: wallet callback (LNURL-auth spec)", () => {
   });
 });
 
+// ── Mode 1 (dashboard): ?dashboard=1 challenge generation ────────────────────
+
+describe("lnurl-auth — Mode 1 (dashboard): ?dashboard=1", () => {
+  beforeEach(() => {
+    process.env.OWNER_PUBKEY = "03" + "ab".repeat(32); // dummy 33-byte compressed pubkey
+  });
+
+  it("gera k1 + LNURL sem exigir lightningAddress", async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve(new Response(null, { status: 201 }))
+    ) as typeof fetch;
+
+    const { default: handler } = await import("../../backend/api/lnurl-auth") as unknown as { default: Handler };
+    const req = buildReq({ dashboard: "1" });
+    const res = buildRes();
+    await handler(req as any, res as any);
+
+    expect(res.calls[0].status).toBe(200);
+    const body = res.calls[0].body as { k1: string; lnurl: string };
+    expect(body.k1).toHaveLength(64);
+    expect(body.lnurl).toMatch(/^LNURL/);
+  });
+
+  it("salva lightning_address = '__dashboard__' no Supabase", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let inserted: any = null;
+    global.fetch = jest.fn((...args: FetchArgs) => {
+      inserted = JSON.parse(args[1]?.body as string);
+      return Promise.resolve(new Response(null, { status: 201 }));
+    }) as typeof fetch;
+
+    const { default: handler } = await import("../../backend/api/lnurl-auth") as unknown as { default: Handler };
+    await handler(buildReq({ dashboard: "1" }) as any, buildRes() as any);
+
+    expect(inserted).not.toBeNull();
+    expect(inserted.lightning_address).toBe("__dashboard__");
+  });
+
+  it("retorna 500 quando OWNER_PUBKEY não está configurado", async () => {
+    delete process.env.OWNER_PUBKEY;
+    global.fetch = jest.fn() as typeof fetch;
+
+    const { default: handler } = await import("../../backend/api/lnurl-auth") as unknown as { default: Handler };
+    const res = buildRes();
+    await handler(buildReq({ dashboard: "1" }) as any, res as any);
+
+    expect(res.calls[0].status).toBe(500);
+  });
+
+  it("rejeita ?dashboard=1 sem OWNER_PUBKEY — nunca insere no Supabase", async () => {
+    delete process.env.OWNER_PUBKEY;
+    const fetchCalls: FetchArgs[] = [];
+    global.fetch = jest.fn((...a: FetchArgs) => {
+      fetchCalls.push(a);
+      return Promise.resolve(new Response(null, { status: 201 }));
+    }) as typeof fetch;
+
+    const { default: handler } = await import("../../backend/api/lnurl-auth") as unknown as { default: Handler };
+    await handler(buildReq({ dashboard: "1" }) as any, buildRes() as any);
+
+    expect(fetchCalls).toHaveLength(0);
+  });
+});
+
+// ── Mode 2 (dashboard): OWNER_PUBKEY enforcement ──────────────────────────────
+
+describe("lnurl-auth — Mode 2 (dashboard): OWNER_PUBKEY enforcement", () => {
+  const k1 = randomBytes(32).toString("hex");
+  const futureExpiry = new Date(Date.now() + 300_000).toISOString();
+
+  function makeDashboardRow(overrides: Partial<{ expires_at: string; verified: boolean; pubkey: string }> = {}) {
+    return JSON.stringify([{
+      k1,
+      expires_at: overrides.expires_at ?? futureExpiry,
+      verified: overrides.verified ?? false,
+      lightning_address: "__dashboard__",
+    }]);
+  }
+
+  it("rejeita wallet diferente do OWNER_PUBKEY → 401", async () => {
+    const ownerPriv = randomBytes(32);
+    const ownerPub = Buffer.from(secp256k1.getPublicKey(ownerPriv, true)).toString("hex");
+    process.env.OWNER_PUBKEY = ownerPub;
+
+    // sign with a DIFFERENT key
+    const { sig, key: wrongKey } = signChallenge(k1);
+
+    global.fetch = jest.fn((...args: FetchArgs) => {
+      if ((args[0] as string).includes("lnurl_challenges")) {
+        return Promise.resolve(new Response(makeDashboardRow(), { status: 200 }));
+      }
+      return Promise.reject(new Error("unexpected"));
+    }) as typeof fetch;
+
+    const { default: handler } = await import("../../backend/api/lnurl-auth") as unknown as { default: Handler };
+    const req = buildReq({ tag: "login", k1, sig, key: wrongKey });
+    const res = buildRes();
+    await handler(req as any, res as any);
+
+    expect(res.calls[0].status).toBe(401);
+    expect((res.calls[0].body as { reason: string }).reason).toMatch(/not authorized|not the owner/i);
+  });
+
+  it("aceita owner wallet com sig válida → 200 OK + token com TTL ~24h", async () => {
+    const ownerPriv = randomBytes(32);
+    const ownerPub = Buffer.from(secp256k1.getPublicKey(ownerPriv, true)).toString("hex");
+    process.env.OWNER_PUBKEY = ownerPub;
+
+    const k1Bytes = Uint8Array.from(Buffer.from(k1, "hex"));
+    const sig = Buffer.from(secp256k1.sign(k1Bytes, ownerPriv).toDERRawBytes()).toString("hex");
+
+    let patched: Record<string, unknown> | null = null;
+    global.fetch = jest.fn((...args: FetchArgs) => {
+      if (args[1]?.method === "PATCH") {
+        patched = JSON.parse(args[1].body as string);
+        return Promise.resolve(new Response(null, { status: 200 }));
+      }
+      return Promise.resolve(new Response(makeDashboardRow(), { status: 200 }));
+    }) as typeof fetch;
+
+    const { default: handler } = await import("../../backend/api/lnurl-auth") as unknown as { default: Handler };
+    const req = buildReq({ tag: "login", k1, sig, key: ownerPub });
+    const res = buildRes();
+    await handler(req as any, res as any);
+
+    expect(res.calls[0].status).toBe(200);
+    expect((res.calls[0].body as { status: string }).status).toBe("OK");
+    expect(patched).not.toBeNull();
+    // 24h token: expires_at deve ser ao menos 23h no futuro
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ttlMs = new Date((patched as any).token_expires_at as string).getTime() - Date.now();
+    expect(ttlMs).toBeGreaterThan(23 * 60 * 60 * 1_000);
+  });
+});
+
 // ── Mode 3: client poll ───────────────────────────────────────────────────────
 
 describe("lnurl-auth — Mode 3: client poll", () => {

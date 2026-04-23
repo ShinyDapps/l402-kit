@@ -1,6 +1,6 @@
 ---
 title: System Flows
-description: Visual diagrams of every flow in the l402-kit platform — payment, authentication, subscription, email, and infrastructure.
+description: Visual diagrams of every flow in the l402-kit platform — payment, authentication, subscription, and infrastructure.
 ---
 
 ## 1. Core L402 Payment Flow
@@ -153,32 +153,42 @@ sequenceDiagram
 
 ---
 
-## 6. Waitlist & Email Flow
+## 6. Dashboard LNURL-auth Login Flow
+
+Owner-only dashboard authentication — no passwords, no secrets in Vercel.
 
 ```mermaid
 sequenceDiagram
-    participant U as User (browser)
-    participant V as Vercel<br/>/api/waitlist
-    participant S as Supabase<br/>waitlist table
-    participant R as Resend API
-    participant RW as Vercel<br/>/api/resend-webhook
+    participant O as Owner browser
+    participant V as Vercel<br/>/api/lnurl-auth
+    participant W as Owner Lightning Wallet
+    participant S as Supabase<br/>lnurl_challenges
+    participant D as Vercel<br/>/api/stats
 
-    U->>V: POST /api/waitlist<br/>{email: "user@example.com"}
-    V->>V: Validate email format
-    V->>V: encryptEmail(AES-256-GCM)
-    V->>S: INSERT {email: encrypted, status: pending}
-    Note over S: 409 if already signed up → idempotent
-    V-->>U: {ok: true}
+    O->>V: GET /api/lnurl-auth?dashboard=1
+    V->>V: k1 = randomBytes(32)
+    V->>S: INSERT {k1, lightning_address: "__dashboard__", expires_at: +5min}
+    V-->>O: {k1, lnurl} — show QR code
 
-    Note over V,R: fire-and-forget async
-    V->>R: POST /emails<br/>from: hello@l402kit.com<br/>to: user@example.com
-    R-->>V: {id: "resend_abc…"}
-    V->>S: PATCH WHERE id=rowId<br/>SET resend_id, status: sending
+    Note over O,W: Owner scans QR with their Lightning wallet
+    W->>W: Sign k1 with secp256k1 key
+    W->>V: GET /api/lnurl-auth<br/>?tag=login&k1=…&sig=…&key=…
+    V->>V: key === OWNER_PUBKEY? ✓
+    V->>V: secp256k1.verify(sig, k1, key)
+    V->>V: token = randomBytes(32), TTL 24h
+    V->>S: PATCH {verified: true, pubkey, token, token_expires_at}
+    V-->>W: {status: "OK"}
 
-    Note over R,RW: Resend fires webhook on delivery event
-    R->>RW: POST /api/resend-webhook<br/>{type: "email.delivered", data.email_id}
-    RW->>RW: Verify Svix HMAC signature
-    RW->>S: PATCH WHERE resend_id=?<br/>SET email_status: delivered
+    loop Poll every 2s
+        O->>V: GET /api/lnurl-auth?poll=<k1>
+        V->>S: SELECT verified, token WHERE k1=?
+        V-->>O: {verified: true, token: "abc…"}
+    end
+
+    O->>D: GET /api/stats<br/>x-lnurl-token: <token>
+    D->>S: SELECT verified, pubkey, token_expires_at WHERE token=?
+    D->>D: pubkey === OWNER_PUBKEY? ✓ not expired? ✓
+    D-->>O: {totalPayments, totalSats, byDay, trend, recent…}
 ```
 
 ---
@@ -188,34 +198,31 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph CF["Cloudflare DNS (l402kit.com)"]
-        DNS["l402kit.com\nCNAME → cname.vercel-dns.com\nMX → inbound-smtp.us-east-1.amazonaws.com\nDKIM + SPF records"]
+        DNS["l402kit.com\nCNAME → cname.vercel-dns.com"]
     end
 
     subgraph VCL["Vercel (l402kit project)"]
         LAND["Landing Page\nbackend/index.html"]
-        API["Backend API\n/api/invoice\n/api/waitlist\n/api/delete-data\n/api/lnurl-auth\n/api/pro-subscribe\n/api/stats"]
-        HOOK["Webhooks\n/api/blink-webhook\n/api/resend-webhook"]
+        API["Backend API\n/api/invoice → Edge Function\n/api/delete-data\n/api/lnurl-auth\n/api/pro-subscribe\n/api/stats (LNURL-auth)"]
+        HOOK["Webhooks\n/api/blink-webhook"]
     end
 
-    subgraph SB["Supabase (PostgreSQL)"]
+    subgraph SB["Supabase (PostgreSQL + Edge Functions)"]
         PAY["payments\npayment_hash · amount_sats\nowner_address · endpoint"]
         PRO["pro_access\naddress · tier\nexpires_at · payment_hash"]
-        WAIT["waitlist\nemail (AES-256-GCM)\nresend_id · email_status"]
-        LNURL["lnurl_challenges\nk1 · verified · token\ntoken_expires_at"]
+        LNURL["lnurl_challenges\nk1 · verified · token\ntoken_expires_at · pubkey"]
+        EF["Edge Function: create-invoice\nBLINK_API_KEY (Supabase Secret)\nBLINK_WALLET_ID (Supabase Secret)"]
     end
 
     subgraph EXT["External Services"]
         BLINK["Blink Lightning\napi.blink.sv"]
-        RESEND["Resend Email\nhello@l402kit.com"]
     end
 
     CF --> VCL
     API --> SB
     HOOK --> SB
-    API --> BLINK
-    API --> RESEND
+    EF --> BLINK
     BLINK --> HOOK
-    RESEND --> HOOK
 ```
 
 ---

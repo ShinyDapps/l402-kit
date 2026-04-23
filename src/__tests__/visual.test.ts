@@ -127,9 +127,9 @@ describe("[Visual] dashboard — dashboard.html", () => {
     expect(html).toMatch(/period-tab/);
   });
 
-  it("busca /api/stats com x-dashboard-secret", () => {
+  it("busca /api/stats com x-lnurl-token", () => {
     expect(html).toMatch(/\/api\/stats/);
-    expect(html).toMatch(/x-dashboard-secret/);
+    expect(html).toMatch(/x-lnurl-token/);
   });
 
   it("processa byDay para o chart", () => {
@@ -152,10 +152,12 @@ describe("[Visual] dashboard — dashboard.html", () => {
     expect(html).not.toMatch(/re_[A-Za-z0-9]{20,}/);
   });
 
-  it("tem login com password input antes de mostrar dados", () => {
-    expect(html).toMatch(/type="password"/);
+  it("tem login LNURL-auth (QR + botão conectar) antes de mostrar dados", () => {
     expect(html).toMatch(/id="loginView"/);
     expect(html).toMatch(/id="appView"/);
+    expect(html).toMatch(/connectBtn|id="connectBtn"/);
+    expect(html).toMatch(/lnurl-auth|LNURL|lnurlToken/i);
+    expect(html).not.toMatch(/type="password"/);
   });
 });
 
@@ -217,10 +219,18 @@ describe("[Visual] flows.mdx — diagramas Mermaid de todos os fluxos", () => {
     expect(src).toMatch(/\/api\/lnurl-auth/);
   });
 
-  it("infrastructure: Cloudflare → Vercel → Supabase", () => {
+  it("dashboard login flow: OWNER_PUBKEY + 24h token documentados", () => {
+    expect(src).toMatch(/dashboard=1/);
+    expect(src).toMatch(/OWNER_PUBKEY/);
+    expect(src).toMatch(/24h/);
+    expect(src).toMatch(/__dashboard__/);
+  });
+
+  it("infrastructure: Cloudflare → Vercel → Supabase + Edge Function", () => {
     expect(src).toMatch(/Cloudflare/);
     expect(src).toMatch(/cname\.vercel-dns\.com/);
     expect(src).toMatch(/lnurl_challenges/);
+    expect(src).toMatch(/Edge Function/);
   });
 
   it("SHA-256 preimage: explica por que é seguro armazenar hash", () => {
