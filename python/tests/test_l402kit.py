@@ -279,7 +279,7 @@ class TestFastAPIMiddleware:
         client = self._make_app(provider, price_sats=250)
         res = client.get("/premium")
         assert res.status_code == 402
-        assert res.json().get("priceSats") == 250
+        assert res.json().get("price_sats") == 250
 
     def test_empty_auth_returns_402(self):
         provider, _, _ = self._make_provider_and_preimage()
