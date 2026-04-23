@@ -456,6 +456,57 @@ td { padding: 5px 4px; border-bottom: 1px solid #181818; font-size: 11px; color:
 }
 .retry-btn:hover { background: #222; border-color: #444; }
 .loading { text-align: center; padding: 44px 12px; color: #f7931a; font-size: 13px; }
+.danger-zone {
+  margin-top: 20px; border: 1px solid #2a0a0a; border-radius: 8px;
+  background: #110606; padding: 12px 14px;
+}
+.danger-title {
+  font-size: 10px; font-weight: 700; color: #8b2020;
+  text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;
+}
+.delete-trigger-btn {
+  width: 100%; padding: 7px 12px; background: transparent;
+  border: 1px solid #5a1515; border-radius: 6px;
+  color: #c94040; font-size: 11px; font-weight: 600;
+  cursor: pointer; text-align: left;
+}
+.delete-trigger-btn:hover { background: #1a0606; border-color: #c94040; color: #ef4444; }
+.delete-confirm-box {
+  display: none; margin-top: 10px;
+  background: #160404; border: 1px solid #3a0a0a;
+  border-radius: 6px; padding: 12px;
+}
+.delete-warn { font-size: 10px; color: #888; line-height: 1.7; margin-bottom: 10px; }
+.delete-warn strong { color: #c0c0c0; }
+.delete-warn .addr-chip {
+  display: inline-block; background: #1e0808; border: 1px solid #3a1010;
+  border-radius: 4px; padding: 1px 7px; font-family: monospace; color: #f7931a;
+  font-size: 10px; margin: 2px 0;
+}
+.delete-label { font-size: 10px; color: #777; margin-bottom: 4px; }
+.delete-input {
+  width: 100%; padding: 6px 8px; background: #0e0606;
+  border: 1px solid #3a1010; border-radius: 5px;
+  color: #d0d0d0; font-size: 11px; font-family: monospace;
+  outline: none; margin-bottom: 10px;
+}
+.delete-input:focus { border-color: #8b2020; }
+.delete-actions { display: flex; gap: 6px; }
+.delete-cancel-btn {
+  flex: 1; padding: 6px; background: #1a1a1a;
+  border: 1px solid #2a2a2a; border-radius: 5px;
+  color: #888; font-size: 11px; cursor: pointer;
+}
+.delete-cancel-btn:hover { border-color: #444; color: #bbb; }
+.delete-confirm-btn {
+  flex: 1; padding: 6px; background: #3a0a0a;
+  border: 1px solid #5a1515; border-radius: 5px;
+  color: #c94040; font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.delete-confirm-btn:not(:disabled):hover { background: #5a0a0a; border-color: #c94040; color: #ef4444; }
+.delete-confirm-btn:disabled { opacity: .35; cursor: not-allowed; }
+.delete-status { font-size: 10px; margin-top: 8px; color: #666; }
 </style>
 </head>
 <body>
@@ -470,12 +521,12 @@ td { padding: 5px 4px; border-bottom: 1px solid #181818; font-size: 11px; color:
 <div id="content"><div class="loading">⚡ Loading…</div></div>
 
 <div style="text-align:center;padding:8px 12px;border-top:1px solid #1a1a1a;background:#0e0e0e">
-  <a href="https://l402kit.vercel.app" target="_blank"
+  <a href="https://l402kit.com" target="_blank"
      style="font-size:10px;color:#555;text-decoration:none;letter-spacing:.3px">
-    ⚡ l402kit.vercel.app
+    ⚡ l402kit.com
   </a>
   <span style="color:#2a2a2a;margin:0 6px">·</span>
-  <a href="https://l402kit.vercel.app/docs" target="_blank"
+  <a href="https://l402kit.com/docs" target="_blank"
      style="font-size:10px;color:#555;text-decoration:none">
     docs
   </a>
@@ -679,7 +730,7 @@ function renderContent(rows) {
     const proSats = btcPrice > 0 ? Math.ceil(${MONTHLY_FEE_USD} / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
     html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
     html += '<div class="pro-features">' + t('proFeatures') + '</div>';
-    html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">' + t('upgradeBtn') + '</a>';
+    html += '<a href="https://l402kit.com/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">' + t('upgradeBtn') + '</a>';
     html += '</div>';
   }
 
@@ -713,6 +764,28 @@ function renderContent(rows) {
   }
   html += '</table>';
 
+  // danger zone
+  html += '<div class="danger-zone">';
+  html += '<div class="danger-title">⚠ Danger Zone</div>';
+  html += '<button class="delete-trigger-btn" id="deleteTriggerBtn">🗑 Delete all my data…</button>';
+  html += '<div class="delete-confirm-box" id="deleteConfirmBox">';
+  html += '<div class="delete-warn">';
+  html += 'This will permanently delete:<br>';
+  html += '• <strong>All payment history</strong> (' + rows.length + ' payments)<br>';
+  html += '• <strong>Your Pro subscription</strong><br>';
+  html += '• <strong style="color:#ef4444">This action cannot be undone.</strong>';
+  html += '</div>';
+  html += '<div class="delete-label">Type your Lightning address to confirm:</div>';
+  html += '<div class="addr-chip" style="margin-bottom:8px">' + esc(ADDR) + '</div>';
+  html += '<input class="delete-input" id="deleteInput" placeholder="' + esc(ADDR) + '" autocomplete="off" spellcheck="false">';
+  html += '<div class="delete-actions">';
+  html += '<button class="delete-cancel-btn" id="deleteCancelBtn">Cancel</button>';
+  html += '<button class="delete-confirm-btn" id="deleteConfirmBtn" disabled>Delete my data</button>';
+  html += '</div>';
+  html += '<div class="delete-status" id="deleteStatus"></div>';
+  html += '</div>';
+  html += '</div>';
+
   setContent(html);
 
   // wire up chart + buttons after DOM update
@@ -724,7 +797,7 @@ function renderContent(rows) {
       btn.addEventListener('click', function() {
         const r = btn.getAttribute('data-r');
         if ((r === '1Y' || r === 'ALL') && !isPro) {
-          window.open('https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
+          window.open('https://l402kit.com/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
           return;
         }
         chartRange = r;
@@ -744,6 +817,71 @@ function renderContent(rows) {
           return new Date(r.paid_at).toISOString() + ',' + (r.endpoint || '') + ',' + (r.amount_sats || 0);
         }).join('\\n');
         vsc.postMessage({ command: 'downloadCsv', data: header + body });
+      });
+    }
+
+    // danger zone wiring
+    const triggerBtn  = el('deleteTriggerBtn');
+    const confirmBox  = el('deleteConfirmBox');
+    const cancelBtn   = el('deleteCancelBtn');
+    const deleteInput = el('deleteInput') as HTMLInputElement | null;
+    const confirmBtn  = el('deleteConfirmBtn') as HTMLButtonElement | null;
+    const deleteStatus = el('deleteStatus');
+
+    if (triggerBtn && confirmBox) {
+      triggerBtn.addEventListener('click', function() {
+        confirmBox.style.display = 'block';
+        triggerBtn.style.display = 'none';
+        if (deleteInput) deleteInput.focus();
+      });
+    }
+    if (cancelBtn && confirmBox && triggerBtn) {
+      cancelBtn.addEventListener('click', function() {
+        confirmBox.style.display = 'none';
+        triggerBtn.style.display = '';
+        if (deleteInput) deleteInput.value = '';
+        if (confirmBtn) confirmBtn.disabled = true;
+        if (deleteStatus) deleteStatus.textContent = '';
+      });
+    }
+    if (deleteInput && confirmBtn) {
+      deleteInput.addEventListener('input', function() {
+        confirmBtn.disabled = deleteInput.value.trim() !== ADDR;
+      });
+    }
+    if (confirmBtn && deleteInput && deleteStatus) {
+      confirmBtn.addEventListener('click', async function() {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Deleting…';
+        deleteStatus.textContent = '';
+        try {
+          const r = await fetch('https://l402kit.com/api/delete-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lightningAddress: ADDR }),
+          });
+          const d = await r.json() as { deleted?: { payments: number; proAccess: boolean }; error?: string };
+          if (r.ok && d.deleted) {
+            const p = d.deleted.payments;
+            const sub = d.deleted.proAccess ? ' + Pro subscription' : '';
+            deleteStatus.style.color = '#22c55e';
+            deleteStatus.textContent = '✅ Deleted: ' + p + ' payment' + (p !== 1 ? 's' : '') + sub + '.';
+            confirmBtn.textContent = 'Deleted';
+            deleteInput.disabled = true;
+            if (cancelBtn) cancelBtn.textContent = 'Close';
+            setTimeout(function() { load(); }, 2000);
+          } else {
+            deleteStatus.style.color = '#ef4444';
+            deleteStatus.textContent = '✗ ' + (d.error || 'Unexpected error');
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Delete my data';
+          }
+        } catch(e) {
+          deleteStatus.style.color = '#ef4444';
+          deleteStatus.textContent = '✗ Network error — try again.';
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Delete my data';
+        }
       });
     }
 
@@ -770,7 +908,7 @@ function renderContent(rows) {
 async function checkPro() {
   if (!ADDR) return;
   try {
-    const r = await fetch('https://l402kit.vercel.app/api/pro-check?address=' + encodeURIComponent(ADDR));
+    const r = await fetch('https://l402kit.com/api/pro-check?address=' + encodeURIComponent(ADDR));
     if (r.ok) { const d = await r.json(); isPro = d.pro === true; }
   } catch(_) {}
 }
