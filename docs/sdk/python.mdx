@@ -13,9 +13,9 @@ pip install l402kit
 
 ---
 
-## Zero-config managed mode
+## Sovereign mode (you keep 100%)
 
-The fastest way to monetize your API. Set your Lightning Address — l402-kit handles invoices, verification, and fee split automatically. You receive **99.7%** of every payment directly to your wallet.
+Bring your own Lightning provider — payments go directly to your wallet, 0% fees.
 
 ```python
 import os
@@ -243,4 +243,62 @@ curl http://localhost:3000/api/data
 
 # Pay invoice, then:
 curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
+```
+
+---
+
+## L402Client — automatic payment
+
+`L402Client` wraps `httpx` and handles the full 402 → pay → retry loop automatically.
+
+```python
+from l402kit import L402Client
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+
+client = L402Client(wallet=wallet)
+data = client.get("https://api.example.com/premium").json()
+```
+
+### Wallets
+
+| Class | Install | Description |
+|---|---|---|
+| `BlinkWallet` | `pip install l402kit` | Pay via [Blink](https://blink.sv) GraphQL API |
+| `AlbyWallet` | `pip install l402kit` | Pay via [Alby](https://getalby.com) REST API |
+
+```python
+from l402kit.wallets import BlinkWallet, AlbyWallet
+
+blink = BlinkWallet(api_key="...", wallet_id="...")
+alby  = AlbyWallet(access_token=os.environ["ALBY_TOKEN"])
+```
+
+---
+
+## DevProvider + DevWallet — local development
+
+Zero-config local development — no Lightning node, no real payments. Cryptographically identical to production: `SHA256(preimage) === paymentHash`.
+
+```python
+from l402kit.dev import DevProvider, DevWallet
+from l402kit import L402Client, l402_required
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+provider = DevProvider()
+wallet   = DevWallet(provider)
+
+@app.get("/premium")
+@l402_required(price_sats=1, lightning=provider)
+async def premium(request: Request):
+    return {"data": "premium content"}
+
+# Client — pays automatically without real Lightning
+client = L402Client(wallet=wallet)
+data   = client.get("http://localhost:8000/premium").json()
 ```
