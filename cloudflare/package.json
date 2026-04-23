@@ -1,0 +1,15 @@
+{
+  "name": "l402kit-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "secrets": "node scripts/set-secrets.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241106.0",
+    "typescript": "^5.4.0",
+    "wrangler": "^4.84.1"
+  }
+}
