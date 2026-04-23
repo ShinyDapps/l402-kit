@@ -1,165 +1,419 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShinyDapps — Dashboard</title>
+<title>l402-kit — Dashboard</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0a0a0a; color: #e5e5e5; min-height: 100vh; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .login { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  .login-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 40px; width: 360px; text-align: center; }
-  .login-card h1 { font-size: 24px; margin-bottom: 8px; }
-  .login-card p { color: #666; margin-bottom: 24px; font-size: 14px; }
-  .login-card input { width: 100%; padding: 12px 16px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #e5e5e5; font-size: 14px; margin-bottom: 12px; }
-  .login-card input:focus { outline: none; border-color: #f7931a; }
-  .btn { width: 100%; padding: 12px; background: #f7931a; color: #000; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn:hover { background: #e8841a; }
-  .error { color: #ff4444; font-size: 13px; margin-top: 8px; }
+  :root {
+    --bg:       #080810;
+    --surface:  #0f0f1a;
+    --border:   #1c1c2e;
+    --border2:  #252538;
+    --orange:   #f7931a;
+    --orange2:  #ff6b00;
+    --green:    #22c55e;
+    --red:      #f87171;
+    --blue:     #60a5fa;
+    --purple:   #a78bfa;
+    --text:     #e2e2f0;
+    --muted:    #6b6b8a;
+    --muted2:   #3a3a55;
+  }
 
-  .app { display: none; padding: 32px; max-width: 1100px; margin: 0 auto; }
-  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
-  header h1 { font-size: 20px; font-weight: 600; }
-  .badge { background: #1a1a1a; border: 1px solid #f7931a33; color: #f7931a; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
 
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 24px; }
-  .card-label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .card-value { font-size: 32px; font-weight: 700; }
-  .card-value.orange { color: #f7931a; }
-  .card-value.green { color: #4ade80; }
-  .card-sub { font-size: 12px; color: #555; margin-top: 4px; }
+  /* ── LOGIN ───────────────────────────────────────────── */
+  .login-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, #1a0a2e44, transparent);
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 380px;
+    text-align: center;
+    box-shadow: 0 24px 80px #00000088;
+  }
+  .login-logo {
+    font-size: 36px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 12px #f7931a66);
+  }
+  .login-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .login-card p  { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  .login-card input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .login-card input:focus { outline: none; border-color: var(--orange); }
+  .btn-login {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: opacity 0.2s;
+  }
+  .btn-login:hover { opacity: 0.9; }
+  .login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 18px; }
 
-  .section { background: #111; border: 1px solid #222; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-  .section h2 { font-size: 14px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+  /* ── APP SHELL ───────────────────────────────────────── */
+  .app { display: none; }
 
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #080810dd;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo { font-size: 20px; filter: drop-shadow(0 0 6px #f7931a66); }
+  .topbar h1   { font-size: 16px; font-weight: 700; }
+  .badge {
+    background: #1a1a2e;
+    border: 1px solid #f7931a33;
+    color: var(--orange);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .period-tabs  { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .period-tab {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .period-tab.active { background: var(--orange); color: #000; }
+  .btn-refresh {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-refresh:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* ── MAIN CONTENT ────────────────────────────────────── */
+  .main { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── KPI CARDS ───────────────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi:hover { border-color: var(--border2); }
+  .kpi-glow {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 14px 14px 0 0;
+  }
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
+  .kpi-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .kpi-sub   { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .trend-up   { color: var(--green); font-weight: 600; }
+  .trend-down { color: var(--red);   font-weight: 600; }
+  .trend-neu  { color: var(--muted); }
+
+
+  /* ── CONVERSION BANNER ───────────────────────────────── */
+  .conversion-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 22px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .conv-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .conv-track {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .conv-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), var(--orange2));
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+  .conv-pct { font-size: 14px; font-weight: 700; color: var(--orange); white-space: nowrap; }
+
+  /* ── CHART ───────────────────────────────────────────── */
+  .chart-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .chart-toggle { display: flex; gap: 4px; }
+  .chart-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .chart-btn.active { background: var(--border2); color: var(--text); }
+
+  #chartSvg { width: 100%; overflow: visible; display: block; }
+
+  /* ── TABLES ──────────────────────────────────────────── */
+  .table-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; color: #555; padding: 8px 12px; border-bottom: 1px solid #1e1e1e; font-weight: 500; }
-  td { padding: 10px 12px; border-bottom: 1px solid #1a1a1a; color: #ccc; }
+  th {
+    text-align: left;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); color: #c8c8e0; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #161616; }
-  .mono { font-family: monospace; font-size: 11px; color: #555; }
-  .sats { color: #f7931a; font-weight: 600; }
-  .endpoint { background: #1a1a1a; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #aaa; }
+  tbody tr { transition: background 0.1s; }
+  tbody tr:hover td { background: #0f0f1e; }
 
-  .empty { text-align: center; padding: 48px; color: #444; }
-  .empty span { font-size: 32px; display: block; margin-bottom: 12px; }
+  .mono { font-family: "SF Mono", "Fira Code", monospace; font-size: 11px; color: var(--muted); }
+  .sats { color: var(--orange); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .green-text { color: var(--green); }
+  .chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    font-family: "SF Mono", monospace;
+    color: #aaa;
+  }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
 
-  .refresh { background: #1a1a1a; border: 1px solid #333; color: #aaa; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
-  .refresh:hover { border-color: #f7931a; color: #f7931a; }
+  .empty { text-align: center; padding: 48px; color: var(--muted2); }
+  .empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
 
-  .lightning { color: #f7931a; }
-
-  .status-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .status-pending    { background: #1e1e2e; color: #666; }
-  .status-sending    { background: #1a2a1a; color: #4ade80; }
-  .status-delivered  { background: #1a2a1a; color: #22c55e; }
-  .status-bounced    { background: #2a1a1a; color: #f87171; }
-  .status-complained { background: #2a1a00; color: #fb923c; }
+  /* ── FOOTER ──────────────────────────────────────────── */
+  .footer { text-align: center; padding: 24px; color: var(--muted2); font-size: 12px; }
 </style>
 </head>
 <body>
 
-<div class="login" id="loginView">
+<!-- LOGIN -->
+<div class="login-wrap" id="loginView">
   <div class="login-card">
-    <div style="font-size:32px;margin-bottom:12px">⚡</div>
-    <h1>ShinyDapps</h1>
-    <p>Dashboard de pagamentos Lightning</p>
-    <input type="password" id="secretInput" placeholder="Dashboard secret" />
-    <button class="btn" onclick="login()">Entrar</button>
-    <div class="error" id="loginError"></div>
+    <div class="login-logo">⚡</div>
+    <h1>l402-kit</h1>
+    <p>Dashboard de pagamentos Lightning — acesso restrito</p>
+    <input type="password" id="secretInput" placeholder="Dashboard secret" autocomplete="current-password" />
+    <button class="btn-login" onclick="login()">Entrar</button>
+    <div class="login-error" id="loginError"></div>
   </div>
 </div>
 
+<!-- APP -->
 <div class="app" id="appView">
-  <header>
-    <div>
-      <h1>⚡ ShinyDapps Dashboard</h1>
+  <nav class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">⚡</span>
+      <h1>l402-kit</h1>
+      <span class="badge">ShinyDapps</span>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span class="badge">l402-kit</span>
-      <button class="refresh" onclick="loadStats()">↻ Atualizar</button>
+    <div class="topbar-right">
+      <div class="period-tabs">
+        <button class="period-tab active" data-days="7"  onclick="setPeriod(7)">7d</button>
+        <button class="period-tab"        data-days="30" onclick="setPeriod(30)">30d</button>
+        <button class="period-tab"        data-days="0"  onclick="setPeriod(0)">Tudo</button>
+      </div>
+      <button class="btn-refresh" onclick="loadStats()">↻ Atualizar</button>
     </div>
-  </header>
+  </nav>
 
-  <div class="cards">
-    <div class="card">
-      <div class="card-label">Total de Pagamentos</div>
-      <div class="card-value" id="totalPayments">—</div>
-      <div class="card-sub">chamadas de API pagas</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Total Recebido</div>
-      <div class="card-value orange" id="totalSats">—</div>
-      <div class="card-sub">sats via Lightning</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Receita ShinyDapps (0.3%)</div>
-      <div class="card-value green" id="shinydappsFee">—</div>
-      <div class="card-sub">sats de taxa</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Devs Ativos</div>
-      <div class="card-value" id="activeDevs">—</div>
-      <div class="card-sub">Lightning Addresses únicas</div>
-    </div>
-  </div>
+  <div class="main">
 
-  <!-- Email Stats -->
-  <div class="cards" id="emailCards">
-    <div class="card">
-      <div class="card-label">Waitlist Total</div>
-      <div class="card-value" id="emailTotal">—</div>
-      <div class="card-sub">emails capturados</div>
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-glow" style="background:linear-gradient(90deg,#f7931a,#ff6b00)"></div>
+        <div class="kpi-label">Total de Pagamentos</div>
+        <div class="kpi-value" id="kpiPayments">—</div>
+        <div class="kpi-sub"><span id="trendPayments"></span> chamadas de API pagas</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow" style="background:linear-gradient(90deg,#a78bfa,#7c3aed)"></div>
+        <div class="kpi-label">Total Recebido</div>
+        <div class="kpi-value" style="color:var(--purple)" id="kpiSats">—</div>
+        <div class="kpi-sub"><span id="trendSats"></span> sats via Lightning</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow" style="background:linear-gradient(90deg,#22c55e,#16a34a)"></div>
+        <div class="kpi-label">Receita ShinyDapps (0.3%)</div>
+        <div class="kpi-value" style="color:var(--green)" id="kpiFee">—</div>
+        <div class="kpi-sub">sats de taxa</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow" style="background:linear-gradient(90deg,#60a5fa,#3b82f6)"></div>
+        <div class="kpi-label">Devs Ativos</div>
+        <div class="kpi-value" style="color:var(--blue)" id="kpiDevs">—</div>
+        <div class="kpi-sub">Lightning Addresses únicas</div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-label">Entregues</div>
-      <div class="card-value green" id="emailDelivered">—</div>
-      <div class="card-sub">confirmed delivery</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Em trânsito</div>
-      <div class="card-value orange" id="emailSending">—</div>
-      <div class="card-sub">sending + pending</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Bounced / Spam</div>
-      <div class="card-value" id="emailBounced" style="color:#f87171">—</div>
-      <div class="card-sub">bounced + complained</div>
-    </div>
-  </div>
 
-  <div class="section">
-    <h2>Waitlist — emails recentes</h2>
-    <div id="waitlistTable"><div class="empty"><span>📧</span>Sem dados ainda</div></div>
-  </div>
 
-  <div class="section">
-    <h2>Por Lightning Address</h2>
-    <div id="byOwnerTable"><div class="empty"><span>⚡</span>Sem dados ainda</div></div>
-  </div>
+    <!-- CHART -->
+    <div class="chart-section">
+      <div class="section-header">
+        <span class="section-title">Volume diário</span>
+        <div class="chart-toggle">
+          <button class="chart-btn active" id="btnSats" onclick="switchChart('sats')">Sats</button>
+          <button class="chart-btn"        id="btnCount" onclick="switchChart('count')">Chamadas</button>
+        </div>
+      </div>
+      <svg id="chartSvg" height="160" viewBox="0 0 900 160" preserveAspectRatio="none"></svg>
+    </div>
 
-  <div class="section">
-    <h2>Pagamentos Recentes</h2>
-    <div id="recentTable"><div class="empty"><span>⚡</span>Sem pagamentos ainda</div></div>
-  </div>
-</div>
+
+    <!-- BY OWNER -->
+    <div class="table-section">
+      <div class="section-header">
+        <span class="section-title">Ranking por Lightning Address</span>
+      </div>
+      <div id="byOwnerTable"><div class="empty"><div class="empty-icon">⚡</div>Sem dados ainda</div></div>
+    </div>
+
+    <!-- RECENT PAYMENTS -->
+    <div class="table-section">
+      <div class="section-header">
+        <span class="section-title">Pagamentos recentes</span>
+      </div>
+      <div id="recentTable"><div class="empty"><div class="empty-icon">⚡</div>Nenhum pagamento ainda</div></div>
+    </div>
+
+  </div><!-- /main -->
+  <div class="footer">l402-kit v1.2.1 · ShinyDapps · <span id="lastUpdated"></span></div>
+</div><!-- /app -->
 
 <script>
 let secret = "";
+let activePeriod = 7;
+let chartMode = "sats";
+let currentData = null;
 
+// ── LOGIN ─────────────────────────────────────────────────
 function login() {
   secret = document.getElementById("secretInput").value.trim();
   if (!secret) return;
   document.getElementById("loginError").textContent = "";
   loadStats();
 }
-
 document.getElementById("secretInput").addEventListener("keydown", e => {
   if (e.key === "Enter") login();
 });
 
+// ── PERIOD ────────────────────────────────────────────────
+function setPeriod(days) {
+  activePeriod = days;
+  document.querySelectorAll(".period-tab").forEach(b => {
+    b.classList.toggle("active", parseInt(b.dataset.days) === days);
+  });
+  if (currentData) renderAll(currentData);
+}
+
+// ── CHART MODE ────────────────────────────────────────────
+function switchChart(mode) {
+  chartMode = mode;
+  document.getElementById("btnSats").classList.toggle("active", mode === "sats");
+  document.getElementById("btnCount").classList.toggle("active", mode === "count");
+  if (currentData) drawChart(currentData.byDay);
+}
+
+// ── FETCH ─────────────────────────────────────────────────
 async function loadStats() {
   try {
     const res = await fetch("/api/stats", {
@@ -170,87 +424,180 @@ async function loadStats() {
       return;
     }
     const data = await res.json();
-
+    currentData = data;
     document.getElementById("loginView").style.display = "none";
     document.getElementById("appView").style.display = "block";
-
-    document.getElementById("totalPayments").textContent = data.totalPayments.toLocaleString();
-    document.getElementById("totalSats").textContent = data.totalSats.toLocaleString() + " sats";
-    document.getElementById("shinydappsFee").textContent = data.shinydappsFee.toLocaleString() + " sats";
-    document.getElementById("activeDevs").textContent = Object.keys(data.byOwner).length;
-
-    // Email stats
-    if (data.emailStats) {
-      const es = data.emailStats;
-      document.getElementById("emailTotal").textContent = es.total.toLocaleString();
-      document.getElementById("emailDelivered").textContent = es.delivered.toLocaleString();
-      document.getElementById("emailSending").textContent = (es.sending + es.pending).toLocaleString();
-      document.getElementById("emailBounced").textContent = (es.bounced + es.complained).toLocaleString();
-    }
-
-    // Waitlist table
-    const wl = data.recentWaitlist || [];
-    if (wl.length === 0) {
-      document.getElementById("waitlistTable").innerHTML = '<div class="empty"><span>📧</span>Nenhum signup ainda</div>';
-    } else {
-      const statusLabel = s => {
-        const map = { pending: "pending", sending: "sending", delivered: "delivered", bounced: "bounced", complained: "spam" };
-        return `<span class="status-pill status-${s}">${map[s] || s}</span>`;
-      };
-      document.getElementById("waitlistTable").innerHTML = `
-        <table>
-          <tr><th>Email</th><th>Status</th><th>Resend ID</th><th>Cadastro</th></tr>
-          ${wl.map(w => `
-            <tr>
-              <td>${w.email}</td>
-              <td>${statusLabel(w.email_status)}</td>
-              <td class="mono">${w.resend_id ? w.resend_id.slice(0,12) + "…" : "—"}</td>
-              <td>${new Date(w.created_at).toLocaleString("pt-BR")}</td>
-            </tr>
-          `).join("")}
-        </table>`;
-    }
-
-    // By owner table
-    const owners = Object.entries(data.byOwner).sort((a, b) => b[1].sats - a[1].sats);
-    if (owners.length === 0) {
-      document.getElementById("byOwnerTable").innerHTML = '<div class="empty"><span>⚡</span>Sem dados ainda</div>';
-    } else {
-      document.getElementById("byOwnerTable").innerHTML = `
-        <table>
-          <tr><th>Lightning Address</th><th>Pagamentos</th><th>Total Sats</th><th>Ganho (99.7%)</th></tr>
-          ${owners.map(([addr, d]) => `
-            <tr>
-              <td>${addr}</td>
-              <td>${d.count}</td>
-              <td class="sats">${d.sats.toLocaleString()} sats</td>
-              <td class="sats">${Math.floor(d.sats * 0.997).toLocaleString()} sats</td>
-            </tr>
-          `).join("")}
-        </table>`;
-    }
-
-    // Recent payments
-    if (data.recent.length === 0) {
-      document.getElementById("recentTable").innerHTML = '<div class="empty"><span>⚡</span>Sem pagamentos ainda — compartilha o projeto!</div>';
-    } else {
-      document.getElementById("recentTable").innerHTML = `
-        <table>
-          <tr><th>Quando</th><th>Endpoint</th><th>Sats</th><th>Owner</th><th>Preimage</th></tr>
-          ${data.recent.map(p => `
-            <tr>
-              <td>${new Date(p.paid_at).toLocaleString("pt-BR")}</td>
-              <td><span class="endpoint">${p.endpoint}</span></td>
-              <td class="sats">${p.amount_sats} sats</td>
-              <td>${p.owner_address || "—"}</td>
-              <td class="mono">${p.preimage?.slice(0, 16)}…</td>
-            </tr>
-          `).join("")}
-        </table>`;
-    }
-  } catch (err) {
+    renderAll(data);
+    document.getElementById("lastUpdated").textContent =
+      "Atualizado " + new Date().toLocaleTimeString("pt-BR");
+  } catch {
     document.getElementById("loginError").textContent = "Erro ao conectar.";
   }
+}
+
+// ── RENDER ────────────────────────────────────────────────
+function renderAll(data) {
+  const filtered = filterByPeriod(data.recent, activePeriod);
+  const filtSats = filtered.reduce((s, p) => s + p.amount_sats, 0);
+
+  // KPI
+  document.getElementById("kpiPayments").textContent = filtered.length.toLocaleString("pt-BR");
+  document.getElementById("kpiSats").textContent     = filtSats.toLocaleString("pt-BR") + " sats";
+  document.getElementById("kpiFee").textContent      = Math.floor(filtSats * 0.003).toLocaleString("pt-BR") + " sats";
+
+  const ownerSet = new Set(filtered.map(p => p.owner_address).filter(Boolean));
+  document.getElementById("kpiDevs").textContent = ownerSet.size.toLocaleString("pt-BR");
+
+  // Trend vs prev period
+  if (activePeriod > 0 && data.trend) {
+    const t = data.trend;
+    renderTrend("trendPayments", t.payments7d, t.payments7dPrev);
+    renderTrend("trendSats", t.sats7d, t.sats7dPrev);
+  } else {
+    document.getElementById("trendPayments").textContent = "";
+    document.getElementById("trendSats").textContent = "";
+  }
+
+
+  // Chart
+  drawChart(data.byDay);
+
+
+  // By owner
+  const owners = Object.entries(data.byOwner || {}).sort((a, b) => b[1].sats - a[1].sats);
+  if (owners.length === 0) {
+    document.getElementById("byOwnerTable").innerHTML =
+      '<div class="empty"><div class="empty-icon">⚡</div>Sem dados ainda</div>';
+  } else {
+    document.getElementById("byOwnerTable").innerHTML = `
+      <table>
+        <thead><tr><th>#</th><th>Lightning Address</th><th>Chamadas</th><th>Total Sats</th><th>Ganho (99.7%)</th></tr></thead>
+        <tbody>${owners.map(([addr, d], i) => `
+          <tr>
+            <td class="mono" style="color:var(--muted2)">${i + 1}</td>
+            <td>${escHtml(addr)}</td>
+            <td>${d.count.toLocaleString("pt-BR")}</td>
+            <td class="sats">${d.sats.toLocaleString("pt-BR")} sats</td>
+            <td class="sats">${Math.floor(d.sats * 0.997).toLocaleString("pt-BR")} sats</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  // Recent payments
+  if (filtered.length === 0) {
+    document.getElementById("recentTable").innerHTML =
+      '<div class="empty"><div class="empty-icon">⚡</div>Nenhum pagamento no período</div>';
+  } else {
+    document.getElementById("recentTable").innerHTML = `
+      <table>
+        <thead><tr><th>Quando</th><th>Endpoint</th><th>Sats</th><th>Owner</th><th>Payment Hash</th></tr></thead>
+        <tbody>${filtered.slice(0, 20).map(p => `
+          <tr>
+            <td class="mono">${new Date(p.paid_at).toLocaleString("pt-BR")}</td>
+            <td><span class="chip">${escHtml(p.endpoint || "—")}</span></td>
+            <td class="sats">${p.amount_sats} sats</td>
+            <td>${escHtml(p.owner_address || "—")}</td>
+            <td class="mono">${(p.payment_hash || p.preimage || "").slice(0, 20)}…</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+  }
+}
+
+// ── CHART (SVG pure) ──────────────────────────────────────
+function drawChart(byDay) {
+  const svg   = document.getElementById("chartSvg");
+  const W     = 900, H = 140, pad = { l: 8, r: 8, t: 10, b: 28 };
+  const days  = activePeriod > 0 ? activePeriod : 60;
+
+  // Build ordered days
+  const today = new Date();
+  const slots = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    slots.push(d.toISOString().slice(0, 10));
+  }
+
+  const vals = slots.map(s => {
+    const entry = byDay?.[s];
+    return entry ? (chartMode === "sats" ? entry.sats : entry.count) : 0;
+  });
+
+  const maxVal = Math.max(...vals, 1);
+  const n      = slots.length;
+  const barW   = (W - pad.l - pad.r) / n;
+  const barArea = H - pad.t - pad.b;
+
+  let bars = "";
+  let labels = "";
+
+  vals.forEach((v, i) => {
+    const x   = pad.l + i * barW;
+    const bh  = Math.max(v / maxVal * barArea, v > 0 ? 3 : 0);
+    const y   = pad.t + barArea - bh;
+    const cx  = x + barW / 2;
+    const fill = v > 0
+      ? `url(#barGrad)`
+      : "#1c1c2e";
+    bars += `<rect x="${(x + 1).toFixed(1)}" y="${y.toFixed(1)}" width="${(barW - 2).toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${fill}" opacity="${v > 0 ? 1 : 0.4}">
+      <title>${slots[i]}: ${v.toLocaleString("pt-BR")} ${chartMode === "sats" ? "sats" : "chamadas"}</title>
+    </rect>`;
+
+    // Show label every N bars
+    const step = n <= 14 ? 2 : n <= 30 ? 5 : 10;
+    if (i % step === 0 || i === n - 1) {
+      const dateStr = slots[i].slice(5); // MM-DD
+      labels += `<text x="${cx.toFixed(1)}" y="${(H - 6).toFixed(1)}" text-anchor="middle" fill="#3a3a55" font-size="10" font-family="monospace">${dateStr}</text>`;
+    }
+  });
+
+  // Max label
+  const maxLabel = chartMode === "sats"
+    ? maxVal.toLocaleString("pt-BR") + " sats"
+    : maxVal.toLocaleString("pt-BR");
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#f7931a"/>
+        <stop offset="100%" stop-color="#ff6b0088"/>
+      </linearGradient>
+    </defs>
+    <line x1="${pad.l}" y1="${pad.t}" x2="${W - pad.r}" y2="${pad.t}" stroke="#1c1c2e" stroke-width="1"/>
+    <text x="${pad.l + 4}" y="${pad.t - 3}" fill="#3a3a55" font-size="10" font-family="monospace">${maxLabel}</text>
+    ${bars}
+    ${labels}`;
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function filterByPeriod(items, days) {
+  if (!days) return items;
+  const cutoff = Date.now() - days * 86400_000;
+  return items.filter(p => new Date(p.paid_at).getTime() >= cutoff);
+}
+
+function renderTrend(id, curr, prev) {
+  const el = document.getElementById(id);
+  if (!prev && !curr) { el.textContent = ""; return; }
+  if (!prev) { el.className = "trend-up"; el.textContent = "▲ novo"; return; }
+  const pct = ((curr - prev) / prev * 100).toFixed(0);
+  if (curr >= prev) {
+    el.className = "trend-up";
+    el.textContent = `▲ ${pct}% vs 7d ant`;
+  } else {
+    el.className = "trend-down";
+    el.textContent = `▼ ${Math.abs(pct)}% vs 7d ant`;
+  }
+}
+
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 </script>
 </body>

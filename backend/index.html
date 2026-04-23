@@ -898,7 +898,7 @@ Authorization: L402 <span class="hl">&lt;token&gt;:&lt;preimage&gt;</span></pre>
       </div>
     </div>
   </div>
-  <p style="font-size:13px;color:#444">Be among the first. <a href="#waitlist" style="color:var(--orange);text-decoration:none">Join the early access list ⚡</a></p>
+  <p style="font-size:13px;color:#444">Open source · MIT · <a href="https://github.com/ShinyDapps/l402-kit" style="color:var(--orange);text-decoration:none">Star on GitHub ⭐</a></p>
 </section>
 
 <!-- PRO PAYMENT MODAL -->
@@ -978,18 +978,14 @@ Authorization: L402 <span class="hl">&lt;token&gt;:&lt;preimage&gt;</span></pre>
   <p style="font-size:13px;color:var(--muted)">or <a href="https://l402kit.vercel.app/docs" data-docs-link="1">read the docs &rarr;</a></p>
 </section>
 
-<section id="waitlist" style="max-width:580px;margin:0 auto 80px;padding:0 24px;text-align:center">
-  <h2 style="font-size:28px;font-weight:700;margin-bottom:12px">Early access list</h2>
-  <p style="color:var(--muted);font-size:15px;margin-bottom:28px">New providers, protocol upgrades, and the DCA agent when it launches. One email per milestone — no noise.</p>
-  <form id="waitlistForm" onsubmit="submitWaitlist(event)" style="display:flex;gap:8px;max-width:400px;margin:0 auto 12px">
-    <input type="email" id="waitlistEmail" placeholder="you@example.com" required
-      style="flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;min-width:0"
-      onfocus="this.style.borderColor='#f7931a55'" onblur="this.style.borderColor='var(--border)'">
-    <button type="submit" id="waitlistBtn"
-      style="padding:12px 20px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Notify me &#x26a1;</button>
-  </form>
-  <p id="waitlistMsg" style="font-size:13px;min-height:18px;color:var(--muted)"></p>
-  <p style="margin-top:6px;font-size:12px;color:#444">No spam &middot; Only major releases</p>
+<section style="max-width:580px;margin:0 auto 80px;padding:0 24px;text-align:center">
+  <h2 style="font-size:28px;font-weight:700;margin-bottom:12px">Stay in the loop</h2>
+  <p style="color:var(--muted);font-size:15px;margin-bottom:28px">Follow releases on GitHub — star the repo and enable notifications. No email required, no account, no tracking.</p>
+  <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener"
+    style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:var(--orange);color:#000;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none">
+    ⭐ Star on GitHub
+  </a>
+  <p style="margin-top:16px;font-size:12px;color:#444">No email &middot; No tracking &middot; Bitcoin-native</p>
 </section>
 
 <footer>
@@ -1238,7 +1234,6 @@ const T = {
     pricing: [['Free','0.3% fee on payments received','Get started →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning'],[null,'For teams and high-volume APIs','⚡ Subscribe with Lightning'],[null,'Pay once. Use forever.','⚡ Buy Lifetime Access']],
     faqTitle: 'Common questions',
     faq: [['Do my users need a Lightning wallet?','Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.'],['What happens if the Lightning network is down?','Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.'],['Is this production-ready?','Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.'],['How does the 0.3% fee work?','When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.'],['Can I use it without Blink?','Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.']],
-    waitlistTitle: 'Stay in the loop', waitlistSub: 'Get notified about major releases, new providers, and security patches.', waitlistBtn: 'Notify me ⚡',
     ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a>',
     hoodTitle: 'Under the hood',
     hoodSub: 'L402 is built on HTTP 402 — a status code reserved since 1996 for "Payment Required". Here\'s every step, in full.',
@@ -1263,7 +1258,6 @@ const T = {
     pricing: [['Gratis','Taxa de 0.3% nos pagamentos recebidos','Comecar →'],[null,'Pague com Lightning — ativacao instantanea','⚡ Assinar com Lightning'],[null,'Para times e APIs de alto volume','⚡ Assinar com Lightning'],[null,'Pague uma vez. Use para sempre.','⚡ Comprar acesso vitalicio']],
     faqTitle: 'Perguntas comuns',
     faq: [['Meus usuarios precisam de wallet Lightning?','Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.'],['E se a Lightning ficar fora do ar?','A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.'],['Ja esta pronto para producao?','Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.'],['Como funciona a taxa de 0.3%?','No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.'],['Posso usar sem Blink?','Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.']],
-    waitlistTitle: 'Fique por dentro', waitlistSub: 'Receba aviso de releases importantes, novos providers e patches de seguranca.', waitlistBtn: 'Me avise ⚡',
     ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/pt/introduction">leia a documentacao &rarr;</a>',
     hoodTitle: 'Por dentro',
     hoodSub: 'L402 é construído sobre HTTP 402 — um código de status reservado desde 1996 para "Pagamento Necessário". Veja cada etapa em detalhes.',
@@ -1288,7 +1282,6 @@ const T = {
     pricing: [['Gratis','Comisión del 0.3% en pagos recibidos','Empezar →'],[null,'Paga con Lightning — activación instantánea','⚡ Suscribirse con Lightning'],[null,'Para equipos y APIs de alto volumen','⚡ Suscribirse con Lightning'],[null,'Paga una vez. Usa para siempre.','⚡ Comprar acceso de por vida']],
     faqTitle: 'Preguntas frecuentes',
     faq: [['¿Mis usuarios necesitan una wallet Lightning?','Sí — necesitan una wallet Lightning para pagar. Apps como Strike, Cash App, Blink y Phoenix se configuran en menos de 60 segundos.'],['¿Qué pasa si la red Lightning cae?','Lightning es una red descentralizada con casi 100% de disponibilidad. Si tu proveedor falla, cambias en una línea de código.'],['¿Está listo para producción?','Sí. Prueba criptográfica (SHA256), protección anti-replay y registro en Supabase están integrados.'],['¿Cómo funciona la comisión del 0.3%?','En modo gestionado, se deduce automáticamente el 0.3%. En self-host con tu propio nodo, no hay comisión.'],['¿Puedo usarlo sin Blink?','Sí. OpenNode, LNbits o cualquier proveedor que implemente LightningProvider.']],
-    waitlistTitle: 'Mantente al día', waitlistSub: 'Recibe notificaciones sobre versiones importantes, nuevos providers y parches de seguridad.', waitlistBtn: 'Notifícame ⚡',
     ctaTitle: 'Empieza en 2 minutos', ctaDesc: 'Sin cuenta. Sin tarjeta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/es/introduction">lee los docs &rarr;</a>',
     hoodTitle: 'Por dentro',
     hoodSub: 'L402 está construido sobre HTTP 402 — un código de estado reservado desde 1996 para "Pago Requerido". Aquí está cada paso en detalle.',
@@ -1313,7 +1306,6 @@ const T = {
     pricing: [['Gratuit','Frais de 0.3% sur les paiements reçus','Commencer →'],[null,'Payez avec Lightning — activation instantanée','⚡ S\'abonner avec Lightning'],[null,'Pour les équipes et APIs à fort volume','⚡ S\'abonner avec Lightning'],[null,'Payez une fois. Utilisez pour toujours.','⚡ Acheter l\'accès à vie']],
     faqTitle: 'Questions fréquentes',
     faq: [['Mes utilisateurs ont-ils besoin d\'un wallet Lightning ?','Oui — ils ont besoin d\'un wallet Lightning pour payer. Des apps comme Strike, Cash App, Blink et Phoenix se configurent en moins de 60 secondes.'],['Que se passe-t-il si le réseau Lightning tombe ?','Lightning est un réseau décentralisé avec une disponibilité proche de 100%. Si votre fournisseur tombe, changez-en en une ligne de code.'],['Est-ce prêt pour la production ?','Oui. Preuve cryptographique (SHA256), protection anti-replay et journalisation Supabase sont intégrés.'],['Comment fonctionnent les frais de 0.3% ?','En mode géré, une commission de 0.3% est déduite automatiquement. En self-host, pas de frais.'],['Puis-je l\'utiliser sans Blink ?','Oui. OpenNode, LNbits ou tout fournisseur implémentant l\'interface LightningProvider.']],
-    waitlistTitle: 'Restez informé', waitlistSub: 'Soyez notifié des sorties majeures, nouveaux fournisseurs et correctifs de sécurité.', waitlistBtn: 'Me notifier ⚡',
     ctaTitle: 'Démarrez en 2 minutes', ctaDesc: 'Sans compte. Sans carte. Juste Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/fr/introduction">lisez les docs &rarr;</a>',
     hoodTitle: 'Sous le capot',
     hoodSub: 'L402 est construit sur HTTP 402 — un code de statut réservé depuis 1996 pour "Paiement Requis". Voici chaque étape en détail.',
@@ -1338,7 +1330,6 @@ const T = {
     pricing: [['Kostenlos','0.3% Gebühr auf empfangene Zahlungen','Loslegen →'],[null,'Mit Lightning zahlen — sofortige Aktivierung','⚡ Mit Lightning abonnieren'],[null,'Für Teams und APIs mit hohem Volumen','⚡ Mit Lightning abonnieren'],[null,'Einmal zahlen. Für immer nutzen.','⚡ Lebenslangen Zugang kaufen']],
     faqTitle: 'Häufige Fragen',
     faq: [['Brauchen meine Nutzer ein Lightning-Wallet?','Ja — sie brauchen ein Lightning-Wallet zum Bezahlen. Apps wie Strike, Cash App, Blink und Phoenix sind in unter 60 Sekunden eingerichtet.'],['Was passiert, wenn das Lightning-Netzwerk ausfällt?','Lightning ist ein dezentrales Netzwerk mit nahezu 100% Verfügbarkeit. Wenn dein Provider ausfällt, wechselst du in einer Zeile Code.'],['Ist das produktionsreif?','Ja. Kryptografischer Beweis (SHA256), Replay-Schutz und Supabase-Zahlungsprotokoll sind eingebaut.'],['Wie funktioniert die 0.3%-Gebühr?','Im verwalteten Modus wird automatisch 0.3% abgezogen. Im Self-Host-Modus gibt es keine Gebühr.'],['Kann ich es ohne Blink verwenden?','Ja. OpenNode, LNbits oder jeder Provider, der LightningProvider implementiert.']],
-    waitlistTitle: 'Bleib informiert', waitlistSub: 'Werde über wichtige Releases, neue Provider und Sicherheits-Patches benachrichtigt.', waitlistBtn: 'Benachrichtige mich ⚡',
     ctaTitle: 'In 2 Minuten starten', ctaDesc: 'Kein Konto. Keine Karte. Nur Bitcoin.', ctaDocs: 'oder <a href="https://l402kit.vercel.app/docs/de/introduction">Docs lesen &rarr;</a>',
     hoodTitle: 'Unter der Haube',
     hoodSub: 'L402 basiert auf HTTP 402 — einem seit 1996 reservierten Statuscode für "Zahlung erforderlich". Hier ist jeder Schritt im Detail.',
@@ -1363,7 +1354,6 @@ const T = {
     pricing: [['Gratuito','Commissione 0.3% sui pagamenti ricevuti','Inizia →'],[null,'Paga con Lightning — attivazione istantanea','⚡ Abbonati con Lightning'],[null,'Per team e API ad alto volume','⚡ Abbonati con Lightning'],[null,'Paga una volta. Usa per sempre.','⚡ Acquista accesso a vita']],
     faqTitle: 'Domande frequenti',
     faq: [['I miei utenti hanno bisogno di un wallet Lightning?','Sì — hanno bisogno di un wallet Lightning per pagare. App come Strike, Cash App, Blink e Phoenix si configurano in meno di 60 secondi.'],['Cosa succede se la rete Lightning è giù?','Lightning è una rete decentralizzata con disponibilità vicina al 100%. Se il tuo provider ha un downtime, cambi in una riga di codice.'],['È pronto per la produzione?','Sì. Prova crittografica (SHA256), protezione anti-replay e logging Supabase sono integrati.'],['Come funziona la commissione dello 0.3%?','In modalità gestita, lo 0.3% viene dedotto automaticamente. In self-host con il tuo nodo, non c\'è commissione.'],['Posso usarlo senza Blink?','Sì. OpenNode, LNbits o qualsiasi provider che implementi l\'interfaccia LightningProvider.']],
-    waitlistTitle: 'Rimani aggiornato', waitlistSub: 'Ricevi notifiche su rilasci importanti, nuovi provider e patch di sicurezza.', waitlistBtn: 'Avvisami ⚡',
     ctaTitle: 'Inizia in 2 minuti', ctaDesc: 'Senza account. Senza carta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.vercel.app/docs/it/introduction">leggi i docs &rarr;</a>',
     hoodTitle: 'Sotto il cofano',
     hoodSub: 'L402 è costruito su HTTP 402 — un codice di stato riservato dal 1996 per "Pagamento Richiesto". Ecco ogni passaggio in dettaglio.',
@@ -1388,7 +1378,6 @@ const T = {
     pricing: [['無料','受信した支払いの0.3%手数料','始める →'],[null,'Lightningで支払い — 即時有効化','⚡ Lightningでサブスクライブ'],[null,'チームと高ボリュームAPI向け','⚡ Lightningでサブスクライブ'],[null,'一度支払って永遠に使う。','⚡ 生涯アクセスを購入']],
     faqTitle: 'よくある質問',
     faq: [['ユーザーはLightningウォレットが必要ですか？','はい。支払いにはLightningウォレットが必要です。Strike、Cash App、Blink、Phoenixなどは60秒以内に設定できます。'],['Lightningネットワークがダウンした場合は？','Lightningはほぼ100%の稼働時間を持つ分散型ネットワークです。プロバイダーに問題が生じても、1行のコードで切り替えられます。'],['本番環境で使用できますか？','はい。暗号学的証明(SHA256)、リプレイ攻撃防御、Supabaseによるログが組み込まれています。'],['0.3%手数料の仕組みは？','マネージドモードでは0.3%が自動的に差し引かれます。自己ホストの場合は手数料なし。'],['Blinkなしで使えますか？','はい。OpenNode、LNbits、またはLightningProviderインターフェースを実装する任意のプロバイダーが使えます。']],
-    waitlistTitle: '最新情報を受け取る', waitlistSub: 'メジャーリリース、新プロバイダー、セキュリティパッチの通知を受け取ります。', waitlistBtn: '通知を受け取る ⚡',
     ctaTitle: '2分で始める', ctaDesc: 'アカウント不要。クレジットカード不要。Bitcoinだけ。', ctaDocs: 'または <a href="https://l402kit.vercel.app/docs/ja/introduction">ドキュメントを読む &rarr;</a>',
     hoodTitle: '技術的な仕組み',
     hoodSub: 'L402はHTTP 402の上に構築されています — 1996年から「支払いが必要」のために予約されたステータスコード。全ステップを詳しく説明します。',
@@ -1413,7 +1402,6 @@ const T = {
     pricing: [['Бесплатно','Комиссия 0.3% от полученных платежей','Начать →'],[null,'Платите Lightning — мгновенная активация','⚡ Подписаться через Lightning'],[null,'Для команд и высоконагруженных API','⚡ Подписаться через Lightning'],[null,'Оплатите раз. Используйте всегда.','⚡ Купить пожизненный доступ']],
     faqTitle: 'Частые вопросы',
     faq: [['Нужен ли моим пользователям Lightning-кошелёк?','Да — им нужен Lightning-кошелёк для оплаты. Приложения Strike, Cash App, Blink, Phoenix настраиваются менее чем за 60 секунд.'],['Что будет, если сеть Lightning упадёт?','Lightning — децентрализованная сеть с почти 100% аптаймом. Смена провайдера — одна строка кода.'],['Готово ли к продакшену?','Да. Криптодоказательство (SHA256), защита от реплей-атак и лог Supabase — всё встроено.'],['Как работает комиссия 0.3%?','В managed-режиме 0.3% вычитается автоматически. В self-host нет никакой комиссии.'],['Можно ли без Blink?','Да. OpenNode, LNbits или любой провайдер, реализующий интерфейс LightningProvider.']],
-    waitlistTitle: 'Будь в курсе', waitlistSub: 'Получай уведомления о крупных релизах, новых провайдерах и патчах безопасности.', waitlistBtn: 'Уведомить меня ⚡',
     ctaTitle: 'Начни за 2 минуты', ctaDesc: 'Без аккаунта. Без карты. Только Bitcoin.', ctaDocs: 'или <a href="https://l402kit.vercel.app/docs/ru/introduction">читай документацию &rarr;</a>',
     hoodTitle: 'Под капотом',
     hoodSub: 'L402 построен на HTTP 402 — коде статуса, зарезервированном с 1996 года для «Требуется оплата». Вот каждый шаг в деталях.',
@@ -1438,7 +1426,6 @@ const T = {
     pricing: [['免费','收到支付的 0.3% 手续费','立即开始 →'],[null,'使用 Lightning 支付 — 即时激活','⚡ 使用 Lightning 订阅'],[null,'适合团队和高流量 API','⚡ 使用 Lightning 订阅'],[null,'一次付款，永久使用。','⚡ 购买终身访问']],
     faqTitle: '常见问题',
     faq: [['我的用户需要 Lightning 钱包吗？','是的——他们需要 Lightning 钱包来付款。Strike、Cash App、Blink 和 Phoenix 等应用可在 60 秒内设置完成。'],['如果 Lightning 网络宕机怎么办？','Lightning 是一个去中心化网络，正常运行时间接近 100%。如果你的提供商宕机，一行代码即可切换。'],['这是否可用于生产环境？','是的。密码学证明（SHA256）、防重放保护和 Supabase 支付日志都已内置。'],['0.3% 手续费如何运作？','使用托管模式时，自动扣除 0.3% 路由费。自托管时，无任何费用。'],['可以不用 Blink 吗？','可以。OpenNode、LNbits 或任何实现 LightningProvider 接口的提供商都可以。']],
-    waitlistTitle: '保持关注', waitlistSub: '获取重大版本发布、新提供商和安全补丁的通知。', waitlistBtn: '通知我 ⚡',
     ctaTitle: '2分钟内开始', ctaDesc: '无需账户。无需信用卡。只需 Bitcoin。', ctaDocs: '或 <a href="https://l402kit.vercel.app/docs/zh/introduction">查看文档 &rarr;</a>',
     hoodTitle: '技术原理',
     hoodSub: 'L402基于HTTP 402构建 — 这是自1996年起为"付款必须"保留的状态码。以下是每个步骤的完整说明。',
@@ -1463,7 +1450,6 @@ const T = {
     pricing: [['मुफ्त','प्राप्त भुगतानों पर 0.3% शुल्क','शुरू करें →'],[null,'Lightning से भुगतान — तत्काल सक्रियण','⚡ Lightning से सब्सक्राइब करें'],[null,'टीम और उच्च-वॉल्यूम API के लिए','⚡ Lightning से सब्सक्राइब करें'],[null,'एक बार भुगतान करें। हमेशा के लिए उपयोग करें।','⚡ आजीवन एक्सेस खरीदें']],
     faqTitle: 'सामान्य प्रश्न',
     faq: [['क्या मेरे उपयोगकर्ताओं को Lightning वॉलेट चाहिए?','हां — भुगतान के लिए Lightning वॉलेट की जरूरत है। Strike, Cash App, Blink, Phoenix 60 सेकंड में सेट हो जाते हैं।'],['अगर Lightning नेटवर्क डाउन हो तो?','Lightning एक विकेंद्रीकृत नेटवर्क है जिसमें लगभग 100% अपटाइम है। एक लाइन कोड से प्रदाता बदला जा सकता है।'],['क्या यह प्रोडक्शन के लिए तैयार है?','हां। SHA256 क्रिप्टोग्राफिक प्रमाण, रिप्ले सुरक्षा और Supabase लॉगिंग बिल्ट-इन हैं।'],['0.3% शुल्क कैसे काम करता है?','मैनेज्ड मोड में 0.3% स्वचालित रूप से काटा जाता है। सेल्फ-होस्ट में कोई शुल्क नहीं।'],['क्या मैं Blink के बिना इस्तेमाल कर सकता हूं?','हां। OpenNode, LNbits या कोई भी LightningProvider लागू करने वाला प्रदाता।']],
-    waitlistTitle: 'अपडेट रहें', waitlistSub: 'प्रमुख रिलीज़, नए प्रदाताओं और सुरक्षा पैच की सूचना पाएं।', waitlistBtn: 'मुझे सूचित करें ⚡',
     ctaTitle: '2 मिनट में शुरू करें', ctaDesc: 'कोई खाता नहीं। कोई कार्ड नहीं। सिर्फ Bitcoin।', ctaDocs: 'या <a href="https://l402kit.vercel.app/docs/hi/introduction">डॉक्स पढ़ें &rarr;</a>',
     hoodTitle: 'तकनीकी विवरण',
     hoodSub: 'L402, HTTP 402 पर बनाया गया है — 1996 से "Payment Required" के लिए आरक्षित एक स्टेटस कोड। यहाँ हर कदम विस्तार से है।',
@@ -1488,7 +1474,6 @@ const T = {
     pricing: [['مجاني','رسوم 0.3% على المدفوعات المستلمة','ابدأ →'],[null,'ادفع بـ Lightning — تفعيل فوري','⚡ اشترك بـ Lightning'],[null,'للفرق وAPIs عالية الحجم','⚡ اشترك بـ Lightning'],[null,'ادفع مرة واحدة. استخدم للأبد.','⚡ شراء وصول مدى الحياة']],
     faqTitle: 'أسئلة شائعة',
     faq: [['هل يحتاج مستخدمي محفظة Lightning؟','نعم — يحتاجون محفظة Lightning للدفع. تطبيقات مثل Strike وCash App وBlink وPhoenix تُعدّ في أقل من 60 ثانية.'],['ماذا يحدث إذا توقفت شبكة Lightning؟','Lightning شبكة لامركزية بوقت تشغيل يقارب 100%. إذا تعطل مزودك، يمكنك التبديل بسطر كود واحد.'],['هل هو جاهز للإنتاج؟','نعم. الإثبات التشفيري (SHA256)، الحماية من إعادة التشغيل، وتسجيل Supabase مدمجة.'],['كيف تعمل رسوم 0.3%؟','في الوضع المُدار، يُخصم 0.3% تلقائياً. في التثبيت الذاتي، لا توجد رسوم.'],['هل يمكن الاستخدام بدون Blink؟','نعم. OpenNode وLNbits أو أي مزود ينفذ واجهة LightningProvider.']],
-    waitlistTitle: 'ابقَ على اطلاع', waitlistSub: 'احصل على إشعارات حول الإصدارات الكبرى، المزودين الجدد، وتصحيحات الأمان.', waitlistBtn: 'أخبرني ⚡',
     ctaTitle: 'ابدأ في دقيقتين', ctaDesc: 'بدون حساب. بدون بطاقة. فقط Bitcoin.', ctaDocs: 'أو <a href="https://l402kit.vercel.app/docs/ar/introduction">اقرأ التوثيق &rarr;</a>',
     hoodTitle: 'تحت الغطاء',
     hoodSub: 'يُبنى L402 على HTTP 402 — رمز حالة محجوز منذ عام 1996 لـ "الدفع مطلوب". إليك كل خطوة بالتفصيل.',
@@ -1620,12 +1605,6 @@ function applyFullPageCopy(lang) {
   });
 
   // Waitlist
-  const wlH2 = document.querySelector('#waitlist h2');
-  const wlP = document.querySelector('#waitlist > p');
-  const wlBtn = document.getElementById('waitlistBtn');
-  if (wlH2) wlH2.textContent = d.waitlistTitle;
-  if (wlP) wlP.textContent = d.waitlistSub;
-  if (wlBtn) wlBtn.textContent = d.waitlistBtn;
 
   // CTA
   const ctaH2 = document.querySelector('.cta h2');
@@ -1954,34 +1933,6 @@ document.getElementById('proModal').addEventListener('click', function(e) {
   }
 })();
 
-// Waitlist form
-async function submitWaitlist(e) {
-  e.preventDefault();
-  const email = document.getElementById('waitlistEmail').value.trim();
-  const btn = document.getElementById('waitlistBtn');
-  const msg = document.getElementById('waitlistMsg');
-  btn.textContent = 'Sending\u2026'; btn.disabled = true;
-  try {
-    const r = await fetch('/api/waitlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const d = await r.json();
-    if (r.ok) {
-      msg.textContent = '\u26a1 You\u2019re in! We\u2019ll notify you.';
-      msg.style.color = '#4ade80';
-      document.getElementById('waitlistForm').reset();
-    } else {
-      msg.textContent = d.error || 'Something went wrong.';
-      msg.style.color = '#f87171';
-    }
-  } catch {
-    msg.textContent = 'Network error. Try again.';
-    msg.style.color = '#f87171';
-  }
-  btn.textContent = 'Notify me \u26a1'; btn.disabled = false;
-}
 
 // Animate live stats
 function animateValue(id, start, end, duration) {
