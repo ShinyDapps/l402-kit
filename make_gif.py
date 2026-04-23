@@ -101,26 +101,47 @@ def f4():
         y += f.size + 8
     return i
 
-# ── Frame 5: AI AGENTS ────────────────────────────────────────────────────────
+# ── Frame 5: AGENT ECONOMY ───────────────────────────────────────────────────
 def f5():
     i, d = img()
-    y = 70
-    y = center_text(d, y, "AI agents need to pay for APIs.", "#e6edf3", F_BIG)
-    y += 10
-    y = center_text(d, y, "L402 is the protocol.", "#d29922", F_BIG)
-    y += 30
-    lines = [
-        ("client = L402Client(wallet=BlinkWallet(...))",  "#e6edf3", F_MED),
-        ("agent.get(\"https://api.example.com/data\")",    "#e6edf3", F_MED),
-        ("# agent pays autonomously — no human needed",   "#3fb950", F_SMALL),
-    ]
-    x = PAD
-    bx = x - 10
-    bh = sum(f.size + 10 for _, _, f in lines) + 20
-    d.rectangle([bx, y-10, W-PAD+10, y+bh], fill="#161b22", outline="#30363d", width=1)
-    for text, color, f in lines:
-        d.text((x+8, y), text, fill=color, font=f)
-        y += f.size + 10
+
+    # Titulo
+    y = 36
+    y = center_text(d, y, "Agents paying agents.", "#d29922", F_BIG)
+    y = center_text(d, y, "No human. No bank. Pure Bitcoin.", "#6e7681", F_MED)
+    y += 20
+
+    # AgentA (esquerda) — servidor
+    ax1, ax2 = PAD, W//2 - 20
+    d.rectangle([ax1, y, ax2, y+140], fill="#161b22", outline="#3fb950", width=2)
+    d.text((ax1+16, y+14), "AgentA  (seller)", fill="#3fb950", font=F_MED)
+    d.text((ax1+16, y+42), "@l402_required(price_sats=5)", fill="#e6edf3", font=F_SMALL)
+    d.text((ax1+16, y+64), "async def analyze(request):", fill="#e6edf3", font=F_SMALL)
+    d.text((ax1+16, y+84), "    return sentiment", fill="#e6edf3", font=F_SMALL)
+    d.text((ax1+16, y+110), "receives sats directly", fill="#3fb950", font=F_SMALL)
+
+    # AgentB (direita) — cliente
+    bx1, bx2 = W//2 + 20, W - PAD
+    d.rectangle([bx1, y, bx2, y+140], fill="#161b22", outline="#79c0ff", width=2)
+    d.text((bx1+16, y+14), "AgentB  (buyer)", fill="#79c0ff", font=F_MED)
+    d.text((bx1+16, y+42), "client = L402Client(", fill="#e6edf3", font=F_SMALL)
+    d.text((bx1+16, y+62), "  wallet=BlinkWallet())", fill="#e6edf3", font=F_SMALL)
+    d.text((bx1+16, y+84), "client.get('/analyze')", fill="#e6edf3", font=F_SMALL)
+    d.text((bx1+16, y+110), "pays automatically", fill="#79c0ff", font=F_SMALL)
+
+    # Seta central com sats
+    mid_y = y + 70
+    mx = W // 2
+    d.line([(ax2+4, mid_y), (bx1-4, mid_y)], fill="#d29922", width=2)
+    d.polygon([(bx1-4, mid_y-6), (bx1-4, mid_y+6), (bx1+6, mid_y)], fill="#d29922")
+    label = "5 sats"
+    lw = F_SMALL.getlength(label)
+    d.text((mx - lw//2, mid_y - 22), label, fill="#d29922", font=F_SMALL)
+
+    # Rodape
+    y2 = y + 160
+    center_text(d, y2, "Any agent. Any API. Any country. Instant.", "#6e7681", F_SMALL)
+
     return i
 
 # ── Frame 6: FLOW de pagamento ────────────────────────────────────────────────
