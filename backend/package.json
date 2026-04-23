@@ -2,6 +2,10 @@
   "name": "shinydapps-backend",
   "version": "1.0.0",
   "private": true,
+  "dependencies": {
+    "@noble/curves": "^1.6.0",
+    "bech32": "^2.0.0"
+  },
   "devDependencies": {
     "@vercel/node": "^5.7.12",
     "typescript": "^5.4.0"

@@ -6,7 +6,12 @@
 type FetchArgs = [string, RequestInit?];
 
 function makeSupabaseOk() {
-  return Promise.resolve(new Response(null, { status: 201 }));
+  return Promise.resolve(
+    new Response(JSON.stringify([{ id: "mock-row-id" }]), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    })
+  );
 }
 
 function makeSupabase409() {
@@ -90,7 +95,7 @@ describe("waitlist handler — email dispatch logic", () => {
 
     const resendBody = JSON.parse((resendCalls[0][1]?.body as string) ?? "{}");
     expect(resendBody.to).toBe("user@example.com");
-    expect(resendBody.from).toContain("resend.dev");
+    expect(resendBody.from).toContain("l402kit.com");
 
     // deve fazer PATCH no Supabase com o resend_id retornado
     await new Promise((r) => setTimeout(r, 100));

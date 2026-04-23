@@ -1,9 +1,31 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { createCipheriv, randomBytes } from "crypto";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
 const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
+const EMAIL_ENCRYPTION_KEY = process.env.EMAIL_ENCRYPTION_KEY ?? "";
+
+/**
+ * AES-256-GCM encrypt an email address before persisting to Supabase.
+ * Format stored: iv_hex:tag_hex:ciphertext_hex
+ * Falls back to plaintext if EMAIL_ENCRYPTION_KEY is not configured (dev only).
+ */
+function encryptEmail(email: string): string {
+  if (!EMAIL_ENCRYPTION_KEY) return email;
+  // Uint8Array.from produces Uint8Array<ArrayBuffer>; required by strict TS crypto overloads
+  const key = Uint8Array.from(Buffer.from(EMAIL_ENCRYPTION_KEY, "hex"));
+  const ivBuf = randomBytes(12);
+  const iv = Uint8Array.from(ivBuf);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([
+    Uint8Array.from(cipher.update(email, "utf8")),
+    Uint8Array.from(cipher.final()),
+  ]);
+  const tag = cipher.getAuthTag();
+  return `${ivBuf.toString("hex")}:${tag.toString("hex")}:${ciphertext.toString("hex")}`;
+}
 
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 
@@ -89,9 +111,9 @@ async function sendWelcomeEmail(email: string): Promise<string | null> {
   return d.id ?? null;
 }
 
-async function saveResendId(email: string, resendId: string): Promise<void> {
+async function saveResendId(rowId: string, resendId: string): Promise<void> {
   await fetch(
-    `${SUPABASE_URL}/rest/v1/waitlist?email=eq.${encodeURIComponent(email)}`,
+    `${SUPABASE_URL}/rest/v1/waitlist?id=eq.${encodeURIComponent(rowId)}`,
     {
       method: "PATCH",
       headers: {
@@ -124,9 +146,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
         "Content-Type": "application/json",
-        Prefer: "return=minimal",
+        Prefer: "return=representation",
       },
-      body: JSON.stringify({ email, email_status: "pending" }),
+      body: JSON.stringify({ email: encryptEmail(email), email_status: "pending" }),
     });
 
     // 409 = already signed up — idempotent, skip email
@@ -138,11 +160,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: "Failed to save" });
     }
 
+    let rowId: string | undefined;
+    try {
+      const rows = (await r.json()) as { id: string }[];
+      rowId = rows[0]?.id;
+    } catch { /* rowId unavailable — Resend tracking skipped, row still inserted */ }
+
     // Send welcome email and persist the Resend ID (fire-and-forget)
     (async () => {
       try {
         const resendId = await sendWelcomeEmail(email);
-        if (resendId) await saveResendId(email, resendId);
+        if (resendId && rowId) await saveResendId(rowId, resendId);
       } catch (e) {
         console.error("[waitlist] email/tracking error", e);
       }

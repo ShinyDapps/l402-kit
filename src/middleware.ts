@@ -126,6 +126,9 @@ async function logPayment(
   ownerAddress: string, supabaseUrl: string, supabaseKey: string,
 ): Promise<{ ok: boolean; replay: boolean }> {
   const [, preimage] = token.split(":");
+  // Store SHA-256(preimage) — the payment hash is already public in the BOLT11 invoice.
+  // Never store the raw preimage: it is the 32-byte secret that proves payment.
+  const paymentHash = createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
   const res = await fetch(`${supabaseUrl}/rest/v1/payments`, {
     method: "POST",
     headers: {
@@ -136,13 +139,13 @@ async function logPayment(
     },
     body: JSON.stringify({
       endpoint,
-      preimage,
+      payment_hash: paymentHash,
       amount_sats: amountSats,
       owner_address: ownerAddress,
       paid_at: new Date().toISOString(),
     }),
   });
-  // 409 Conflict = preimage already in DB (unique constraint) = replay attack
+  // 409 Conflict = payment_hash already in DB (unique constraint) = replay attack
   if (res.status === 409) return { ok: false, replay: true };
   return { ok: res.ok, replay: false };
 }

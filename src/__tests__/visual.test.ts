@@ -198,12 +198,12 @@ describe("[Visual] welcome email — template HTML", () => {
     expect(html).toMatch(/Read the docs/i);
   });
 
-  it("from é onboarding@resend.dev (domínio ainda não verificado)", () => {
+  it("from usa domínio verificado hello@l402kit.com", () => {
     const src = fs.readFileSync(
       path.resolve(__dirname, "../../backend/api/waitlist.ts"), "utf-8"
     );
-    expect(src).toMatch(/onboarding@resend\.dev/);
-    expect(src).not.toMatch(/hello@l402kit\.com.*from/); // não no campo from
+    expect(src).toMatch(/hello@l402kit\.com/);
+    expect(src).not.toMatch(/onboarding@resend\.dev/); // domínio antigo removido
   });
 
   it("cor da marca (#F7931A bitcoin orange) está presente", () => {
@@ -516,6 +516,185 @@ describe("[Visual] landing — seção 'Why credit cards fail'", () => {
     expect(html).toMatch(/tarjetas fallan/);
     expect(html).toMatch(/クレジットカードがAPIに向かない/);
     expect(html).toMatch(/لماذا تفشل بطاقات الائتمان/);
+  });
+});
+
+// ─── Privacy feature 1: LNURL-auth endpoint ──────────────────────────────────
+
+describe("[Visual] lnurl-auth — LNURL-auth endpoint", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../../backend/api/lnurl-auth.ts"), "utf-8"
+    );
+  });
+
+  it("importa @noble/curves para verificação secp256k1", () => {
+    expect(src).toMatch(/@noble\/curves\/secp256k1/);
+    expect(src).toMatch(/secp256k1\.verify/);
+  });
+
+  it("importa bech32 para encoding LNURL", () => {
+    expect(src).toMatch(/bech32/);
+    expect(src).toMatch(/bech32\.encode/);
+    expect(src).toMatch(/"lnurl"/);
+  });
+
+  it("gera k1 com 32 bytes aleatórios (randomBytes(32))", () => {
+    expect(src).toMatch(/randomBytes\(32\)/);
+  });
+
+  it("modo challenge: retorna { k1, lnurl }", () => {
+    expect(src).toMatch(/k1.*lnurl|lnurl.*k1/s);
+    expect(src).toMatch(/res\.status\(200\)\.json/);
+  });
+
+  it("modo callback: verifica tag=login + k1 + sig + key", () => {
+    expect(src).toMatch(/tag.*login|login.*tag/);
+    expect(src).toMatch(/sig/);
+    expect(src).toMatch(/key/);
+  });
+
+  it("rejeita challenge expirado", () => {
+    expect(src).toMatch(/expires_at/);
+    expect(src).toMatch(/Challenge expired/);
+  });
+
+  it("emite token de 32 bytes após verificação", () => {
+    expect(src).toMatch(/randomBytes\(32\)/);
+    expect(src).toMatch(/token/);
+    expect(src).toMatch(/token_expires_at/);
+  });
+
+  it("modo poll: retorna { verified, token }", () => {
+    expect(src).toMatch(/poll/);
+    expect(src).toMatch(/verified.*token|token.*verified/s);
+  });
+
+  it("usa SUPABASE_SERVICE_KEY para estado dos desafios", () => {
+    expect(src).toMatch(/SUPABASE_SERVICE_KEY/);
+  });
+
+  it("define TTL do challenge (5 min) e do token (10 min)", () => {
+    expect(src).toMatch(/5 \* 60/);
+    expect(src).toMatch(/10 \* 60/);
+  });
+});
+
+// ─── Privacy feature 1b: delete-data agora exige LNURL-auth token ────────────
+
+describe("[Visual] delete-data — exige LNURL-auth token", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../../backend/api/delete-data.ts"), "utf-8"
+    );
+  });
+
+  it("requer token de 64 chars no body", () => {
+    expect(src).toMatch(/token/);
+    expect(src).toMatch(/token\.length.*64|64.*token\.length/);
+  });
+
+  it("valida token via lnurl_challenges no Supabase", () => {
+    expect(src).toMatch(/lnurl_challenges/);
+    expect(src).toMatch(/token=eq\./);
+  });
+
+  it("rejeita token não verificado ou inválido → 401", () => {
+    expect(src).toMatch(/Invalid or unverified token/);
+    expect(src).toMatch(/res\.status\(401\)/);
+  });
+
+  it("rejeita token expirado → 401", () => {
+    expect(src).toMatch(/Token expired/);
+  });
+
+  it("revoga token imediatamente após uso (single-use)", () => {
+    expect(src).toMatch(/token.*null|null.*token/);
+    expect(src).toMatch(/PATCH/);
+  });
+});
+
+// ─── Privacy feature 2: SHA-256(preimage) no middleware ──────────────────────
+
+describe("[Visual] middleware — armazena SHA-256(preimage) não raw", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../middleware.ts"), "utf-8"
+    );
+  });
+
+  it("logPayment usa createHash('sha256') no preimage", () => {
+    expect(src).toMatch(/createHash\(["']sha256["']\)/);
+    expect(src).toMatch(/preimage.*hex|hex.*preimage/);
+  });
+
+  it("armazena payment_hash (não preimage raw) na tabela payments", () => {
+    expect(src).toMatch(/payment_hash.*paymentHash|paymentHash.*payment_hash/s);
+    // The logPayment body must contain payment_hash, not a raw preimage field
+    expect(src).toMatch(/rest\/v1\/payments[\s\S]*?payment_hash/);
+    expect(src).not.toMatch(/rest\/v1\/payments[\s\S]*?["']preimage["']/);
+  });
+
+  it("comentário explica o motivo (preimage é segredo)", () => {
+    expect(src).toMatch(/SHA-256|sha256.*preimage|preimage.*hash/i);
+  });
+
+  it("replay check ainda funciona via 409 Conflict", () => {
+    expect(src).toMatch(/409/);
+    expect(src).toMatch(/replay/);
+  });
+});
+
+// ─── Privacy feature 3: AES-256-GCM email encryption ────────────────────────
+
+describe("[Visual] waitlist — AES-256-GCM email encryption", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../../backend/api/waitlist.ts"), "utf-8"
+    );
+  });
+
+  it("importa createCipheriv e randomBytes de crypto", () => {
+    expect(src).toMatch(/createCipheriv/);
+    expect(src).toMatch(/randomBytes/);
+    expect(src).toMatch(/from ['"]crypto['"]/);
+  });
+
+  it("usa aes-256-gcm como algoritmo", () => {
+    expect(src).toMatch(/aes-256-gcm/);
+  });
+
+  it("IV gerado aleatoriamente (12 bytes)", () => {
+    expect(src).toMatch(/randomBytes\(12\)/);
+  });
+
+  it("usa getAuthTag() para autenticação GCM", () => {
+    expect(src).toMatch(/getAuthTag/);
+  });
+
+  it("formato armazenado: iv:tag:ciphertext (hex separado por ':')", () => {
+    expect(src).toMatch(/iv.*tag.*ciphertext|toString\("hex"\).*:.*toString\("hex"\)/s);
+  });
+
+  it("lê EMAIL_ENCRYPTION_KEY do ambiente", () => {
+    expect(src).toMatch(/EMAIL_ENCRYPTION_KEY/);
+  });
+
+  it("fallback para plaintext se chave não configurada (dev)", () => {
+    expect(src).toMatch(/if.*EMAIL_ENCRYPTION_KEY.*return email/s);
+  });
+
+  it("insert no Supabase chama encryptEmail()", () => {
+    expect(src).toMatch(/encryptEmail\(email\)/);
+  });
+
+  it("PATCH usa id= (não email=) para evitar busca por email cifrado", () => {
+    expect(src).toMatch(/waitlist\?id=eq\./);
+    expect(src).not.toMatch(/waitlist\?email=eq\./);
   });
 });
 
