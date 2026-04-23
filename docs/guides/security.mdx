@@ -194,6 +194,84 @@ If you're building your own dashboard on top of l402-kit, expose a similar endpo
 
 ---
 
+## Privacy & data minimization
+
+l402-kit is designed to collect the minimum data needed to operate. Here is what is stored, why, and how to harden each field.
+
+### What gets stored
+
+| Table | Field | Why | Sensitivity |
+|---|---|---|---|
+| `payments` | `preimage` | Replay protection + proof of payment | ⚠️ Medium — hash it instead (see below) |
+| `payments` | `owner_address` | Attribute revenue to Lightning address | Low — Lightning addresses are public |
+| `payments` | `amount_sats` | Dashboard stats | Low |
+| `payments` | `endpoint` | Per-endpoint analytics | Low–medium |
+| `pro_access` | `address` | Verify Pro subscription | Low — public |
+| `waitlist` | `email` | Send welcome + release emails | ⚠️ High — real PII, encrypt or omit |
+| `waitlist` | `lightning_address` | Optional identity signal | Low |
+
+### Hash preimages instead of storing them raw
+
+The preimage is the 32-byte secret that proves a Lightning payment was made. Storing it raw means a database breach exposes every proof. Store the SHA-256 hash instead — it is already public (embedded in the BOLT11 invoice) and sufficient for replay protection:
+
+```typescript
+import { createHash } from 'crypto';
+
+// Instead of storing preimage directly:
+const paymentHash = createHash('sha256').update(Buffer.from(preimage, 'hex')).digest('hex');
+
+await supabase.from('payments').insert({
+  payment_hash: paymentHash,   // ✅ safe to store
+  // preimage: preimage        // ❌ avoid
+  owner_address,
+  amount_sats,
+  endpoint,
+});
+
+// Replay check: hash the incoming preimage, look up the hash
+const incomingHash = createHash('sha256').update(Buffer.from(incoming, 'hex')).digest('hex');
+const { data } = await supabase.from('payments').select('id').eq('payment_hash', incomingHash);
+const alreadyUsed = data && data.length > 0;
+```
+
+### Protect waitlist emails
+
+Email addresses are the only true PII in the system. Options in order of increasing protection:
+
+```typescript
+// Option A — encrypt before insert (AES-256-GCM, key stored outside Supabase)
+import { createCipheriv, randomBytes } from 'crypto';
+const key = Buffer.from(process.env.EMAIL_ENCRYPTION_KEY!, 'hex'); // 32 bytes
+const iv  = randomBytes(12);
+const cipher = createCipheriv('aes-256-gcm', key, iv);
+const encrypted = Buffer.concat([cipher.update(email), cipher.final()]);
+const tag = cipher.getAuthTag();
+const stored = iv.toString('hex') + ':' + tag.toString('hex') + ':' + encrypted.toString('hex');
+
+// Option B — store only a SHA-256 hash (irreversible — cannot send more emails)
+const emailHash = createHash('sha256').update(email.toLowerCase()).digest('hex');
+
+// Option C — do not store the email at all (send the welcome email and discard)
+```
+
+### Prove wallet ownership before deleting data (LNURL-auth)
+
+The `/api/delete-data` endpoint should only accept requests from the actual owner of the Lightning address. Use **LNURL-auth** to prove ownership cryptographically — the user signs a server challenge with their Lightning wallet private key, with no password or account required:
+
+```
+1. Client calls GET /api/lnurl-auth → server returns {k1, lnurl}
+2. User scans the LNURL-auth QR with their wallet
+3. Wallet signs k1 with the secp256k1 key derived for this domain
+4. Wallet calls GET /api/lnurl-auth?k1=...&sig=...&key=...
+5. Server verifies the signature → issues a short-lived deletion token
+6. Client sends POST /api/delete-data with {lightningAddress, token}
+7. Server validates token → deletes data → revokes token
+```
+
+This ensures no one can delete another user's records, even if they know the Lightning address.
+
+---
+
 ## Checklist
 
 <AccordionGroup>
@@ -207,6 +285,9 @@ If you're building your own dashboard on top of l402-kit, expose a similar endpo
     - [ ] Rate limiter on invoice creation
     - [ ] Replay protection tested (try reusing a preimage → expect 401)
     - [ ] Token expiry tested (set short TTL in dev, confirm 401 after expiry)
+    - [ ] Preimages stored as SHA-256 hashes, not raw secrets
+    - [ ] Waitlist emails encrypted at rest or discarded after sending
+    - [ ] `/api/delete-data` requires LNURL-auth proof of wallet ownership
   </Accordion>
   <Accordion title="For high-traffic APIs">
     - [ ] Redis-backed replay store (shared across instances)
