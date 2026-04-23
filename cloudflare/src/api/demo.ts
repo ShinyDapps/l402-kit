@@ -80,17 +80,25 @@ async function verifyToken(token: string): Promise<{ ok: boolean; reason?: strin
 
 async function createInvoice(amountSats: number, env: Env) {
   try {
-    const r = await fetch(`${env.SUPABASE_URL}/functions/v1/create-invoice`, {
+    const r = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`,
+        "X-API-KEY": env.BLINK_API_KEY,
       },
-      body: JSON.stringify({ amountSats }),
+      body: JSON.stringify({
+        query: `mutation { lnInvoiceCreate(input: { walletId: "${env.BLINK_WALLET_ID}", amount: ${amountSats} }) { invoice { paymentRequest paymentHash } errors { message } } }`,
+      }),
       signal: AbortSignal.timeout(10_000),
     });
     if (!r.ok) return null;
-    return await r.json() as { paymentRequest: string; paymentHash: string; macaroon: string };
+    const data = await r.json() as { data?: { lnInvoiceCreate?: { invoice?: { paymentRequest: string; paymentHash: string }; errors?: { message: string }[] } } };
+    const inv = data?.data?.lnInvoiceCreate;
+    if (!inv?.invoice || inv.errors?.length) return null;
+
+    const exp = Date.now() + 3_600_000;
+    const macaroon = btoa(JSON.stringify({ hash: inv.invoice.paymentHash, exp }));
+    return { paymentRequest: inv.invoice.paymentRequest, paymentHash: inv.invoice.paymentHash, macaroon };
   } catch {
     return null;
   }

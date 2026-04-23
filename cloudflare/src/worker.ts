@@ -18,6 +18,8 @@ export interface Env {
   SPLIT_SECRET: string;
   DASHBOARD_SECRET: string;
   RESEND_API_KEY: string;
+  BLINK_API_KEY: string;
+  BLINK_WALLET_ID: string;
 }
 
 function cors(res: Response): Response {
