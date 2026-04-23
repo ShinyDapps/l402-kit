@@ -94,7 +94,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,
-  ownerLightningAddress: "you@yourdomain.com", // receives 99.7% of every payment
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!), // receives 99.7% of every payment
 }), (_req, res) => {
   res.json({ data: "Payment confirmed." });
 });
@@ -113,7 +113,7 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="you@yourdomain.com",
+    lightning=AlbyProvider(os.environ["ALBY_TOKEN"]),
 )
 async def premium(request: Request):
     return {"data": "Payment confirmed."}

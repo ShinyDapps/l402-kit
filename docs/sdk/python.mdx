@@ -21,36 +21,17 @@ The fastest way to monetize your API. Set your Lightning Address — l402-kit ha
 import os
 from fastapi import FastAPI, Request
 from l402kit import l402_required
-
-app = FastAPI()
-
-@app.get("/api/data")
-@l402_required(price_sats=10, owner_lightning_address="you@yourdomain.com")
-async def get_data(request: Request):
-    return {"data": "premium content"}
-```
-
-No Lightning node, no invoice handling, no crypto code.
-
----
-
-## Self-hosted mode (bring your own provider)
-
-```python
-import os
-from fastapi import FastAPI, Request
-from l402kit import l402_required
 from l402kit.providers.blink import BlinkProvider
 
 app = FastAPI()
 
-blink = BlinkProvider(
+lightning = BlinkProvider(
     api_key=os.environ["BLINK_API_KEY"],
     wallet_id=os.environ["BLINK_WALLET_ID"],
 )
 
 @app.get("/api/data")
-@l402_required(price_sats=10, lightning=blink)
+@l402_required(price_sats=10, lightning=lightning)
 async def get_data(request: Request):
     return {"data": "premium content"}
 ```
@@ -60,13 +41,20 @@ async def get_data(request: Request):
 ## Flask
 
 ```python
+import os
 from flask import Flask, jsonify
 from l402kit import l402_required
+from l402kit.providers.blink import BlinkProvider
 
 app = Flask(__name__)
 
+lightning = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+
 @app.route("/api/data")
-@l402_required(price_sats=10, owner_lightning_address="you@yourdomain.com")
+@l402_required(price_sats=10, lightning=lightning)
 def get_data():
     return jsonify({"data": "premium content"})
 
@@ -83,8 +71,7 @@ if __name__ == "__main__":
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `price_sats` | `int` | **required** | Price per call in satoshis |
-| `owner_lightning_address` | `str` | — | Your Lightning Address — enables managed mode |
-| `lightning` | `LightningProvider` | — | Custom provider. Required if `owner_lightning_address` not set |
+| `lightning` | `LightningProvider` | **required** | Your Lightning backend |
 | `replay` | `ReplayAdapter` | in-memory | Pluggable replay protection backend |
 
 ### Behavior
@@ -168,7 +155,7 @@ replay = RedisReplayAdapter(r, ttl_seconds=86400)
 @app.get("/api/data")
 @l402_required(
     price_sats=10,
-    owner_lightning_address="you@yourdomain.com",
+    lightning=lightning,
     replay=replay,
 )
 async def get_data(request: Request):

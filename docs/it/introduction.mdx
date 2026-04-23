@@ -53,7 +53,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // ~€0,05 per chiamata
-  ownerLightningAddress: "tu@tuodominio.com",     // il tuo indirizzo — riceve il 99.7%
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!),     // il tuo indirizzo — riceve il 99.7%
 }), (_req, res) => {
   res.json({ data: "Pagamento confermato." });
 });
@@ -72,7 +72,7 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="tu@tuodominio.com",
+    lightning=AlbyProvider(os.environ["ALBY_TOKEN"]),
 )
 async def premium(request: Request):
     return {"data": "Pagamento confermato."}

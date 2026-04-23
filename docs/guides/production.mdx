@@ -49,7 +49,6 @@ app.use(async (req, res, next) => {
         endpoint: req.path,
         preimage: req.l402Preimage,
         amount_sats: req.l402AmountSats,
-        owner_address: process.env.LIGHTNING_ADDRESS,
       }).then(() => {});
     }
     return original(body);

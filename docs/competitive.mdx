@@ -91,14 +91,13 @@ These are Lightning infrastructure providers — they provide invoice creation A
 ### 1. Full-stack middleware (not just a protocol)
 Every competitor is either a payment processor (Stripe) or a protocol spec (x402). We're the only ready-to-use middleware SDK for both TypeScript and Python.
 
-### 2. Zero-config managed mode
+### 2. Three lines, any Lightning backend
 ```typescript
-app.get("/premium", l402({
-  priceSats: 100,
-  ownerLightningAddress: "you@yourdomain.com", // that's it
-}), handler);
+import { AlbyProvider } from "l402-kit";
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+app.get("/premium", l402({ priceSats: 100, lightning }), handler);
 ```
-No Lightning node. No wallet setup. Works in **seconds** — while Stripe takes 30 minutes of forms, KYC, and waiting for bank verification.
+Sovereign mode — you keep 100%, zero fees. Or use `ManagedProvider` for cloud-hosted invoices. Works in **seconds** — while Stripe takes 30 minutes of forms, KYC, and waiting for bank verification.
 
 ### 3. Python support
 No other L402/x402 solution has a Python SDK. The entire FastAPI/Flask ecosystem (~40% of API developers) has no other option.
