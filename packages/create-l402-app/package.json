@@ -1,0 +1,35 @@
+{
+  "name": "create-l402-app",
+  "version": "1.0.2",
+  "description": "Scaffold a Bitcoin Lightning pay-per-call API in 60 seconds. npx create-l402-app my-api",
+  "type": "module",
+  "bin": {
+    "create-l402-app": "bin/create-l402-app.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "keywords": [
+    "l402",
+    "lightning",
+    "bitcoin",
+    "create-app",
+    "scaffolding",
+    "micropayments",
+    "api-monetization",
+    "pay-per-call"
+  ],
+  "homepage": "https://l402kit.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShinyDapps/l402-kit.git"
+  },
+  "author": "Thiago Yoshiaki",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1"
+  }
+}

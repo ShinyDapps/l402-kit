@@ -311,6 +311,10 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:16px;letter-spacing:-0.5px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:14px;opacity:.8">⚡</span></button>
     <a href="https://l402kit.vercel.app/docs" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Read the docs →</a>
   </div>
+  <div style="margin-top:12px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+    <span style="font-size:12px;color:#555">Or scaffold a full server in one command:</span>
+    <button onclick="copyScaffold()" style="font-family:monospace;font-size:13px;background:#111;border:1px solid #2a2a2a;color:#a8c5da;border-radius:8px;padding:7px 14px;cursor:pointer;transition:all .2s" onmouseenter="this.style.borderColor='#f7931a';this.style.color='#f7931a'" onmouseleave="this.style.borderColor='#2a2a2a';this.style.color='#a8c5da'" id="scaffoldBtn">npx create-l402-app my-api</button>
+  </div>
   <div class="hero-stats">
     <div class="hero-stat"><div class="stat-num">4</div><div class="stat-label">Languages</div></div>
     <div class="hero-stat"><div class="stat-num">&lt;1s</div><div class="stat-label">Settlement</div></div>
@@ -1016,7 +1020,15 @@ function copyInstall() {
   navigator.clipboard.writeText('npm install l402-kit').then(() => {
     const icon = document.getElementById('installIcon');
     icon.textContent = '✓ copied';
-    setTimeout(() => { icon.textContent = 'copy'; }, 2000);
+    setTimeout(() => { icon.textContent = '⚡'; }, 2000);
+  });
+}
+function copyScaffold() {
+  navigator.clipboard.writeText('npx create-l402-app my-api').then(() => {
+    const btn = document.getElementById('scaffoldBtn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
   });
 }
 

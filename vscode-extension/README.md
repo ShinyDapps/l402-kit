@@ -14,6 +14,14 @@
 
 Real-time Bitcoin Lightning payment dashboard for developers using [l402-kit](https://npmjs.com/package/l402-kit). Every payment your API receives appears instantly: endpoint, amount in sats, USD value, live chart.
 
+### Start in 60 seconds
+
+```bash
+npx create-l402-app my-api
+```
+
+One command scaffolds a complete pay-per-call API — Express server, `.env.example`, TypeScript config, and a `/premium` endpoint that accepts Lightning payments. `cd my-api && npm run dev` and you're live.
+
 ### Features
 
 ⚡ **Live sats counter** in the status bar — updates every 30 seconds
@@ -36,7 +44,13 @@ Real-time Bitcoin Lightning payment dashboard for developers using [l402-kit](ht
 
 **Step 1 — Add l402-kit to your API**
 
-Pick your language and add pay-per-call in 3 lines:
+Fastest way — scaffold a complete server in one command:
+
+```bash
+npx create-l402-app my-api
+```
+
+Or add to an existing project:
 
 ```bash
 npm install l402-kit      # TypeScript / Node.js / Express

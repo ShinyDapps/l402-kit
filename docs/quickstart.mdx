@@ -1,19 +1,51 @@
 ---
 title: Quickstart
-description: From zero to paid API in 5 minutes.
+description: From zero to a paid API in 60 seconds.
 ---
 
-<Card title="▶ Watch the flow first" icon="play" href="https://l402kit.vercel.app/demo">
-  Interactive terminal demo — see install → 402 → Lightning pay → 200 OK, end to end.
+<Card title="▶ Watch the 402 flow first" icon="play" href="https://l402kit.com/#live-demo">
+  Interactive terminal demo — see request → 402 → Lightning pay → 200 OK, live in your browser.
 </Card>
 
-## 1. Get a free Lightning wallet
+## Option A — Scaffold a full server in one command (fastest)
+
+```bash
+npx create-l402-app my-api
+```
+
+This creates a complete Express + l402-kit project: `server.ts`, `.env.example`, `tsconfig.json`, and a `/premium` endpoint ready to accept Lightning payments.
+
+```
+my-api/
+  src/server.ts      ← your API with l402 middleware
+  .env.example       ← Blink/OpenNode credentials template
+  package.json       ← npm install l402-kit + tsx
+  tsconfig.json
+  README.md
+```
+
+Then:
+
+```bash
+cd my-api
+cp .env.example .env   # add your Blink API key
+npm install
+npm run dev
+# ⚡ l402-kit server running on http://localhost:3000
+# curl http://localhost:3000/premium  →  402 Payment Required
+```
+
+---
+
+## Option B — Add to an existing project
+
+### 1. Get a free Lightning wallet
 
 Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card, works globally.
 
 Copy your **API Key** and **BTC Wallet ID**.
 
-## 2. Install
+### 2. Install
 
 <CodeGroup>
 ```bash TypeScript
@@ -33,7 +65,7 @@ cargo add l402kit
 ```
 </CodeGroup>
 
-## 3. Add to your API
+### 3. Add to your API
 
 <CodeGroup>
 ```typescript Express
@@ -119,7 +151,7 @@ async fn main() {
 ```
 </CodeGroup>
 
-## 4. Test it
+### 4. Test it
 
 ```bash
 curl http://localhost:3000/premium
