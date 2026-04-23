@@ -182,5 +182,8 @@
     "@vscode/vsce": "^2.24.0",
     "sharp": "^0.34.5",
     "typescript": "^5.4.0"
+  },
+  "overrides": {
+    "uuid": ">=14.0.0"
   }
 }
