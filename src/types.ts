@@ -33,11 +33,6 @@ export interface L402Options {
    * ```
    */
   lightning: LightningProvider;
-  /**
-   * @deprecated Use `lightning` with a cloud provider instead.
-   * Will be removed in v2.0.
-   */
-  ownerLightningAddress?: string;
   /** Supabase URL for logging. Falls back to process.env.SUPABASE_URL */
   supabaseUrl?: string;
   /** Falls back to process.env.SUPABASE_ANON_KEY */

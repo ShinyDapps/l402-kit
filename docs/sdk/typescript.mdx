@@ -295,15 +295,13 @@ import type { L402Options, LightningProvider, Invoice, L402Token } from 'l402-ki
 
 interface L402Options {
   priceSats: number;
-  lightning: LightningProvider;        // required since v1.4.0
+  lightning: LightningProvider;
   supabaseUrl?: string;
   supabaseKey?: string;
   onPayment?: (token: L402Token, amountSats: number) => void | Promise<void>;
   webhookUrl?: string;
   webhookSecret?: string;
   replayAdapter?: ReplayAdapter;
-  /** @deprecated use lightning: ManagedProvider.fromAddress(addr) */
-  ownerLightningAddress?: string;
 }
 
 interface Invoice {
@@ -323,23 +321,6 @@ interface LightningProvider {
 ---
 
 ## Migration guide
-
-### v1.3.x → v1.4.0 (breaking)
-
-`lightning` is now required. `ownerLightningAddress` is deprecated.
-
-```typescript
-// Before (v1.3.x)
-l402({ priceSats: 10, ownerLightningAddress: 'you@blink.sv' })
-
-// After (v1.4.0) — sovereign
-import { AlbyProvider } from 'l402-kit';
-l402({ priceSats: 10, lightning: new AlbyProvider(process.env.ALBY_TOKEN!) })
-
-// After (v1.4.0) — cloud managed (explicit opt-in)
-import { ManagedProvider } from 'l402-kit';
-l402({ priceSats: 10, lightning: ManagedProvider.fromAddress('you@blink.sv') })
-```
 
 ### v1.1 → v1.2
 
