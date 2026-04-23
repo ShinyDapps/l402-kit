@@ -265,7 +265,7 @@ sequenceDiagram
     participant W as Lightning Wallet
     participant D as /api/delete-data
 
-    C->>S: GET ?lightningAddress=you@blink.sv
+    C->>S: GET ?lightningAddress=you@yourdomain.com
     S-->>C: {k1, lnurl} — display as QR
     W->>S: GET ?tag=login&k1=…&sig=…&key=…
     Note over S: secp256k1.verify(sig, k1, pubkey) ✓

@@ -35,7 +35,7 @@ async fn main() {
         .route("/api/data", get(handler))
         .layer(l402_middleware(Options {
             price_sats: 10,
-            owner_lightning_address: Some("you@blink.sv".into()),
+            owner_lightning_address: Some("you@yourdomain.com".into()),
             ..Default::default()
         }));
 
@@ -131,7 +131,7 @@ let app = Router::new()
     .route("/api/data", get(handler))
     .layer(l402_middleware(Options {
         price_sats: 10,
-        owner_lightning_address: Some("you@blink.sv".into()),
+        owner_lightning_address: Some("you@yourdomain.com".into()),
         on_payment: Some(Box::new(|token: L402Token, amount_sats: u64| {
             println!("payment received: {} sats", amount_sats);
         })),

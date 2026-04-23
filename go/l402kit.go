@@ -6,6 +6,6 @@
 //	mux := http.NewServeMux()
 //	mux.Handle("/api/data", l402kit.Middleware(l402kit.Options{
 //	    PriceSats:             10,
-//	    OwnerLightningAddress: "you@blink.sv",
+//	    OwnerLightningAddress: "you@yourdomain.com",
 //	}, myHandler))
 package l402kit

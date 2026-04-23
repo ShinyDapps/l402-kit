@@ -55,7 +55,7 @@ sequenceDiagram
     participant V as Vercel Backend<br/>/api/invoice
     participant B as Blink API<br/>(ShinyDapps wallet)
     participant S as Supabase
-    participant O as Owner wallet<br/>(you@blink.sv)
+    participant O as Owner wallet<br/>(you@yourdomain.com)
 
     C->>V: POST /api/invoice<br/>{priceSats, ownerAddress}
     V->>B: lnInvoiceCreate(priceSats)
@@ -124,7 +124,7 @@ sequenceDiagram
     participant S as Supabase<br/>lnurl_challenges
     participant D as Vercel<br/>/api/delete-data
 
-    U->>V: GET /api/lnurl-auth<br/>?lightningAddress=you@blink.sv
+    U->>V: GET /api/lnurl-auth<br/>?lightningAddress=you@yourdomain.com
     V->>V: k1 = randomBytes(32)
     V->>S: INSERT {k1, lightning_address, expires_at: +5min}
     V-->>U: {k1, lnurl} — show as QR code

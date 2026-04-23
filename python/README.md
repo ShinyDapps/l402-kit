@@ -62,7 +62,7 @@ async def root():
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="you@blink.sv",  # your Lightning Address — receives 99.7%
+    owner_lightning_address="you@yourdomain.com",  # your Lightning Address — receives 99.7%
 )
 async def premium(request: Request):
     return {"data": "Payment confirmed. Here is your data."}
@@ -77,7 +77,7 @@ from l402kit import l402_required
 app = Flask(__name__)
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="you@blink.sv")
+@l402_required(price_sats=100, owner_lightning_address="you@yourdomain.com")
 def premium():
     return jsonify({"data": "Payment confirmed."})
 ```

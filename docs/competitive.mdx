@@ -95,7 +95,7 @@ Every competitor is either a payment processor (Stripe) or a protocol spec (x402
 ```typescript
 app.get("/premium", l402({
   priceSats: 100,
-  ownerLightningAddress: "you@blink.sv", // that's it
+  ownerLightningAddress: "you@yourdomain.com", // that's it
 }), handler);
 ```
 No Lightning node. No wallet setup. Works in **seconds** — while Stripe takes 30 minutes of forms, KYC, and waiting for bank verification.

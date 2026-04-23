@@ -25,7 +25,7 @@ from l402kit import l402_required
 app = FastAPI()
 
 @app.get("/api/data")
-@l402_required(price_sats=10, owner_lightning_address="you@blink.sv")
+@l402_required(price_sats=10, owner_lightning_address="you@yourdomain.com")
 async def get_data(request: Request):
     return {"data": "premium content"}
 ```
@@ -66,7 +66,7 @@ from l402kit import l402_required
 app = Flask(__name__)
 
 @app.route("/api/data")
-@l402_required(price_sats=10, owner_lightning_address="you@blink.sv")
+@l402_required(price_sats=10, owner_lightning_address="you@yourdomain.com")
 def get_data():
     return jsonify({"data": "premium content"})
 
@@ -168,7 +168,7 @@ replay = RedisReplayAdapter(r, ttl_seconds=86400)
 @app.get("/api/data")
 @l402_required(
     price_sats=10,
-    owner_lightning_address="you@blink.sv",
+    owner_lightning_address="you@yourdomain.com",
     replay=replay,
 )
 async def get_data(request: Request):

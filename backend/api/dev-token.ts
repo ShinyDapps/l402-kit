@@ -10,7 +10,7 @@ const PRO_PRICE_SATS = 9000; // ~$9
 const PRO_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // GET /api/dev-token?address=you@blink.sv — get invoice or check access
+  // GET /api/dev-token?address=you@yourdomain.com — get invoice or check access
   if (req.method === "GET") {
     const address = String(req.query.address ?? "");
     if (!address) return res.status(400).json({ error: "Missing address" });

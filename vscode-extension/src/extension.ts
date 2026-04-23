@@ -237,10 +237,10 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("shinydapps.configure", async () => {
       const address = await vscode.window.showInputBox({
-        prompt: "⚡ Your Lightning Address (e.g. you@blink.sv)",
-        placeHolder: "you@blink.sv",
+        prompt: "⚡ Your Lightning Address (e.g. you@yourdomain.com)",
+        placeHolder: "you@yourdomain.com",
         ignoreFocusOut: true,
-        validateInput: v => (v && v.includes("@") ? null : "Enter a valid Lightning address (e.g. you@blink.sv)"),
+        validateInput: v => (v && v.includes("@") ? null : "Enter a valid Lightning address (e.g. you@yourdomain.com)"),
       });
       if (!address) return;
       const cfg = vscode.workspace.getConfiguration("shinydapps");
@@ -667,7 +667,7 @@ function renderSetup() {
     '<p>' + t('setupStep1') + '<br>' + t('setupStep2') + '</p>' +
     '<button class="cfg-btn" id="cfgBtn">⚡ ' + t('cfgBtn') + '</button>' +
     '<p>' + t('setupStep3') + '</p>' +
-    '<pre>"shinydapps.lightningAddress": "you@blink.sv"</pre>' +
+    '<pre>"shinydapps.lightningAddress": "you@yourdomain.com"</pre>' +
     '<p class="hint">' + t('setupHint') + '</p>' +
     '</div>'
   );

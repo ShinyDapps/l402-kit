@@ -50,8 +50,13 @@ export function l402(options: L402Options): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers["authorization"] ?? "";
 
-    if (authHeader.startsWith("L402 ")) {
-      const token = authHeader.slice(5);
+    // x402 (Coinbase) compatibility: accept X-Payment header as well
+    const x402Header = req.headers["x-payment"] as string | undefined;
+    const effectiveAuth = authHeader.startsWith("L402 ") ? authHeader
+      : x402Header ? `L402 ${x402Header}` : authHeader;
+
+    if (effectiveAuth.startsWith("L402 ")) {
+      const token = effectiveAuth.slice(5);
       const valid = await verifyToken(token);
 
       if (valid) {

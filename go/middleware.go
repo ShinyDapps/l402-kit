@@ -29,7 +29,7 @@ type Options struct {
 	PriceSats int
 
 	// OwnerLightningAddress enables zero-config managed mode.
-	// Example: "you@blink.sv"
+	// Example: "you@yourdomain.com"
 	// The ShinyDapps backend creates invoices and you receive 99.7% of each payment.
 	OwnerLightningAddress string
 
@@ -96,7 +96,7 @@ func (m *managedProvider) sendSplit(ctx context.Context, amountSats int) {
 //
 //	mux.Handle("/api/data", l402kit.Middleware(l402kit.Options{
 //	    PriceSats:             10,
-//	    OwnerLightningAddress: "you@blink.sv",
+//	    OwnerLightningAddress: "you@yourdomain.com",
 //	}, myHandler))
 func Middleware(opts Options, next http.Handler) http.Handler {
 	var provider LightningProvider

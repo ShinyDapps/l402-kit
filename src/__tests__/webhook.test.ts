@@ -14,7 +14,7 @@ function makeEvent(overrides: Partial<WebhookEvent> = {}): WebhookEvent {
       amountSats: 100,
       preimage: randomBytes(32).toString("hex"),
       paymentHash: randomBytes(32).toString("hex"),
-      ownerAddress: "you@blink.sv",
+      ownerAddress: "you@yourdomain.com",
     },
     ...overrides,
   };

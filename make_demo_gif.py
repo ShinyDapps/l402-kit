@@ -220,7 +220,7 @@ def scene_input(typed="", theme="dark"):
     px, py, pw = W//2-210, 70, 420
     d.rectangle([px, py, px+pw, py+68], fill=C["palette_bg"])
     d.rectangle([px, py, px+pw, py+1], fill=C["statusbar"])
-    d.text((px+10, py+8), "Enter your Lightning Address (e.g. you@blink.sv)", fill=C["muted"], font=fUI_S)
+    d.text((px+10, py+8), "Enter your Lightning Address (e.g. you@yourdomain.com)", fill=C["muted"], font=fUI_S)
     d.rectangle([px+10, py+28, px+pw-10, py+54], fill=C["input_bg"])
     cursor = "|" if len(typed) < 12 else ""
     d.text((px+16, py+34), typed + cursor, fill=C["text"], font=fUI_M)
@@ -283,7 +283,7 @@ add(scene_cmd(step=2), 1000)
 add(scene_cmd(step=3), 800)
 
 # 10-16s  type lightning address
-addr_steps = ["", "y", "yo", "you", "you@", "you@b", "you@blink", "you@blink.sv"]
+addr_steps = ["", "y", "yo", "you", "you@", "you@b", "you@blink", "you@yourdomain.com"]
 for a in addr_steps:
     add(scene_input(typed=a), 250 if len(a)>0 else 600)
 

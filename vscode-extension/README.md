@@ -64,7 +64,7 @@ Use your Lightning address as the owner:
 ```typescript
 app.get("/premium", l402({
   priceSats: 100,
-  ownerLightningAddress: "you@blink.sv",  // ← your Lightning address
+  ownerLightningAddress: "you@yourdomain.com",  // ← your Lightning address
 }), handler);
 ```
 
@@ -73,7 +73,7 @@ app.get("/premium", l402({
 Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
-Enter the **same Lightning address** you used in your API (e.g. `you@blink.sv`).
+Enter the **same Lightning address** you used in your API (e.g. `you@yourdomain.com`).
 That's it — the extension connects automatically.
 
 > **No Lightning address yet?** Get one free at [dashboard.blink.sv](https://dashboard.blink.sv) — no credit card, instant setup.
@@ -312,7 +312,7 @@ cargo add l402kit         # Rust
 打开命令面板 (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
-输入与您的 API 中相同的闪电地址（例如：`you@blink.sv`）。
+输入与您的 API 中相同的闪电地址（例如：`you@yourdomain.com`）。
 
 **第三步 — 实时查看支付**
 
@@ -375,7 +375,7 @@ cargo add l402kit         # Rust
 コマンドパレット (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
-API で使用したのと**同じ Lightning アドレス**を入力（例：`you@blink.sv`）。
+API で使用したのと**同じ Lightning アドレス**を入力（例：`you@yourdomain.com`）。
 
 **ステップ 3 — リアルタイムで支払いを確認**
 

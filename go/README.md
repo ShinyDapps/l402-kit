@@ -33,7 +33,7 @@ func main() {
 
     mux.Handle("/api/data", l402kit.Middleware(l402kit.Options{
         PriceSats:             10,
-        OwnerLightningAddress: "you@blink.sv",
+        OwnerLightningAddress: "you@yourdomain.com",
     }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintln(w, `{"message": "paid access"}`)
     })))

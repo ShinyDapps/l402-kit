@@ -40,7 +40,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // 1回約$0.06
-  ownerLightningAddress: "you@blink.sv",    // 99.7%を受け取る
+  ownerLightningAddress: "you@yourdomain.com",    // 99.7%を受け取る
 }), (_req, res) => {
   res.json({ data: "支払いが確認されました。" });
 });
@@ -59,7 +59,7 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="you@blink.sv",
+    owner_lightning_address="you@yourdomain.com",
 )
 async def premium(request: Request):
     return {"data": "支払いが確認されました。"}

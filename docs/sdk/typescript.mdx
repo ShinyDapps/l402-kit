@@ -25,7 +25,7 @@ const app = express();
 
 app.get('/api/data', l402({
   priceSats: 10,
-  ownerLightningAddress: 'you@blink.sv',
+  ownerLightningAddress: 'you@yourdomain.com',
 }), (req, res) => {
   res.json({ data: 'premium content' });
 });
@@ -149,7 +149,7 @@ Built-in. Resets on restart. Suitable for single-process deployments.
 
 ```typescript
 // No configuration needed — enabled by default
-app.get('/api', l402({ priceSats: 10, ownerLightningAddress: 'you@blink.sv' }), handler);
+app.get('/api', l402({ priceSats: 10, ownerLightningAddress: 'you@yourdomain.com' }), handler);
 ```
 
 ### Redis (production — multi-instance)
@@ -165,7 +165,7 @@ const replay = new RedisReplayAdapter(
 
 app.get('/api', l402({
   priceSats: 10,
-  ownerLightningAddress: 'you@blink.sv',
+  ownerLightningAddress: 'you@yourdomain.com',
   replayAdapter: replay,
 }), handler);
 ```
@@ -183,7 +183,7 @@ import { l402, verifyWebhook } from 'l402-kit';
 
 app.get('/api/data', l402({
   priceSats: 10,
-  ownerLightningAddress: 'you@blink.sv',
+  ownerLightningAddress: 'you@yourdomain.com',
   webhookUrl: 'https://yourapi.com/webhooks/l402',
   webhookSecret: process.env.L402_WEBHOOK_SECRET!,
 }), handler);
@@ -214,7 +214,7 @@ app.post('/webhooks/l402', express.raw({ type: '*/*' }), (req, res) => {
     "endpoint": "/api/data",
     "amountSats": 10,
     "paymentHash": "sha256-of-preimage",
-    "ownerAddress": "you@blink.sv"
+    "ownerAddress": "you@yourdomain.com"
   }
 }
 ```
@@ -228,7 +228,7 @@ Synchronous hook called after each verified payment, before `next()`:
 ```typescript
 app.get('/api/data', l402({
   priceSats: 10,
-  ownerLightningAddress: 'you@blink.sv',
+  ownerLightningAddress: 'you@yourdomain.com',
   onPayment: async ({ macaroon, preimage }, amountSats) => {
     await myAnalytics.track('payment', { amountSats });
   },
@@ -245,12 +245,12 @@ Set `SUPABASE_URL` + `SUPABASE_ANON_KEY` in your environment (or pass via option
 // Via env vars (recommended)
 // SUPABASE_URL=https://xxx.supabase.co
 // SUPABASE_ANON_KEY=...
-app.get('/api', l402({ priceSats: 10, ownerLightningAddress: 'you@blink.sv' }), handler);
+app.get('/api', l402({ priceSats: 10, ownerLightningAddress: 'you@yourdomain.com' }), handler);
 
 // Or explicit
 app.get('/api', l402({
   priceSats: 10,
-  ownerLightningAddress: 'you@blink.sv',
+  ownerLightningAddress: 'you@yourdomain.com',
   supabaseUrl: 'https://xxx.supabase.co',
   supabaseKey: process.env.SUPABASE_ANON_KEY!,
 }), handler);
@@ -349,7 +349,7 @@ app.use(express.json());
 // ── Managed mode (zero-config) ────────────────────────────────────────────
 app.get('/api/weather', l402({
   priceSats: 5,
-  ownerLightningAddress: 'you@blink.sv',
+  ownerLightningAddress: 'you@yourdomain.com',
 }), (req, res) => {
   res.json({ temp: 24, city: 'São Paulo' });
 });

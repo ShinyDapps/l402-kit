@@ -199,7 +199,7 @@ import l402kit "github.com/shinydapps/l402-kit/go"
 
 mux.Handle("/ai/weather", l402kit.Middleware(l402kit.Options{
     PriceSats:             21,
-    OwnerLightningAddress: "you@blink.sv",
+    OwnerLightningAddress: "you@yourdomain.com",
 }, weatherHandler))
 ```
 
@@ -208,7 +208,7 @@ mux.Handle("/ai/weather", l402kit.Middleware(l402kit.Options{
 use l402kit::{l402_middleware, Options};
 use std::sync::Arc;
 
-let opts = Arc::new(Options::new(21).with_address("you@blink.sv"));
+let opts = Arc::new(Options::new(21).with_address("you@yourdomain.com"));
 let app = Router::new()
     .route("/ai/weather", get(weather_handler))
     .route_layer(middleware::from_fn_with_state(opts, l402_middleware));

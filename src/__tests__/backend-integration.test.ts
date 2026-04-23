@@ -154,7 +154,7 @@ describe("/api/pro-subscribe — validações", () => {
     const r = await fetch(`${BASE}/api/pro-subscribe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lightningAddress: "you@blink.sv", tier: "hacker" }),
+      body: JSON.stringify({ lightningAddress: "you@yourdomain.com", tier: "hacker" }),
     });
     expect(r.status).toBe(400);
   });
@@ -178,14 +178,14 @@ describe("/api/pro-subscribe — validações", () => {
 
 describe("/api/pro-poll — validações", () => {
   it_live("retorna 400 sem paymentHash", async () => {
-    const r = await fetch(`${BASE}/api/pro-poll?address=you@blink.sv&tier=pro`);
+    const r = await fetch(`${BASE}/api/pro-poll?address=you@yourdomain.com&tier=pro`);
     expect(r.status).toBe(400);
   });
 
   it_live("retorna paid:false para hash inexistente", async () => {
     const fakeHash = "a".repeat(64);
     const r = await fetch(
-      `${BASE}/api/pro-poll?paymentHash=${fakeHash}&address=you@blink.sv&tier=pro`
+      `${BASE}/api/pro-poll?paymentHash=${fakeHash}&address=you@yourdomain.com&tier=pro`
     );
     expect([200, 404]).toContain(r.status);
     if (r.status === 200) {

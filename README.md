@@ -113,7 +113,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                          // ~$0.10 per call
-  ownerLightningAddress: "you@blink.sv",   // your Lightning Address
+  ownerLightningAddress: "you@yourdomain.com",   // your Lightning Address
 }), (_req, res) => {
   res.json({ data: "Payment confirmed." });
 });
@@ -130,7 +130,7 @@ from l402kit import l402_required
 app = FastAPI()
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="you@blink.sv")
+@l402_required(price_sats=100, owner_lightning_address="you@yourdomain.com")
 async def premium(request: Request):
     return {"data": "Payment confirmed."}
 ```
@@ -149,7 +149,7 @@ import (
 func main() {
     http.Handle("/premium", l402kit.Middleware(l402kit.Options{
         PriceSats:             100,
-        OwnerLightningAddress: "you@blink.sv",
+        OwnerLightningAddress: "you@yourdomain.com",
     }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintln(w, `{"data": "Payment confirmed."}`)
     })))
@@ -166,7 +166,7 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let opts = Arc::new(Options::new(100).with_address("you@blink.sv"));
+    let opts = Arc::new(Options::new(100).with_address("you@yourdomain.com"));
 
     let app = Router::new()
         .route("/premium", get(|| async { "Payment confirmed." }))

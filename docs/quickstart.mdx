@@ -138,7 +138,7 @@ use std::sync::Arc;
 #[tokio::main]
 async fn main() {
     let opts = Arc::new(
-        Options::new(100).with_address("you@blink.sv"),
+        Options::new(100).with_address("you@yourdomain.com"),
     );
 
     let app = Router::new()

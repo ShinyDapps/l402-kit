@@ -27,7 +27,7 @@ use std::sync::Arc;
 #[tokio::main]
 async fn main() {
     let opts = Arc::new(
-        Options::new(10).with_address("you@blink.sv"),
+        Options::new(10).with_address("you@yourdomain.com"),
     );
 
     let app = Router::new()
@@ -50,7 +50,7 @@ async fn main() {
 
 ```rust
 let opts = Options::new(10)                          // 10 sats per call
-    .with_address("you@blink.sv")                    // zero-config managed mode
+    .with_address("you@yourdomain.com")                    // zero-config managed mode
     .with_provider(Arc::new(MyCustomProvider));      // or bring your own
 ```
 

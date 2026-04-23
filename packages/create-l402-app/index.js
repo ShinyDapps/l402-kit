@@ -188,9 +188,9 @@ if (p.isCancel(priceSats)) { p.cancel("Cancelled."); process.exit(0); }
 
 const ownerAddress = await p.text({
   message: "Your Lightning Address (receives payments)",
-  placeholder: "you@blink.sv",
+  placeholder: "you@yourdomain.com",
   validate: (v) => {
-    if (!v || !v.includes("@")) return "Enter a valid Lightning Address (e.g. you@blink.sv)";
+    if (!v || !v.includes("@")) return "Enter a valid Lightning Address (e.g. you@yourdomain.com)";
   },
 });
 if (p.isCancel(ownerAddress)) { p.cancel("Cancelled."); process.exit(0); }

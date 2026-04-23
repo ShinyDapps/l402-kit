@@ -14,7 +14,7 @@ func main() {
 	// Protected endpoint — costs 10 sats per call
 	mux.Handle("/api/data", l402kit.Middleware(l402kit.Options{
 		PriceSats:             10,
-		OwnerLightningAddress: "you@blink.sv",
+		OwnerLightningAddress: "you@yourdomain.com",
 		OnPayment: func(token l402kit.L402Token, sats int) {
 			fmt.Printf("Payment received: %d sats\n", sats)
 		},

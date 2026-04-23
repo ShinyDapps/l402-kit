@@ -47,7 +47,7 @@ async def root():
 @l402_required(
     price_sats=50,
     lightning=lightning,
-    owner_lightning_address=os.environ.get("LIGHTNING_ADDRESS", "you@blink.sv"),
+    owner_lightning_address=os.environ.get("LIGHTNING_ADDRESS", "you@yourdomain.com"),
 )
 async def generate(request: Request, prompt: str = "Hello!"):
     """Paid inference endpoint — 50 sats per call."""

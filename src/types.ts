@@ -24,7 +24,7 @@ export interface L402Options {
   priceSats: number;
   /**
    * Lightning Address of the API owner — receives 99.7% of each payment.
-   * Example: "you@blink.sv"
+   * Example: "you@yourdomain.com"
    * When set, l402-kit manages everything: invoices via ShinyDapps account,
    * automatic split, and 0.3% fee to ShinyDapps.
    */

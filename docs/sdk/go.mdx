@@ -31,7 +31,7 @@ func main() {
 
     mux.Handle("/api/data", l402.Middleware(l402.Options{
         PriceSats:             10,
-        OwnerLightningAddress: "you@blink.sv",
+        OwnerLightningAddress: "you@yourdomain.com",
     }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
         json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
@@ -121,7 +121,7 @@ type LightningProvider interface {
 ```go
 mux.Handle("/api/data", l402.Middleware(l402.Options{
     PriceSats:             10,
-    OwnerLightningAddress: "you@blink.sv",
+    OwnerLightningAddress: "you@yourdomain.com",
     OnPayment: func(token l402.L402Token, amountSats int) {
         log.Printf("payment: %d sats, preimage: %s", amountSats, token.Preimage)
     },
@@ -147,7 +147,7 @@ import (
 r := chi.NewRouter()
 r.With(l402.ChiMiddleware(l402.Options{
     PriceSats:             10,
-    OwnerLightningAddress: "you@blink.sv",
+    OwnerLightningAddress: "you@yourdomain.com",
 })).Get("/api/data", handler)
 ```
 

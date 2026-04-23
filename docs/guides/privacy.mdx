@@ -67,7 +67,7 @@ No password to phish. No session token to steal from Vercel. The JWT is scoped b
 
 Only your wallet can authorize deletion of your data. The flow:
 
-1. Client calls `/api/lnurl-auth?lightningAddress=you@blink.sv`
+1. Client calls `/api/lnurl-auth?lightningAddress=you@yourdomain.com`
 2. Server returns a one-time k1 challenge + LNURL
 3. Your wallet signs k1 with its secp256k1 private key
 4. Server verifies the signature — issues a single-use 64-char token
