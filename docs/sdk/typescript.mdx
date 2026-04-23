@@ -1,6 +1,6 @@
 ---
 title: TypeScript SDK
-description: Complete reference for the l402-kit TypeScript/JavaScript SDK.
+description: Complete reference for the l402-kit TypeScript/Node.js SDK — Express middleware for Bitcoin Lightning pay-per-call APIs.
 ---
 
 ## Installation
@@ -9,14 +9,39 @@ description: Complete reference for the l402-kit TypeScript/JavaScript SDK.
 npm install l402-kit
 ```
 
-**Peer dependency**: `express >= 4.0.0` (optional — only needed for Express middleware)
+**Requirements**: Node.js 18+, Express 4+
 
 ---
 
-## Quick start
+## Zero-config managed mode
+
+The fastest way to monetize your API. Set your Lightning Address — l402-kit handles invoices, verification, and fee split automatically. You receive **99.7%** of every payment directly to your wallet.
 
 ```typescript
 import express from 'express';
+import { l402 } from 'l402-kit';
+
+const app = express();
+
+app.get('/api/data', l402({
+  priceSats: 10,
+  ownerLightningAddress: 'you@blink.sv',
+}), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+
+That's it. No Lightning node, no invoice handling, no crypto code.
+
+---
+
+## Self-hosted mode (bring your own provider)
+
+For full control over your Lightning backend:
+
+```typescript
 import { l402, BlinkProvider } from 'l402-kit';
 
 const blink = new BlinkProvider(
@@ -24,47 +49,44 @@ const blink = new BlinkProvider(
   process.env.BLINK_WALLET_ID!,
 );
 
-const app = express();
-
-app.get('/api/data', l402({ priceSats: 10, lightning: blink }), (req, res) => {
-  res.json({ data: 'premium content' });
-});
-
-app.listen(3000);
+app.get('/api/data', l402({ priceSats: 10, lightning: blink }), handler);
 ```
 
 ---
 
 ## `l402(options)` — middleware
 
-Returns an Express middleware that enforces L402 payment on the route.
-
-```typescript
-import { l402 } from 'l402-kit';
-
-app.get('/route', l402(options), handler);
-```
+Returns an Express `RequestHandler` that enforces L402 payment on the route.
 
 ### Options
 
-| Option | Type | Required | Description |
+| Option | Type | Default | Description |
 |---|---|---|---|
-| `priceSats` | `number` | ✅ | Price in satoshis |
-| `lightning` | `LightningProvider` | ✅ | Provider instance |
+| `priceSats` | `number` | **required** | Price per call in satoshis |
+| `ownerLightningAddress` | `string` | — | Your Lightning Address. Enables managed mode — no provider needed |
+| `lightning` | `LightningProvider` | — | Custom Lightning provider. Required if `ownerLightningAddress` is not set |
+| `supabaseUrl` | `string` | `SUPABASE_URL` env | Supabase URL for payment logging |
+| `supabaseKey` | `string` | `SUPABASE_ANON_KEY` env | Supabase key for payment logging |
+| `onPayment` | `(token, amountSats) => void` | — | Callback fired after each verified payment |
+| `webhookUrl` | `string` | — | Your endpoint to receive signed payment events |
+| `webhookSecret` | `string` | — | HMAC-SHA256 secret for webhook signing |
+| `replayAdapter` | `ReplayAdapter` | in-memory | Pluggable replay protection backend |
 
 ### Behavior
 
-- **No token**: Returns `402 Payment Required` with invoice + macaroon
-- **Valid token**: Calls `next()` — route handler executes
-- **Invalid/expired token**: Returns `401 Unauthorized`
-- **Replayed token**: Returns `401 Token already used`
+| Request | Response |
+|---|---|
+| No `Authorization` header | `402 Payment Required` with BOLT11 invoice + macaroon |
+| Valid `L402 <macaroon>:<preimage>` | `next()` — handler executes |
+| Invalid or expired token | `401 Unauthorized` |
+| Replayed preimage | `401 Token already used` |
 
-### 402 Response body
+### 402 response body
 
 ```json
 {
   "error": "Payment Required",
-  "invoice": "lnbc100n1...",
+  "invoice": "lnbc100n1p...",
   "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
   "priceSats": 10
 }
@@ -78,61 +100,31 @@ WWW-Authenticate: L402 macaroon="eyJ...", invoice="lnbc..."
 
 ---
 
-## `verifyToken(token)` — standalone verification
-
-Verify an L402 token without Express middleware:
-
-```typescript
-import { verifyToken } from 'l402-kit';
-
-const token = 'eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==:deadbeef...';
-const isValid = verifyToken(token); // true | false
-```
-
----
-
-## `parseToken(token)` — parse token parts
-
-```typescript
-import { parseToken } from 'l402-kit';
-
-const { macaroon, preimage } = parseToken(token);
-// macaroon: 'eyJoYXNo...'
-// preimage: 'deadbeef...'
-```
-
----
-
-## `checkAndMarkPreimage(preimage)` — replay protection
-
-```typescript
-import { checkAndMarkPreimage } from 'l402-kit';
-
-const isFirstUse = checkAndMarkPreimage(preimage);
-// true  → first use, mark as spent
-// false → already used (replay attack)
-```
-
----
-
 ## Providers
 
 ### `BlinkProvider`
 
+[Blink](https://blink.sv) — free custodial Lightning wallet, no KYC for small amounts.
+
 ```typescript
 import { BlinkProvider } from 'l402-kit';
 
-const blink = new BlinkProvider(apiKey: string, walletId: string);
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // dashboard.blink.sv → API Keys
+  process.env.BLINK_WALLET_ID!,  // your BTC wallet ID
+);
 ```
 
 ### `LNbitsProvider`
+
+Self-hosted or [legend.lnbits.com](https://legend.lnbits.com).
 
 ```typescript
 import { LNbitsProvider } from 'l402-kit';
 
 const lnbits = new LNbitsProvider(
-  apiKey: string,
-  baseUrl?: string, // default: 'https://legend.lnbits.com'
+  process.env.LNBITS_API_KEY!,
+  'https://your-lnbits-instance.com', // optional, defaults to legend.lnbits.com
 );
 ```
 
@@ -142,9 +134,160 @@ const lnbits = new LNbitsProvider(
 import { OpenNodeProvider } from 'l402-kit';
 
 const opennode = new OpenNodeProvider(
-  apiKey: string,
-  testMode?: boolean, // default: false
+  process.env.OPENNODE_API_KEY!,
+  false, // testMode — set to true for sandbox
 );
+```
+
+---
+
+## Replay protection
+
+### Default — in-memory (development)
+
+Built-in. Resets on restart. Suitable for single-process deployments.
+
+```typescript
+// No configuration needed — enabled by default
+app.get('/api', l402({ priceSats: 10, ownerLightningAddress: 'you@blink.sv' }), handler);
+```
+
+### Redis (production — multi-instance)
+
+```typescript
+import Redis from 'ioredis';
+import { l402, RedisReplayAdapter } from 'l402-kit';
+
+const replay = new RedisReplayAdapter(
+  new Redis(process.env.REDIS_URL!),
+  86400, // TTL in seconds (24h)
+);
+
+app.get('/api', l402({
+  priceSats: 10,
+  ownerLightningAddress: 'you@blink.sv',
+  replayAdapter: replay,
+}), handler);
+```
+
+`RedisReplayAdapter` uses `SET key 1 NX EX ttl` — atomic, race-condition free.
+
+---
+
+## Payment webhooks
+
+Receive a signed event after each payment. Use this to trigger side-effects (provision access, send content, log analytics).
+
+```typescript
+import { l402, verifyWebhook } from 'l402-kit';
+
+app.get('/api/data', l402({
+  priceSats: 10,
+  ownerLightningAddress: 'you@blink.sv',
+  webhookUrl: 'https://yourapi.com/webhooks/l402',
+  webhookSecret: process.env.L402_WEBHOOK_SECRET!,
+}), handler);
+
+// Webhook receiver
+app.post('/webhooks/l402', express.raw({ type: '*/*' }), (req, res) => {
+  const valid = verifyWebhook(
+    process.env.L402_WEBHOOK_SECRET!,
+    req.body.toString(),
+    req.headers['l402-signature'] as string,
+  );
+  if (!valid) return res.status(401).end();
+
+  const event = JSON.parse(req.body.toString());
+  console.log('Payment received:', event.data.paymentHash, event.data.amountSats);
+  res.json({ ok: true });
+});
+```
+
+**Webhook payload:**
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "payment.received",
+  "created": 1700000000,
+  "data": {
+    "endpoint": "/api/data",
+    "amountSats": 10,
+    "paymentHash": "sha256-of-preimage",
+    "ownerAddress": "you@blink.sv"
+  }
+}
+```
+
+---
+
+## `onPayment` callback
+
+Synchronous hook called after each verified payment, before `next()`:
+
+```typescript
+app.get('/api/data', l402({
+  priceSats: 10,
+  ownerLightningAddress: 'you@blink.sv',
+  onPayment: async ({ macaroon, preimage }, amountSats) => {
+    await myAnalytics.track('payment', { amountSats });
+  },
+}), handler);
+```
+
+---
+
+## Supabase payment logging
+
+Set `SUPABASE_URL` + `SUPABASE_ANON_KEY` in your environment (or pass via options) to log payments automatically.
+
+```typescript
+// Via env vars (recommended)
+// SUPABASE_URL=https://xxx.supabase.co
+// SUPABASE_ANON_KEY=...
+app.get('/api', l402({ priceSats: 10, ownerLightningAddress: 'you@blink.sv' }), handler);
+
+// Or explicit
+app.get('/api', l402({
+  priceSats: 10,
+  ownerLightningAddress: 'you@blink.sv',
+  supabaseUrl: 'https://xxx.supabase.co',
+  supabaseKey: process.env.SUPABASE_ANON_KEY!,
+}), handler);
+```
+
+**Payments table schema** (`payments`):
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — safe to store
+  endpoint      text,
+  amount_sats   integer,
+  owner_address text,
+  paid_at       timestamptz default now()
+);
+```
+
+<Note>
+`payment_hash` stores `SHA256(preimage)`, not the raw preimage. The preimage is the 32-byte Lightning payment secret — its hash is already public in the BOLT11 invoice. This protects your users in case of a database breach.
+</Note>
+
+---
+
+## Standalone utilities
+
+```typescript
+import { verifyToken, parseToken, checkAndMarkPreimage } from 'l402-kit';
+
+// Verify a token (returns true/false)
+const isValid = await verifyToken('eyJoYXNoIjoi...:deadbeef...');
+
+// Parse token parts
+const { macaroon, preimage } = parseToken(token);
+
+// Custom replay check (returns true = first use, false = replay)
+const isFirstUse = await checkAndMarkPreimage(preimage);
 ```
 
 ---
@@ -152,25 +295,45 @@ const opennode = new OpenNodeProvider(
 ## Types
 
 ```typescript
+import type { L402Options, LightningProvider, Invoice, L402Token } from 'l402-kit';
+
+interface L402Options {
+  priceSats: number;
+  ownerLightningAddress?: string;
+  lightning?: LightningProvider;
+  supabaseUrl?: string;
+  supabaseKey?: string;
+  onPayment?: (token: L402Token, amountSats: number) => void | Promise<void>;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  replayAdapter?: ReplayAdapter;
+}
+
+interface Invoice {
+  paymentRequest: string;
+  paymentHash: string;
+  macaroon: string;
+  amountSats: number;
+  expiresAt: number;        // Unix ms
+}
+
 interface LightningProvider {
   createInvoice(amountSats: number): Promise<Invoice>;
   checkPayment(paymentHash: string): Promise<boolean>;
 }
-
-interface Invoice {
-  paymentRequest: string;   // BOLT11 invoice string
-  paymentHash: string;      // SHA256 hash
-  macaroon: string;         // base64-encoded JSON {hash, exp}
-  amountSats: number;       // amount in satoshis
-  expiresAt: number;        // Unix timestamp (ms)
-}
-
-interface L402Options {
-  priceSats: number;
-  lightning: LightningProvider;
-  checkReplay?: (preimage: string) => boolean | Promise<boolean>;
-}
 ```
+
+---
+
+## Migration guide — v1.1 → v1.2
+
+If you use the Supabase integration (`SUPABASE_URL` + `SUPABASE_ANON_KEY`), rename the column in your `payments` table:
+
+```sql
+ALTER TABLE payments RENAME COLUMN preimage TO payment_hash;
+```
+
+No other changes required. The public API is identical.
 
 ---
 
@@ -178,37 +341,38 @@ interface L402Options {
 
 ```typescript
 import express from 'express';
-import { l402, BlinkProvider, verifyToken } from 'l402-kit';
+import { l402, BlinkProvider } from 'l402-kit';
 
+const app = express();
+app.use(express.json());
+
+// ── Managed mode (zero-config) ────────────────────────────────────────────
+app.get('/api/weather', l402({
+  priceSats: 5,
+  ownerLightningAddress: 'you@blink.sv',
+}), (req, res) => {
+  res.json({ temp: 24, city: 'São Paulo' });
+});
+
+// ── Self-hosted mode ──────────────────────────────────────────────────────
 const blink = new BlinkProvider(
   process.env.BLINK_API_KEY!,
   process.env.BLINK_WALLET_ID!,
 );
 
-const app = express();
-app.use(express.json());
-
-// Free endpoint
-app.get('/health', (req, res) => res.json({ ok: true }));
-
-// 10-sat endpoint
-app.get('/api/weather', l402({ priceSats: 10, lightning: blink }), (req, res) => {
-  res.json({ temp: 24, city: 'São Paulo' });
-});
-
-// 100-sat endpoint
 app.post('/api/generate', l402({ priceSats: 100, lightning: blink }), (req, res) => {
   res.json({ result: 'AI-generated content' });
 });
 
-app.listen(3000, () => console.log('API running on :3000'));
+app.listen(3000, () => console.log('⚡ API running on :3000'));
 ```
 
-**Test:**
 ```bash
-# Triggers 402 → get invoice + macaroon
+# 1. First request — triggers 402
 curl http://localhost:3000/api/weather
+# → {"error":"Payment Required","invoice":"lnbc...","macaroon":"eyJ...","priceSats":5}
 
-# Pay invoice via Lightning wallet, then:
+# 2. Pay the invoice in your Lightning wallet, then:
 curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/weather
+# → {"temp":24,"city":"São Paulo"}
 ```

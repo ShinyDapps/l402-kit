@@ -1,21 +1,21 @@
 ---
 title: Go SDK
-description: Complete reference for the l402-kit Go SDK (net/http middleware).
+description: Complete reference for the l402-kit Go SDK — net/http middleware for Bitcoin Lightning pay-per-call APIs.
 ---
 
 ## Installation
 
 ```bash
-go get github.com/shinydapps/l402-kit/go@v1.0.1
+go get github.com/shinydapps/l402-kit/go@v1.1.6
 ```
 
-<Note>
-The module requires Go 1.21+.
-</Note>
+**Requirements**: Go 1.21+
 
 ---
 
-## Quick start
+## Zero-config managed mode
+
+The fastest way to monetize your API. Set your Lightning Address — l402-kit handles invoices, verification, and fee split automatically. You receive **99.7%** of every payment directly to your wallet.
 
 ```go
 package main
@@ -29,55 +29,127 @@ import (
 func main() {
     mux := http.NewServeMux()
 
-    protected := l402.Middleware(l402.Options{
-        PriceSats:        10,
-        LightningAddress: "you@blink.sv",
-    })
-
-    mux.Handle("/api/data", protected(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    mux.Handle("/api/data", l402.Middleware(l402.Options{
+        PriceSats:             10,
+        OwnerLightningAddress: "you@blink.sv",
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
         json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
     })))
 
-    http.ListenAndServe(":8080", mux)
+    http.ListenAndServe(":8080", nil)
 }
+```
+
+No Lightning node, no invoice handling, no crypto code.
+
+---
+
+## Self-hosted mode (bring your own provider)
+
+```go
+import l402 "github.com/shinydapps/l402-kit/go"
+
+type MyProvider struct{}
+
+func (p *MyProvider) CreateInvoice(ctx context.Context, amountSats int) (l402.Invoice, error) {
+    // create invoice with your Lightning node
+}
+
+func (p *MyProvider) CheckPayment(ctx context.Context, paymentHash string) (bool, error) {
+    // check if paid
+}
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: &MyProvider{},
+}, handler))
 ```
 
 ---
 
 ## `l402.Options`
 
-| Field | Type | Required | Description |
+| Field | Type | Default | Description |
 |---|---|---|---|
-| `PriceSats` | `int64` | ✅ | Amount in satoshis per call |
-| `LightningAddress` | `string` | ✅ | Your Lightning address (`you@blink.sv`) |
-| `InvoiceExpiry` | `int` | — | Invoice TTL in seconds (default: 3600) |
+| `PriceSats` | `int` | **required** | Price per call in satoshis |
+| `OwnerLightningAddress` | `string` | — | Your Lightning Address — enables managed mode |
+| `Lightning` | `LightningProvider` | — | Custom provider. Required if `OwnerLightningAddress` not set |
+| `OnPayment` | `func(L402Token, int)` | — | Callback fired after each verified payment |
 
 ---
 
-## `l402.Middleware(opts Options)`
+## `l402.Middleware(opts Options, next http.Handler) http.Handler`
 
-Returns an `func(http.Handler) http.Handler` compatible with `net/http`, Chi, Gorilla Mux, and any standard Go HTTP framework.
+Returns an `http.Handler` compatible with `net/http`, Chi, Gorilla Mux, and any standard Go HTTP framework.
 
-**First call (no token):**
-```
-HTTP 402 Payment Required
-WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+### Behavior
+
+| Request | Response |
+|---|---|
+| No `Authorization` header | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| Valid `L402 <macaroon>:<preimage>` | `next.ServeHTTP(w, r)` |
+| Invalid or expired token | `401 Unauthorized` |
+| Replayed preimage | `401 Token already used` |
+
+### 402 response body
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
 ```
 
-**Subsequent call (with payment proof):**
+---
+
+## `LightningProvider` interface
+
+```go
+type LightningProvider interface {
+    CreateInvoice(ctx context.Context, amountSats int) (Invoice, error)
+    CheckPayment(ctx context.Context, paymentHash string) (bool, error)
+}
 ```
-Authorization: L402 <macaroon>:<preimage>
-→ HTTP 200 OK
+
+---
+
+## `OnPayment` callback
+
+```go
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats:             10,
+    OwnerLightningAddress: "you@blink.sv",
+    OnPayment: func(token l402.L402Token, amountSats int) {
+        log.Printf("payment: %d sats, preimage: %s", amountSats, token.Preimage)
+    },
+}, handler))
 ```
 
 ---
 
 ## Verification
 
-The middleware verifies `SHA256(preimage) == paymentHash` locally — no external call on the hot path.
+`SHA256(preimage) == paymentHash` is verified locally in memory — no network call on the hot path. Token expiry (`exp` field in the macaroon) is checked in the same operation.
 
-Replay prevention: each preimage is checked against Supabase (unique constraint) before access is granted.
+---
+
+## Chi router example
+
+```go
+import (
+    "github.com/go-chi/chi/v5"
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+r := chi.NewRouter()
+r.With(l402.ChiMiddleware(l402.Options{
+    PriceSats:             10,
+    OwnerLightningAddress: "you@blink.sv",
+})).Get("/api/data", handler)
+```
 
 ---
 
@@ -86,11 +158,19 @@ Replay prevention: each preimage is checked against Supabase (unique constraint)
 | Status | Meaning |
 |---|---|
 | `402` | No payment token — pay the invoice |
-| `401` | Invalid preimage (wrong payment proof) |
-| `401` | Replayed token (already used) |
+| `401` | Invalid token or expired macaroon |
+| `401` | Replayed token (preimage already used) |
 
 ---
 
-## Contact
+## Running
 
-Questions or access issues: `shinydapps@gmail.com` · Lightning: `shinydapps@blink.sv`
+```bash
+go run main.go
+
+# Test — triggers 402
+curl http://localhost:8080/api/data
+
+# Pay invoice, then:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:8080/api/data
+```

@@ -1,6 +1,6 @@
 ---
 title: Rust SDK
-description: Complete reference for the l402-kit Rust SDK (axum middleware).
+description: Complete reference for the l402-kit Rust SDK — axum middleware for Bitcoin Lightning pay-per-call APIs.
 ---
 
 ## Installation
@@ -13,25 +13,30 @@ Or in `Cargo.toml`:
 
 ```toml
 [dependencies]
-l402kit = "1.0"
+l402kit = "1.1"
 ```
+
+**Requirements**: Rust 1.75+, Tokio async runtime
 
 ---
 
-## Quick start
+## Zero-config managed mode
+
+The fastest way to monetize your API. Set your Lightning Address — l402-kit handles invoices, verification, and fee split automatically. You receive **99.7%** of every payment directly to your wallet.
 
 ```rust
 use axum::{Router, routing::get, Json};
-use l402kit::l402_middleware;
+use l402kit::{l402_middleware, Options};
 use serde_json::{json, Value};
 
 #[tokio::main]
 async fn main() {
     let app = Router::new()
         .route("/api/data", get(handler))
-        .layer(l402_middleware(l402kit::Options {
+        .layer(l402_middleware(Options {
             price_sats: 10,
-            lightning_address: "you@blink.sv".into(),
+            owner_lightning_address: Some("you@blink.sv".into()),
+            ..Default::default()
         }));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -43,15 +48,51 @@ async fn handler() -> Json<Value> {
 }
 ```
 
+No Lightning node, no invoice handling, no crypto code.
+
 ---
 
-## `l402kit::Options`
+## Self-hosted mode (bring your own provider)
 
-| Field | Type | Required | Description |
+```rust
+use std::sync::Arc;
+use l402kit::{l402_middleware, Options, LightningProvider, Invoice, BoxFuture, L402Error};
+
+struct MyProvider;
+
+impl LightningProvider for MyProvider {
+    fn create_invoice<'a>(&'a self, amount_sats: u64) -> BoxFuture<'a, Result<Invoice, L402Error>> {
+        Box::pin(async move {
+            // create invoice with your Lightning node
+            Ok(Invoice {
+                payment_request: "lnbc...".into(),
+                payment_hash: "abc123...".into(),
+                macaroon: "eyJ...".into(),
+                amount_sats,
+            })
+        })
+    }
+}
+
+let app = Router::new()
+    .route("/api/data", get(handler))
+    .layer(l402_middleware(Options {
+        price_sats: 10,
+        lightning: Some(Arc::new(MyProvider)),
+        ..Default::default()
+    }));
+```
+
+---
+
+## `Options`
+
+| Field | Type | Default | Description |
 |---|---|---|---|
-| `price_sats` | `u64` | ✅ | Amount in satoshis per call |
-| `lightning_address` | `String` | ✅ | Your Lightning address (`you@blink.sv`) |
-| `invoice_expiry` | `u32` | — | Invoice TTL in seconds (default: 3600) |
+| `price_sats` | `u64` | **required** | Price per call in satoshis |
+| `owner_lightning_address` | `Option<String>` | `None` | Your Lightning Address — enables managed mode |
+| `lightning` | `Option<Arc<dyn LightningProvider>>` | `None` | Custom provider. Overrides `owner_lightning_address` |
+| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | `None` | Callback fired after each verified payment |
 
 ---
 
@@ -59,29 +100,48 @@ async fn handler() -> Json<Value> {
 
 Returns an `axum::middleware::Layer` compatible with axum 0.8+.
 
-**First call (no token):**
-```
-HTTP 402 Payment Required
-WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
-```
+### Behavior
 
-**Subsequent call (with payment proof):**
-```
-Authorization: L402 <macaroon>:<preimage>
-→ HTTP 200 OK
+| Request | Response |
+|---|---|
+| No `Authorization` header | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| Valid `L402 <macaroon>:<preimage>` | Handler executes |
+| Invalid or expired token | `401 Unauthorized` |
+| Replayed preimage | `401 Token already used` |
+
+### 402 response body
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
 ```
 
 ---
 
-## Verification
+## `on_payment` callback
 
-The middleware verifies `SHA256(preimage) == paymentHash` using the `sha2` crate — no external call on the hot path.
+```rust
+use l402kit::{Options, L402Token};
+
+let app = Router::new()
+    .route("/api/data", get(handler))
+    .layer(l402_middleware(Options {
+        price_sats: 10,
+        owner_lightning_address: Some("you@blink.sv".into()),
+        on_payment: Some(Box::new(|token: L402Token, amount_sats: u64| {
+            println!("payment received: {} sats", amount_sats);
+        })),
+        ..Default::default()
+    }));
+```
 
 ---
 
-## Features
-
-The crate has a single feature flag:
+## Feature flags
 
 ```toml
 [features]
@@ -89,7 +149,17 @@ default = ["axum-middleware"]
 axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
 ```
 
-Disable `axum-middleware` if you only need the core `verify_token` function.
+Disable `axum-middleware` to use only the core verification functions without axum or reqwest:
+
+```toml
+l402kit = { version = "1.1", default-features = false }
+```
+
+---
+
+## Verification
+
+`SHA256(preimage) == paymentHash` is verified locally using the `sha2` crate — no network call on the hot path. Token expiry is checked in the same operation.
 
 ---
 
@@ -98,11 +168,19 @@ Disable `axum-middleware` if you only need the core `verify_token` function.
 | Status | Meaning |
 |---|---|
 | `402` | No payment token — pay the invoice |
-| `401` | Invalid preimage (wrong payment proof) |
-| `401` | Replayed token (already used) |
+| `401` | Invalid token or expired macaroon |
+| `401` | Replayed preimage (already used) |
 
 ---
 
-## Contact
+## Running
 
-`shinydapps@gmail.com` · [crates.io/crates/l402kit](https://crates.io/crates/l402kit)
+```bash
+cargo run
+
+# Test — triggers 402
+curl http://localhost:3000/api/data
+
+# Pay invoice, then:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
+```

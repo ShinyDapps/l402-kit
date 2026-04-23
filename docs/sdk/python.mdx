@@ -1,6 +1,6 @@
 ---
 title: Python SDK
-description: Complete reference for the l402kit Python SDK (FastAPI, Flask, async).
+description: Complete reference for the l402kit Python SDK — FastAPI and Flask decorator for Bitcoin Lightning pay-per-call APIs.
 ---
 
 ## Installation
@@ -13,7 +13,28 @@ pip install l402kit
 
 ---
 
-## Quick start (FastAPI)
+## Zero-config managed mode
+
+The fastest way to monetize your API. Set your Lightning Address — l402-kit handles invoices, verification, and fee split automatically. You receive **99.7%** of every payment directly to your wallet.
+
+```python
+import os
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+
+app = FastAPI()
+
+@app.get("/api/data")
+@l402_required(price_sats=10, owner_lightning_address="you@blink.sv")
+async def get_data(request: Request):
+    return {"data": "premium content"}
+```
+
+No Lightning node, no invoice handling, no crypto code.
+
+---
+
+## Self-hosted mode (bring your own provider)
 
 ```python
 import os
@@ -36,23 +57,16 @@ async def get_data(request: Request):
 
 ---
 
-## Quick start (Flask)
+## Flask
 
 ```python
-import os
 from flask import Flask, jsonify
 from l402kit import l402_required
-from l402kit.providers.blink import BlinkProvider
 
 app = Flask(__name__)
 
-blink = BlinkProvider(
-    api_key=os.environ["BLINK_API_KEY"],
-    wallet_id=os.environ["BLINK_WALLET_ID"],
-)
-
 @app.route("/api/data")
-@l402_required(price_sats=10, lightning=blink)
+@l402_required(price_sats=10, owner_lightning_address="you@blink.sv")
 def get_data():
     return jsonify({"data": "premium content"})
 
@@ -62,32 +76,27 @@ if __name__ == "__main__":
 
 ---
 
-## `l402_required(price_sats, lightning)` — decorator
-
-```python
-from l402kit import l402_required
-
-@app.get("/route")
-@l402_required(price_sats=100, lightning=blink)
-async def handler(request: Request):
-    ...
-```
+## `@l402_required` — decorator
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Default | Description |
 |---|---|---|---|
-| `price_sats` | `int` | ✅ | Price in satoshis |
-| `lightning` | `LightningProvider` | ✅ | Provider instance |
+| `price_sats` | `int` | **required** | Price per call in satoshis |
+| `owner_lightning_address` | `str` | — | Your Lightning Address — enables managed mode |
+| `lightning` | `LightningProvider` | — | Custom provider. Required if `owner_lightning_address` not set |
+| `replay` | `ReplayAdapter` | in-memory | Pluggable replay protection backend |
 
 ### Behavior
 
-- **No `Authorization` header**: Returns `402` with invoice, macaroon, price
-- **Valid `L402 <macaroon>:<preimage>` header**: Route executes normally
-- **Invalid/expired token**: Returns `401`
-- **Replayed token**: Returns `401 Token already used`
+| Request | Response |
+|---|---|
+| No `Authorization` header | `402` with invoice, macaroon, price |
+| Valid `L402 <macaroon>:<preimage>` | Handler executes normally |
+| Invalid or expired token | `401 Unauthorized` |
+| Replayed preimage | `401 Token already used` |
 
-### 402 Response
+### 402 response
 
 ```json
 {
@@ -100,65 +109,18 @@ async def handler(request: Request):
 
 ---
 
-## `verify_token(token)` — standalone
-
-```python
-from l402kit.verify import verify_token
-
-token = "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==:deadbeef..."
-is_valid = verify_token(token)  # True / False
-```
-
----
-
-## Replay protection
-
-### In-memory (default — single process)
-
-```python
-from l402kit.replay import check_and_mark_preimage
-
-is_first_use = check_and_mark_preimage(preimage)
-# True  → first use, marked as spent
-# False → already used (replay attack)
-```
-
-Resets on process restart. Suitable for development and single-instance deployments.
-
-### Redis (production — multi-instance)
-
-For multiple workers or instances, use `RedisReplayAdapter` so every instance shares the same spent-token store:
-
-```python
-import os, redis
-from l402kit import l402_required, RedisReplayAdapter
-from l402kit.providers.blink import BlinkProvider
-
-r = redis.Redis.from_url(os.environ["REDIS_URL"])
-replay = RedisReplayAdapter(r, ttl_seconds=86400)
-
-blink = BlinkProvider(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"])
-
-@app.get("/api/data")
-@l402_required(price_sats=10, lightning=blink, replay=replay)
-async def get_data(request: Request):
-    return {"data": "premium content"}
-```
-
-`RedisReplayAdapter.check_and_mark` uses `SET key 1 NX EX ttl` — atomic, race-condition free.
-
----
-
 ## Providers
 
 ### `BlinkProvider`
+
+[Blink](https://blink.sv) — free custodial Lightning wallet, no KYC for small amounts.
 
 ```python
 from l402kit.providers.blink import BlinkProvider
 
 blink = BlinkProvider(
-    api_key="blink_xxx",
-    wallet_id="your-wallet-uuid",
+    api_key=os.environ["BLINK_API_KEY"],    # dashboard.blink.sv → API Keys
+    wallet_id=os.environ["BLINK_WALLET_ID"],
 )
 ```
 
@@ -168,8 +130,8 @@ blink = BlinkProvider(
 from l402kit.providers.lnbits import LNbitsProvider
 
 lnbits = LNbitsProvider(
-    api_key="your-invoice-key",
-    base_url="https://legend.lnbits.com",  # optional
+    api_key=os.environ["LNBITS_API_KEY"],
+    base_url="https://your-lnbits.com",  # optional
 )
 ```
 
@@ -179,9 +141,56 @@ lnbits = LNbitsProvider(
 from l402kit.providers.opennode import OpenNodeProvider
 
 opennode = OpenNodeProvider(
-    api_key="your-api-key",
-    test_mode=True,  # optional, default False
+    api_key=os.environ["OPENNODE_API_KEY"],
+    test_mode=False,  # True for sandbox
 )
+```
+
+---
+
+## Replay protection
+
+### Default — in-memory (development)
+
+Built-in, no configuration needed. Resets on process restart.
+
+### Redis (production — multi-instance)
+
+For Gunicorn/uvicorn multi-worker deployments, share replay state via Redis:
+
+```python
+import os, redis
+from l402kit import l402_required, RedisReplayAdapter
+
+r = redis.Redis.from_url(os.environ["REDIS_URL"])
+replay = RedisReplayAdapter(r, ttl_seconds=86400)
+
+@app.get("/api/data")
+@l402_required(
+    price_sats=10,
+    owner_lightning_address="you@blink.sv",
+    replay=replay,
+)
+async def get_data(request: Request):
+    return {"data": "premium content"}
+```
+
+`RedisReplayAdapter` uses `SET key 1 NX EX ttl` — atomic and race-condition free.
+
+---
+
+## Standalone utilities
+
+```python
+from l402kit.verify import verify_token
+from l402kit.replay import check_and_mark_preimage
+
+# Verify a token (True / False)
+is_valid = verify_token("eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==:deadbeef...")
+
+# Manual replay check
+is_first_use = check_and_mark_preimage(preimage)
+# True = first use, False = already used
 ```
 
 ---
@@ -216,11 +225,10 @@ class MyProvider(LightningProvider):
 ## Testing
 
 ```python
-from l402kit.verify import verify_token
-from l402kit.replay import check_and_mark_preimage
 import hashlib, base64, json, time, os
+from l402kit.verify import verify_token
 
-def make_test_token():
+def make_test_token() -> str:
     preimage = os.urandom(32).hex()
     payment_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
     exp = int((time.time() + 3600) * 1000)
@@ -229,8 +237,7 @@ def make_test_token():
     ).decode()
     return f"{macaroon}:{preimage}"
 
-token = make_test_token()
-assert verify_token(token) is True
+assert verify_token(make_test_token()) is True
 ```
 
 ---
@@ -244,6 +251,9 @@ uvicorn main:app --port 3000
 # Flask
 python app.py
 
-# Test (triggers 402)
+# Test — triggers 402
 curl http://localhost:3000/api/data
+
+# Pay invoice, then:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
 ```
