@@ -301,11 +301,25 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 <section class="hero">
   <div class="hero-network" id="heroNetwork"></div>
-  <div class="hero-badge">⚡ Bitcoin Lightning · AI-native · Open Source · free or 0.3%</div>
-  <h1 id="heroTitle">Charge for your API in sats.<br>Any wallet pays. <span>Instantly.</span></h1>
-  <p id="heroSubtitle">3 lines of code. No Stripe. No account. AI agents pay natively — machines pay machines.</p>
-  <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.25);border-radius:12px;padding:10px 20px;margin-bottom:20px;margin-top:-8px">
-    <span id="heroAiText" style="font-size:14px;color:#e5e5e5;font-weight:600">⚡ <b>Stripe minimum: $0.30/call.</b> <span style="color:var(--orange)">l402-kit minimum: 1 sat ≈ $0.0006.</span> That's <b>500× cheaper.</b> AI agents make billions of calls/day — every one is a revenue opportunity Stripe can't touch.</span>
+  <div class="hero-badge">⚡ MIT Open Source · TypeScript · Python · Go · Rust · AI-native</div>
+  <h1 id="heroTitle">The payment layer for<br>APIs and <span>AI agents.</span></h1>
+  <p id="heroSubtitle">L402 protocol — machines pay machines. Bring your Lightning node or ours. No middleman required.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;margin-top:-8px">
+    <div style="background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.2);border-radius:10px;padding:10px 18px;text-align:center">
+      <div style="font-size:11px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:.8px">Sovereign</div>
+      <div style="font-size:13px;color:#e5e5e5;font-weight:600">BTCPay · Alby Hub · LNbits</div>
+      <div style="font-size:11px;color:#4ade80;margin-top:2px">0% fee · your node · your keys</div>
+    </div>
+    <div style="background:rgba(247,147,26,0.05);border:1px solid rgba(247,147,26,0.15);border-radius:10px;padding:10px 18px;text-align:center">
+      <div style="font-size:11px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:.8px">Plug &amp; Play</div>
+      <div style="font-size:13px;color:#e5e5e5;font-weight:600">Hosted Lightning endpoint</div>
+      <div style="font-size:11px;color:#f7931a;margin-top:2px">0.3% · no node needed</div>
+    </div>
+    <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:10px 18px;text-align:center">
+      <div style="font-size:11px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:.8px">AI Agents</div>
+      <div style="font-size:13px;color:#e5e5e5;font-weight:600">L402Client · autonomous pay</div>
+      <div style="font-size:11px;color:#22c55e;margin-top:2px">Claude · GPT · any agent</div>
+    </div>
   </div>
   <div class="hero-actions">
     <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:16px;letter-spacing:-0.5px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:14px;opacity:.8">⚡</span></button>
@@ -406,42 +420,59 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 <section class="demo">
   <div class="demo-tabs">
-    <div class="tab active" onclick="showTab('ts')">TypeScript</div>
+    <div class="tab active" onclick="showTab('agent')" style="color:#22c55e;border-color:rgba(34,197,94,.3)">⚡ AI Agent</div>
+    <div class="tab" onclick="showTab('ts')">TypeScript</div>
     <div class="tab" onclick="showTab('py')">Python</div>
     <div class="tab" onclick="showTab('go')">Go</div>
     <div class="tab" onclick="showTab('rs')">Rust</div>
-    <div class="tab" onclick="showTab('agent')" style="color:#22c55e;border-color:#22c55e22">Agent / Client</div>
   </div>
   <div class="code-block" style="position:relative">
     <button id="copyCodeBtn" onclick="copyCode()" style="position:absolute;top:14px;right:14px;background:#1a1a1a;border:1px solid #333;color:#888;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;z-index:10;transition:all .2s" onmouseenter="this.style.borderColor='#f7931a';this.style.color='#f7931a'" onmouseleave="this.style.borderColor='#333';this.style.color='#888'">copy</button>
-    <div class="code-pane active" id="tab-ts"><pre>
-<span class="c-comment">// npm install l402-kit</span>
+    <div class="code-pane active" id="tab-agent"><pre>
+<span class="c-comment">// npm install l402-kit  — AI agent consuming an L402-protected API</span>
+<span class="c-keyword">import</span> { L402Client } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
+<span class="c-keyword">import</span> { AlbyProvider } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
+
+<span class="c-comment">// Agent has its own Lightning wallet — pays autonomously</span>
+<span class="c-keyword">const</span> client = <span class="c-keyword">new</span> <span class="c-fn">L402Client</span>({
+  wallet: <span class="c-keyword">new</span> <span class="c-fn">AlbyProvider</span>(process.env.<span class="c-fn">ALBY_TOKEN</span>!, process.env.<span class="c-fn">ALBY_URL</span>!),
+});
+
+<span class="c-comment">// Automatic: 402 detected → pays invoice → retries → returns data</span>
+<span class="c-keyword">const</span> res = <span class="c-keyword">await</span> client.<span class="c-fn">fetch</span>(<span class="c-string">"https://any-l402-api.com/data"</span>);
+<span class="c-keyword">const</span> data = <span class="c-keyword">await</span> res.<span class="c-fn">json</span>();
+<span class="c-comment">// → 200 OK — paid in &lt;1s, no human involved, no API key, no subscription</span></pre></div>
+    <div class="code-pane" id="tab-ts"><pre>
+<span class="c-comment">// npm install l402-kit  — protect your API (sovereign, 0% fee)</span>
 <span class="c-keyword">import</span> express <span class="c-keyword">from</span> <span class="c-string">"express"</span>;
-<span class="c-keyword">import</span> { l402 } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
+<span class="c-keyword">import</span> { l402, AlbyProvider } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
 
 <span class="c-keyword">const</span> app = <span class="c-fn">express</span>();
+<span class="c-keyword">const</span> lightning = <span class="c-keyword">new</span> <span class="c-fn">AlbyProvider</span>(
+  process.env.<span class="c-fn">ALBY_TOKEN</span>!,   <span class="c-comment">// hub.getalby.com — self-custodial</span>
+  process.env.<span class="c-fn">ALBY_URL</span>!
+);
 
-app.<span class="c-fn">get</span>(<span class="c-string">"/premium"</span>, <span class="c-fn">l402</span>({
-  priceSats: <span class="c-num">100</span>,
-  ownerLightningAddress: <span class="c-string">"you@yourdomain.com"</span>,  <span class="c-comment">// receives 99.7%</span>
-}), (req, res) => {
+app.<span class="c-fn">get</span>(<span class="c-string">"/premium"</span>, <span class="c-fn">l402</span>({ priceSats: <span class="c-num">100</span>, lightning }), (req, res) => {
   res.<span class="c-fn">json</span>({ data: <span class="c-string">"Payment confirmed ⚡"</span> });
 });
 
-app.<span class="c-fn">listen</span>(<span class="c-num">3000</span>);</pre></div>
+app.<span class="c-fn">listen</span>(<span class="c-num">3000</span>);
+<span class="c-comment">// 0% fee. Your node. Every sat goes directly to you.</span></pre></div>
     <div class="code-pane" id="tab-py"><pre>
-<span class="c-comment"># pip install l402kit</span>
-<span class="c-keyword">from</span> fastapi <span class="c-keyword">import</span> FastAPI, Request
-<span class="c-keyword">from</span> l402kit <span class="c-keyword">import</span> l402_required
+<span class="c-comment"># pip install l402kit  — protect your FastAPI endpoint (sovereign)</span>
+<span class="c-keyword">from</span> fastapi <span class="c-keyword">import</span> FastAPI
+<span class="c-keyword">from</span> l402kit <span class="c-keyword">import</span> l402_required, BlinkProvider
 
 app = <span class="c-fn">FastAPI</span>()
+lightning = <span class="c-fn">BlinkProvider</span>(
+    api_key=<span class="c-string">"your_blink_key"</span>,    <span class="c-comment"># dashboard.blink.sv — free</span>
+    wallet_id=<span class="c-string">"your_wallet_id"</span>
+)
 
 <span class="c-fn">@app.get</span>(<span class="c-string">"/premium"</span>)
-<span class="c-fn">@l402_required</span>(
-    price_sats=<span class="c-num">100</span>,
-    owner_lightning_address=<span class="c-string">"you@yourdomain.com"</span>,
-)
-<span class="c-keyword">async def</span> <span class="c-fn">premium</span>(request: Request):
+<span class="c-fn">@l402_required</span>(price_sats=<span class="c-num">100</span>, lightning=lightning)
+<span class="c-keyword">async def</span> <span class="c-fn">premium</span>():
     <span class="c-keyword">return</span> {<span class="c-string">"data"</span>: <span class="c-string">"Payment confirmed ⚡"</span>}</pre></div>
     <div class="code-pane" id="tab-go"><pre>
 <span class="c-comment">// go get github.com/shinydapps/l402-kit/go</span>
@@ -454,34 +485,13 @@ app = <span class="c-fn">FastAPI</span>()
 
 <span class="c-keyword">func</span> <span class="c-fn">main</span>() {
     http.<span class="c-fn">Handle</span>(<span class="c-string">"/premium"</span>, l402kit.<span class="c-fn">Middleware</span>(l402kit.Options{
-        PriceSats:             <span class="c-num">100</span>,
-        OwnerLightningAddress: <span class="c-string">"you@yourdomain.com"</span>,
+        PriceSats: <span class="c-num">100</span>,
+        Provider:  l402kit.<span class="c-fn">NewBlinkProvider</span>(os.<span class="c-fn">Getenv</span>(<span class="c-string">"BLINK_KEY"</span>), os.<span class="c-fn">Getenv</span>(<span class="c-string">"BLINK_WALLET"</span>)),
     }, http.<span class="c-fn">HandlerFunc</span>(<span class="c-keyword">func</span>(w http.ResponseWriter, r *http.Request) {
         fmt.<span class="c-fn">Fprintln</span>(w, <span class="c-string">`{"data":"Payment confirmed ⚡"}`</span>)
     })))
     http.<span class="c-fn">ListenAndServe</span>(<span class="c-string">":8080"</span>, <span class="c-keyword">nil</span>)
 }</pre></div>
-    <div class="code-pane" id="tab-agent"><pre>
-<span class="c-comment">// How any client or AI agent pays your L402-protected API</span>
-<span class="c-comment">// Works with any HTTP library — no special SDK required</span>
-
-<span class="c-comment">// Step 1 — call the endpoint, receive a payment request</span>
-<span class="c-keyword">const</span> r1 = <span class="c-keyword">await</span> <span class="c-fn">fetch</span>(<span class="c-string">"https://your-api.com/premium"</span>);
-<span class="c-comment">// → HTTP 402 Payment Required</span>
-<span class="c-keyword">const</span> { invoice, token } = <span class="c-keyword">await</span> r1.<span class="c-fn">json</span>();
-<span class="c-comment">// invoice: "lnbc100n1p..." (BOLT11 Lightning invoice)</span>
-
-<span class="c-comment">// Step 2 — agent pays via its own Lightning wallet</span>
-<span class="c-keyword">const</span> { preimage } = <span class="c-keyword">await</span> agentWallet.<span class="c-fn">pay</span>(invoice);
-<span class="c-comment">// settles in &lt;1 second — preimage is the cryptographic receipt</span>
-
-<span class="c-comment">// Step 3 — retry with proof of payment</span>
-<span class="c-keyword">const</span> r2 = <span class="c-keyword">await</span> <span class="c-fn">fetch</span>(<span class="c-string">"https://your-api.com/premium"</span>, {
-  headers: { <span class="c-string">Authorization</span>: <span class="c-string">`L402 <span class="c-num">${token}</span>:<span class="c-num">${preimage}</span>`</span> }
-});
-<span class="c-keyword">const</span> data = <span class="c-keyword">await</span> r2.<span class="c-fn">json</span>();
-<span class="c-comment">// → 200 OK  { data: "Payment confirmed ⚡" }</span>
-<span class="c-comment">// Your server receives 99.7% of every sat — verified, final, no chargeback possible</span></pre></div>
     <div class="code-pane" id="tab-rs"><pre>
 <span class="c-comment">// Cargo.toml: l402kit = "0.1"</span>
 <span class="c-keyword">use</span> axum::{middleware, routing::get, Router};
