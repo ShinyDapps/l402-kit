@@ -6,17 +6,28 @@ import { join } from "path";
 
 // ── TypeScript / Express templates ────────────────────────────────────────────
 
-function tplTsServer(priceSats, ownerAddress) {
+function tplTsServer(priceSats, provider) {
+  const imports = {
+    alby:     `import { l402, AlbyProvider } from "l402-kit";`,
+    blink:    `import { l402, BlinkProvider } from "l402-kit";`,
+    opennode: `import { l402, OpenNodeProvider } from "l402-kit";`,
+  }[provider];
+
+  const lightning = {
+    alby:     `const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);`,
+    blink:    `const lightning = new BlinkProvider(\n  process.env.BLINK_API_KEY!,\n  process.env.BLINK_WALLET_ID!,\n);`,
+    opennode: `const lightning = new OpenNodeProvider(process.env.OPENNODE_API_KEY!);`,
+  }[provider];
+
   return `import express from "express";
-import { l402 } from "l402-kit";
+${imports}
 import "dotenv/config";
 
 const app = express();
 
-app.get("/premium", l402({
-  priceSats: ${priceSats},
-  ownerLightningAddress: process.env.OWNER_ADDRESS || "${ownerAddress}",
-}), (_req, res) => {
+${lightning}
+
+app.get("/premium", l402({ priceSats: ${priceSats}, lightning }), (_req, res) => {
   res.json({
     message: "Payment confirmed \\u26a1",
     priceSats: ${priceSats},
@@ -46,7 +57,7 @@ function tplTsPackageJson(projectName) {
   "dependencies": {
     "dotenv": "^17.0.0",
     "express": "^4.21.0",
-    "l402-kit": "^1.3.0"
+    "l402-kit": "^1.4.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.0",
@@ -74,18 +85,27 @@ function tplTsconfig() {
 `;
 }
 
+function tplEnvTs(provider) {
+  return {
+    alby:     `# Alby Hub — hub.getalby.com (self-custodial, 0% fee)\nALBY_TOKEN=your_alby_token\n\n# PORT=3000\n`,
+    blink:    `# Blink — free at dashboard.blink.sv\nBLINK_API_KEY=your_blink_api_key\nBLINK_WALLET_ID=your_blink_wallet_id\n\n# PORT=3000\n`,
+    opennode: `# OpenNode — app.opennode.com\nOPENNODE_API_KEY=your_opennode_key\n\n# PORT=3000\n`,
+  }[provider];
+}
+
 // ── Python / FastAPI templates ─────────────────────────────────────────────────
 
-function tplPythonServer(priceSats, ownerAddress) {
+function tplPythonServer(priceSats) {
   return `import os
-from fastapi import FastAPI
-from l402kit import l402_required, BlinkProvider
+from fastapi import FastAPI, Request
+from l402kit import l402_required
+from l402kit.providers.blink import BlinkProvider
 
 app = FastAPI()
 
 lightning = BlinkProvider(
-    api_key=os.environ.get("L402KIT_BLINK_API_KEY", ""),
-    wallet_id=os.environ.get("L402KIT_BLINK_WALLET_ID", ""),
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
 )
 
 @app.get("/health")
@@ -94,7 +114,7 @@ async def health():
 
 @app.get("/premium")
 @l402_required(price_sats=${priceSats}, lightning=lightning)
-async def premium():
+async def premium(request: Request):
     return {
         "message": "Payment confirmed ⚡",
         "price_sats": ${priceSats},
@@ -105,68 +125,65 @@ async def premium():
 function tplPythonRequirements() {
   return `fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
-l402kit>=1.3.0
+l402kit>=1.4.0
 python-dotenv>=1.0.0
 `;
 }
 
-function tplPythonEnv(ownerAddress) {
-  return `# l402-kit configuration
-OWNER_ADDRESS=${ownerAddress}
-
-# Blink API — free at dashboard.blink.sv
-L402KIT_BLINK_API_KEY=your_blink_api_key
-L402KIT_BLINK_WALLET_ID=your_blink_wallet_id
+function tplPythonEnv() {
+  return `# Blink — free at dashboard.blink.sv
+BLINK_API_KEY=your_blink_api_key
+BLINK_WALLET_ID=your_blink_wallet_id
 `;
 }
 
 // ── Go templates ───────────────────────────────────────────────────────────────
 
-function tplGoServer(priceSats, ownerAddress) {
+function tplGoServer(priceSats) {
   return `package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
-	"time"
+\t"encoding/json"
+\t"fmt"
+\t"net/http"
+\t"os"
+\t"time"
 
-	l402kit "github.com/shinydapps/l402-kit/go"
+\tl402kit "github.com/shinydapps/l402-kit/go"
 )
 
 func premiumHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message":    "Payment confirmed ⚡",
-		"price_sats": ${priceSats},
-		"timestamp":  time.Now().Format(time.RFC3339),
-	})
+\tw.Header().Set("Content-Type", "application/json")
+\tjson.NewEncoder(w).Encode(map[string]interface{}{
+\t\t"message":    "Payment confirmed ⚡",
+\t\t"price_sats": ${priceSats},
+\t\t"timestamp":  time.Now().Format(time.RFC3339),
+\t})
 }
 
 func main() {
-	ownerAddr := os.Getenv("OWNER_ADDRESS")
-	if ownerAddr == "" {
-		ownerAddr = "${ownerAddress}"
-	}
+\tlightning := l402kit.NewBlinkProvider(
+\t\tos.Getenv("BLINK_API_KEY"),
+\t\tos.Getenv("BLINK_WALLET_ID"),
+\t)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, \`{"ok":true}\`)
-	})
-	mux.Handle("/premium", l402kit.Middleware(l402kit.Options{
-		PriceSats:             ${priceSats},
-		OwnerLightningAddress: ownerAddr,
-	}, http.HandlerFunc(premiumHandler)))
+\tmux := http.NewServeMux()
+\tmux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+\t\tw.Header().Set("Content-Type", "application/json")
+\t\tfmt.Fprintln(w, \`{"ok":true}\`)
+\t})
+\tmux.Handle("/premium", l402kit.Middleware(l402kit.Options{
+\t\tPriceSats: ${priceSats},
+\t\tLightning: lightning,
+\t}, http.HandlerFunc(premiumHandler)))
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	fmt.Printf("⚡ l402-kit server running on http://localhost:%s\\n", port)
-	fmt.Printf("   curl http://localhost:%s/premium  →  402 (pay ${priceSats} sats)  →  200 OK\\n", port)
-	http.ListenAndServe(":"+port, mux)
+\tport := os.Getenv("PORT")
+\tif port == "" {
+\t\tport = "8080"
+\t}
+\tfmt.Printf("\\u26a1 l402-kit server running on http://localhost:%s\\n", port)
+\tfmt.Printf("   curl http://localhost:%s/premium  →  402 (pay ${priceSats} sats)  →  200 OK\\n", port)
+\thttp.ListenAndServe(":"+port, mux)
 }
 `;
 }
@@ -176,30 +193,18 @@ function tplGoMod(projectName) {
 
 go 1.21
 
-require github.com/shinydapps/l402-kit/go v1.3.0
+require github.com/shinydapps/l402-kit/go v1.4.0
 `;
 }
 
-function tplGoEnv(ownerAddress) {
-  return `# l402-kit configuration
-OWNER_ADDRESS=${ownerAddress}
-
-# Blink API — free at dashboard.blink.sv
-L402KIT_BLINK_API_KEY=your_blink_api_key
-L402KIT_BLINK_WALLET_ID=your_blink_wallet_id
+function tplGoEnv() {
+  return `# Blink — free at dashboard.blink.sv
+BLINK_API_KEY=your_blink_api_key
+BLINK_WALLET_ID=your_blink_wallet_id
 `;
 }
 
 // ── Shared templates ───────────────────────────────────────────────────────────
-
-function tplEnvTs(ownerAddress, provider) {
-  const providerBlock = provider === "blink"
-    ? `\n# Blink API — free at dashboard.blink.sv\nL402KIT_BLINK_API_KEY=your_blink_api_key\nL402KIT_BLINK_WALLET_ID=your_blink_wallet_id`
-    : provider === "opennode"
-    ? `\n# OpenNode API — app.opennode.com\nL402KIT_OPENNODE_API_KEY=your_opennode_key`
-    : `\n# Alby Hub — hub.getalby.com (self-custodial)\nALBY_ACCESS_TOKEN=your_alby_token\nALBY_HUB_URL=https://your-name.getalby.com`;
-  return `# l402-kit configuration\nOWNER_ADDRESS=${ownerAddress}${providerBlock}\n\n# PORT=3000\n`;
-}
 
 function tplGitignore(lang) {
   if (lang === "python") return `__pycache__/\n*.pyc\n.env\n*.log\n.venv/\n`;
@@ -207,7 +212,7 @@ function tplGitignore(lang) {
   return `node_modules/\ndist/\n.env\n*.log\n`;
 }
 
-function tplReadme(projectName, priceSats, ownerAddress, lang) {
+function tplReadme(projectName, priceSats, lang) {
   const runCmd = lang === "python"
     ? "uvicorn main:app --reload"
     : lang === "go"
@@ -243,7 +248,7 @@ curl http://localhost:${port}/premium \\
 2. Client pays with any Lightning wallet (Phoenix, Blink, Strike, Alby…)
 3. Client retries with \`Authorization: L402 <token>:<preimage>\`
 4. Server verifies \`SHA256(preimage) === token.hash\` locally in <1ms — no DB, no network
-5. Server returns **200 OK** — ${priceSats} sats go to ${ownerAddress}
+5. Server returns **200 OK** — ${priceSats} sats go directly to your wallet
 
 ## Docs
 
@@ -303,23 +308,14 @@ const priceSats = await p.text({
 });
 if (p.isCancel(priceSats)) { p.cancel("Cancelled."); process.exit(0); }
 
-const ownerAddress = await p.text({
-  message: "Your Lightning Address (receives payments)",
-  placeholder: "you@yourdomain.com",
-  validate: (v) => {
-    if (!v || !v.includes("@")) return "Enter a valid Lightning Address (e.g. you@yourdomain.com)";
-  },
-});
-if (p.isCancel(ownerAddress)) { p.cancel("Cancelled."); process.exit(0); }
-
 let provider = "blink";
 if (lang === "ts") {
   provider = await p.select({
     message: "Lightning provider",
     options: [
+      { value: "alby",     label: "Alby Hub   (self-custodial, 0% fee — hub.getalby.com)" },
       { value: "blink",    label: "Blink      (free, plug & play — dashboard.blink.sv)" },
       { value: "opennode", label: "OpenNode   (app.opennode.com)" },
-      { value: "alby",    label: "Alby Hub   (self-custodial, 0% fee — hub.getalby.com)" },
     ],
   });
   if (p.isCancel(provider)) { p.cancel("Cancelled."); process.exit(0); }
@@ -333,10 +329,9 @@ if (p.isCancel(install)) { p.cancel("Cancelled."); process.exit(0); }
 
 // ── scaffold ──────────────────────────────────────────────────────────────────
 
-const name    = projectName.trim();
-const sats    = Number(priceSats);
-const address = ownerAddress.trim().toLowerCase();
-const dir     = join(process.cwd(), name);
+const name = projectName.trim();
+const sats = Number(priceSats);
+const dir  = join(process.cwd(), name);
 
 if (existsSync(dir)) {
   p.cancel(`Directory "${name}" already exists.`);
@@ -352,22 +347,22 @@ if (lang === "ts") {
   mkdirSync(join(dir, "src"));
   write(dir, "package.json",  tplTsPackageJson(name));
   write(dir, "tsconfig.json", tplTsconfig());
-  write(dir, ".env.example",  tplEnvTs(address, provider));
+  write(dir, ".env.example",  tplEnvTs(provider));
   write(dir, ".gitignore",    tplGitignore("ts"));
-  write(dir, "README.md",     tplReadme(name, sats, address, "ts"));
-  write(join(dir, "src"), "server.ts", tplTsServer(sats, address));
+  write(dir, "README.md",     tplReadme(name, sats, "ts"));
+  write(join(dir, "src"), "server.ts", tplTsServer(sats, provider));
 } else if (lang === "python") {
-  write(dir, "main.py",          tplPythonServer(sats, address));
+  write(dir, "main.py",          tplPythonServer(sats));
   write(dir, "requirements.txt", tplPythonRequirements());
-  write(dir, ".env.example",     tplPythonEnv(address));
+  write(dir, ".env.example",     tplPythonEnv());
   write(dir, ".gitignore",       tplGitignore("python"));
-  write(dir, "README.md",        tplReadme(name, sats, address, "python"));
+  write(dir, "README.md",        tplReadme(name, sats, "python"));
 } else if (lang === "go") {
-  write(dir, "main.go",     tplGoServer(sats, address));
+  write(dir, "main.go",     tplGoServer(sats));
   write(dir, "go.mod",      tplGoMod(name));
-  write(dir, ".env.example", tplGoEnv(address));
+  write(dir, ".env.example", tplGoEnv());
   write(dir, ".gitignore",   tplGitignore("go"));
-  write(dir, "README.md",    tplReadme(name, sats, address, "go"));
+  write(dir, "README.md",    tplReadme(name, sats, "go"));
 }
 
 s.stop("Project created.");
