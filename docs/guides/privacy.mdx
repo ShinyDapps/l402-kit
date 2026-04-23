@@ -1,0 +1,153 @@
+---
+title: Privacy Architecture
+description: How l402-kit stores zero PII, authenticates by wallet, and keeps keys distributed — a privacy model worthy of Bitcoin.
+---
+
+## The problem with traditional payment APIs
+
+Stripe, LemonSqueezy, Paddle — every conventional payment provider requires:
+
+- An email address (PII, GDPR liability)
+- An account and password (phishable, breachable)
+- Centralized key storage (single point of failure)
+- Trust that the provider doesn't sell your data
+
+Lightning changes the model entirely. **Your wallet is cryptographic proof of identity.** l402-kit is built around that premise.
+
+---
+
+## What we store — and what we don't
+
+| Data | Stored | Why |
+|---|---|---|
+| `payment_hash` | ✅ Yes | SHA-256 of preimage — already public in BOLT11 invoice |
+| Lightning Address | ✅ Yes (owner only) | Needed to route the 99.7% split |
+| Endpoint called | ✅ Yes | Required for your analytics |
+| `preimage` (payment secret) | ❌ Never | Would expose the payment key |
+| Email | ❌ Never | Not needed — wallet is identity |
+| Name / IP / device | ❌ Never | Not collected at any layer |
+| Cookies / tracking | ❌ Never | No analytics SDKs, no fingerprinting |
+
+### Why `payment_hash` is safe to store
+
+The preimage is the 32-byte secret that proves payment. Its SHA-256 hash (`payment_hash`) is already broadcast publicly in the BOLT11 invoice the moment you create it. Storing the hash reveals nothing — the preimage never touches our database.
+
+```
+preimage  →  SHA-256  →  payment_hash  (public, in BOLT11)
+   ↑
+never stored
+```
+
+---
+
+## Authentication: your wallet, not a password
+
+### Developer dashboard
+
+The analytics dashboard authenticates via **LNURL-auth** — the same secp256k1 flow used by Lightning wallets:
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+No password to phish. No session token to steal from Vercel. The JWT is scoped by Row Level Security — other pubkeys see nothing.
+
+### Data deletion
+
+Only your wallet can authorize deletion of your data. The flow:
+
+1. Client calls `/api/lnurl-auth?lightningAddress=you@blink.sv`
+2. Server returns a one-time k1 challenge + LNURL
+3. Your wallet signs k1 with its secp256k1 private key
+4. Server verifies the signature — issues a single-use 64-char token
+5. Client POSTs to `/api/delete-data` with `{ lightningAddress, token }`
+6. Server revokes token immediately (prevents replay), deletes all rows
+7. Data is gone — no support ticket, no email confirmation
+
+**Why this is strong:** An attacker who knows your Lightning Address cannot delete your data without your private key. The token is single-use and expires in 10 minutes.
+
+---
+
+## Key distribution
+
+Traditional SaaS: one breach → everything exposed.
+
+l402-kit distributes trust across layers:
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Vercel         Blink API key only             Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+No single layer has enough to impersonate you, read your identity, or drain your wallet.
+
+---
+
+## LGPD / GDPR compliance by design
+
+Because we store zero PII, most LGPD/GDPR obligations don't apply:
+
+- **No data subject requests** — there's no identity to look up
+- **No breach notification for personal data** — payment_hash is not personal data
+- **No cookie consent** — no tracking, no cookies
+- **Right to erasure** — fulfilled cryptographically via LNURL-auth delete
+
+This is not a legal opinion. But "we don't collect it" is a stronger position than "we collect it and protect it."
+
+---
+
+## Lightning payments are private by default
+
+Lightning payments don't identify the payer on-chain:
+
+- No name, no address, no bank account
+- The payment route is onion-encrypted (like Tor)
+- Only the invoice issuer knows the payment was settled
+- The payer's identity is never revealed to the payee
+
+Your end-users pay your API anonymously. You know the invoice was paid. That's all either party needs.
+
+---
+
+## Comparison
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| Email required | ❌ | ✅ | ✅ |
+| Account required | ❌ | ✅ | ✅ |
+| KYC / identity | ❌ | ✅ | ✅ |
+| PII stored | ❌ | ✅ | ✅ |
+| Auth method | secp256k1 wallet | email + password | email + password |
+| Delete mechanism | cryptographic proof | email request | email request |
+| LGPD/GDPR overhead | minimal | high | high |
+| Payer anonymous | ✅ | ❌ | ❌ |
+
+---
+
+## What this means for your users
+
+If you build on l402-kit:
+
+- Your users never hand you their email
+- A breach of your database exposes nothing personal
+- Any AI agent can pay your API without an account or identity
+- Users who want to delete their data do it themselves, instantly, with their wallet
+
+This is the payment layer Bitcoin deserves.

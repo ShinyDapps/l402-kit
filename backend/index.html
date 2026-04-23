@@ -978,6 +978,75 @@ Authorization: L402 <span class="hl">&lt;token&gt;:&lt;preimage&gt;</span></pre>
   <p style="font-size:13px;color:var(--muted)">or <a href="https://l402kit.vercel.app/docs" data-docs-link="1">read the docs &rarr;</a></p>
 </section>
 
+<!-- PRIVACY SECTION -->
+<section style="max-width:900px;margin:0 auto 80px;padding:0 24px">
+  <div style="text-align:center;margin-bottom:48px">
+    <div style="display:inline-block;background:#0f0f0f;border:1px solid #f7931a33;border-radius:20px;padding:6px 16px;font-size:12px;color:#f7931a;font-weight:600;letter-spacing:0.5px;margin-bottom:16px;text-transform:uppercase">Privacy-first architecture</div>
+    <h2 style="font-size:36px;font-weight:900;margin-bottom:14px;line-height:1.2">Your wallet is your identity.<br><span style="color:#f7931a">Nothing else required.</span></h2>
+    <p style="color:var(--muted);font-size:17px;max-width:560px;margin:0 auto;line-height:1.6">Most payment APIs need your email, credit card, and account. l402-kit needs none of that — your Lightning wallet is cryptographic proof of who you are.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-bottom:40px">
+
+    <div style="background:#0f0f0f;border:1px solid #1c1c1c;border-radius:14px;padding:28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#f7931a,#ff6b00)"></div>
+      <div style="font-size:28px;margin-bottom:12px">🔑</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">No account. No password.</h3>
+      <p style="color:#666;font-size:13px;line-height:1.6">Your Lightning Address is your identity. Authentication is a secp256k1 signature from your wallet — mathematically unforgeable, no server involved.</p>
+    </div>
+
+    <div style="background:#0f0f0f;border:1px solid #1c1c1c;border-radius:14px;padding:28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a78bfa,#7c3aed)"></div>
+      <div style="font-size:28px;margin-bottom:12px">🗄️</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Zero PII stored.</h3>
+      <p style="color:#666;font-size:13px;line-height:1.6">No email. No name. No IP. We store <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;font-size:11px">payment_hash</code> — already public in the BOLT11 invoice. A database breach exposes nothing personal.</p>
+    </div>
+
+    <div style="background:#0f0f0f;border:1px solid #1c1c1c;border-radius:14px;padding:28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#22c55e,#16a34a)"></div>
+      <div style="font-size:28px;margin-bottom:12px">🔐</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Keys never centralized.</h3>
+      <p style="color:#666;font-size:13px;line-height:1.6">Payment logic runs inside the database (Supabase Edge Functions). The API server holds only the invoice key — not your data, not your identity, not your history.</p>
+    </div>
+
+    <div style="background:#0f0f0f;border:1px solid #1c1c1c;border-radius:14px;padding:28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#60a5fa,#3b82f6)"></div>
+      <div style="font-size:28px;margin-bottom:12px">🗑️</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Delete with cryptographic proof.</h3>
+      <p style="color:#666;font-size:13px;line-height:1.6">Only your wallet can authorize deletion of your data. No support ticket. No email verification. Sign the challenge — data is gone. Single-use token prevents replay.</p>
+    </div>
+
+    <div style="background:#0f0f0f;border:1px solid #1c1c1c;border-radius:14px;padding:28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#fb923c,#f97316)"></div>
+      <div style="font-size:28px;margin-bottom:12px">💸</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Payments are private by default.</h3>
+      <p style="color:#666;font-size:13px;line-height:1.6">Lightning payments don't identify the payer on-chain. The preimage is never stored. Your users pay anonymously — you just know the invoice was settled.</p>
+    </div>
+
+    <div style="background:#0f0f0f;border:1px solid #1c1c1c;border-radius:14px;padding:28px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#f87171,#ef4444)"></div>
+      <div style="font-size:28px;margin-bottom:12px">📊</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Dashboard auth by wallet, not password.</h3>
+      <p style="color:#666;font-size:13px;line-height:1.6">Your analytics dashboard authenticates via LNURL-auth — the same secp256k1 flow. No password to phish, no session to hijack, no Vercel holding your admin secret.</p>
+    </div>
+
+  </div>
+
+  <div style="background:#0a0a0a;border:1px solid #1c1c1c;border-radius:14px;padding:24px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+      <div style="font-size:13px;font-weight:700;color:#e5e5e5;margin-bottom:4px">vs. Stripe / LemonSqueezy / Paddle</div>
+      <div style="font-size:13px;color:#555;line-height:1.6">They require email, KYC, account creation, and centralize all keys. A single breach exposes every customer's identity and payment history.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:200px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#22c55e;font-weight:700">✓</span> <span style="color:#aaa">No email collected</span></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#22c55e;font-weight:700">✓</span> <span style="color:#aaa">No account required</span></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#22c55e;font-weight:700">✓</span> <span style="color:#aaa">No KYC, no compliance overhead</span></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#22c55e;font-weight:700">✓</span> <span style="color:#aaa">Cryptographic delete (LNURL-auth)</span></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#22c55e;font-weight:700">✓</span> <span style="color:#aaa">LGPD/GDPR compliant by design</span></div>
+    </div>
+  </div>
+</section>
+
 <section style="max-width:580px;margin:0 auto 80px;padding:0 24px;text-align:center">
   <h2 style="font-size:28px;font-weight:700;margin-bottom:12px">Stay in the loop</h2>
   <p style="color:var(--muted);font-size:15px;margin-bottom:28px">Follow releases on GitHub — star the repo and enable notifications. No email required, no account, no tracking.</p>

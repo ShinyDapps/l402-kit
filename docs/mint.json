@@ -26,7 +26,7 @@
     },
     {
       "group": "Guides",
-      "pages": ["guides/flows", "guides/ai-agents", "guides/security", "guides/production"]
+      "pages": ["guides/privacy", "guides/flows", "guides/ai-agents", "guides/security", "guides/production"]
     },
     {
       "group": "Reference",

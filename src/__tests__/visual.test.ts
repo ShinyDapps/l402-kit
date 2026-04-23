@@ -73,6 +73,22 @@ describe("[Visual] landing page — index.html", () => {
     expect(html).toMatch(/0\.3%/);
   });
 
+  it("tem seção Privacy-first architecture", () => {
+    expect(html).toMatch(/Privacy-first architecture/i);
+    expect(html).toMatch(/Zero PII|zero PII|No email collected/i);
+    expect(html).toMatch(/secp256k1/i);
+  });
+
+  it("compara com Stripe/LemonSqueezy no copy de privacidade", () => {
+    expect(html).toMatch(/Stripe/);
+    expect(html).toMatch(/LemonSqueezy/);
+  });
+
+  it("menciona LNURL-auth para delete criptográfico", () => {
+    expect(html).toMatch(/LNURL-auth/i);
+    expect(html).toMatch(/cryptographic|Cryptographic/);
+  });
+
   it("menciona 4 linguagens: TypeScript, Python, Go, Rust", () => {
     expect(html).toMatch(/typescript/i);
     expect(html).toMatch(/python/i);
@@ -218,6 +234,60 @@ describe("[Visual] flows.mdx — diagramas Mermaid de todos os fluxos", () => {
       path.resolve(__dirname, "../../docs/mint.json"), "utf-8"
     );
     expect(mintSrc).toMatch(/guides\/flows/);
+  });
+});
+
+// ─── docs/guides/privacy.mdx — arquitetura de privacidade ────────────────────
+
+describe("[Visual] privacy.mdx — Privacy Architecture", () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(
+      path.resolve(__dirname, "../../docs/guides/privacy.mdx"), "utf-8"
+    );
+  });
+
+  it("tem frontmatter com title Privacy Architecture", () => {
+    expect(src).toMatch(/title: Privacy Architecture/);
+  });
+
+  it("documenta que payment_hash é seguro (já público no BOLT11)", () => {
+    expect(src).toMatch(/payment_hash/);
+    expect(src).toMatch(/BOLT11/);
+    expect(src).toMatch(/SHA-256/);
+  });
+
+  it("explica autenticação por secp256k1 (LNURL-auth)", () => {
+    expect(src).toMatch(/secp256k1/);
+    expect(src).toMatch(/LNURL-auth/);
+  });
+
+  it("documenta distribuição de chaves (Vercel, Supabase, wallet)", () => {
+    expect(src).toMatch(/Vercel/);
+    expect(src).toMatch(/Supabase/);
+    expect(src).toMatch(/Edge Functions/);
+  });
+
+  it("menciona LGPD e GDPR compliance by design", () => {
+    expect(src).toMatch(/LGPD/);
+    expect(src).toMatch(/GDPR/);
+  });
+
+  it("compara com Stripe e LemonSqueezy", () => {
+    expect(src).toMatch(/Stripe/);
+    expect(src).toMatch(/LemonSqueezy/);
+  });
+
+  it("explica delete criptográfico (single-use token)", () => {
+    expect(src).toMatch(/single-use/i);
+    expect(src).toMatch(/delete-data/);
+  });
+
+  it("está registrado no mint.json antes de flows", () => {
+    const mintSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../docs/mint.json"), "utf-8"
+    );
+    expect(mintSrc).toMatch(/guides\/privacy/);
   });
 });
 
