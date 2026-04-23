@@ -55,17 +55,17 @@ Or add to an existing project:
 ```bash
 npm install l402-kit      # TypeScript / Node.js / Express
 pip install l402kit       # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go@v1.1.6   # Go
+go get github.com/shinydapps/l402-kit/go@v1.4.2   # Go
 cargo add l402kit         # Rust / axum
 ```
 
-Use your Lightning address as the owner:
+Pick a Lightning provider and add 3 lines:
 
 ```typescript
-app.get("/premium", l402({
-  priceSats: 100,
-  ownerLightningAddress: "you@yourdomain.com",  // ← your Lightning address
-}), handler);
+import { l402, AlbyProvider } from "l402-kit";
+
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+app.get("/premium", l402({ priceSats: 100, lightning }), handler);
 ```
 
 **Step 2 — Install this extension and configure it**
@@ -124,7 +124,7 @@ Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning 
 | ![npm](https://l402kit.vercel.app/logos/npm.png) **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
 | ![python](https://l402kit.vercel.app/logos/python.png) **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
 | ![rust](https://l402kit.vercel.app/logos/rust.png) **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
-| ![go](https://l402kit.vercel.app/logos/go.png) **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.1.6-00acd7?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
+| ![go](https://l402kit.vercel.app/logos/go.png) **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.4.2-00acd7?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
 
 ### Links
 
@@ -163,11 +163,11 @@ Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usa
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
-Use seu Lightning address como `ownerLightningAddress` na configuração.
+Configure seu provedor Lightning (Blink, Alby, OpenNode) e adicione as credenciais ao `.env`.
 
 **Passo 2 — Configure a extensão**
 
@@ -240,7 +240,7 @@ Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -303,7 +303,7 @@ Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -366,7 +366,7 @@ cargo add l402kit         # Rust
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -429,7 +429,7 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -492,7 +492,7 @@ Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -555,7 +555,7 @@ Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -618,7 +618,7 @@ Command Palette (`Ctrl+Shift+P`) →
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -681,7 +681,7 @@ Activity bar में ⚡ आइकन क्लिक करें।
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 
@@ -744,7 +744,7 @@ API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightni
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 cargo add l402kit         # Rust
 ```
 

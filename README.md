@@ -107,14 +107,13 @@ cargo add l402kit           # Rust / axum
 
 ```typescript
 import express from "express";
-import { l402 } from "l402-kit";
+import { l402, AlbyProvider } from "l402-kit";
 
 const app = express();
 
-app.get("/premium", l402({
-  priceSats: 100,                          // ~$0.10 per call
-  ownerLightningAddress: "you@yourdomain.com",   // your Lightning Address
-}), (_req, res) => {
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+
+app.get("/premium", l402({ priceSats: 100, lightning }), (_req, res) => {
   res.json({ data: "Payment confirmed." });
 });
 

@@ -6,16 +6,14 @@ description: Complete reference for the l402-kit Go SDK — net/http middleware 
 ## Installation
 
 ```bash
-go get github.com/shinydapps/l402-kit/go@v1.1.6
+go get github.com/shinydapps/l402-kit/go@v1.4.2
 ```
 
 **Requirements**: Go 1.21+
 
 ---
 
-## Zero-config managed mode
-
-The fastest way to monetize your API. Set your Lightning Address — l402-kit handles invoices, verification, and fee split automatically. You receive **99.7%** of every payment directly to your wallet.
+## Quickstart
 
 ```go
 package main
@@ -23,25 +21,31 @@ package main
 import (
     "encoding/json"
     "net/http"
+    "os"
+
     l402 "github.com/shinydapps/l402-kit/go"
 )
 
 func main() {
-    mux := http.NewServeMux()
+    lightning := l402.NewBlinkProvider(
+        os.Getenv("BLINK_API_KEY"),
+        os.Getenv("BLINK_WALLET_ID"),
+    )
 
+    mux := http.NewServeMux()
     mux.Handle("/api/data", l402.Middleware(l402.Options{
-        PriceSats:             10,
-        OwnerLightningAddress: "you@yourdomain.com",
+        PriceSats: 10,
+        Lightning: lightning,
     }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
         json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
     })))
 
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe(":8080", mux)
 }
 ```
 
-No Lightning node, no invoice handling, no crypto code.
+Get Blink credentials free at [dashboard.blink.sv](https://dashboard.blink.sv). Payments go directly to your wallet.
 
 ---
 
@@ -73,9 +77,9 @@ mux.Handle("/api/data", l402.Middleware(l402.Options{
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `PriceSats` | `int` | **required** | Price per call in satoshis |
-| `OwnerLightningAddress` | `string` | — | Your Lightning Address — enables managed mode |
-| `Lightning` | `LightningProvider` | — | Custom provider. Required if `OwnerLightningAddress` not set |
+| `Lightning` | `LightningProvider` | **required** | Your Lightning backend (use `NewBlinkProvider`) |
 | `OnPayment` | `func(L402Token, int)` | — | Callback fired after each verified payment |
+| `OwnerLightningAddress` | `string` | — | **Deprecated** — use `Lightning` instead |
 
 ---
 
