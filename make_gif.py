@@ -156,13 +156,13 @@ def f7():
 
 # ── Montar GIF ────────────────────────────────────────────────────────────────
 frames_data = [
-    (f1(), 5500),   # Stripe rejects Nigeria
-    (f2(), 5000),   # l402-kit
-    (f3(), 5500),   # server code
-    (f4(), 5500),   # client code
-    (f5(), 5500),   # AI agents
-    (f6(), 5000),   # payment flow
-    (f7(), 6000),   # close
+    (f1(), 9000),   # Stripe rejects Nigeria
+    (f2(), 8000),   # l402-kit
+    (f3(), 9000),   # server code
+    (f4(), 9000),   # client code
+    (f5(), 9000),   # AI agents
+    (f6(), 8000),   # payment flow
+    (f7(), 10000),  # close
 ]
 
 frames    = [f.convert("P", palette=Image.ADAPTIVE, colors=128) for f, _ in frames_data]
