@@ -13,31 +13,32 @@ Or in `Cargo.toml`:
 
 ```toml
 [dependencies]
-l402kit = "1.1"
+l402kit = "1.4"
 ```
 
 **Requirements**: Rust 1.75+, Tokio async runtime
 
 ---
 
-## Zero-config managed mode
-
-The fastest way to monetize your API. Set your Lightning Address — l402-kit handles invoices, verification, and fee split automatically. You receive **99.7%** of every payment directly to your wallet.
+## Quickstart
 
 ```rust
 use axum::{Router, routing::get, Json};
-use l402kit::{l402_middleware, Options};
+use l402kit::{l402_middleware, Options, BlinkProvider};
 use serde_json::{json, Value};
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
+    let provider = BlinkProvider::new(
+        std::env::var("BLINK_API_KEY").unwrap(),
+        std::env::var("BLINK_WALLET_ID").unwrap(),
+    );
+    let opts = Arc::new(Options::new(10, provider));
+
     let app = Router::new()
         .route("/api/data", get(handler))
-        .layer(l402_middleware(Options {
-            price_sats: 10,
-            owner_lightning_address: Some("you@yourdomain.com".into()),
-            ..Default::default()
-        }));
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -48,22 +49,19 @@ async fn handler() -> Json<Value> {
 }
 ```
 
-No Lightning node, no invoice handling, no crypto code.
-
 ---
 
-## Self-hosted mode (bring your own provider)
+## Custom provider
 
 ```rust
 use std::sync::Arc;
-use l402kit::{l402_middleware, Options, LightningProvider, Invoice, BoxFuture, L402Error};
+use l402kit::{Options, LightningProvider, Invoice, BoxFuture, L402Error};
 
 struct MyProvider;
 
 impl LightningProvider for MyProvider {
     fn create_invoice<'a>(&'a self, amount_sats: u64) -> BoxFuture<'a, Result<Invoice, L402Error>> {
         Box::pin(async move {
-            // create invoice with your Lightning node
             Ok(Invoice {
                 payment_request: "lnbc...".into(),
                 payment_hash: "abc123...".into(),
@@ -74,25 +72,18 @@ impl LightningProvider for MyProvider {
     }
 }
 
-let app = Router::new()
-    .route("/api/data", get(handler))
-    .layer(l402_middleware(Options {
-        price_sats: 10,
-        lightning: Some(Arc::new(MyProvider)),
-        ..Default::default()
-    }));
+let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
 ```
 
 ---
 
 ## `Options`
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `price_sats` | `u64` | **required** | Price per call in satoshis |
-| `owner_lightning_address` | `Option<String>` | `None` | Your Lightning Address — enables managed mode |
-| `lightning` | `Option<Arc<dyn LightningProvider>>` | `None` | Custom provider. Overrides `owner_lightning_address` |
-| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | `None` | Callback fired after each verified payment |
+| Field | Type | Description |
+|---|---|---|
+| `price_sats` | `u64` | Price per call in satoshis (**required**) |
+| `lightning` | `Arc<dyn LightningProvider>` | Your Lightning backend (**required**) |
+| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | Callback fired after each verified payment |
 
 ---
 
@@ -127,16 +118,11 @@ Returns an `axum::middleware::Layer` compatible with axum 0.8+.
 ```rust
 use l402kit::{Options, L402Token};
 
-let app = Router::new()
-    .route("/api/data", get(handler))
-    .layer(l402_middleware(Options {
-        price_sats: 10,
-        owner_lightning_address: Some("you@yourdomain.com".into()),
-        on_payment: Some(Box::new(|token: L402Token, amount_sats: u64| {
-            println!("payment received: {} sats", amount_sats);
-        })),
-        ..Default::default()
-    }));
+let opts = Arc::new(
+    Options::new(10, provider).on_payment(|token: L402Token, amount_sats: u64| {
+        println!("payment received: {} sats", amount_sats);
+    }),
+);
 ```
 
 ---

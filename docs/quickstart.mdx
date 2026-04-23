@@ -120,9 +120,10 @@ import (
 )
 
 func main() {
+    blink := l402kit.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
     http.Handle("/premium", l402kit.Middleware(l402kit.Options{
-        PriceSats:             100,
-        OwnerLightningAddress: os.Getenv("OWNER_LIGHTNING_ADDRESS"),
+        PriceSats: 100,
+        Lightning: blink,
     }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintln(w, `{"data": "You paid 100 sats. Here is your data."}`)
     })))
@@ -132,14 +133,16 @@ func main() {
 
 ```rust Rust (axum)
 use axum::{middleware, routing::get, Router};
-use l402kit::{l402_middleware, Options};
+use l402kit::{l402_middleware, Options, BlinkProvider};
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let opts = Arc::new(
-        Options::new(100).with_address("you@yourdomain.com"),
+    let provider = BlinkProvider::new(
+        std::env::var("BLINK_API_KEY").unwrap(),
+        std::env::var("BLINK_WALLET_ID").unwrap(),
     );
+    let opts = Arc::new(Options::new(100, provider));
 
     let app = Router::new()
         .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
