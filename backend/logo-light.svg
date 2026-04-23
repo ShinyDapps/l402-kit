@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="160" height="40" viewBox="0 0 160 40">
-  <title>l402-kit</title>
-  <!-- Lightning bolt — precision geometry (same proportions as mark.svg) -->
-  <polygon points="21,3 9,22 18,22 14.5,36.5 30.5,16.5 21.5,16.5" fill="#F7931A"/>
-  <!-- Wordmark — monospace bold, dark text for light backgrounds -->
-  <text x="40" y="28"
-    font-family="'JetBrains Mono','Fira Code',ui-monospace,'SF Mono',Menlo,monospace"
-    font-weight="700" font-size="19" fill="#0B0C14" letter-spacing="-0.8">l402-kit</text>
-</svg>
