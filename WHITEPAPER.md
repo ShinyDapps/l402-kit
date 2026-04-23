@@ -1,7 +1,7 @@
 # l402-kit: A Universal Payment Layer for Machine-Readable APIs
 
 **White Paper â€” April 2026**
-*ShinyDapps Â· l402kit.vercel.app Â· github.com/ShinyDapps/l402-kit*
+*ShinyDapps Â· l402kit.com Â· github.com/ShinyDapps/l402-kit*
 
 ---
 
@@ -320,7 +320,7 @@ l402-kit charges 0.3% of each payment as an infrastructure fee, split automatica
 
 ### v1.0.0 â€” Milestone: First paying Pro customer
 
-- [ ] DNS l402kit.vercel.app live
+- [ ] DNS l402kit.com live
 - [ ] Blink webhook active (real-time payment confirmation)
 - [ ] Public distribution (Hacker News, Reddit, Twitter)
 - [ ] Go semver tags (`go get @v0.9.2`)
@@ -371,7 +371,7 @@ The infrastructure is complete. The window is open.
 
 **Contact:** shinydapps@gmail.com
 **GitHub:** https://github.com/ShinyDapps/l402-kit
-**Docs:** https://l402kit.vercel.app/docs
+**Docs:** https://l402kit.com/docs
 **npm:** https://npmjs.com/package/l402-kit
 **PyPI:** https://pypi.org/project/l402kit
 

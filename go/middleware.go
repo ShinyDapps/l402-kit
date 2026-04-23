@@ -40,7 +40,7 @@ type Options struct {
 	OnPayment func(token L402Token, amountSats int)
 }
 
-const shinydappsAPI = "https://l402kit.vercel.app"
+const shinydappsAPI = "https://l402kit.com"
 
 // managedProvider uses the ShinyDapps backend to create invoices (zero-config mode).
 type managedProvider struct {

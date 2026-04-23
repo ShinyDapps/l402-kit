@@ -31,7 +31,7 @@ export async function handleDevToken(req: Request, env: Env): Promise<Response> 
       if (Date.now() > payload.exp) return json({ error: "Invoice expired" }, 401);
 
       const preimageBytes = hexToUint8Array(body.preimage);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", preimageBytes);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", preimageBytes.buffer as ArrayBuffer);
       const digest = uint8ArrayToHex(new Uint8Array(hashBuffer));
       if (digest !== payload.hash) return json({ error: "Invalid payment proof" }, 401);
 

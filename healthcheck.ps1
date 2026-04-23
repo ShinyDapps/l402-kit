@@ -115,7 +115,7 @@ Write-Host "[ BACKEND LIVE ]"
 
 # Landing page
 try {
-    $r = Invoke-WebRequest -Uri "https://l402kit.vercel.app" -UseBasicParsing -TimeoutSec 8
+    $r = Invoke-WebRequest -Uri "https://l402kit.com" -UseBasicParsing -TimeoutSec 8
     Add-Result "Landing  /" $PASS "HTTP $($r.StatusCode)"
 } catch {
     Add-Result "Landing  /" $FAIL "HTTP $($_.Exception.Response.StatusCode.value__)"
@@ -123,7 +123,7 @@ try {
 
 # /api/invoice - GET sem params: 400, 401, 402, 405 sao aceitaveis
 try {
-    Invoke-WebRequest -Uri "https://l402kit.vercel.app/api/invoice" -UseBasicParsing -TimeoutSec 8 | Out-Null
+    Invoke-WebRequest -Uri "https://l402kit.com/api/invoice" -UseBasicParsing -TimeoutSec 8 | Out-Null
     Add-Result "API  /api/invoice" $FAIL "esperava 4xx"
 } catch {
     $code   = $_.Exception.Response.StatusCode.value__
@@ -133,7 +133,7 @@ try {
 
 # /api/stats - deve retornar 401 (requer DASHBOARD_SECRET)
 try {
-    Invoke-WebRequest -Uri "https://l402kit.vercel.app/api/stats" -UseBasicParsing -TimeoutSec 8 | Out-Null
+    Invoke-WebRequest -Uri "https://l402kit.com/api/stats" -UseBasicParsing -TimeoutSec 8 | Out-Null
     Add-Result "API  /api/stats" $FAIL "esperava 401"
 } catch {
     $code   = $_.Exception.Response.StatusCode.value__

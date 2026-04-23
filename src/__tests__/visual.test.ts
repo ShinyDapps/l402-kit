@@ -53,8 +53,8 @@ describe("[Visual] landing page — index.html", () => {
     expect(html).toMatch(/og:image:type[^>]*image\/png/);
   });
 
-  it("tem og:url apontando para l402kit.vercel.app", () => {
-    expect(html).toMatch(/og:url[^>]*l402kit\.vercel\.app/);
+  it("tem og:url apontando para l402kit.com", () => {
+    expect(html).toMatch(/og:url[^>]*l402kit\.com/);
   });
 
   it("tem og:title definido", () => {
@@ -244,9 +244,8 @@ describe("[Visual] flows.mdx — diagramas Mermaid de todos os fluxos", () => {
     expect(src).toMatch(/__dashboard__/);
   });
 
-  it("infrastructure: Cloudflare → Vercel → Supabase + Edge Function", () => {
+  it("infrastructure: Cloudflare Workers + Pages → Supabase + Edge Function", () => {
     expect(src).toMatch(/Cloudflare/);
-    expect(src).toMatch(/cname\.vercel-dns\.com/);
     expect(src).toMatch(/lnurl_challenges/);
     expect(src).toMatch(/Edge Function/);
   });
@@ -290,8 +289,8 @@ describe("[Visual] privacy.mdx — Privacy Architecture", () => {
     expect(src).toMatch(/LNURL-auth/);
   });
 
-  it("documenta distribuição de chaves (Vercel, Supabase, wallet)", () => {
-    expect(src).toMatch(/Vercel/);
+  it("documenta distribuição de chaves (Cloudflare, Supabase, wallet)", () => {
+    expect(src).toMatch(/Cloudflare/);
     expect(src).toMatch(/Supabase/);
     expect(src).toMatch(/Edge Functions/);
   });

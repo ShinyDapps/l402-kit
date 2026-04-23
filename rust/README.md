@@ -9,7 +9,7 @@
 
 L402 (HTTP 402 + Lightning Network) middleware for Rust. Supports **axum**.
 
-📖 **Docs:** [l402kit.vercel.app/docs/sdk/rust](https://l402kit.vercel.app/docs/sdk/rust)
+📖 **Docs:** [l402kit.vercel.app/docs/sdk/rust](https://l402kit.com/docs/sdk/rust)
 
 ## Install
 

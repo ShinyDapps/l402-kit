@@ -23,7 +23,7 @@ pip install l402kit
 
 📖 **Docs / Documentação / Documentation:**
 
-[🇺🇸 English](https://l402kit.vercel.app/docs) · [🇧🇷 Português](https://l402kit.vercel.app/docs/pt/introduction) · [🇪🇸 Español](https://l402kit.vercel.app/docs/es/introduction) · [🇨🇳 中文](https://l402kit.vercel.app/docs/zh/introduction) · [🇮🇳 हिंदी](https://l402kit.vercel.app/docs/hi/introduction) · [🇸🇦 العربية](https://l402kit.vercel.app/docs/ar/introduction) · [🇫🇷 Français](https://l402kit.vercel.app/docs/fr/introduction) · [🇩🇪 Deutsch](https://l402kit.vercel.app/docs/de/introduction) · [🇷🇺 Русский](https://l402kit.vercel.app/docs/ru/introduction) · [🇯🇵 日本語](https://l402kit.vercel.app/docs/ja/introduction) · [🇮🇹 Italiano](https://l402kit.vercel.app/docs/it/introduction)
+[🇺🇸 English](https://l402kit.com/docs) · [🇧🇷 Português](https://l402kit.com/docs/pt/introduction) · [🇪🇸 Español](https://l402kit.com/docs/es/introduction) · [🇨🇳 中文](https://l402kit.com/docs/zh/introduction) · [🇮🇳 हिंदी](https://l402kit.com/docs/hi/introduction) · [🇸🇦 العربية](https://l402kit.com/docs/ar/introduction) · [🇫🇷 Français](https://l402kit.com/docs/fr/introduction) · [🇩🇪 Deutsch](https://l402kit.com/docs/de/introduction) · [🇷🇺 Русский](https://l402kit.com/docs/ru/introduction) · [🇯🇵 日本語](https://l402kit.com/docs/ja/introduction) · [🇮🇹 Italiano](https://l402kit.com/docs/it/introduction)
 
 ---
 
@@ -269,9 +269,9 @@ Your address: `yourname@yourdomain.com`
 
 | | |
 |---|---|
-| Docs (11 languages) | [l402kit.vercel.app/docs](https://l402kit.vercel.app/docs) |
+| Docs (11 languages) | [l402kit.com/docs](https://l402kit.com/docs) |
 | PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
-| Python SDK docs | [l402kit.vercel.app/docs/sdk/python](https://l402kit.vercel.app/docs/sdk/python) |
+| Python SDK docs | [l402kit.com/docs/sdk/python](https://l402kit.com/docs/sdk/python) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
 | GitHub | [github.com/ShinyDapps/l402-kit](https://github.com/ShinyDapps/l402-kit) |
 | Lightning | shinydapps@blink.sv |

@@ -195,7 +195,7 @@ async function poll() {
       document.getElementById('statusDot').className = 'dot paid';
       document.getElementById('statusText').textContent = 'Payment confirmed!';
       document.getElementById('receiptHash').textContent = paymentHash;
-      const verifyUrl = 'https://l402kit.vercel.app/api/verify?paymentHash=' + encodeURIComponent(paymentHash);
+      const verifyUrl = 'https://l402kit.com/api/verify?paymentHash=' + encodeURIComponent(paymentHash);
       document.getElementById('receiptVerifyLink').href = verifyUrl;
       setTimeout(() => show('successView'), 800);
     }

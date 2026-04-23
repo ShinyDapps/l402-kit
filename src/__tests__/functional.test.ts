@@ -4,7 +4,7 @@
  * Cobrem os deltas entre o código antigo em produção e as mudanças novas:
  *   1. OG PNG  — backend/logos/og-1200x630.png + meta tags corrigidas
  *   2. Resend  — welcome email automático ao signup do waitlist
- *   3. Infra   — chave Resend válida, domínio configurado, Vercel READY
+ *   3. Infra   — chave Resend válida, domínio configurado, Cloudflare READY
  *
  * Rodar:
  *   INTEGRATION=1 RESEND_API_KEY=re_xxx npx jest functional
@@ -13,7 +13,7 @@
  * Sem ela, os testes Resend são skippados graciosamente.
  */
 
-const BASE = "https://l402kit.vercel.app";
+const BASE = "https://l402kit.com";
 const RUN = process.env.INTEGRATION === "1";
 const RESEND_KEY = process.env.RESEND_API_KEY ?? "";
 const HAS_RESEND = RUN && RESEND_KEY.length > 0;
@@ -80,7 +80,7 @@ describe("[OG] og:image PNG em produção", () => {
 });
 
 // ─── 2. RESEND — infra ────────────────────────────────────────────────────────
-// Delta: RESEND_API_KEY adicionada ao Vercel. Chave antiga revogada.
+// Delta: RESEND_API_KEY configurada no Cloudflare Workers (wrangler secret).
 
 describe("[Resend] infraestrutura de email", () => {
   it_resend("API key ativa é válida (GET /api-keys retorna 200)", async () => {
@@ -381,15 +381,15 @@ describe("[Delete Data] /api/delete-data", () => {
   });
 });
 
-// ─── 9. VERCEL — ambiente de produção ─────────────────────────────────────────
+// ─── 9. CLOUDFLARE — ambiente de produção ────────────────────────────────────
 
-describe("[Vercel] ambiente de produção", () => {
-  it_live("deploy atual retorna 200 na landing", async () => {
+describe("[Cloudflare] ambiente de produção", () => {
+  it_live("Pages: landing retorna 200", async () => {
     const r = await fetch(BASE);
     expect(r.status).toBe(200);
   });
 
-  it_live("API /api/invoice operacional (rejeita body vazio com 400)", async () => {
+  it_live("Workers: /api/invoice rejeita body vazio com 400", async () => {
     const r = await fetch(`${BASE}/api/invoice`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -398,11 +398,15 @@ describe("[Vercel] ambiente de produção", () => {
     expect(r.status).toBe(400);
   });
 
-  it_live("dashboard.html acessível em /dashboard", async () => {
+  it_live("Pages: /dashboard acessível", async () => {
     const r = await fetch(`${BASE}/dashboard`);
     expect(r.status).toBe(200);
     const html = await r.text();
-    expect(html).toMatch(/emailTotal/);
-    expect(html).toMatch(/waitlistTable/);
+    expect(html).toMatch(/x-dashboard-secret/);
+  });
+
+  it_live("Workers: CORS headers presentes", async () => {
+    const r = await fetch(`${BASE}/api/invoice`, { method: "OPTIONS" });
+    expect(r.headers.get("access-control-allow-origin")).toBe("*");
   });
 });

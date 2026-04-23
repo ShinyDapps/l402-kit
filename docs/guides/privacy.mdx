@@ -61,7 +61,7 @@ sequenceDiagram
   D->>S: Read payments, stats (RLS enforced)
 ```
 
-No password to phish. No session token to steal from Vercel. The JWT is scoped by Row Level Security — other pubkeys see nothing.
+No password to phish. No session token to steal from the edge. The JWT is scoped by Row Level Security — other pubkeys see nothing.
 
 ### Data deletion
 
@@ -88,7 +88,7 @@ l402-kit distributes trust across layers:
 ```
 Layer          Holds                          Can do if breached
 ─────────────────────────────────────────────────────────────────
-Vercel         Blink API key only             Create invoices (not read data)
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
 Supabase       Payment rows (hashed)          See payment_hash + endpoints
                RLS policies                  Cannot bypass without service key
                Edge Functions                 Logic runs inside DB boundary

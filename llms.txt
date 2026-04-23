@@ -129,7 +129,7 @@ Replay protection is handled by the SDK (in-memory or Redis-backed).
 - GitHub: https://github.com/ShinyDapps/l402-kit
 - npm: https://npmjs.com/package/l402-kit
 - PyPI: https://pypi.org/project/l402kit
-- Docs: https://l402kit.vercel.app/docs
+- Docs: https://l402kit.com/docs
 
 ---
 

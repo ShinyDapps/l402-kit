@@ -60,9 +60,9 @@ app.use(async (req, res, next) => {
 
 ---
 
-## Vercel / Edge deployment
+## Cloudflare Workers deployment
 
-l402-kit works with Vercel Serverless Functions. Note: the in-memory replay store resets on cold starts. For high-traffic APIs, use Redis for replay protection.
+l402-kit API runs on Cloudflare Workers (V8 isolates, zero cold start). The in-memory replay store resets per isolate — for high-traffic APIs, use Cloudflare KV or Durable Objects for replay protection.
 
 ```typescript
 // api/data.ts

@@ -6,7 +6,7 @@ import type { ReplayAdapter } from "./replay";
 import type { L402Options, LightningProvider, Invoice } from "./types";
 import { randomBytes, createHash } from "crypto";
 
-const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://l402kit.vercel.app";
+const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://l402kit.com";
 const SPLIT_SECRET = process.env.SPLIT_SECRET ?? "";
 
 class ManagedProvider implements LightningProvider {

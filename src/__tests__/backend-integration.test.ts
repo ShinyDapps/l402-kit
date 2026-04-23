@@ -1,7 +1,7 @@
 /**
  * Backend Integration Tests — l402-kit
  *
- * Testa os endpoints da API ao vivo (https://l402kit.vercel.app).
+ * Testa os endpoints da API ao vivo (https://l402kit.com).
  * Para rodar: INTEGRATION=1 npx jest backend-integration
  *
  * Por padrão skippados em CI para não depender de rede/Blink.
@@ -10,7 +10,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const BASE = "https://l402kit.vercel.app";
+const BASE = "https://l402kit.com";
 const RUN = process.env.INTEGRATION === "1";
 const it_live = RUN ? it : it.skip;
 

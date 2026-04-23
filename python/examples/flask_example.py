@@ -34,7 +34,7 @@ def index():
     return jsonify({
         "service": "Weather API",
         "pricing": "10 sats per forecast",
-        "docs": "https://l402kit.vercel.app/docs",
+        "docs": "https://l402kit.com/docs",
     })
 
 

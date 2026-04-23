@@ -52,7 +52,7 @@ When you set `ownerLightningAddress`, ShinyDapps creates the invoice, receives t
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant V as Vercel Backend<br/>/api/invoice
+    participant V as Cloudflare Worker<br/>/api/invoice
     participant B as Blink API<br/>(ShinyDapps wallet)
     participant S as Supabase
     participant O as Owner wallet<br/>(you@yourdomain.com)
@@ -81,7 +81,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant U as User (VS Code)
-    participant V as Vercel Backend
+    participant V as Cloudflare Worker
     participant B as Blink API
     participant S as Supabase
     participant W as Blink Webhook
@@ -119,10 +119,10 @@ Proves you own a Lightning wallet without a password. Required before deleting a
 ```mermaid
 sequenceDiagram
     participant U as User (VS Code)
-    participant V as Vercel<br/>/api/lnurl-auth
+    participant V as Cloudflare<br/>/api/lnurl-auth
     participant W as Lightning Wallet<br/>(Phoenix, Blink…)
     participant S as Supabase<br/>lnurl_challenges
-    participant D as Vercel<br/>/api/delete-data
+    participant D as Cloudflare<br/>/api/delete-data
 
     U->>V: GET /api/lnurl-auth<br/>?lightningAddress=you@yourdomain.com
     V->>V: k1 = randomBytes(32)
@@ -155,15 +155,15 @@ sequenceDiagram
 
 ## 6. Dashboard LNURL-auth Login Flow
 
-Owner-only dashboard authentication — no passwords, no secrets in Vercel.
+Owner-only dashboard authentication — DASHBOARD_SECRET stored in Cloudflare Workers secrets.
 
 ```mermaid
 sequenceDiagram
     participant O as Owner browser
-    participant V as Vercel<br/>/api/lnurl-auth
+    participant V as Cloudflare<br/>/api/lnurl-auth
     participant W as Owner Lightning Wallet
     participant S as Supabase<br/>lnurl_challenges
-    participant D as Vercel<br/>/api/stats
+    participant D as Cloudflare<br/>/api/stats
 
     O->>V: GET /api/lnurl-auth?dashboard=1
     V->>V: k1 = randomBytes(32)
@@ -198,10 +198,10 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph CF["Cloudflare DNS (l402kit.com)"]
-        DNS["l402kit.com\nCNAME → cname.vercel-dns.com"]
+        DNS["l402kit.com\nCNAME → l402kit-pages.pages.dev"]
     end
 
-    subgraph VCL["Vercel (l402kit project)"]
+    subgraph VCL["Cloudflare (Workers + Pages)"]
         LAND["Landing Page\nbackend/index.html"]
         API["Backend API\n/api/invoice → Edge Function\n/api/delete-data\n/api/lnurl-auth\n/api/pro-subscribe\n/api/stats (LNURL-auth)"]
         HOOK["Webhooks\n/api/blink-webhook"]

@@ -120,7 +120,7 @@ Use a secrets manager in production: AWS Secrets Manager, Doppler, Vault, or `.e
 If you expose admin or stats endpoints, **never accept secrets via URL query parameters**. URLs are logged in full by reverse proxies, CDNs, and cloud providers — including the query string.
 
 ```typescript
-// ❌ Never — secret visible in Vercel/CloudFlare access logs
+// ❌ Never — secret visible in Cloudflare Workers logs
 GET /api/stats?secret=my-secret
 
 // ✅ Correct — header is not logged by default
@@ -145,7 +145,7 @@ Use `SUPABASE_SERVICE_KEY` (server-side only) vs `SUPABASE_ANON_KEY` (safe to ex
 | `anon` | VS Code extension, browser clients | No |
 | `service_role` | Server-side API functions | Yes |
 
-Server-side Vercel functions that read sensitive tables (e.g. `pro_access`) must use the service key — never the anon key. RLS policies on sensitive tables should not grant anon access.
+Server-side Cloudflare Workers that read sensitive tables (e.g. `pro_access`) must use the service key — never the anon key. RLS policies on sensitive tables should not grant anon access.
 
 ```typescript
 // ✅ Server-side endpoint

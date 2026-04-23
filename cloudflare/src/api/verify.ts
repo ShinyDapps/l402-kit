@@ -16,7 +16,7 @@ export async function handleVerify(req: Request, _env: Env): Promise<Response> {
     if (decoded.exp && Date.now() > decoded.exp) return json({ valid: false, error: "Token expired" });
 
     const preimageBytes = hexToUint8Array(preimage);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", preimageBytes);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", preimageBytes.buffer as ArrayBuffer);
     const computedHash = uint8ArrayToHex(new Uint8Array(hashBuffer));
 
     const valid = computedHash === decoded.hash;

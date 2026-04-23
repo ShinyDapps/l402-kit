@@ -501,12 +501,12 @@ td { padding: 5px 4px; border-bottom: 1px solid #181818; font-size: 11px; color:
 <div id="content"><div class="loading">⚡ Loading…</div></div>
 
 <div style="text-align:center;padding:8px 12px;border-top:1px solid #1a1a1a;background:#0e0e0e">
-  <a href="https://l402kit.vercel.app" target="_blank"
+  <a href="https://l402kit.com" target="_blank"
      style="font-size:10px;color:#555;text-decoration:none;letter-spacing:.3px">
-    ⚡ l402kit.vercel.app
+    ⚡ l402kit.com
   </a>
   <span style="color:#2a2a2a;margin:0 6px">·</span>
-  <a href="https://l402kit.vercel.app/docs" target="_blank"
+  <a href="https://l402kit.com/docs" target="_blank"
      style="font-size:10px;color:#555;text-decoration:none">
     docs
   </a>
@@ -710,7 +710,7 @@ function renderContent(rows) {
     const proSats = btcPrice > 0 ? Math.ceil(${MONTHLY_FEE_USD} / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
     html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
     html += '<div class="pro-features">' + t('proFeatures') + '</div>';
-    html += '<a href="https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">' + t('upgradeBtn') + '</a>';
+    html += '<a href="https://l402kit.com/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">' + t('upgradeBtn') + '</a>';
     html += '</div>';
   }
 
@@ -777,7 +777,7 @@ function renderContent(rows) {
       btn.addEventListener('click', function() {
         const r = btn.getAttribute('data-r');
         if ((r === '1Y' || r === 'ALL') && !isPro) {
-          window.open('https://l402kit.vercel.app/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
+          window.open('https://l402kit.com/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
           return;
         }
         chartRange = r;
@@ -835,7 +835,7 @@ function renderContent(rows) {
         confirmBtn.textContent = 'Deleting…';
         deleteStatus.textContent = '';
         try {
-          const r = await fetch('https://l402kit.vercel.app/api/delete-data', {
+          const r = await fetch('https://l402kit.com/api/delete-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lightningAddress: ADDR }),
@@ -888,7 +888,7 @@ function renderContent(rows) {
 async function checkPro() {
   if (!ADDR) return;
   try {
-    const r = await fetch('https://l402kit.vercel.app/api/pro-check?address=' + encodeURIComponent(ADDR));
+    const r = await fetch('https://l402kit.com/api/pro-check?address=' + encodeURIComponent(ADDR));
     if (r.ok) { const d = await r.json(); isPro = d.pro === true; }
   } catch(_) {}
 }

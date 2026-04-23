@@ -8,7 +8,7 @@
 
 L402 (HTTP 402 + Lightning Network) middleware for Go. Works with `net/http`, Chi, Gin.
 
-📖 **Docs:** [l402kit.vercel.app/docs/sdk/go](https://l402kit.vercel.app/docs/sdk/go)
+📖 **Docs:** [l402kit.com/docs/sdk/go](https://l402kit.com/docs/sdk/go)
 
 ## Install
 

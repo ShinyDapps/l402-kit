@@ -19,3 +19,7 @@ ENVIRONMENT = "production"
 pattern = "l402kit.com/api/*"
 zone_name = "l402kit.com"
 
+[[routes]]
+pattern = "l402kit.com/.well-known/lnurlp/*"
+zone_name = "l402kit.com"
+

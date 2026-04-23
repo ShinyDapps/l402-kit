@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://l402kit.vercel.app/logo-dark.svg" height="72">
-  <img src="https://l402kit.vercel.app/logo-light.svg" height="72" alt="l402-kit">
+  <source media="(prefers-color-scheme: dark)" srcset="https://l402kit.com/logo-dark.svg" height="72">
+  <img src="https://l402kit.com/logo-light.svg" height="72" alt="l402-kit">
 </picture>
 
 # l402-kit
@@ -10,18 +10,18 @@
 **Add Bitcoin Lightning pay-per-call to any API. 3 lines of code.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.vercel.app/demo)
+[![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.com/demo)
 [![139 tests](https://img.shields.io/badge/tests-139_passing-22c55e)](https://github.com/ShinyDapps/l402-kit)
 
 <br/>
 
-<a href="https://l402kit.vercel.app/demo" title="Watch end-to-end demo">
-  <img src="https://l402kit.vercel.app/extension-preview.png" width="600" alt="ShinyDapps VS Code extension — real-time Lightning payment dashboard" />
+<a href="https://l402kit.com/demo" title="Watch end-to-end demo">
+  <img src="https://l402kit.com/extension-preview.png" width="600" alt="ShinyDapps VS Code extension — real-time Lightning payment dashboard" />
 </a>
 
 <br/>
 
-**[▶ Watch end-to-end demo — install → 402 → pay → 200 OK](https://l402kit.vercel.app/demo)**
+**[▶ Watch end-to-end demo — install → 402 → pay → 200 OK](https://l402kit.com/demo)**
 
 <br/>
 
@@ -60,7 +60,7 @@
 🇯🇵 Bitcoin LightningでAPIを3行で収益化。
 🇮🇹 Monetizza la tua API con Bitcoin Lightning. 3 righe di codice.
 
-📖 **Official docs:** [🇺🇸](https://l402kit.vercel.app/docs) · [🇧🇷](https://l402kit.vercel.app/docs/pt/introduction) · [🇪🇸](https://l402kit.vercel.app/docs/es/introduction) · [🇨🇳](https://l402kit.vercel.app/docs/zh/introduction) · [🇮🇳](https://l402kit.vercel.app/docs/hi/introduction) · [🇸🇦](https://l402kit.vercel.app/docs/ar/introduction) · [🇫🇷](https://l402kit.vercel.app/docs/fr/introduction) · [🇩🇪](https://l402kit.vercel.app/docs/de/introduction) · [🇷🇺](https://l402kit.vercel.app/docs/ru/introduction) · [🇯🇵](https://l402kit.vercel.app/docs/ja/introduction) · [🇮🇹](https://l402kit.vercel.app/docs/it/introduction)
+📖 **Official docs:** [🇺🇸](https://l402kit.com/docs) · [🇧🇷](https://l402kit.com/docs/pt/introduction) · [🇪🇸](https://l402kit.com/docs/es/introduction) · [🇨🇳](https://l402kit.com/docs/zh/introduction) · [🇮🇳](https://l402kit.com/docs/hi/introduction) · [🇸🇦](https://l402kit.com/docs/ar/introduction) · [🇫🇷](https://l402kit.com/docs/fr/introduction) · [🇩🇪](https://l402kit.com/docs/de/introduction) · [🇷🇺](https://l402kit.com/docs/ru/introduction) · [🇯🇵](https://l402kit.com/docs/ja/introduction) · [🇮🇹](https://l402kit.com/docs/it/introduction)
 
 </details>
 
@@ -192,7 +192,7 @@ curl http://localhost:3000/premium \
 # ← { "data": "Payment confirmed." }
 ```
 
-[▶ Try the interactive demo](https://l402kit.vercel.app/demo)
+[▶ Try the interactive demo](https://l402kit.com/demo)
 
 ---
 
@@ -284,7 +284,7 @@ Other wallets: [Wallet of Satoshi](https://walletofsatoshi.com) · [Phoenix](htt
 
 | Resource | URL |
 |----------|-----|
-| 📖 Docs (11 languages) | [l402kit.vercel.app/docs](https://l402kit.vercel.app/docs) |
+| 📖 Docs (11 languages) | [l402kit.com/docs](https://l402kit.com/docs) |
 | 📦 npm | [npmjs.com/package/l402-kit](https://npmjs.com/package/l402-kit) |
 | 🐍 PyPI | [pypi.org/project/l402kit](https://pypi.org/project/l402kit) |
 | 🦫 Go | [pkg.go.dev/github.com/shinydapps/l402-kit/go](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
@@ -307,6 +307,6 @@ Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps)
 
 <br/>
 
-<a href="https://l402kit.vercel.app/docs">Docs</a> · <a href="https://l402kit.vercel.app/demo">Demo</a> · <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">VS Code</a> · <a href="https://npmjs.com/package/l402-kit">npm</a>
+<a href="https://l402kit.com/docs">Docs</a> · <a href="https://l402kit.com/demo">Demo</a> · <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">VS Code</a> · <a href="https://npmjs.com/package/l402-kit">npm</a>
 
 </div>
