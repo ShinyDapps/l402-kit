@@ -23,17 +23,21 @@ export interface L402Options {
   /** Price in satoshis per API call */
   priceSats: number;
   /**
-   * Lightning Address of the API owner — receives 99.7% of each payment.
-   * Example: "you@yourdomain.com"
-   * When set, l402-kit manages everything: invoices via ShinyDapps account,
-   * automatic split, and 0.3% fee to ShinyDapps.
+   * Your Lightning provider — BTCPay, Alby, Blink, LNbits, OpenNode, or any
+   * implementation of `LightningProvider`. This is required.
+   *
+   * @example
+   * ```ts
+   * import { AlbyProvider } from "l402-kit";
+   * { lightning: new AlbyProvider(process.env.ALBY_TOKEN) }
+   * ```
+   */
+  lightning: LightningProvider;
+  /**
+   * @deprecated Use `lightning` with a cloud provider instead.
+   * Will be removed in v2.0.
    */
   ownerLightningAddress?: string;
-  /**
-   * Bring your own Lightning provider (advanced).
-   * Use when you want full control over your Lightning backend.
-   */
-  lightning?: LightningProvider;
   /** Supabase URL for logging. Falls back to process.env.SUPABASE_URL */
   supabaseUrl?: string;
   /** Falls back to process.env.SUPABASE_ANON_KEY */

@@ -10,6 +10,19 @@ use crate::{
 
 const SHINYDAPPS_API: &str = "https://l402kit.com";
 
+/// Cloud-managed Lightning provider (l402kit.com hosted service).
+///
+/// Use when you want zero infrastructure: invoices and splits are handled
+/// by the l402kit cloud. 0.3% fee per payment.
+///
+/// For sovereign mode (0% fee), use `BlinkProvider`, `AlbyProvider`,
+/// `BtcPayProvider`, or any `LightningProvider` implementation.
+///
+/// # Example
+/// ```rust
+/// use l402kit::ManagedProvider;
+/// let provider = ManagedProvider::new("you@yourdomain.com".into());
+/// ```
 pub struct ManagedProvider {
     owner_address: String,
     client: Client,
@@ -61,7 +74,6 @@ impl ManagedProvider {
         })
     }
 
-    /// Fire-and-forget: send split to ShinyDapps backend.
     pub async fn send_split(&self, amount_sats: u64) {
         let _ = self
             .client

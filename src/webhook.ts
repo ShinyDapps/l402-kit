@@ -13,7 +13,6 @@ export interface WebhookEvent {
     amountSats: number;
     preimage: string;
     paymentHash: string;
-    ownerAddress: string;
   };
 }
 

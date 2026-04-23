@@ -9,7 +9,6 @@ use serde_json::json;
 use std::sync::Arc;
 
 use crate::{
-    managed::ManagedProvider,
     replay::check_and_mark_preimage,
     types::Options,
     verify::{parse_token, verify_token},
@@ -19,12 +18,16 @@ use crate::{
 ///
 /// ```rust,no_run
 /// use axum::{Router, routing::get, middleware};
-/// use l402kit::{l402_middleware, Options};
+/// use l402kit::{l402_middleware, Options, BlinkProvider};
 /// use std::sync::Arc;
 ///
 /// async fn my_handler() -> &'static str { "ok" }
 ///
-/// let opts = Arc::new(Options::new(10).with_address("you@blink.sv"));
+/// let provider = BlinkProvider::new(
+///     std::env::var("BLINK_API_KEY").unwrap(),
+///     std::env::var("BLINK_WALLET_ID").unwrap(),
+/// );
+/// let opts = Arc::new(Options::new(10, provider));
 /// let app: Router<()> = Router::new()
 ///     .route("/api/data", get(my_handler))
 ///     .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
@@ -34,7 +37,6 @@ pub async fn l402_middleware(
     request: Request,
     next: Next,
 ) -> Response {
-    // Extract Authorization header before consuming `request`
     let auth = request
         .headers()
         .get(header::AUTHORIZATION)
@@ -64,14 +66,7 @@ pub async fn l402_middleware(
     }
 
     // No valid token — create invoice and return 402
-    let provider = match &opts.lightning {
-        Some(p) => p.clone(),
-        None => ManagedProvider::new(
-            opts.owner_lightning_address.clone().unwrap_or_default(),
-        ),
-    };
-
-    match provider.create_invoice(opts.price_sats).await {
+    match opts.lightning.create_invoice(opts.price_sats).await {
         Ok(inv) => {
             let www_auth = format!(
                 r#"L402 macaroon="{}", invoice="{}""#,

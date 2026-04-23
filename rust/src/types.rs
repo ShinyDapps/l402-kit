@@ -36,45 +36,52 @@ pub struct Options {
     /// Price per API call in satoshis.
     pub price_sats: u64,
 
-    /// Your Lightning Address — enables zero-config managed mode.
-    /// Example: `"you@blink.sv"`
-    pub owner_lightning_address: Option<String>,
-
-    /// Custom Lightning provider (advanced). Overrides `owner_lightning_address`.
-    pub lightning: Option<Arc<dyn LightningProvider>>,
+    /// Your Lightning provider — required.
+    /// Use `BlinkProvider`, `AlbyProvider`, `BtcPayProvider`, or `ManagedProvider`.
+    pub lightning: Arc<dyn LightningProvider>,
 
     /// Optional callback after each verified payment.
     pub on_payment: Option<Box<dyn Fn(L402Token, u64) + Send + Sync>>,
+
+    /// Deprecated: use `with_provider(ManagedProvider::new(address))` instead.
+    #[doc(hidden)]
+    pub owner_lightning_address: Option<String>,
 }
 
 impl std::fmt::Debug for Options {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Options")
             .field("price_sats", &self.price_sats)
-            .field("owner_lightning_address", &self.owner_lightning_address)
-            .field("lightning", &self.lightning.as_ref().map(|_| "<provider>"))
+            .field("lightning", &"<provider>")
             .field("on_payment", &self.on_payment.as_ref().map(|_| "<callback>"))
             .finish()
     }
 }
 
 impl Options {
-    pub fn new(price_sats: u64) -> Self {
+    pub fn new(price_sats: u64, provider: Arc<dyn LightningProvider>) -> Self {
         Self {
             price_sats,
-            owner_lightning_address: None,
-            lightning: None,
+            lightning: provider,
             on_payment: None,
+            owner_lightning_address: None,
         }
     }
 
+    /// Deprecated: use `Options::new(sats, ManagedProvider::new(address))`.
+    #[deprecated(since = "1.4.0", note = "use Options::new with an explicit provider")]
     pub fn with_address(mut self, address: impl Into<String>) -> Self {
         self.owner_lightning_address = Some(address.into());
         self
     }
 
     pub fn with_provider(mut self, provider: Arc<dyn LightningProvider>) -> Self {
-        self.lightning = Some(provider);
+        self.lightning = provider;
+        self
+    }
+
+    pub fn on_payment(mut self, cb: impl Fn(L402Token, u64) + Send + Sync + 'static) -> Self {
+        self.on_payment = Some(Box::new(cb));
         self
     }
 }
