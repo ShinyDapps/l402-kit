@@ -1,7 +1,6 @@
 import type { Env } from "../worker";
 
 const PRICE_SATS = 1;
-const used = new Set<string>();
 
 export async function handleDemo(_req: Request, _env: Env): Promise<Response> {
   return json({
@@ -17,8 +16,6 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
     const token = auth.slice(5);
     const verified = await verifyToken(token);
     if (!verified.ok) return json({ error: verified.reason }, 401);
-    if (used.has(verified.preimage!)) return json({ error: "Token already used" }, 401);
-    used.add(verified.preimage!);
 
     const price = await fetchBtcPrice();
     return json({
@@ -30,7 +27,6 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
     });
   }
 
-  // No token — create invoice and return 402
   const inv = await createInvoice(PRICE_SATS, env);
   if (!inv) return json({ error: "Lightning provider unavailable" }, 503);
 
@@ -40,6 +36,7 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
       priceSats: PRICE_SATS,
       invoice: inv.paymentRequest,
       macaroon: inv.macaroon,
+      blinkPaymentHash: inv.paymentHash,
     }),
     {
       status: 402,
@@ -51,9 +48,32 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
   );
 }
 
+// Returns the server-generated preimage once the Blink invoice is paid.
+// Client polls this after paying manually (e.g. from Bipa).
+export async function handleDemoPreimage(req: Request, env: Env): Promise<Response> {
+  const url = new URL(req.url);
+  const blinkHash = url.searchParams.get("hash");
+  if (!blinkHash) return json({ error: "Missing hash" }, 400);
+
+  const stored = await env.demo_preimages.get(blinkHash);
+  if (!stored) return json({ error: "Unknown invoice" }, 404);
+
+  const { serverPreimage, paid } = JSON.parse(stored) as { serverPreimage: string; paid: boolean };
+
+  if (!paid) {
+    // Check Blink for payment
+    const confirmed = await checkBlinkPayment(blinkHash, env);
+    if (!confirmed) return json({ pending: true }, 202);
+    // Mark paid in KV
+    await env.demo_preimages.put(blinkHash, JSON.stringify({ serverPreimage, paid: true }), { expirationTtl: 3600 });
+  }
+
+  return json({ preimage: serverPreimage });
+}
+
 // ── helpers ────────────────────────────────────────────────────────────────────
 
-async function verifyToken(token: string): Promise<{ ok: boolean; reason?: string; preimage?: string }> {
+async function verifyToken(token: string): Promise<{ ok: boolean; reason?: string }> {
   const colon = token.lastIndexOf(":");
   if (colon === -1) return { ok: false, reason: "Malformed token" };
 
@@ -72,7 +92,7 @@ async function verifyToken(token: string): Promise<{ ok: boolean; reason?: strin
     const hash = bytesToHex(new Uint8Array(hashBuf));
 
     if (hash !== decoded.hash) return { ok: false, reason: "Invalid preimage" };
-    return { ok: true, preimage };
+    return { ok: true };
   } catch {
     return { ok: false, reason: "Invalid token format" };
   }
@@ -80,12 +100,16 @@ async function verifyToken(token: string): Promise<{ ok: boolean; reason?: strin
 
 async function createInvoice(amountSats: number, env: Env) {
   try {
+    // Generate server-side preimage; macaroon binds to SHA256 of it
+    const preimageBytes = crypto.getRandomValues(new Uint8Array(32));
+    const serverPreimage = bytesToHex(preimageBytes);
+    const serverHashBuf = await crypto.subtle.digest("SHA-256", preimageBytes.buffer as ArrayBuffer);
+    const serverHash = bytesToHex(new Uint8Array(serverHashBuf));
+
+    // Create real Blink invoice (Blink generates its own payment hash — different from serverHash)
     const r = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-KEY": env.BLINK_API_KEY,
-      },
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
       body: JSON.stringify({
         query: `mutation { lnInvoiceCreate(input: { walletId: "${env.BLINK_WALLET_ID}", amount: ${amountSats} }) { invoice { paymentRequest paymentHash } errors { message } } }`,
       }),
@@ -96,11 +120,42 @@ async function createInvoice(amountSats: number, env: Env) {
     const inv = data?.data?.lnInvoiceCreate;
     if (!inv?.invoice || inv.errors?.length) return null;
 
+    const blinkHash = inv.invoice.paymentHash;
+
+    // Store serverPreimage keyed by blinkHash so the preimage endpoint can return it after payment
+    await env.demo_preimages.put(blinkHash, JSON.stringify({ serverPreimage, paid: false }), { expirationTtl: 3600 });
+
+    // Macaroon encodes serverHash (= SHA256(serverPreimage)) — verifyToken checks this
     const exp = Date.now() + 3_600_000;
-    const macaroon = btoa(JSON.stringify({ hash: inv.invoice.paymentHash, exp }));
-    return { paymentRequest: inv.invoice.paymentRequest, paymentHash: inv.invoice.paymentHash, macaroon };
+    const macaroon = btoa(JSON.stringify({ hash: serverHash, exp }));
+
+    return { paymentRequest: inv.invoice.paymentRequest, paymentHash: blinkHash, macaroon };
   } catch {
     return null;
+  }
+}
+
+async function checkBlinkPayment(blinkPaymentHash: string, env: Env): Promise<boolean> {
+  try {
+    const r = await fetch("https://api.blink.sv/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      body: JSON.stringify({
+        query: `{ me { defaultAccount { wallets { ... on BTCWallet { transactions(first: 10) { edges { node { initiationVia { ... on InitiationViaLn { paymentHash } } } } } } } } } }`,
+      }),
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!r.ok) return false;
+    const data = await r.json() as { data?: { me?: { defaultAccount?: { wallets?: { transactions?: { edges?: { node?: { initiationVia?: { paymentHash?: string } } }[] } }[] } } } };
+    const wallets = data?.data?.me?.defaultAccount?.wallets ?? [];
+    for (const w of wallets) {
+      for (const edge of (w as { transactions?: { edges?: { node?: { initiationVia?: { paymentHash?: string } } }[] } }).transactions?.edges ?? []) {
+        if (edge?.node?.initiationVia?.paymentHash === blinkPaymentHash) return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
   }
 }
 
@@ -116,7 +171,6 @@ async function fetchBtcPrice(): Promise<{ usd: number; eur: number; gbp: number;
     }
   } catch { /* fallback */ }
 
-  // Fallback: Coinbase
   try {
     const [usd, eur, gbp] = await Promise.all([
       fetch("https://api.coinbase.com/v2/prices/BTC-USD/spot").then(r => r.json()) as Promise<{ data: { amount: string } }>,

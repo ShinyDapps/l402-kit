@@ -15,6 +15,10 @@ ENVIRONMENT = "production"
 # DASHBOARD_SECRET
 # RESEND_API_KEY
 
+[[kv_namespaces]]
+binding = "demo_preimages"
+id = "cc84c53bdb464a1391313565ff920d16"
+
 [[routes]]
 pattern = "l402kit.com/api/*"
 zone_name = "l402kit.com"

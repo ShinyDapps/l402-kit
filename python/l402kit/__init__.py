@@ -6,7 +6,7 @@ from .providers.lnbits import LNbitsProvider
 from .types import LightningProvider, Invoice
 from .replay import MemoryReplayAdapter, RedisReplayAdapter
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 __all__ = [
     "l402_required",
     "L402Client",
@@ -20,3 +20,8 @@ __all__ = [
     "MemoryReplayAdapter",
     "RedisReplayAdapter",
 ]
+
+# Dev/demo exports
+from .dev import DevProvider, DevWallet
+
+__all__ = [*__all__, "DevProvider", "DevWallet"]

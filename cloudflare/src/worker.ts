@@ -2,7 +2,7 @@ import { handleInvoice }    from "./api/invoice";
 import { handleStats }      from "./api/stats";
 import { handleSplit }      from "./api/split";
 import { handleDevToken }   from "./api/dev-token";
-import { handleDemo, handleDemoBtcPrice } from "./api/demo";
+import { handleDemo, handleDemoBtcPrice, handleDemoPreimage } from "./api/demo";
 import { handleVerify }     from "./api/verify";
 import { handleLnurlAuth }  from "./api/lnurl-auth";
 import { handleLnurlp }     from "./api/lnurlp";
@@ -20,6 +20,7 @@ export interface Env {
   RESEND_API_KEY: string;
   BLINK_API_KEY: string;
   BLINK_WALLET_ID: string;
+  demo_preimages: KVNamespace;
 }
 
 function cors(res: Response): Response {
@@ -45,8 +46,9 @@ export default {
       else if (path === "/api/stats")     res = await handleStats(request, env);
       else if (path === "/api/split")     res = await handleSplit(request, env);
       else if (path === "/api/dev-token") res = await handleDevToken(request, env);
-      else if (path === "/api/demo")           res = await handleDemo(request, env);
-      else if (path === "/api/demo/btc-price") res = await handleDemoBtcPrice(request, env);
+      else if (path === "/api/demo")                res = await handleDemo(request, env);
+      else if (path === "/api/demo/btc-price")     res = await handleDemoBtcPrice(request, env);
+      else if (path === "/api/demo/preimage")      res = await handleDemoPreimage(request, env);
       else if (path === "/api/verify")    res = await handleVerify(request, env);
       else if (path === "/api/lnurl-auth") res = await handleLnurlAuth(request, env);
       else if (path.startsWith("/.well-known/lnurlp/")) res = await handleLnurlp(request, env);
