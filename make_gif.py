@@ -101,44 +101,68 @@ def f4():
         y += f.size + 8
     return i
 
-# ── Frame 5: FLOW de pagamento ────────────────────────────────────────────────
+# ── Frame 5: AI AGENTS ────────────────────────────────────────────────────────
 def f5():
     i, d = img()
-    y = 80
+    y = 70
+    y = center_text(d, y, "AI agents need to pay for APIs.", "#e6edf3", F_BIG)
+    y += 10
+    y = center_text(d, y, "L402 is the protocol.", "#d29922", F_BIG)
+    y += 30
+    lines = [
+        ("client = L402Client(wallet=BlinkWallet(...))",  "#e6edf3", F_MED),
+        ("agent.get(\"https://api.example.com/data\")",    "#e6edf3", F_MED),
+        ("# agent pays autonomously — no human needed",   "#3fb950", F_SMALL),
+    ]
+    x = PAD
+    bx = x - 10
+    bh = sum(f.size + 10 for _, _, f in lines) + 20
+    d.rectangle([bx, y-10, W-PAD+10, y+bh], fill="#161b22", outline="#30363d", width=1)
+    for text, color, f in lines:
+        d.text((x+8, y), text, fill=color, font=f)
+        y += f.size + 10
+    return i
+
+# ── Frame 6: FLOW de pagamento ────────────────────────────────────────────────
+def f6():
+    i, d = img()
+    y = 70
     steps = [
-        ("GET  /premium",                        "#6e7681"),
-        ("402  Payment Required  →  1 sat invoice", "#d29922"),
-        ("      wallet pays via Lightning  ✓",    "#6e7681"),
-        ("GET  /premium  Authorization: L402 ...", "#6e7681"),
-        ("200  OK  →  { \"data\": \"...\" }",     "#3fb950"),
+        ("agent calls  GET /data",                   "#6e7681"),
+        ("← 402  Payment Required",                  "#d29922"),
+        ("   wallet pays 1 sat via Lightning  ✓",    "#6e7681"),
+        ("agent retries  GET /data  + L402 token",   "#6e7681"),
+        ("← 200 OK  — autonomous, trustless, global","#3fb950"),
     ]
     for step, color in steps:
         w = F_MED.getlength(step)
         d.text(((W - w) / 2, y), step, fill=color, font=F_MED)
-        y += F_MED.size + 18
+        y += F_MED.size + 22
     return i
 
-# ── Frame 6: FECHAMENTO ───────────────────────────────────────────────────────
-def f6():
+# ── Frame 7: FECHAMENTO ───────────────────────────────────────────────────────
+def f7():
     i, d = img()
-    y = 90
+    y = 80
     y = center_text(d, y, "No bank. No KYC. No Stripe.", "#e6edf3", F_BIG)
     y = center_text(d, y, "Pure Bitcoin. Pure Lightning.", "#d29922", F_BIG)
+    y += 20
+    y = center_text(d, y, "Works where traditional finance doesn't.", "#6e7681", F_MED)
     y += 30
-    y = center_text(d, y, "pip install l402kit", "#3fb950", F_MED)
-    y = center_text(d, y, "npm install l402-kit", "#3fb950", F_MED)
-    y += 10
+    y = center_text(d, y, "pip install l402kit    npm install l402-kit", "#3fb950", F_MED)
+    y += 6
     center_text(d, y, "l402kit.com", "#6e7681", F_MED)
     return i
 
 # ── Montar GIF ────────────────────────────────────────────────────────────────
 frames_data = [
-    (f1(), 3200),
-    (f2(), 2800),
-    (f3(), 3000),
-    (f4(), 3000),
-    (f5(), 2800),
-    (f6(), 4000),
+    (f1(), 5500),   # Stripe rejects Nigeria
+    (f2(), 5000),   # l402-kit
+    (f3(), 5500),   # server code
+    (f4(), 5500),   # client code
+    (f5(), 5500),   # AI agents
+    (f6(), 5000),   # payment flow
+    (f7(), 6000),   # close
 ]
 
 frames    = [f.convert("P", palette=Image.ADAPTIVE, colors=128) for f, _ in frames_data]
