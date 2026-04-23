@@ -73,6 +73,24 @@ describe("[Visual] landing page — index.html", () => {
     expect(html).toMatch(/0\.3%/);
   });
 
+  it("tem terminal interativo de demo L402 (#live-demo)", () => {
+    expect(html).toMatch(/id="live-demo"/);
+    expect(html).toMatch(/id="dtBody"/);
+    expect(html).toMatch(/id="dtRunBtn"/);
+    expect(html).toMatch(/dtRun\(\)/);
+    expect(html).toMatch(/dtSimulate\(\)/);
+    expect(html).toMatch(/402 Payment Required/);
+  });
+
+  it("não tem iframe de demo.html (substituído pelo terminal embutido)", () => {
+    expect(html).not.toMatch(/src="demo\.html"/);
+  });
+
+  it("não tem seção 'Under the Hood' (substituída pelo terminal)", () => {
+    expect(html).not.toMatch(/class="hood"/);
+    expect(html).not.toMatch(/Under the hood/i);
+  });
+
   it("tem seção Privacy-first architecture", () => {
     expect(html).toMatch(/Privacy-first architecture/i);
     expect(html).toMatch(/Zero PII|zero PII|No email collected/i);
