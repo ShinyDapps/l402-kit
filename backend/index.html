@@ -301,7 +301,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 <section class="hero">
   <div class="hero-network" id="heroNetwork"></div>
-  <div class="hero-badge">⚡ Bitcoin Lightning · AI-native · 0.3% fee · Open Source</div>
+  <div class="hero-badge">⚡ Bitcoin Lightning · AI-native · Open Source · free or 0.3%</div>
   <h1 id="heroTitle">Charge for your API in sats.<br>Any wallet pays. <span>Instantly.</span></h1>
   <p id="heroSubtitle">3 lines of code. No Stripe. No account. AI agents pay natively — machines pay machines.</p>
   <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.25);border-radius:12px;padding:10px 20px;margin-bottom:20px;margin-top:-8px">
@@ -318,7 +318,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="hero-stats">
     <div class="hero-stat"><div class="stat-num">4</div><div class="stat-label">Languages</div></div>
     <div class="hero-stat"><div class="stat-num">&lt;1s</div><div class="stat-label">Settlement</div></div>
-    <div class="hero-stat"><div class="stat-num">0.3%</div><div class="stat-label">Fee only</div></div>
+    <div class="hero-stat"><div class="stat-num">0%</div><div class="stat-label">Fee (own wallet)</div></div>
     <div class="hero-stat"><div class="stat-num" style="font-size:18px">1 sat</div><div class="stat-label">min. price</div></div>
   </div>
 </section>
@@ -423,7 +423,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 app.<span class="c-fn">get</span>(<span class="c-string">"/premium"</span>, <span class="c-fn">l402</span>({
   priceSats: <span class="c-num">100</span>,
-  ownerLightningAddress: <span class="c-string">"you@blink.sv"</span>,  <span class="c-comment">// receives 99.7%</span>
+  ownerLightningAddress: <span class="c-string">"you@yourdomain.com"</span>,  <span class="c-comment">// receives 99.7%</span>
 }), (req, res) => {
   res.<span class="c-fn">json</span>({ data: <span class="c-string">"Payment confirmed ⚡"</span> });
 });
@@ -439,7 +439,7 @@ app = <span class="c-fn">FastAPI</span>()
 <span class="c-fn">@app.get</span>(<span class="c-string">"/premium"</span>)
 <span class="c-fn">@l402_required</span>(
     price_sats=<span class="c-num">100</span>,
-    owner_lightning_address=<span class="c-string">"you@blink.sv"</span>,
+    owner_lightning_address=<span class="c-string">"you@yourdomain.com"</span>,
 )
 <span class="c-keyword">async def</span> <span class="c-fn">premium</span>(request: Request):
     <span class="c-keyword">return</span> {<span class="c-string">"data"</span>: <span class="c-string">"Payment confirmed ⚡"</span>}</pre></div>
@@ -455,7 +455,7 @@ app = <span class="c-fn">FastAPI</span>()
 <span class="c-keyword">func</span> <span class="c-fn">main</span>() {
     http.<span class="c-fn">Handle</span>(<span class="c-string">"/premium"</span>, l402kit.<span class="c-fn">Middleware</span>(l402kit.Options{
         PriceSats:             <span class="c-num">100</span>,
-        OwnerLightningAddress: <span class="c-string">"you@blink.sv"</span>,
+        OwnerLightningAddress: <span class="c-string">"you@yourdomain.com"</span>,
     }, http.<span class="c-fn">HandlerFunc</span>(<span class="c-keyword">func</span>(w http.ResponseWriter, r *http.Request) {
         fmt.<span class="c-fn">Fprintln</span>(w, <span class="c-string">`{"data":"Payment confirmed ⚡"}`</span>)
     })))
@@ -495,7 +495,7 @@ app = <span class="c-fn">FastAPI</span>()
 <span class="c-fn">#[tokio::main]</span>
 <span class="c-keyword">async fn</span> <span class="c-fn">main</span>() {
     <span class="c-keyword">let</span> opts = Arc::new(
-        Options::<span class="c-fn">new</span>(<span class="c-num">100</span>).<span class="c-fn">with_address</span>(<span class="c-string">"you@blink.sv"</span>),
+        Options::<span class="c-fn">new</span>(<span class="c-num">100</span>).<span class="c-fn">with_address</span>(<span class="c-string">"you@yourdomain.com"</span>),
     );
     <span class="c-keyword">let</span> app = Router::new()
         .<span class="c-fn">route</span>(<span class="c-string">"/premium"</span>, get(handler))
@@ -601,8 +601,8 @@ app = <span class="c-fn">FastAPI</span>()
   <div class="features-grid">
     <div class="feature-card">
       <div class="feature-icon">⚡</div>
-      <div class="feature-title">Zero setup</div>
-      <div class="feature-desc">Just set your Lightning Address. No node, no wallet setup, no config files.</div>
+      <div class="feature-title">Plug and play</div>
+      <div class="feature-desc">Add your Lightning Address and go. Or connect your own wallet for zero fee. Your choice.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🌍</div>
@@ -626,8 +626,8 @@ app = <span class="c-fn">FastAPI</span>()
     </div>
     <div class="feature-card">
       <div class="feature-icon">🧩</div>
-      <div class="feature-title">Provider agnostic</div>
-      <div class="feature-desc">Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.</div>
+      <div class="feature-title">Bring your wallet</div>
+      <div class="feature-desc">Blink, OpenNode, LNbits, BTCPay — or any wallet. Swap providers in one line. Zero lock-in.</div>
     </div>
   </div>
 </section>
@@ -743,7 +743,7 @@ app = <span class="c-fn">FastAPI</span>()
         </div>
         <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px;margin-bottom:12px">
           <div style="font-size:11px;color:#555;margin-bottom:6px">LIGHTNING ADDRESS</div>
-          <div style="font-size:13px;color:#f7931a">you@blink.sv</div>
+          <div style="font-size:13px;color:#f7931a">you@yourdomain.com</div>
         </div>
         <div style="background:#111;border:1px solid #f7931a33;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between">
           <div><div style="font-size:12px;font-weight:700;color:#f7931a">⚡ ShinyDapps Pro</div><div style="font-size:11px;color:#555;margin-top:2px">Full history · CSV · Pay in Bitcoin</div></div>
@@ -762,10 +762,10 @@ app = <span class="c-fn">FastAPI</span>()
       <div class="pricing-name">Free</div>
       <div class="pricing-price">$0 <span>forever</span></div>
       <div class="pricing-sats">0 sats — always free</div>
-      <div class="pricing-desc">0.3% fee on payments received</div>
+      <div class="pricing-desc">0% with your own wallet · 0.3% managed</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> TypeScript, Python, Go, Rust</li>
-        <li><span class="check">✓</span> Managed Lightning — no node needed</li>
+        <li><span class="check">✓</span> Plug &amp; play or bring your wallet</li>
         <li><span class="check">✓</span> Unlimited API calls</li>
         <li><span class="check">✓</span> Payment history (last 7 days)</li>
         <li><span class="check">✓</span> 1D / 7D charts</li>
@@ -857,7 +857,7 @@ app = <span class="c-fn">FastAPI</span>()
       <h3 style="margin-bottom:8px">Subscribe with Lightning &#x26a1;</h3>
       <p style="color:#666;font-size:13px;margin-bottom:24px">Enter your Lightning address. An invoice will be generated. Pay it from any Lightning wallet &mdash; access activates in seconds.</p>
       <label style="font-size:13px;color:#888">Your Lightning address</label>
-      <input id="proAddr" type="email" placeholder="you@blink.sv" style="width:100%;margin-top:6px;margin-bottom:16px;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e5e5e5;font-size:14px;box-sizing:border-box">
+      <input id="proAddr" type="email" placeholder="you@yourdomain.com" style="width:100%;margin-top:6px;margin-bottom:16px;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e5e5e5;font-size:14px;box-sizing:border-box">
       <p style="font-size:12px;color:#555;margin-bottom:20px">Tier: <span id="proTierLabel" style="color:var(--orange)">Pro — $9/month</span></p>
       <button onclick="generateProInvoice()" style="width:100%;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer" id="proGenBtn">Generate Invoice</button>
     </div>
@@ -905,7 +905,7 @@ app = <span class="c-fn">FastAPI</span>()
   </div>
   <div class="faq-item">
     <div class="faq-q">How does the 0.3% fee work?</div>
-    <div class="faq-a">When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.</div>
+    <div class="faq-a">If you use our managed infrastructure (just add your Lightning address, we handle the rest), we keep 0.3%. If you connect your own wallet — Blink, OpenNode, LNbits, BTCPay — the fee is zero. You can switch at any time with one line of code.</div>
   </div>
   <div class="faq-item">
     <div class="faq-q">Can I use it without Blink?</div>
@@ -1256,7 +1256,7 @@ const T = {
     usecases: [['AI / Agents','Monetize your AI tool','Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.'],['Data APIs','Pay-per-query data','Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.'],['Content','Paywalled endpoints','Articles, research papers, PDFs, audio. No account creation required from your users.'],['Compute','Serverless billing','Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.']],
     ext: {badge:'VS CODE EXTENSION',h2:'Watch your sats roll in — without leaving your editor',p:'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart.',lis:['✓ Live payment feed with amount & endpoint','✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Light / dark / auto theme','✓ Zero config — just set your Lightning address'],links:['Install Free on Marketplace','Documentation →']},
     pricingTitle: 'Simple pricing', pricingSub: 'Pay with Bitcoin Lightning. No credit card. No account. Instant.',
-    pricing: [['Free','0.3% fee on payments received','Get started →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning'],[null,'For teams and high-volume APIs','⚡ Subscribe with Lightning'],[null,'Pay once. Use forever.','⚡ Buy Lifetime Access']],
+    pricing: [['Free','0% with your wallet · 0.3% managed','Get started →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning'],[null,'For teams and high-volume APIs','⚡ Subscribe with Lightning'],[null,'Pay once. Use forever.','⚡ Buy Lifetime Access']],
     faqTitle: 'Common questions',
     faq: [['Do my users need a Lightning wallet?','Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.'],['What happens if the Lightning network is down?','Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.'],['Is this production-ready?','Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.'],['How does the 0.3% fee work?','When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.'],['Can I use it without Blink?','Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.']],
     ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://l402kit.vercel.app/docs">read the docs &rarr;</a>',
@@ -1277,7 +1277,7 @@ const T = {
     usecases: [['IA / Agentes','Monetize sua ferramenta de IA','Cobre por chamada de inferencia. Wrappers de LLM, geracao de imagem, OCR APIs. Funciona com agentes LangChain e AutoGPT.'],['APIs de Dados','Dados por consulta','Clima, financas, esportes, mapas. Sem assinatura: usuarios pagam so pelo uso.'],['Conteudo','Endpoints com paywall','Artigos, pesquisas, PDFs, audio. Sem exigir criacao de conta do usuario.'],['Computacao','Billing serverless','Cobre por tarefas pesadas: render, transcricao, compressao. 100% por uso.']],
     ext: {badge:'EXTENSAO VS CODE',h2:'Veja os sats entrando sem sair do editor',p:'Dashboard de pagamentos Lightning em tempo real dentro do VS Code. Veja cada pagamento no instante em que cai.',lis:['✓ Feed de pagamentos ao vivo com valor e endpoint','✓ Grafico de barras — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Tema claro / escuro / automatico','✓ Zero config — so definir seu Lightning address'],links:['Instalar gratis no Marketplace','Documentacao →']},
     pricingTitle: 'Precos simples', pricingSub: 'Pague com Bitcoin Lightning. Sem cartao. Sem conta. Instantaneo.',
-    pricing: [['Gratis','Taxa de 0.3% nos pagamentos recebidos','Comecar →'],[null,'Pague com Lightning — ativacao instantanea','⚡ Assinar com Lightning'],[null,'Para times e APIs de alto volume','⚡ Assinar com Lightning'],[null,'Pague uma vez. Use para sempre.','⚡ Comprar acesso vitalicio']],
+    pricing: [['Gratis','0% com sua wallet · 0.3% gerenciado','Comecar →'],[null,'Pague com Lightning — ativacao instantanea','⚡ Assinar com Lightning'],[null,'Para times e APIs de alto volume','⚡ Assinar com Lightning'],[null,'Pague uma vez. Use para sempre.','⚡ Comprar acesso vitalicio']],
     faqTitle: 'Perguntas comuns',
     faq: [['Meus usuarios precisam de wallet Lightning?','Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.'],['E se a Lightning ficar fora do ar?','A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.'],['Ja esta pronto para producao?','Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.'],['Como funciona a taxa de 0.3%?','No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.'],['Posso usar sem Blink?','Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.']],
     ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.vercel.app/docs/pt/introduction">leia a documentacao &rarr;</a>',
@@ -1642,7 +1642,7 @@ function saveLightningAddress() {
   const status = document.getElementById('lnWalletStatus');
   const value = input.value.trim();
   if (!/^.+@.+\..+$/.test(value) && !/^.+@.+$/.test(value)) {
-    status.textContent = 'Invalid Lightning Address. Example: you@blink.sv';
+    status.textContent = 'Invalid Lightning Address. Example: you@yourdomain.com';
     status.style.color = '#f87171';
     return;
   }
@@ -1796,7 +1796,7 @@ function closeProModal() {
 }
 async function generateProInvoice() {
   const address = document.getElementById('proAddr').value.trim();
-  if (!address || !address.includes('@')) { alert('Please enter a valid Lightning address (e.g. you@blink.sv)'); return; }
+  if (!address || !address.includes('@')) { alert('Please enter a valid Lightning address (e.g. you@yourdomain.com)'); return; }
   const btn = document.getElementById('proGenBtn');
   btn.textContent = 'Generating\u2026'; btn.disabled = true;
   try {
