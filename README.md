@@ -274,7 +274,7 @@ Monitor every sat in real-time without leaving your editor.
 ## Get a Lightning Address (free)
 
 Sign up at **[dashboard.blink.sv](https://dashboard.blink.sv)** — free, no credit card, instant.
-Your address: `yourname@blink.sv`
+Your address: `yourname@yourdomain.com`
 
 Other wallets: [Wallet of Satoshi](https://walletofsatoshi.com) · [Phoenix](https://phoenix.acinq.co) · [Zeus](https://zeusln.app) · [Alby](https://getalby.com)
 

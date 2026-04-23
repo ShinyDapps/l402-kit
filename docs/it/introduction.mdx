@@ -53,7 +53,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // ~€0,05 per chiamata
-  ownerLightningAddress: "tu@blink.sv",     // il tuo indirizzo — riceve il 99.7%
+  ownerLightningAddress: "tu@tuodominio.com",     // il tuo indirizzo — riceve il 99.7%
 }), (_req, res) => {
   res.json({ data: "Pagamento confermato." });
 });
@@ -72,7 +72,7 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="tu@blink.sv",
+    owner_lightning_address="tu@tuodominio.com",
 )
 async def premium(request: Request):
     return {"data": "Pagamento confermato."}
@@ -93,7 +93,7 @@ async def premium(request: Request):
 ## Ottieni un Lightning Address gratuito
 
 Registrati su [dashboard.blink.sv](https://dashboard.blink.sv) — gratuito, nessuna carta di credito.
-Il tuo indirizzo sarà: `tuonome@blink.sv`
+Il tuo indirizzo sarà: `tuonome@tuodominio.com`
 
 ---
 

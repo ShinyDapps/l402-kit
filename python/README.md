@@ -125,7 +125,7 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="você@blink.sv",  # recebe 99.7% de cada pagamento
+    owner_lightning_address="você@seudominio.com",  # recebe 99.7% de cada pagamento
 )
 async def premium(request: Request):
     return {"data": "Pagamento confirmado."}
@@ -140,7 +140,7 @@ from l402kit import l402_required
 app = Flask(__name__)
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="você@blink.sv")
+@l402_required(price_sats=100, owner_lightning_address="você@seudominio.com")
 def premium():
     return jsonify({"data": "Pagamento confirmado."})
 ```
@@ -168,7 +168,7 @@ from l402kit import l402_required
 app = FastAPI()
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="tu@blink.sv")
+@l402_required(price_sats=100, owner_lightning_address="tu@tudominio.com")
 async def premium(request: Request):
     return {"data": "Pago confirmado."}
 ```
@@ -190,7 +190,7 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    owner_lightning_address="tu@blink.sv",  # riceve il 99.7% di ogni pagamento
+    owner_lightning_address="tu@tudominio.com",  # riceve il 99.7% di ogni pagamento
 )
 async def premium(request: Request):
     return {"data": "Pagamento confermato."}
@@ -205,7 +205,7 @@ from l402kit import l402_required
 app = Flask(__name__)
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="tu@blink.sv")
+@l402_required(price_sats=100, owner_lightning_address="tu@tudominio.com")
 def premium():
     return jsonify({"data": "Pagamento confermato."})
 ```
@@ -261,7 +261,7 @@ SHA256(preimage) == paymentHash
 ## Get a free Lightning Address
 
 Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card.
-Your address: `yourname@blink.sv`
+Your address: `yourname@yourdomain.com`
 
 ---
 

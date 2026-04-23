@@ -174,7 +174,7 @@ Use seu Lightning address como `ownerLightningAddress` na configuração.
 Abra o Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
-Digite o **mesmo Lightning address** que você usou na sua API (ex: `voce@blink.sv`).
+Digite o **mesmo Lightning address** que você usou na sua API (ex: `voce@seudominio.com`).
 
 > **Não tem Lightning address?** Crie grátis em [dashboard.blink.sv](https://dashboard.blink.sv) — sem cartão, instantâneo.
 
@@ -249,7 +249,7 @@ cargo add l402kit         # Rust
 Abre Command Palette (`Ctrl+Shift+P`) →
 **ShinyDapps: Configure Lightning Address**
 
-Ingresa el **mismo Lightning address** que usaste en tu API (ej: `tu@blink.sv`).
+Ingresa el **mismo Lightning address** que usaste en tu API (ej: `tu@tudominio.com`).
 
 **Paso 3 — Observa los pagos en tiempo real**
 
