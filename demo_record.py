@@ -1,15 +1,12 @@
 """
-demo_record.py — VS Code demo gravado do l402-kit.
-Usa DevProvider (sem Lightning real) para demo limpo e repetível.
+demo_record.py — VS Code demo pitch do l402-kit.
 
 Como gravar:
-  1. Abra o terminal integrado do VS Code (Ctrl+`)
-  2. Maximize a janela / use fonte grande (Ctrl+= algumas vezes)
-  3. Inicie a gravacao de tela (OBS, Xbox Game Bar Win+G, etc.)
+  1. Terminal VS Code (Ctrl+`), fonte 16+, tema escuro
+  2. Maximize a janela
+  3. Inicie gravacao (OBS / Xbox Game Bar Win+G)
   4. python demo_record.py
-  5. Pare a gravacao
-
-Duracao: ~35 segundos
+  5. Pare a gravacao (~40s)
 """
 import sys, time, hashlib, asyncio, os, json
 sys.path.insert(0, "python")
@@ -17,31 +14,45 @@ sys.path.insert(0, "python")
 from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
-from rich.text import Text
 from rich.rule import Rule
 from rich import box
 
-console = Console()
+console = Console(width=64)
 
-def pause(s=0.8):
-    time.sleep(s)
+def pause(s=0.8): time.sleep(s)
 
 async def main():
     console.clear()
-    pause(0.5)
+    pause(0.6)
 
-    # ── HEADER ────────────────────────────────────────────────────────────────
+    # ── PROBLEMA ──────────────────────────────────────────────────────────────
     console.print(Panel(
-        "[bold yellow]l402-kit[/bold yellow]  [dim]·[/dim]  [white]Bitcoin Lightning pay-per-call[/white]\n"
-        "[dim]Monetize any API in 3 lines of code — no account, no KYC[/dim]",
+        "[bold red]Stripe rejects Nigeria.[/bold red]\n"
+        "[bold red]PayPal blocks Venezuela.[/bold red]\n"
+        "[bold red]Banks freeze developer accounts.[/bold red]\n\n"
+        "[white]What if any API could accept payments\n"
+        "from anyone, anywhere — in seconds?[/white]",
+        border_style="red",
+        box=box.ROUNDED,
+        width=64,
+    ))
+    pause(2.5)
+
+    # ── SOLUCAO ───────────────────────────────────────────────────────────────
+    console.print()
+    console.print(Panel(
+        "[bold yellow]l402-kit[/bold yellow]\n\n"
+        "[white]Bitcoin Lightning pay-per-call.\n"
+        "3 lines of code. Zero KYC. Zero account.\n"
+        "Works in 180+ countries.[/white]",
         border_style="yellow",
         box=box.ROUNDED,
-        width=62,
+        width=64,
     ))
-    pause(1.2)
+    pause(2.0)
 
-    # ── SERVER CODE ───────────────────────────────────────────────────────────
-    console.print("\n[bold dim]# 1. Protect your endpoint[/bold dim]")
+    # ── SERVER ────────────────────────────────────────────────────────────────
+    console.print(Rule("[dim]server — 3 lines[/dim]", style="dim"))
     pause(0.5)
 
     console.print(Syntax("""\
@@ -50,103 +61,82 @@ from l402kit.providers.blink import BlinkProvider
 
 lightning = BlinkProvider(api_key="...", wallet_id="...")
 
-@app.get("/btc-price")
-@l402_required(price_sats=1, lightning=lightning)
-async def btc_price(request: Request):
-    return {"price": get_price()}""",
-        "python", theme="monokai"))
-    pause(1.8)
+@app.get("/data")
+@l402_required(price_sats=10, lightning=lightning)
+async def data(request: Request):
+    return {"result": "premium content"}""",
+        "python", theme="monokai", padding=(0, 1)))
+    pause(2.0)
 
-    # ── CLIENT CODE ───────────────────────────────────────────────────────────
-    console.print("\n[bold dim]# 2. Client pays automatically[/bold dim]")
+    # ── CLIENT ────────────────────────────────────────────────────────────────
+    console.print(Rule("[dim]client — 1 line[/dim]", style="dim"))
     pause(0.5)
 
     console.print(Syntax("""\
-from l402kit import L402Client
-from l402kit.wallets import BlinkWallet
-
 client = L402Client(wallet=BlinkWallet(api_key="...", wallet_id="..."))
-data = client.get("https://api.example.com/btc-price").json()""",
-        "python", theme="monokai"))
-    pause(1.8)
+data   = client.get("https://api.example.com/data").json()
+# pays automatically via Lightning. No code changes needed.""",
+        "python", theme="monokai", padding=(0, 1)))
+    pause(2.0)
 
-    # ── RUNNING ───────────────────────────────────────────────────────────────
-    console.print("\n[bold green]$ python client.py[/bold green]")
-    pause(0.6)
-
-    console.print("[dim]  GET  /btc-price[/dim]")
+    # ── LIVE FLOW ─────────────────────────────────────────────────────────────
+    console.print(Rule("[dim]live — payment flow[/dim]", style="dim"))
     pause(0.5)
-    console.print("[yellow]  402  Payment Required[/yellow]  [dim]lnbc10n1p574...[/dim]")
-    pause(0.8)
-    console.print("[dim]  paying 1 sat via Lightning...[/dim]", end="")
 
-    # Simulate crypto (real SHA256)
+    steps = [
+        ("dim",    "  GET  /data"),
+        ("yellow", "  402  Payment Required   [dim]lnbc10n1p574...[/dim]"),
+        ("dim",    "       wallet pays 10 sat via Lightning..."),
+    ]
+    for style, text in steps:
+        console.print(f"[{style}]{text}[/{style}]")
+        pause(0.7)
+
+    # Simulate real SHA256
     preimage = os.urandom(32).hex()
-    payment_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
-    for _ in range(3):
-        time.sleep(0.4)
-        console.print("[dim].[/dim]", end="")
-    console.print()
-
-    console.print(f"[dim]  preimage : {preimage[:20]}...[/dim]")
+    ph = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+    console.print(f"[dim]       preimage : {preimage[:18]}...[/dim]")
     pause(0.3)
-    console.print(f"[dim]  SHA256   : {payment_hash[:20]}... [/dim][bold green]OK[/bold green]")
+    console.print(f"[dim]       SHA256   : {ph[:18]}...[/dim] [bold green]OK[/bold green]")
     pause(0.5)
-    console.print("[dim]  GET  /btc-price  Authorization: L402 eyJ...[/dim]")
+    console.print("[dim]  GET  /data  Authorization: L402 eyJ...[/dim]")
     pause(0.6)
     console.print("[bold green]  200  OK[/bold green]")
     pause(0.3)
-
-    result = {"usd": 94_832, "eur": 87_241, "gbp": 74_510, "sats_paid": 1, "protocol": "L402"}
-    console.print(Syntax(json.dumps(result, indent=2), "json", theme="monokai"))
-    pause(1.5)
+    console.print(Syntax(
+        json.dumps({"result": "premium content", "sats_paid": 10, "protocol": "L402"}, indent=2),
+        "json", theme="monokai", padding=(0, 1)))
+    pause(1.8)
 
     # ── VSCODE EXTENSION ──────────────────────────────────────────────────────
-    console.print(Rule("[bold yellow]VS Code Extension[/bold yellow]", style="yellow"))
-    pause(0.6)
+    console.print(Rule("[dim]VS Code Extension[/dim]", style="dim"))
+    pause(0.5)
 
     console.print(Panel(
         "[bold]ShinyDapps.shinydapps-l402[/bold]\n\n"
-        "  [green]>[/green]  l402-kit: Generate L402 snippet    [dim]Ctrl+Shift+P[/dim]\n"
-        "  [green]>[/green]  l402-kit: Test endpoint            [dim]Ctrl+Shift+P[/dim]\n"
-        "  [green]>[/green]  l402-kit: Show payment stats       [dim]Ctrl+Shift+P[/dim]\n\n"
-        "[dim]  Installs the decorator + provider in 1 click[/dim]",
-        title="[yellow]Command Palette[/yellow]",
+        "  [green]>[/green]  l402-kit: Add to endpoint       [dim]1 click[/dim]\n"
+        "  [green]>[/green]  l402-kit: Test payment flow     [dim]1 click[/dim]\n"
+        "  [green]>[/green]  l402-kit: Open payment stats    [dim]1 click[/dim]",
         border_style="dim",
         box=box.ROUNDED,
-        width=62,
+        width=64,
     ))
-    pause(1.2)
+    pause(1.8)
 
-    console.print("\n[dim]  Generating snippet...[/dim]")
-    pause(0.8)
-    console.print(Syntax("""\
-# Generated by l402-kit VS Code Extension
-from l402kit import l402_required
-from l402kit.providers.blink import BlinkProvider
-
-lightning = BlinkProvider(
-    api_key=os.environ["BLINK_API_KEY"],
-    wallet_id=os.environ["BLINK_WALLET_ID"],
-)
-
-@app.get("/your-endpoint")
-@l402_required(price_sats=10, lightning=lightning)
-async def your_endpoint(request: Request):
-    return {"data": "premium content"}""",
-        "python", theme="monokai"))
-    pause(1.5)
-
-    # ── FOOTER ────────────────────────────────────────────────────────────────
+    # ── FECHAMENTO ────────────────────────────────────────────────────────────
     console.print()
     console.print(Panel(
-        "[bold white]3 lines of code.[/bold white] Any API. Any Lightning wallet.\n"
-        "0% fees in sovereign mode — payments go straight to your wallet.\n\n"
-        "[yellow]pip install l402kit[/yellow]   [dim]·[/dim]   [yellow]npm install l402-kit[/yellow]   [dim]·[/dim]   [yellow]l402kit.com[/yellow]",
-        border_style="green",
+        "[bold white]No bank. No KYC. No Stripe.[/bold white]\n"
+        "[bold white]Pure Bitcoin. Pure Lightning.[/bold white]\n\n"
+        "[dim]Sovereign mode: 0% fee — payments go straight to your wallet.\n"
+        "Any wallet. Any country. Any API.[/dim]\n\n"
+        "[yellow]pip install l402kit[/yellow]   [dim]·[/dim]   "
+        "[yellow]npm install l402-kit[/yellow]   [dim]·[/dim]   "
+        "[yellow bold]l402kit.com[/yellow bold]",
+        border_style="yellow",
         box=box.DOUBLE,
-        width=62,
+        width=64,
     ))
-    pause(2.5)
+    pause(3.0)
 
 asyncio.run(main())
