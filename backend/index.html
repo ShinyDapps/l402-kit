@@ -866,12 +866,12 @@ lightning = <span class="c-fn">BlinkProvider</span>(
       <div style="position:absolute;top:0;right:0;width:60%;height:100%;background:radial-gradient(ellipse 80% 90% at 100% 50%,rgba(247,147,26,.06),transparent);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
-          <span style="font-size:10px;font-weight:700;color:rgba(247,147,26,.7);text-transform:uppercase;letter-spacing:2px">⚡ Try it live</span>
+          <span style="font-size:10px;font-weight:700;color:rgba(247,147,26,.7);text-transform:uppercase;letter-spacing:2px">⚡ Donate</span>
           <button id="donateRunBtn" onclick="donateRun()"
                   style="padding:9px 20px;background:var(--orange);border:none;color:#000;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s">▶ Run</button>
         </div>
-        <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px">Pay 1 sat. Watch the L402 protocol happen.</h3>
-        <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:20px;max-width:540px">This is real. Click ▶ Run — you get a live BOLT11 invoice. Pay from any Lightning wallet. The protocol completes and you see <strong style="color:#ccc">200 OK</strong> with the BTC price. No account. No friction.</p>
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px">Donate 1 sat to l402-kit ⚡</h3>
+        <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:20px;max-width:540px">Click ▶ Run — you get a real BOLT11 invoice. Pay 1 sat from any Lightning wallet and watch the full L402 flow happen live: <strong style="color:#ccc">402 → invoice → pay → 200 OK</strong>. No account. No friction.</p>
 
         <!-- Terminal -->
         <div style="background:#0d1117;border:1px solid #21262d;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5)">
@@ -2743,14 +2743,9 @@ function animateValue(id, start, end, duration) {
     // Show QR + copy
     document.getElementById('donateInvoiceBox').textContent = _invoice;
     document.getElementById('donateInvoiceArea').style.display = '';
-    if (window.QRCode) {
-      try {
-        var cv = document.createElement('canvas');
-        QRCode.toCanvas(cv, _invoice.toUpperCase(), { width: 160, margin: 2, color: { dark:'#000', light:'#fff' } }, function(err) {
-          if (!err) document.getElementById('donateQrImg').src = cv.toDataURL();
-        });
-      } catch(_) {}
-    }
+    document.getElementById('donateQrImg').src =
+      'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' +
+      encodeURIComponent(_invoice.toUpperCase());
 
     // Poll for payment
     _pollTimer = setInterval(async function() {
