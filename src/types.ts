@@ -29,7 +29,7 @@ export interface L402Options {
    * @example
    * ```ts
    * import { AlbyProvider } from "l402-kit";
-   * { lightning: new AlbyProvider(process.env.ALBY_TOKEN) }
+   * { lightning: new AlbyProvider(process.env.ALBY_ACCESS_TOKEN!, process.env.ALBY_HUB_URL!) }
    * ```
    */
   lightning: LightningProvider;

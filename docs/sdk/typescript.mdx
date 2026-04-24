@@ -15,15 +15,19 @@ npm install l402-kit
 
 ## Quickstart
 
-Pick a Lightning provider and add the middleware. Three lines.
-
+<Tabs>
+  <Tab title="Sovereign (0% fee)">
 ```typescript
 import express from 'express';
-import { l402, AlbyProvider } from 'l402-kit';
+import { l402, BlinkProvider } from 'l402-kit';
 
 const app = express();
 
-const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+// Payments go directly to your Blink wallet — 0% fee
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
 
 app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
   res.json({ data: 'premium content' });
@@ -31,6 +35,25 @@ app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
 
 app.listen(3000);
 ```
+  </Tab>
+  <Tab title="Managed (no node needed)">
+```typescript
+import express from 'express';
+import { l402, ManagedProvider } from 'l402-kit';
+
+const app = express();
+
+// l402kit.com hosts the node. You receive 99.7% of each payment.
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+</Tabs>
 
 ---
 
@@ -88,7 +111,12 @@ WWW-Authenticate: L402 macaroon="eyJ...", invoice="lnbc..."
 ```typescript
 import { AlbyProvider } from 'l402-kit';
 
-const lightning = new AlbyProvider(process.env.ALBY_TOKEN!); // getalby.com → API tokens
+// 1. Create an Alby Hub at hub.getalby.com (or self-host)
+// 2. Settings → Access Tokens → create token (scopes: invoices:create, invoices:read)
+const lightning = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!, // Hub access token
+  process.env.ALBY_HUB_URL!,      // e.g. "https://your-name.getalby.com"
+);
 ```
 
 ### `BTCPayProvider` — self-hosted, zero trust
@@ -317,6 +345,27 @@ interface LightningProvider {
   checkPayment(paymentHash: string): Promise<boolean>;
 }
 ```
+
+---
+
+## Verification timing
+
+Token verification runs `SHA256(preimage) == paymentHash` in memory — **sub-millisecond, no network call** on the hot path.
+
+The in-memory `ReplayAdapter` (default) also runs synchronously. If you use `RedisReplayAdapter`, add a **5–50 ms** Redis round-trip per request. Plan capacity accordingly for high-frequency endpoints.
+
+---
+
+## x402 compatibility (`X-Payment` header)
+
+The middleware silently accepts the `X-Payment` header (used by Coinbase's [x402 protocol](https://x402.org)) in addition to the standard `Authorization: L402 …` header. Both are treated identically — useful if you want to serve clients that speak either protocol.
+
+```typescript
+// Client using x402 header — handled transparently
+// X-Payment: <macaroon>:<preimage>
+```
+
+No configuration needed; it is always enabled.
 
 ---
 

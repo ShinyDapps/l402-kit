@@ -36,6 +36,10 @@ async def get_data(request: Request):
     return {"data": "premium content"}
 ```
 
+<Note>
+**Managed mode** (l402kit.com hosts the node, 0.3% fee) is available in the [TypeScript SDK](/sdk/typescript). Python sovereign mode has no fee — payments go directly to your wallet.
+</Note>
+
 ---
 
 ## Flask
@@ -61,6 +65,10 @@ def get_data():
 if __name__ == "__main__":
     app.run(port=3000)
 ```
+
+<Warning>
+**Flask + Gunicorn with gevent/eventlet workers**: `l402_required` calls the async Lightning provider from a sync Flask handler. If your Gunicorn worker uses gevent or eventlet monkey-patching (which creates a running event loop), the decorator detects this automatically and runs the async call in a dedicated thread — no action needed. Standard Gunicorn sync workers and uvicorn (FastAPI) are unaffected.
+</Warning>
 
 ---
 

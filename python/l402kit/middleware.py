@@ -76,7 +76,34 @@ def l402_required(price_sats: int, lightning: LightningProvider):
                     else:
                         return jsonify({"error": "Token already used"}), 401
 
-            invoice = asyncio.run(lightning.create_invoice(price_sats))
+            # asyncio.run() fails when called from inside a running event loop
+            # (e.g. Gunicorn + gevent/eventlet workers, pytest-asyncio). Detect
+            # and fall back to a fresh thread with its own loop.
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+            if loop and loop.is_running():
+                import concurrent.futures, threading
+                result_box: list = [None]
+                exc_box: list = [None]
+                def _run() -> None:
+                    new_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(new_loop)
+                    try:
+                        result_box[0] = new_loop.run_until_complete(lightning.create_invoice(price_sats))
+                    except Exception as e:
+                        exc_box[0] = e
+                    finally:
+                        new_loop.close()
+                t = threading.Thread(target=_run, daemon=True)
+                t.start()
+                t.join()
+                if exc_box[0]:
+                    raise exc_box[0]
+                invoice = result_box[0]
+            else:
+                invoice = asyncio.run(lightning.create_invoice(price_sats))
             resp = make_response(
                 jsonify({
                     "error": "Payment Required",
