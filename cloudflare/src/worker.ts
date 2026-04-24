@@ -24,6 +24,21 @@ export interface Env {
   demo_preimages: KVNamespace;
 }
 
+const MINTLIFY = "https://shinydapps-bd9fa40b.mintlify.app";
+
+async function handleDocsProxy(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const mintPath = url.pathname.replace(/^\/docs/, "") || "/";
+  const target = `${MINTLIFY}${mintPath}${url.search}`;
+  const res = await fetch(new Request(target, { method: request.method, headers: request.headers, redirect: "follow" }));
+  const ct = res.headers.get("content-type") ?? "";
+  if (ct.includes("text/html")) {
+    const body = (await res.text()).replaceAll(MINTLIFY, "https://l402kit.com/docs");
+    return new Response(body, { status: res.status, headers: res.headers });
+  }
+  return res;
+}
+
 function cors(res: Response): Response {
   const h = new Headers(res.headers);
   h.set("Access-Control-Allow-Origin", "*");
@@ -58,6 +73,7 @@ export default {
       else if (path === "/api/dev-stats")       res = await handleDevStats(request, env);
       else if (path === "/api/badges/tests")   res = handleBadgeTests();
       else if (path === "/api/pro-check")      res = await handleProCheck(request, env);
+      else if (path.startsWith("/docs"))       return await handleDocsProxy(request);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     } catch (err) {
       res = new Response(JSON.stringify({ error: String(err) }), { status: 500 });
