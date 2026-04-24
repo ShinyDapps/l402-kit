@@ -8,7 +8,7 @@ import { handleLnurlAuth }  from "./api/lnurl-auth";
 import { handleLnurlp }     from "./api/lnurlp";
 import { handleBlinkHook }  from "./api/blink-webhook";
 import { handleDeleteData } from "./api/delete-data";
-import { handleDevStats }   from "./api/dev-stats";
+import { handleDevStats, handleBadgeTests } from "./api/dev-stats";
 import { handleProCheck }   from "./api/pro-check";
 
 export interface Env {
@@ -54,8 +54,9 @@ export default {
       else if (path.startsWith("/.well-known/lnurlp/")) res = await handleLnurlp(request, env);
       else if (path === "/api/blink-webhook") res = await handleBlinkHook(request, env);
       else if (path === "/api/delete-data")   res = await handleDeleteData(request, env);
-      else if (path === "/api/dev-stats")     res = await handleDevStats(request, env);
-      else if (path === "/api/pro-check")     res = await handleProCheck(request, env);
+      else if (path === "/api/dev-stats")       res = await handleDevStats(request, env);
+      else if (path === "/api/badges/tests")   res = handleBadgeTests();
+      else if (path === "/api/pro-check")      res = await handleProCheck(request, env);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     } catch (err) {
       res = new Response(JSON.stringify({ error: String(err) }), { status: 500 });

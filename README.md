@@ -11,7 +11,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.com/demo)
-[![392 tests](https://img.shields.io/badge/tests-392_passing-22c55e)](https://github.com/ShinyDapps/l402-kit)
+[![Tests](https://img.shields.io/endpoint?url=https://l402kit.com/api/badges/tests)](https://github.com/ShinyDapps/l402-kit)
 
 <br/>
 
