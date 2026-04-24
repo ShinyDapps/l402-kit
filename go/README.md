@@ -2,8 +2,8 @@
 
 **Add Bitcoin Lightning pay-per-call to any Go API. 3 lines of code.**
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/shinydapps/l402-kit/go.svg)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/shinydapps/l402-kit/go)](https://goreportcard.com/report/github.com/shinydapps/l402-kit/go)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ShinyDapps/l402-kit/go.svg)](https://pkg.go.dev/github.com/ShinyDapps/l402-kit/go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ShinyDapps/l402-kit/go)](https://goreportcard.com/report/github.com/ShinyDapps/l402-kit/go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ShinyDapps/l402-kit/blob/main/LICENSE)
 
 L402 (HTTP 402 + Lightning Network) middleware for Go. Works with `net/http`, Chi, Gin.
@@ -13,7 +13,7 @@ L402 (HTTP 402 + Lightning Network) middleware for Go. Works with `net/http`, Ch
 ## Install
 
 ```bash
-go get github.com/shinydapps/l402-kit/go@v1.0.2
+go get github.com/ShinyDapps/l402-kit/go@v1.0.2
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ import (
     "fmt"
     "net/http"
 
-    l402kit "github.com/shinydapps/l402-kit/go"
+    l402kit "github.com/ShinyDapps/l402-kit/go"
 )
 
 func main() {

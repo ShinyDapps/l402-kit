@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	l402kit "github.com/shinydapps/l402-kit/go"
+	l402kit "github.com/ShinyDapps/l402-kit/go"
 )
 
 func main() {

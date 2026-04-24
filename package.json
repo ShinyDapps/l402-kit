@@ -16,7 +16,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "jest --passWithNoTests",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "deploy:landing": "bash scripts/deploy-landing.sh",
+    "smoke": "bash tests/smoke.sh"
   },
   "keywords": [
     "l402",

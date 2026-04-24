@@ -12,6 +12,7 @@ import { handleDevStats, handleBadgeTests } from "./api/dev-stats";
 import { handleProCheck }   from "./api/pro-check";
 import { handleProPoll }    from "./api/pro-poll";
 import { handleGlobalStats } from "./api/global-stats";
+import { handleProSubscribe } from "./api/pro-subscribe";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -28,17 +29,11 @@ export interface Env {
 
 const MINTLIFY = "https://shinydapps-bd9fa40b.mintlify.app";
 
-async function handleDocsProxy(request: Request): Promise<Response> {
+function handleDocsRedirect(request: Request): Response {
   const url = new URL(request.url);
-  const mintPath = url.pathname.replace(/^\/docs/, "") || "/";
+  const mintPath = url.pathname.replace(/^\/docs/, "") || "/introduction";
   const target = `${MINTLIFY}${mintPath}${url.search}`;
-  const res = await fetch(new Request(target, { method: request.method, headers: request.headers, redirect: "follow" }));
-  const ct = res.headers.get("content-type") ?? "";
-  if (ct.includes("text/html")) {
-    const body = (await res.text()).replaceAll(MINTLIFY, "https://l402kit.com/docs");
-    return new Response(body, { status: res.status, headers: res.headers });
-  }
-  return res;
+  return Response.redirect(target, 302);
 }
 
 function cors(res: Response): Response {
@@ -77,7 +72,8 @@ export default {
       else if (path === "/api/pro-check")      res = await handleProCheck(request, env);
       else if (path === "/api/pro-poll")       res = await handleProPoll(request, env);
       else if (path === "/api/global-stats")   res = await handleGlobalStats(request, env);
-      else if (path.startsWith("/docs"))       return await handleDocsProxy(request);
+      else if (path === "/api/pro-subscribe")  res = await handleProSubscribe(request, env);
+      else if (path.startsWith("/docs"))       return handleDocsRedirect(request);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     } catch (err) {
       res = new Response(JSON.stringify({ error: String(err) }), { status: 500 });
