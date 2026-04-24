@@ -14,7 +14,6 @@ function makeEvent(overrides: Partial<WebhookEvent> = {}): WebhookEvent {
       amountSats: 100,
       preimage: randomBytes(32).toString("hex"),
       paymentHash: randomBytes(32).toString("hex"),
-      ownerAddress: "you@yourdomain.com",
     },
     ...overrides,
   };
@@ -77,7 +76,7 @@ describe("verifyWebhook", () => {
 
   it("throws on tampered body", () => {
     const { sig } = validRequest();
-    const tamperedBody = JSON.stringify(makeEvent({ data: { endpoint: "/evil", amountSats: 999999, preimage: "x", paymentHash: "y", ownerAddress: "attacker@evil.com" } }));
+    const tamperedBody = JSON.stringify(makeEvent({ data: { endpoint: "/evil", amountSats: 999999, preimage: "x", paymentHash: "y" } }));
     expect(() => verifyWebhook(SECRET, tamperedBody, sig)).toThrow("signature mismatch");
   });
 

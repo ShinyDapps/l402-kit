@@ -1,5 +1,5 @@
 use axum::{middleware, routing::get, Router};
-use l402kit::{l402_middleware, Options};
+use l402kit::{l402_middleware, ManagedProvider, Options};
 use std::sync::Arc;
 
 async fn data_handler() -> &'static str {
@@ -9,7 +9,7 @@ async fn data_handler() -> &'static str {
 #[tokio::main]
 async fn main() {
     let opts = Arc::new(
-        Options::new(10).with_address("you@blink.sv"),
+        Options::new(10, ManagedProvider::new("you@blink.sv".into())),
     );
 
     let app = Router::new()

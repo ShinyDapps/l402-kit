@@ -1,4 +1,4 @@
-# l402kit — Rust SDK
+﻿# l402kit — Rust SDK
 
 **Add Bitcoin Lightning pay-per-call to any Rust API. 3 lines of code.**
 
@@ -9,7 +9,7 @@
 
 L402 (HTTP 402 + Lightning Network) middleware for Rust. Supports **axum**.
 
-📖 **Docs:** [l402kit.vercel.app/docs/sdk/rust](https://l402kit.com/docs/sdk/rust)
+📖 **Docs:** [l402kit.com/docs/sdk/rust](https://l402kit.com/docs/sdk/rust)
 
 ## Install
 

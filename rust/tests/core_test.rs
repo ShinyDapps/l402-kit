@@ -332,7 +332,7 @@ mod middleware_tests {
 
     fn test_app() -> Router {
         let opts = Arc::new(
-            Options::new(10).with_provider(Arc::new(MockProvider)),
+            Options::new(10, Arc::new(MockProvider)),
         );
         Router::new()
             .route("/api/data", get(|| async { "ok" }))

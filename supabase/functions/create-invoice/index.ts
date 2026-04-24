@@ -3,7 +3,7 @@
  *
  * Cria invoice Lightning via Blink API.
  * BLINK_API_KEY e BLINK_WALLET_ID ficam em Supabase Secrets — nunca saem daqui.
- * Vercel chama esta função com a anon key (sem expor credenciais do Blink).
+ * Cloudflare Workers chama esta função com a anon key (sem expor credenciais do Blink).
  *
  * Deploy:
  *   supabase functions deploy create-invoice --no-verify-jwt

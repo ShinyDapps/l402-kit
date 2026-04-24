@@ -68,7 +68,7 @@ create index if not exists lnurl_challenges_exp_idx   on lnurl_challenges (expir
 alter table lnurl_challenges enable row level security;
 
 -- Apenas service role lê/escreve: desafios contêm tokens sensíveis.
--- O backend Vercel usa SUPABASE_SERVICE_KEY para todas as operações.
+-- O backend Cloudflare Workers usa SUPABASE_SERVICE_KEY para todas as operações.
 create policy if not exists "service_full_challenges" on lnurl_challenges
   for all to service_role using (true);
 
@@ -97,7 +97,7 @@ create policy if not exists "service_full_challenges" on lnurl_challenges
 --   supabase secrets set BLINK_API_KEY=<sua-key> BLINK_WALLET_ID=<seu-wallet-id>
 --
 -- Após o deploy:
---   - Remova L402KIT_BLINK_API_KEY e L402KIT_BLINK_WALLET_ID do Vercel
---   - Adicione SUPABASE_ANON_KEY ao Vercel (necessário para chamar a Edge Function)
---   - Adicione OWNER_PUBKEY ao Vercel (pubkey secp256k1 da sua Lightning wallet)
+--   - Remova L402KIT_BLINK_API_KEY e L402KIT_BLINK_WALLET_ID do Cloudflare Workers
+--   - Adicione SUPABASE_ANON_KEY ao Cloudflare Workers (necessário para chamar a Edge Function)
+--   - Adicione OWNER_PUBKEY ao Cloudflare Workers (pubkey secp256k1 da sua Lightning wallet)
 --     → Faça um LNURL-auth teste e copie o campo 'pubkey' da tabela lnurl_challenges

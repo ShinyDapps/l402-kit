@@ -1,10 +1,10 @@
-"""make_gif.py — demo.gif com typewriter, cursor piscando e transicoes."""
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import os, math
+"""make_gif.py — demo.gif com ilustrações PIL, países reais, robôs e Lightning."""
+from PIL import Image, ImageDraw, ImageFont
+import os
 
-W, H  = 860, 480
-BG    = "#0d1117"
-PAD   = 60
+W, H = 860, 480
+BG   = (13, 17, 23)
+PAD  = 50
 
 def font(size):
     for p in ["C:/Windows/Fonts/CascadiaCode.ttf",
@@ -15,30 +15,30 @@ def font(size):
             except: pass
     return ImageFont.load_default()
 
-F_HUGE  = font(38)
+F_HUGE  = font(42)
 F_BIG   = font(26)
-F_MED   = font(18)
-F_SMALL = font(14)
-F_CODE  = font(15)
+F_MED   = font(17)
+F_SMALL = font(13)
+F_CODE  = font(14)
 
-COLORS = dict(
-    fg="#e6edf3", dim="#6e7681", green="#3fb950",
-    yellow="#d29922", red="#f85149", blue="#79c0ff",
-    orange="#ffa657",
+C = dict(
+    fg=(230, 237, 243), dim=(110, 118, 129), green=(63, 185, 80),
+    yellow=(210, 153, 34), red=(248, 81, 73), blue=(121, 192, 255),
+    orange=(255, 166, 87), purple=(188, 140, 255), bg=BG,
 )
 
 def img():
     i = Image.new("RGB", (W, H), BG)
     return i, ImageDraw.Draw(i)
 
-def cw(text, f): return int(f.getlength(text))
+def cw(text, f):
+    return int(f.getlength(text))
 
 def center(d, y, text, color, f):
     d.text(((W - cw(text, f)) / 2, y), text, fill=color, font=f)
-    return y + f.size + 14
+    return y + f.size + 12
 
 def fade(img_a, img_b, steps=5):
-    """Fade de img_a para img_b."""
     frames = []
     for k in range(steps):
         t = k / steps
@@ -46,116 +46,150 @@ def fade(img_a, img_b, steps=5):
         frames.append((f, 80))
     return frames
 
-def blink_cursor(base_img, x, y, f, n=4):
-    """Cursor piscando n vezes."""
-    frames = []
-    ch = f.size
-    for k in range(n * 2):
-        fi = base_img.copy()
-        if k % 2 == 0:
-            ImageDraw.Draw(fi).rectangle([x, y+2, x+2, y+ch-2], fill=COLORS["green"])
-        frames.append((fi, 250))
-    return frames
+def blend_color(color, alpha, bg=BG):
+    """Simula transparência misturando com BG."""
+    return tuple(int(bg[i] + (color[i] - bg[i]) * alpha) for i in range(3))
 
-def typewriter(base_fn, lines_cfg, start_y, line_h, hold_ms=120):
-    """
-    Anima linhas aparecendo uma a uma, caractere por caractere.
-    lines_cfg = list of (text, color, font)
-    Retorna lista de (Image, duration_ms).
-    """
-    frames = []
-    drawn = []  # linhas ja completas
+# ── Ilustrações PIL ───────────────────────────────────────────────────────────
 
-    for line_text, color, f in lines_cfg:
-        # Linha vazia — so pausa
-        if not line_text.strip():
-            img_cur = base_fn(drawn + [(line_text, color, f)])
-            frames.append((img_cur, hold_ms * 2))
-            drawn.append((line_text, color, f))
-            continue
+def draw_lock(d, cx, cy, color, size=30):
+    bw, bh = size, int(size * 0.85)
+    bx, by = cx - bw//2, cy
+    d.rounded_rectangle([bx, by, bx+bw, by+bh], radius=4, fill=color)
+    sw = int(size * 0.55)
+    sx = cx - sw//2
+    sy = cy - int(size * 0.55)
+    d.arc([sx, sy, sx+sw, cy+6], start=180, end=0, fill=color, width=4)
+    kx, ky = cx, by + bh//2 - 2
+    d.ellipse([kx-4, ky-4, kx+4, ky+4], fill=BG)
+    d.rectangle([kx-2, ky+2, kx+2, ky+10], fill=BG)
 
-        # Aparece caractere por caractere
-        for ci in range(1, len(line_text) + 1):
-            partial = line_text[:ci]
-            img_cur = base_fn(drawn + [(partial, color, f)])
-            frames.append((img_cur, hold_ms))
-
-        drawn.append((line_text, color, f))
-
-    # Pausa no final com todas as linhas
-    img_final = base_fn(drawn)
-    frames.append((img_final, 2500))
-    return frames
-
-# ── Cena 1: PROBLEMA ──────────────────────────────────────────────────────────
-def render_problem(lines):
-    i, d = img()
-    y = 110
-    texts = [
-        ("Stripe rejects Nigeria.",     COLORS["red"],  F_BIG),
-        ("PayPal blocks Venezuela.",    COLORS["red"],  F_BIG),
-        ("Banks freeze your account.",  COLORS["red"],  F_BIG),
-        ("",                            COLORS["dim"],  F_MED),
-        ("There's a better way.",       COLORS["fg"],   F_MED),
+def draw_lightning(d, cx, cy, color, size=60):
+    s = size
+    pts = [
+        (cx + s*0.08,  cy - s*0.50),
+        (cx - s*0.12,  cy + s*0.04),
+        (cx + s*0.04,  cy + s*0.04),
+        (cx - s*0.08,  cy + s*0.50),
+        (cx + s*0.18,  cy + s*0.02),
+        (cx + s*0.04,  cy + s*0.02),
+        (cx + s*0.22,  cy - s*0.50),
     ]
-    for text, color, f in texts[:len(lines)]:
-        y = center(i.convert("RGB") and d and d, y, text, color, f)
-    return i
+    d.polygon([(int(x), int(y)) for x, y in pts], fill=color)
+
+def draw_robot(d, cx, cy, body_color, sz=1.0):
+    """Robô geométrico desenhado com PIL."""
+    ec = BG  # eye/detail color
+    # antena
+    d.line([(cx, cy - int(88*sz)), (cx, cy - int(72*sz))], fill=body_color, width=3)
+    d.ellipse([cx-5, cy-int(96*sz), cx+5, cy-int(86*sz)], fill=body_color)
+    # cabeça
+    hw, hh = int(44*sz), int(34*sz)
+    hx, hy = cx - hw//2, cy - int(72*sz)
+    d.rounded_rectangle([hx, hy, hx+hw, hy+hh], radius=6, fill=body_color)
+    # olhos
+    ew = int(9*sz)
+    d.rectangle([hx+7, hy+8, hx+7+ew, hy+8+ew], fill=ec)
+    d.rectangle([hx+hw-7-ew, hy+8, hx+hw-7, hy+8+ew], fill=ec)
+    # boca
+    d.line([(hx+10, hy+hh-8), (hx+hw-10, hy+hh-8)], fill=ec, width=2)
+    # corpo
+    bw, bh = int(54*sz), int(46*sz)
+    bx, by = cx - bw//2, cy - int(36*sz)
+    d.rounded_rectangle([bx, by, bx+bw, by+bh], radius=5, fill=body_color)
+    # luz no peito
+    d.ellipse([cx-6, by+8, cx+6, by+20], fill=ec)
+    # braços
+    aw, ah = int(11*sz), int(28*sz)
+    d.rounded_rectangle([bx-aw-3, by+5, bx-3, by+5+ah], radius=4, fill=body_color)
+    d.rounded_rectangle([bx+bw+3, by+5, bx+bw+3+aw, by+5+ah], radius=4, fill=body_color)
+    # pernas
+    lw, lh = int(17*sz), int(26*sz)
+    d.rounded_rectangle([cx-lw-4, by+bh+1, cx-4, by+bh+1+lh], radius=4, fill=body_color)
+    d.rounded_rectangle([cx+4, by+bh+1, cx+4+lw, by+bh+1+lh], radius=4, fill=body_color)
+
+def draw_terminal_frame(d, x, y, w, h):
+    d.rounded_rectangle([x, y, x+w, y+h], radius=6, fill=(22, 27, 34), outline=(48, 54, 61), width=1)
+    d.rounded_rectangle([x, y, x+w, y+20], radius=6, fill=(33, 38, 45))
+    d.rectangle([x, y+14, x+w, y+20], fill=(33, 38, 45))
+    for i, c in enumerate([C["red"], C["yellow"], C["green"]]):
+        d.ellipse([x+10+i*16, y+5, x+18+i*16, y+13], fill=c)
+
+# ── Cena 1: PROBLEMA — países reais ──────────────────────────────────────────
+
+EVENTS = [
+    ("Russia,    2022", "Visa & Mastercard left overnight. 140M people cut off."),
+    ("Nigeria,   2021", "CBN banned crypto banking. Accounts frozen without notice."),
+    ("Lebanon,   2019", "Banks locked everyone out. No withdrawals allowed."),
+    ("Venezuela",       "PayPal blocked. Stripe never came. 1,000,000% inflation."),
+    ("Argentina",       "Capital controls. Can't send $1 abroad."),
+]
 
 def scene_problem():
     frames = []
-    texts = [
-        ("Stripe rejects Nigeria.",     COLORS["red"],  F_BIG),
-        ("PayPal blocks Venezuela.",    COLORS["red"],  F_BIG),
-        ("Banks freeze your account.",  COLORS["red"],  F_BIG),
-        ("",                            COLORS["dim"],  F_MED),
-        ("There's a better way.",       COLORS["fg"],   F_MED),
-    ]
-    for n in range(1, len(texts) + 1):
+    # Aparece um país por vez
+    for n in range(1, len(EVENTS) + 1):
         fi, d = img()
-        y = 110
-        for text, color, f in texts[:n]:
-            if text:
-                d.text(((W - cw(text, f)) / 2, y), text, fill=color, font=f)
-            y += (f.size + 14)
-        ms = 1500 if n == len(texts) else 800
+        d.text((PAD, 18), "Traditional finance fails billions.", fill=C["dim"], font=F_SMALL)
+        y = 50
+        for i, (country, desc) in enumerate(EVENTS[:n]):
+            cx_lock = PAD - 28
+            draw_lock(d, cx_lock, y + 2, C["red"], size=20)
+            d.text((PAD, y), country, fill=C["red"], font=F_BIG)
+            d.text((PAD + 230, y + 4), desc, fill=C["dim"], font=F_MED)
+            y += F_BIG.size + 14
+        ms = 1800 if n == len(EVENTS) else 900
         frames.append((fi, ms))
+
+    # Frame final: "l402-kit works in all of them."
+    fi, d = img()
+    d.text((PAD, 18), "Traditional finance fails billions.", fill=C["dim"], font=F_SMALL)
+    y = 50
+    for country, desc in EVENTS:
+        cx_lock = PAD - 28
+        draw_lock(d, cx_lock, y + 2, C["dim"], size=20)
+        d.text((PAD, y), country, fill=blend_color(C["red"], 0.4), font=F_BIG)
+        d.text((PAD + 230, y + 4), desc, fill=blend_color(C["dim"], 0.5), font=F_MED)
+        y += F_BIG.size + 14
+    sol = "l402-kit works in all of them."
+    center(d, y + 10, sol, C["green"], F_BIG)
+    frames.append((fi, 2500))
     return frames
 
 # ── Cena 2: SOLUCAO ───────────────────────────────────────────────────────────
+
 def scene_solution():
     fi, d = img()
-    y = 120
-    y = center(d, y, "l402-kit", COLORS["yellow"], F_HUGE)
-    y += 8
-    y = center(d, y, "Pay-per-call APIs with Bitcoin Lightning.", COLORS["fg"], F_BIG)
-    y += 12
-    center(d, y, "Zero KYC.  Zero account.  Works in 180+ countries.", COLORS["dim"], F_MED)
+    # raio grande atrás (fantasma)
+    draw_lightning(d, W//2, H//2 + 10, blend_color(C["yellow"], 0.08), size=220)
+    y = 70
+    y = center(d, y, "l402-kit", C["yellow"], F_HUGE)
+    y += 6
+    y = center(d, y, "Pay-per-call APIs with Bitcoin Lightning.", C["fg"], F_BIG)
+    y += 10
+    center(d, y, "Zero KYC.  Zero account.  Works in 180+ countries.", C["dim"], F_MED)
     return [(fi, 3500)]
 
-# ── Cena 3: SERVER code com typewriter ───────────────────────────────────────
+# ── Cena 3: SERVER code ───────────────────────────────────────────────────────
+
 CODE_SERVER = [
-    ("from l402kit import l402_required",            COLORS["blue"],   F_CODE),
-    ("from l402kit.providers.blink import Blink",    COLORS["blue"],   F_CODE),
-    ("",                                             COLORS["fg"],     F_CODE),
-    ("lightning = BlinkProvider(",                   COLORS["fg"],     F_CODE),
-    ('    api_key="...", wallet_id="...")',           COLORS["orange"], F_CODE),
-    (")",                                            COLORS["fg"],     F_CODE),
-    ("",                                             COLORS["fg"],     F_CODE),
-    ("@app.get(\"/premium\")",                       COLORS["green"],  F_CODE),
-    ("@l402_required(price_sats=10,",               COLORS["yellow"], F_CODE),
-    ("                lightning=lightning)",         COLORS["yellow"], F_CODE),
-    ("async def premium(request: Request):",         COLORS["fg"],     F_CODE),
-    ("    return {\"data\": \"premium content\"}",   COLORS["fg"],     F_CODE),
+    ("from l402kit import l402_required",   C["blue"],   F_CODE),
+    ("",                                     C["fg"],     F_CODE),
+    ("@app.get(\"/premium\")",               C["green"],  F_CODE),
+    ("@l402_required(price_sats=10)",        C["yellow"], F_CODE),
+    ("async def premium(request):",          C["fg"],     F_CODE),
+    ("    return {\"data\": \"premium\"}",   C["fg"],     F_CODE),
 ]
 
-def draw_code_base(drawn_lines, title):
+def draw_code_frame(drawn_lines, title, n_lines):
     fi, d = img()
-    d.text((PAD, 20), title, fill=COLORS["dim"], font=F_SMALL)
-    x, y = PAD + 8, 50
-    lh = F_CODE.size + 6
-    bh = len(CODE_SERVER) * lh + 20
-    d.rectangle([PAD-4, 44, W-PAD+4, 44+bh], fill="#161b22", outline="#30363d", width=1)
+    fw = W - PAD * 2
+    fh = n_lines * 22 + 48
+    fy = (H - fh) // 2
+    draw_terminal_frame(d, PAD, fy, fw, fh)
+    d.text((PAD + 56, fy + 5), title, fill=C["dim"], font=F_SMALL)
+    x, y = PAD + 14, fy + 26
+    lh = F_CODE.size + 8
     for text, color, f in drawn_lines:
         d.text((x, y), text, fill=color, font=f)
         y += lh
@@ -164,151 +198,175 @@ def draw_code_base(drawn_lines, title):
 def scene_server():
     frames = []
     drawn = []
-    step = 4  # render every Nth character
+    step = 4
+    n = len(CODE_SERVER)
     for line_text, color, f in CODE_SERVER:
         if not line_text.strip():
             drawn.append((line_text, color, f))
-            fi = draw_code_base(drawn, "server.py")
-            frames.append((fi, 80))
+            frames.append((draw_code_frame(drawn, "server.py", n), 80))
             continue
         indices = list(range(step, len(line_text), step)) + [len(line_text)]
         for ci in indices:
             partial = [(t if i < len(drawn) else line_text[:ci], c, ff)
                        for i, (t, c, ff) in enumerate(drawn + [(line_text, color, f)])]
-            fi = draw_code_base(partial, "server.py")
-            frames.append((fi, step * 30))
+            frames.append((draw_code_frame(partial, "server.py", n), step * 28))
         drawn.append((line_text, color, f))
-    fi = draw_code_base(drawn, "server.py")
-    frames.append((fi, 2500))
+    frames.append((draw_code_frame(drawn, "server.py", n), 2500))
     return frames
 
-# ── Cena 4: CLIENT code com typewriter ───────────────────────────────────────
+# ── Cena 4: CLIENT code ───────────────────────────────────────────────────────
+
 CODE_CLIENT = [
-    ("from l402kit import L402Client",                    COLORS["blue"],   F_CODE),
-    ("from l402kit.wallets import BlinkWallet",           COLORS["blue"],   F_CODE),
-    ("",                                                  COLORS["fg"],     F_CODE),
-    ("wallet = BlinkWallet(",                             COLORS["fg"],     F_CODE),
-    ("    api_key=\"...\", wallet_id=\"...\")",            COLORS["orange"], F_CODE),
-    (")",                                                 COLORS["fg"],     F_CODE),
-    ("client = L402Client(wallet=wallet)",                COLORS["fg"],     F_CODE),
-    ("",                                                  COLORS["fg"],     F_CODE),
-    ("# one line — pays automatically",                   COLORS["green"],  F_CODE),
-    ("data = client.get(\"https://api.example.com\")",    COLORS["fg"],     F_CODE),
-    ("              .json()",                             COLORS["dim"],    F_CODE),
+    ("from l402kit import L402Client",           C["blue"],   F_CODE),
+    ("",                                          C["fg"],     F_CODE),
+    ("client = L402Client(wallet=your_wallet)",  C["fg"],     F_CODE),
+    ("",                                          C["fg"],     F_CODE),
+    ("# one line — pays automatically",           C["green"],  F_CODE),
+    ("data = client.get(url).json()",             C["fg"],     F_CODE),
 ]
 
 def scene_client():
     frames = []
     drawn = []
     step = 4
+    n = len(CODE_CLIENT)
     for line_text, color, f in CODE_CLIENT:
         if not line_text.strip():
             drawn.append((line_text, color, f))
-            fi = draw_code_base(drawn, "client.py")
-            frames.append((fi, 80))
+            frames.append((draw_code_frame(drawn, "client.py", n), 80))
             continue
         indices = list(range(step, len(line_text), step)) + [len(line_text)]
         for ci in indices:
             partial = [(t if i < len(drawn) else line_text[:ci], c, ff)
                        for i, (t, c, ff) in enumerate(drawn + [(line_text, color, f)])]
-            fi = draw_code_base(partial, "client.py")
-            frames.append((fi, step * 30))
+            frames.append((draw_code_frame(partial, "client.py", n), step * 28))
         drawn.append((line_text, color, f))
-    fi = draw_code_base(drawn, "client.py")
-    frames.append((fi, 2500))
+    frames.append((draw_code_frame(drawn, "client.py", n), 2500))
     return frames
 
-# ── Cena 5: AGENT ECONOMY ─────────────────────────────────────────────────────
+# ── Cena 5: ANY WALLET ────────────────────────────────────────────────────────
+
+def scene_wallets():
+    fi, d = img()
+    y = 60
+    y = center(d, y, "Any wallet. Any provider. Your rules.", C["yellow"], F_BIG)
+    y += 22
+    wallets = [
+        ("Blink",     C["green"]),
+        ("Alby",      C["blue"]),
+        ("LNbits",    C["orange"]),
+        ("OpenNode",  C["purple"]),
+        ("Your node", C["fg"]),
+    ]
+    col_w = (W - PAD * 2) // len(wallets)
+    for i, (name, color) in enumerate(wallets):
+        cx = PAD + col_w * i + col_w // 2
+        draw_lightning(d, cx, y + 28, color, size=34)
+        tw = cw(name, F_MED)
+        d.text((cx - tw//2, y + 74), name, fill=color, font=F_MED)
+    y += 112
+    center(d, y, "0% platform fee. Payments go straight to your wallet.", C["dim"], F_MED)
+    return [(fi, 3500)]
+
+# ── Cena 6: AGENT ECONOMY ─────────────────────────────────────────────────────
+
 def scene_agents():
     frames = []
 
     def render(arrow_pct=0.0, label=""):
         fi, d = img()
-        y = 36
-        d.text(((W - cw("Agents paying agents.", F_BIG)) / 2, y),
-               "Agents paying agents.", fill=COLORS["yellow"], font=F_BIG)
-        y += F_BIG.size + 10
-        d.text(((W - cw("No human. No bank. Pure Bitcoin.", F_MED)) / 2, y),
-               "No human. No bank. Pure Bitcoin.", fill=COLORS["dim"], font=F_MED)
-        y += F_MED.size + 22
+        title = "Agents paying agents."
+        d.text(((W - cw(title, F_BIG)) // 2, 20), title, fill=C["yellow"], font=F_BIG)
+        sub = "No human. No bank. Pure Bitcoin."
+        d.text(((W - cw(sub, F_MED)) // 2, 58), sub, fill=C["dim"], font=F_MED)
 
-        ax1, ax2 = PAD, W//2 - 24
-        bx1, bx2 = W//2 + 24, W - PAD
-        box_h = 150
+        robot_y  = H // 2 + 55
+        ax, bx   = PAD + 90, W - PAD - 90
 
-        d.rectangle([ax1, y, ax2, y+box_h], fill="#0d2818", outline=COLORS["green"], width=2)
-        d.text((ax1+14, y+12), "AgentA  (seller)", fill=COLORS["green"], font=F_MED)
-        for j, line in enumerate(["@l402_required(price_sats=5)", "async def analyze(request):", "    return sentiment", "", "receives sats directly"]):
-            c = COLORS["green"] if j == 4 else COLORS["fg"]
-            d.text((ax1+14, y+42+j*20), line, fill=c, font=F_SMALL)
+        draw_robot(d, ax, robot_y, C["green"])
+        draw_robot(d, bx, robot_y, C["blue"])
 
-        d.rectangle([bx1, y, bx2, y+box_h], fill="#0d1a2e", outline=COLORS["blue"], width=2)
-        d.text((bx1+14, y+12), "AgentB  (buyer)", fill=COLORS["blue"], font=F_MED)
-        for j, line in enumerate(["client = L402Client(", "  wallet=BlinkWallet())", "client.get('/analyze')", "", "pays automatically"]):
-            c = COLORS["blue"] if j == 4 else COLORS["fg"]
-            d.text((bx1+14, y+42+j*20), line, fill=c, font=F_SMALL)
+        la = "AgentA  (seller)"
+        lb = "AgentB  (buyer)"
+        d.text((ax - cw(la, F_SMALL)//2, robot_y + 24), la, fill=C["green"], font=F_SMALL)
+        d.text((bx - cw(lb, F_SMALL)//2, robot_y + 24), lb, fill=C["blue"],  font=F_SMALL)
 
-        # Seta animada
-        mid_y = y + box_h // 2
-        x_start, x_end = ax2 + 4, bx1 - 4
-        x_cur = int(x_start + (x_end - x_start) * arrow_pct)
+        tag = "@l402_required(price_sats=5)"
+        d.text((ax - cw(tag, F_SMALL)//2, robot_y + 42), tag, fill=C["dim"], font=F_SMALL)
+
+        # seta animada
+        mid_y   = robot_y - 95
+        x_start = ax + 68
+        x_end   = bx - 68
+        x_cur   = int(x_start + (x_end - x_start) * arrow_pct)
         if x_cur > x_start:
-            d.line([(x_start, mid_y), (x_cur, mid_y)], fill=COLORS["yellow"], width=3)
+            d.line([(x_start, mid_y), (x_cur, mid_y)], fill=C["yellow"], width=3)
         if arrow_pct >= 1.0:
-            d.polygon([(x_end-8, mid_y-6), (x_end-8, mid_y+6), (x_end+2, mid_y)], fill=COLORS["yellow"])
+            d.polygon([(x_end-8, mid_y-6), (x_end-8, mid_y+6), (x_end+2, mid_y)],
+                      fill=C["yellow"])
         if label:
-            lw = cw(label, F_SMALL)
-            d.text(((x_start + x_end) // 2 - lw // 2, mid_y - 22), label, fill=COLORS["yellow"], font=F_SMALL)
+            mid_x = (x_start + x_end) // 2
+            draw_lightning(d, mid_x - 34, mid_y - 20, C["yellow"], size=20)
+            lw = cw(label, F_MED)
+            d.text((mid_x - lw//2, mid_y - 30), label, fill=C["yellow"], font=F_MED)
 
-        foot = "Any agent. Any API. Any country. Instant."
-        d.text(((W - cw(foot, F_SMALL)) / 2, y + box_h + 18), foot, fill=COLORS["dim"], font=F_SMALL)
         return fi
 
-    # Seta aparecendo
-    steps = 10
+    steps = 12
     for k in range(steps + 1):
-        pct = k / steps
+        pct   = k / steps
         label = "5 sats" if pct >= 1.0 else ""
-        frames.append((render(pct, label), 100))
+        frames.append((render(pct, label), 90))
 
-    # Hold final
     frames.append((render(1.0, "5 sats"), 4000))
     return frames
 
-# ── Cena 6: PAYMENT FLOW ─────────────────────────────────────────────────────
+# ── Cena 7: PAYMENT FLOW ──────────────────────────────────────────────────────
+
 def scene_flow():
-    steps = [
-        ("agent calls  GET /premium",               COLORS["dim"]),
-        ("<- 402  Payment Required",                 COLORS["yellow"]),
-        ("   wallet pays 1 sat via Lightning  v",   COLORS["dim"]),
-        ("agent retries  + L402 token",             COLORS["dim"]),
-        ("<- 200 OK  — autonomous, global, instant", COLORS["green"]),
+    steps_data = [
+        ("agent calls  GET /premium",                COLORS_flow := C["dim"]),
+        ("<- 402  Payment Required",                  C["yellow"]),
+        ("   wallet pays 1 sat via Lightning",        C["dim"]),
+        ("agent retries  + L402 token",               C["dim"]),
+        ("<- 200 OK  — autonomous, global, instant",  C["green"]),
     ]
     frames = []
-    for n in range(1, len(steps) + 1):
+    for n in range(1, len(steps_data) + 1):
         fi, d = img()
-        y = 120
-        for text, color in steps[:n]:
-            d.text(((W - cw(text, F_MED)) / 2, y), text, fill=color, font=F_MED)
-            y += F_MED.size + 24
-        ms = 2500 if n == len(steps) else 700
+        draw_lightning(d, W - 70, H//2 - 10, blend_color(C["yellow"], 0.07), size=100)
+        y = 100
+        for text, color in steps_data[:n]:
+            d.text(((W - cw(text, F_MED)) // 2, y), text, fill=color, font=F_MED)
+            y += F_MED.size + 22
+        ms = 2500 if n == len(steps_data) else 700
         frames.append((fi, ms))
     return frames
 
-# ── Cena 7: FECHAMENTO ────────────────────────────────────────────────────────
+# ── Cena 8: FECHAMENTO ────────────────────────────────────────────────────────
+
 def scene_close():
     fi, d = img()
-    y = 90
-    y = center(d, y, "No bank. No KYC. No Stripe.", COLORS["fg"], F_BIG)
-    y = center(d, y, "Pure Bitcoin. Pure Lightning.", COLORS["yellow"], F_BIG)
-    y += 20
-    y = center(d, y, "Works where traditional finance doesn't.", COLORS["dim"], F_MED)
-    y += 26
-    y = center(d, y, "pip install l402kit    npm install l402-kit", COLORS["green"], F_MED)
-    center(d, y, "l402kit.com", COLORS["dim"], F_MED)
+    # Bitcoin ₿ grande fantasma
+    try:
+        bf = font(130)
+        sym = "₿"
+        tw = cw(sym, bf)
+        d.text(((W - tw) // 2, H//2 - 85), sym, fill=blend_color(C["yellow"], 0.07), font=bf)
+    except Exception:
+        pass
+    y = 70
+    y = center(d, y, "No bank. No KYC. No Stripe.", C["fg"], F_BIG)
+    y = center(d, y, "Pure Bitcoin. Pure Lightning.", C["yellow"], F_BIG)
+    y += 18
+    y = center(d, y, "Works where traditional finance doesn't.", C["dim"], F_MED)
+    y += 24
+    y = center(d, y, "pip install l402kit    npm install l402-kit", C["green"], F_MED)
+    center(d, y, "l402kit.com", C["dim"], F_MED)
     return [(fi, 5000)]
 
 # ── Montar GIF ────────────────────────────────────────────────────────────────
+
 all_frames = []
 
 scenes = [
@@ -316,20 +374,20 @@ scenes = [
     scene_solution(),
     scene_server(),
     scene_client(),
+    scene_wallets(),
     scene_agents(),
     scene_flow(),
     scene_close(),
 ]
 
-# Adiciona fade de 6 frames entre cenas
 for si, scene in enumerate(scenes):
     if si > 0:
-        prev_img = all_frames[-1][0]
-        next_img = scene[0][0]
-        all_frames += fade(prev_img.convert("RGB"), next_img.convert("RGB"), steps=8)
+        prev = all_frames[-1][0].convert("RGB")
+        nxt  = scene[0][0].convert("RGB")
+        all_frames += fade(prev, nxt, steps=5)
     all_frames += scene
 
-frames    = [f.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=64) for f, _ in all_frames]
+frames    = [f.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=80) for f, _ in all_frames]
 durations = [d for _, d in all_frames]
 
 out = "docs/demo.gif"

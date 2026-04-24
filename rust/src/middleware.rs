@@ -18,15 +18,12 @@ use crate::{
 ///
 /// ```rust,no_run
 /// use axum::{Router, routing::get, middleware};
-/// use l402kit::{l402_middleware, Options, BlinkProvider};
+/// use l402kit::{l402_middleware, ManagedProvider, Options};
 /// use std::sync::Arc;
 ///
 /// async fn my_handler() -> &'static str { "ok" }
 ///
-/// let provider = BlinkProvider::new(
-///     std::env::var("BLINK_API_KEY").unwrap(),
-///     std::env::var("BLINK_WALLET_ID").unwrap(),
-/// );
+/// let provider = ManagedProvider::new("you@yourdomain.com".into());
 /// let opts = Arc::new(Options::new(10, provider));
 /// let app: Router<()> = Router::new()
 ///     .route("/api/data", get(my_handler))

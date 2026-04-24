@@ -14,4 +14,6 @@ pub use types::{BoxFuture, Invoice, L402Token, LightningProvider, Options};
 pub use verify::{parse_token, verify_token};
 
 #[cfg(feature = "axum-middleware")]
+pub use managed::ManagedProvider;
+#[cfg(feature = "axum-middleware")]
 pub use middleware::l402_middleware;
