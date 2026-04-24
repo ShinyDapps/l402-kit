@@ -47,37 +47,37 @@ go get github.com/shinydapps/l402-kit/go@v1.4.2
 
 ---
 
-## Como funciona — fluxo completo
+## How it works — full flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│  Cliente / Agente IA                                            │
+│  Client / AI Agent                                              │
 │         │                                                       │
-│         │ 1. GET /sua-api                                       │
+│         │ 1. GET /your-api                                      │
 │         ▼                                                       │
-│  Sua API (l402-kit)  ──── 2. Cria invoice ───► ShinyDapps API  │
-│         │                                       (Blink wallet)  │
-│         │ 3. Retorna: 402 + invoice BOLT11                      │
+│  Your API (l402-kit)  ─── 2. Creates invoice ──► ShinyDapps API │
+│         │                                        (Blink wallet) │
+│         │ 3. Returns: 402 + BOLT11 invoice                      │
 │         ▼                                                       │
-│  Cliente paga ──────────────────────────────► Lightning Network │
-│         │                    (< 1 segundo)                      │
-│         │ 4. Envia preimage como prova criptográfica            │
+│  Client pays ───────────────────────────────► Lightning Network │
+│         │                       (< 1 second)                    │
+│         │ 4. Sends preimage as cryptographic proof              │
 │         ▼                                                       │
-│  Sua API verifica: SHA256(preimage) == hash ✓                   │
+│  Your API verifies: SHA256(preimage) == hash ✓                  │
 │         │                                                       │
-│         │ 5. Split automático:                                  │
-│         │    → 99.7% ──────────────────────► Seu Lightning Addr │
-│         │    → 0.3%  ──────────────────────► ShinyDapps (taxa)  │
+│         │ 5. Automatic split:                                   │
+│         │    → 99.7% ───────────────────────► Your Lightning Addr│
+│         │    → 0.3%  ───────────────────────► ShinyDapps (fee)  │
 │         │                                                       │
-│         │ 6. Sua API responde: 200 OK + dados                   │
+│         │ 6. Your API responds: 200 OK + data                   │
 │         ▼                                                       │
-│  Cliente recebe o conteúdo                                      │
+│  Client receives content                                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 <Note>
-**Transparência total:** ShinyDapps recebe o pagamento e envia **99.7%** para seu Lightning Address automaticamente. A taxa de **0.3%** é o que mantém o projeto vivo. O split é determinístico e verificável — nenhum segredo, nenhum intermediário.
+**Full transparency:** ShinyDapps receives the payment and forwards **99.7%** to your Lightning Address automatically. The **0.3%** fee keeps the project alive. The split is deterministic and verifiable — no secrets, no intermediaries.
 </Note>
 
 ---
