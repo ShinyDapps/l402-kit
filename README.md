@@ -11,7 +11,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.com/demo)
-[![139 tests](https://img.shields.io/badge/tests-139_passing-22c55e)](https://github.com/ShinyDapps/l402-kit)
+[![392 tests](https://img.shields.io/badge/tests-392_passing-22c55e)](https://github.com/ShinyDapps/l402-kit)
 
 <br/>
 
@@ -251,7 +251,7 @@ Token expiry:      macaroons expire after 1 hour
 - **Unforgeable** — SHA256 is a one-way function; you cannot fake a preimage
 - **No chargebacks** — cryptographic settlement, not reversible card auth
 - **Replay-safe** — MemoryReplayAdapter (dev) or RedisReplayAdapter (production, multi-instance)
-- **139 automated tests** across 4 languages
+- **392 automated tests** across 5 runtimes (TS, Python, Go, Rust, Cloudflare Workers) — production-grade reliability for autonomous agent workflows
 - **Fully auditable** — MIT, every line open source
 
 ---
