@@ -1,0 +1,188 @@
+---
+title: "Troubleshooting"
+description: "Common errors, their causes, and how to fix them."
+---
+
+## Token Errors
+
+### `Token already used` (401)
+
+**Cause:** The same preimage was submitted twice — replay attack or accidental retry.
+
+**Fix:** Each invoice payment produces a single-use token. Generate a new invoice and pay it again. On the client side, ensure `L402Client` caches tokens per endpoint URL (it does by default).
+
+---
+
+### `Token expired` (401 / `valid: false`)
+
+**Cause:** Invoices expire after 1 hour. The token's `exp` field is in milliseconds.
+
+**Fix:** Request a new invoice. If expiry is happening too fast, check that your server clock is accurate (`Date.now()` on the server vs `time.time()` on the client must be within a few seconds).
+
+---
+
+### `Invalid preimage format` (402 returned instead of 200)
+
+**Cause:** Preimage is not exactly 64 hex characters (32 bytes).
+
+**Fix:** Ensure your wallet returns the raw preimage as a 64-char hex string. Some wallets return it in base64 — decode it first.
+
+---
+
+### `Webhook signature mismatch` (401)
+
+**Cause:** The `l402-signature` header doesn't match the secret or the body was modified in transit.
+
+**Fix:**
+1. Confirm `L402_WEBHOOK_SECRET` matches on both sender and receiver.
+2. Use `express.raw({ type: 'application/json' })` (not `express.json()`) to read the raw body before verification — JSON parsing reformats the string and invalidates the signature.
+3. Check that your reverse proxy (nginx, Cloudflare) isn't modifying the body.
+
+---
+
+## Provider Errors
+
+### `ManagedProvider: invoice creation failed` / HTTP 503
+
+**Cause:** `l402kit.com` is temporarily unavailable or the Blink API is down.
+
+**Fix:** Retry with exponential backoff. Check status at [status.blink.sv](https://status.blink.sv). For production workloads requiring zero downtime, use a sovereign provider (BlinkProvider, AlbyProvider, etc.) with your own credentials.
+
+---
+
+### `Blink: INSUFFICIENT_CHANNEL_BALANCE`
+
+**Cause:** Your Blink wallet has insufficient outbound liquidity for the split payment.
+
+**Fix:** Add funds to your `shinydapps@blink.sv` wallet. The platform needs a small balance to route split payments. This only affects the ManagedProvider split — invoice creation is unaffected.
+
+---
+
+### `LNURL fetch failed` during split
+
+**Cause:** The developer's Lightning Address doesn't resolve. The `/.well-known/lnurlp/` endpoint returned a non-200 status.
+
+**Fix:** Verify the Lightning Address is valid and the domain's LNURL-pay endpoint is reachable. Test with:
+```bash
+curl https://<domain>/.well-known/lnurlp/<username>
+```
+
+---
+
+### `AlbyProvider: HTTP 401`
+
+**Cause:** Expired or revoked Alby access token.
+
+**Fix:** Regenerate the token in Alby Hub → Settings → Access Tokens. Ensure the scope includes `invoices:create`.
+
+---
+
+### `BTCPayProvider: HTTP 403`
+
+**Cause:** API key missing the required permission.
+
+**Fix:** In BTCPay Server → Account → API Keys, ensure the key has `btcpay.store.cancreatelightninginvoice` scope for the correct store.
+
+---
+
+## Replay Protection
+
+### Multiple instances / replays not caught
+
+**Cause:** Default `MemoryReplayAdapter` is in-process only. On restart or across multiple instances, it resets.
+
+**Fix:** Use `RedisReplayAdapter` for multi-instance deployments:
+
+<CodeGroup>
+
+```ts TypeScript
+import Redis from "ioredis";
+import { RedisReplayAdapter } from "l402-kit";
+
+const redis = new Redis(process.env.REDIS_URL!);
+app.get("/api", l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+```python Python
+from l402kit import RedisReplayAdapter
+import redis.asyncio as redis
+
+r = redis.from_url(os.environ["REDIS_URL"])
+# pass replayAdapter to l402_required (coming soon)
+```
+
+</CodeGroup>
+
+The Supabase `payment_hash` unique constraint acts as a durable second layer regardless of the in-memory adapter, so replays are always blocked even without Redis.
+
+---
+
+## Rate Limits
+
+### `Too many requests. Max 20 invoices/minute per IP.` (429)
+
+**Cause:** More than 20 invoice creation requests per minute from the same IP, hitting the ManagedProvider endpoint.
+
+**Fix:** Implement client-side caching — don't create a new invoice on every page load. `L402Client` caches tokens per endpoint URL automatically. For server-to-server flows generating many invoices, use a sovereign provider.
+
+---
+
+## Framework-Specific
+
+### Express: middleware not triggering
+
+**Cause:** Express route handler registered before `l402()` middleware, or middleware order is wrong.
+
+**Fix:**
+```ts
+// ✅ Correct — l402 before handler
+app.get("/api", l402({ priceSats: 10, lightning }), myHandler);
+
+// ❌ Wrong — l402 registered after handler
+app.get("/api", myHandler, l402(...));
+```
+
+---
+
+### FastAPI: `422 Unprocessable Entity` on 402 response
+
+**Cause:** FastAPI validates response bodies against the declared response model. The 402 body doesn't match.
+
+**Fix:** Either exclude the 402 status from response validation or don't declare a response model on decorated endpoints:
+```python
+@app.get("/premium")  # no response_model= here
+@l402_required(price_sats=10, lightning=provider)
+async def premium():
+    return {"data": "paid content"}
+```
+
+---
+
+### Go: `panic: l402: no Lightning provider set`
+
+**Cause:** `Options.Lightning` is nil.
+
+**Fix:** Always set a provider:
+```go
+// ✅
+l402kit.Middleware(l402kit.Options{
+    PriceSats: 10,
+    Lightning: l402kit.NewManagedProvider("you@blink.sv"),
+}, handler)
+
+// ❌ panics
+l402kit.Middleware(l402kit.Options{PriceSats: 10}, handler)
+```
+
+---
+
+## Still stuck?
+
+Open an issue at [github.com/ShinyDapps/l402-kit/issues](https://github.com/ShinyDapps/l402-kit/issues) with:
+- SDK language and version
+- Minimal reproduction
+- Error message and stack trace

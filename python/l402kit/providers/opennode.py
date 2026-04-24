@@ -17,7 +17,8 @@ class OpenNodeProvider:
             )
             res.raise_for_status()
             data = res.json()["data"]
-            macaroon = base64.b64encode(json.dumps({"hash": data["id"], "exp": int(time.time()) + 3600}).encode()).decode()
+            exp_ms = int(time.time() * 1000) + 3_600_000
+            macaroon = base64.b64encode(json.dumps({"hash": data["id"], "exp": exp_ms}).encode()).decode()
             return Invoice(data["lightning_invoice"]["payreq"], data["id"], macaroon, amount_sats, int(time.time()) + 3600)
 
     async def check_payment(self, charge_id: str) -> bool:

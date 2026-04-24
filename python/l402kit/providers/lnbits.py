@@ -17,7 +17,8 @@ class LNbitsProvider:
             )
             res.raise_for_status()
             data = res.json()
-            macaroon = base64.b64encode(json.dumps({"hash": data["payment_hash"], "exp": int(time.time()) + 3600}).encode()).decode()
+            exp_ms = int(time.time() * 1000) + 3_600_000
+            macaroon = base64.b64encode(json.dumps({"hash": data["payment_hash"], "exp": exp_ms}).encode()).decode()
             return Invoice(data["payment_request"], data["payment_hash"], macaroon, amount_sats, int(time.time()) + 3600)
 
     async def check_payment(self, payment_hash: str) -> bool:

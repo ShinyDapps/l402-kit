@@ -28,7 +28,8 @@ def make_hash(preimage: str) -> str:
 
 
 def make_macaroon(hash_: str, exp_offset: int = 3600, extra: dict = None) -> str:
-    payload = {"hash": hash_, "exp": int(time.time()) + exp_offset}
+    # exp in milliseconds — consistent with TS/Go SDKs and verify_token check
+    payload = {"hash": hash_, "exp": int(time.time() * 1000) + exp_offset * 1000}
     if extra:
         payload.update(extra)
     return base64.b64encode(json.dumps(payload).encode()).decode()

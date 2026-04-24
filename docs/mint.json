@@ -26,11 +26,11 @@
     },
     {
       "group": "Guides",
-      "pages": ["guides/dashboard", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/security", "guides/production"]
+      "pages": ["guides/dashboard", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/security", "guides/production", "guides/troubleshooting"]
     },
     {
       "group": "Reference",
-      "pages": ["providers", "competitive", "payment-layer", "whitepaper"]
+      "pages": ["providers", "api-reference", "competitive", "payment-layer", "whitepaper"]
     },
     {
       "group": "🇧🇷 Português",

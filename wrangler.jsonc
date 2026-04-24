@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "l402-kit",
+  "compatibility_date": "2026-04-24",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "backend"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "routes": [
+    { "pattern": "l402kit.com/*", "zone_name": "l402kit.com" }
+  ]
+}

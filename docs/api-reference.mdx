@@ -1,0 +1,259 @@
+---
+title: "API Reference"
+description: "Reference for all l402kit.com REST endpoints used by ManagedProvider and the VS Code extension."
+---
+
+Base URL: `https://l402kit.com`
+
+All responses are `application/json`. CORS is enabled for all origins.
+
+---
+
+## Invoices
+
+### Create Invoice
+
+`POST /api/invoice`
+
+Creates a BOLT11 Lightning invoice. Called automatically by `ManagedProvider` — you rarely need to call this directly.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `amountSats` | number | ✅ | Amount in satoshis (min 1) |
+| `ownerAddress` | string | — | Your Lightning Address. Required for the split to execute. |
+
+**Response 200**
+
+```json
+{
+  "paymentRequest": "lnbc10n1p...",
+  "paymentHash":    "a1b2c3...",
+  "macaroon":       "eyJoYXNoIjoiYTFiMm..."
+}
+```
+
+**Errors**
+
+| Code | Reason |
+|---|---|
+| 400 | Missing or invalid `amountSats` |
+| 429 | Rate limit exceeded (20 requests/min per IP) |
+| 503 | Lightning provider temporarily unavailable |
+
+---
+
+### Verify Token
+
+`POST /api/verify`
+
+Validates an L402 token server-side without the SDK.
+
+**Request body**
+
+```json
+{ "token": "<macaroon>:<preimage>" }
+```
+
+**Response 200**
+
+```json
+{ "valid": true }
+```
+
+```json
+{ "valid": false, "error": "Token expired" }
+```
+
+---
+
+## Split & Payments
+
+### Execute Split
+
+`POST /api/split`
+
+Manually trigger a 99.7/0.3% split payment to a Lightning Address. Requires `x-split-secret` header.
+
+<Note>
+In most cases the split is triggered automatically via the Blink webhook. Use this endpoint only for manual recovery or custom integrations.
+</Note>
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `x-split-secret` | Your `SPLIT_SECRET` env variable |
+
+**Request body**
+
+```json
+{
+  "amountSats":   1000,
+  "ownerAddress": "you@blink.sv"
+}
+```
+
+**Response 200**
+
+```json
+{ "ok": true, "ownerSats": 997 }
+```
+
+**Response 200 (skipped — below minimum)**
+
+```json
+{ "ok": true, "skipped": true }
+```
+
+---
+
+## Dashboard & Stats
+
+### Get Stats
+
+`GET /api/stats`
+
+Returns payment analytics. Requires LNURL-auth session token in `Authorization` header.
+
+**Response 200**
+
+```json
+{
+  "totalPayments": 42,
+  "totalSats":     8400,
+  "shinydappsFee": 25,
+  "walletSats":    12345,
+  "walletUsdCents": 456789,
+  "byOwner": {
+    "dev@blink.sv": { "count": 42, "sats": 8400 }
+  },
+  "byDay": {
+    "2026-04-24": { "count": 5, "sats": 1000 }
+  },
+  "trend": {
+    "payments7d": 12,
+    "sats7d": 2400
+  },
+  "recent": [
+    {
+      "id": "uuid",
+      "endpoint": "/api/data",
+      "payment_hash": "a1b2...",
+      "amount_sats": 100,
+      "owner_address": "dev@blink.sv",
+      "paid_at": "2026-04-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Pro Tier
+
+### Check Pro Access
+
+`GET /api/pro-check?address=you@blink.sv`
+
+Returns whether a Lightning Address has an active Pro subscription.
+
+**Response 200**
+
+```json
+{ "active": true,  "expiresAt": "2026-05-24T10:00:00Z" }
+{ "active": false }
+```
+
+### Subscribe to Pro
+
+`GET /api/dev-token?address=you@blink.sv`
+
+Returns a Lightning invoice to purchase a 30-day Pro subscription (~9,000 sats).
+
+**Response 200**
+
+```json
+{
+  "priceSats": 9000,
+  "invoice":   "lnbc90n1p...",
+  "macaroon":  "eyJoYXNoIjoiY..."
+}
+```
+
+`POST /api/dev-token`
+
+Activate Pro after paying the invoice.
+
+**Request body**
+
+```json
+{ "macaroon": "...", "preimage": "..." }
+```
+
+**Response 200**
+
+```json
+{ "access": true, "expiresAt": "2026-05-24T10:00:00Z" }
+```
+
+---
+
+## Authentication (LNURL-auth)
+
+### Initiate Login
+
+`GET /api/lnurl-auth`
+
+Returns a LNURL-auth challenge for dashboard login. Scan the QR in the dashboard.
+
+### LNURL-pay Endpoint
+
+`GET /.well-known/lnurlp/:username`
+
+Standard LNURL-pay metadata for Lightning Address resolution. Used internally by the split mechanism.
+
+---
+
+## Demo
+
+### Demo Index
+
+`GET /api/demo`
+
+Returns info about the available demo endpoints.
+
+### BTC Price (paid)
+
+`GET /api/demo/btc-price`
+
+Returns live BTC price. Requires a valid L402 token (1 sat).
+
+Returns **402** with invoice + macaroon on first call. Retry with `Authorization: L402 <macaroon>:<preimage>`.
+
+### Reveal Preimage
+
+`GET /api/demo/preimage?hash=<paymentHash>`
+
+After paying the demo invoice, call this endpoint with the `paymentHash` to retrieve your preimage and construct the L402 token.
+
+---
+
+## Webhooks
+
+### Blink Webhook Receiver
+
+`POST /api/blink-webhook`
+
+Internal endpoint. Receives signed payment confirmations from Blink (Svix HMAC-SHA256). Triggers the split and logs the payment. Not intended for direct use.
+
+---
+
+## Data Privacy
+
+### Delete My Data
+
+`POST /api/delete-data`
+
+Initiates a LNURL-auth challenge. After wallet verification, all payment records associated with the authenticated pubkey are permanently deleted (GDPR right-to-erasure).

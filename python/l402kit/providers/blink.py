@@ -39,9 +39,10 @@ class BlinkProvider:
                 raise Exception(f"Blink error: {data['errors'][0]['message']}")
 
             inv = data["invoice"]
+            exp_ms = int(time.time() * 1000) + 3_600_000
             macaroon = base64.b64encode(json.dumps({
                 "hash": inv["paymentHash"],
-                "exp": int(time.time()) + 3600,
+                "exp": exp_ms,
             }).encode()).decode()
 
             return Invoice(
