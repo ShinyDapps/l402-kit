@@ -1,6 +1,24 @@
 import type { Env } from "../worker";
 
 const PRICE_SATS = 1;
+const RATE_LIMIT   = 8;      // max invoice creations per IP per hour
+const RATE_WINDOW  = 3600;   // seconds
+
+async function checkRateLimit(ip: string, env: Env): Promise<boolean> {
+  const key = `rl:${ip}`;
+  const raw = await env.demo_preimages.get(key);
+  const now = Math.floor(Date.now() / 1000);
+  if (raw) {
+    const { count, reset } = JSON.parse(raw) as { count: number; reset: number };
+    if (now < reset && count >= RATE_LIMIT) return false;
+    const newCount = now < reset ? count + 1 : 1;
+    const newReset = now < reset ? reset : now + RATE_WINDOW;
+    await env.demo_preimages.put(key, JSON.stringify({ count: newCount, reset: newReset }), { expirationTtl: RATE_WINDOW });
+  } else {
+    await env.demo_preimages.put(key, JSON.stringify({ count: 1, reset: now + RATE_WINDOW }), { expirationTtl: RATE_WINDOW });
+  }
+  return true;
+}
 
 export async function handleDemo(_req: Request, _env: Env): Promise<Response> {
   return json({
@@ -26,6 +44,10 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
       timestamp: new Date().toISOString(),
     });
   }
+
+  const ip = req.headers.get("CF-Connecting-IP") ?? req.headers.get("X-Forwarded-For") ?? "unknown";
+  const allowed = await checkRateLimit(ip, env);
+  if (!allowed) return json({ error: "Too many requests — try again in 1 hour", retryAfter: 3600 }, 429);
 
   const inv = await createInvoice(PRICE_SATS, env);
   if (!inv) return json({ error: "Lightning provider unavailable" }, 503);
