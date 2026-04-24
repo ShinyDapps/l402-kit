@@ -1,6 +1,6 @@
 {
   "name": "create-l402-app",
-  "version": "1.4.0",
+  "version": "1.6.0",
   "description": "Scaffold a Bitcoin Lightning pay-per-call API in 60 seconds. npx create-l402-app my-api",
   "type": "module",
   "bin": {

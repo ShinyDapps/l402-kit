@@ -12,12 +12,33 @@ function sb(path: string, env: Env): Promise<Response> {
   });
 }
 
+async function fetchBlinkBalance(env: Env): Promise<{ btcSats: number | null; usdCents: number | null }> {
+  try {
+    const res = await fetch("https://api.blink.sv/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      body: JSON.stringify({ query: `{ me { defaultAccount { wallets { id walletCurrency balance } } } }` }),
+    });
+    const { data } = await res.json() as { data?: { me?: { defaultAccount?: { wallets?: { id: string; walletCurrency: string; balance: number }[] } } } };
+    const wallets = data?.me?.defaultAccount?.wallets ?? [];
+    const btc = wallets.find(w => w.walletCurrency === "BTC");
+    const usd = wallets.find(w => w.walletCurrency === "USD");
+    return { btcSats: btc?.balance ?? null, usdCents: usd?.balance ?? null };
+  } catch {
+    return { btcSats: null, usdCents: null };
+  }
+}
+
 export async function handleStats(req: Request, env: Env): Promise<Response> {
   if (req.method !== "GET") return json({ error: "Method not allowed" }, 405);
   if (!(await authenticate(req, env))) return json({ error: "Unauthorized" }, 401);
 
   try {
-    const paymentsRes = await sb("/payments?select=*&order=paid_at.desc", env);
+    const [paymentsRes, walletBalance] = await Promise.all([
+      sb("/payments?select=*&order=paid_at.desc", env),
+      fetchBlinkBalance(env),
+    ]);
+    const { btcSats: walletSats, usdCents: walletUsdCents } = walletBalance;
     const payments = await paymentsRes.json() as {
       id: string; endpoint: string; payment_hash: string;
       amount_sats: number; owner_address: string; paid_at: string;
@@ -53,6 +74,7 @@ export async function handleStats(req: Request, env: Env): Promise<Response> {
 
     return json({
       totalPayments, totalSats, shinydappsFee, byOwner, byDay,
+      walletSats, walletUsdCents,
       trend: {
         payments7d: p7c.length, payments7dPrev: p7p.length,
         sats7d: p7c.reduce((s, p) => s + p.amount_sats, 0),

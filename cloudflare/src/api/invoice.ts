@@ -1,16 +1,21 @@
 import type { Env } from "../worker";
 
-const ipCounts = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 20;
+const RATE_WINDOW = 60; // seconds
 
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = ipCounts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    ipCounts.set(ip, { count: 1, resetAt: now + 60_000 });
-    return false;
+async function isRateLimited(ip: string, env: Env): Promise<boolean> {
+  const key = `inv_rl:${ip}`;
+  const now = Math.floor(Date.now() / 1000);
+  const raw = await env.demo_preimages.get(key);
+  if (raw) {
+    const { count, reset } = JSON.parse(raw) as { count: number; reset: number };
+    if (now < reset && count >= RATE_LIMIT) return true;
+    const newCount = now < reset ? count + 1 : 1;
+    const newReset = now < reset ? reset : now + RATE_WINDOW;
+    await env.demo_preimages.put(key, JSON.stringify({ count: newCount, reset: newReset }), { expirationTtl: RATE_WINDOW });
+  } else {
+    await env.demo_preimages.put(key, JSON.stringify({ count: 1, reset: now + RATE_WINDOW }), { expirationTtl: RATE_WINDOW });
   }
-  if (entry.count >= 20) return true;
-  entry.count++;
   return false;
 }
 
@@ -18,7 +23,7 @@ export async function handleInvoice(req: Request, env: Env): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const ip = req.headers.get("CF-Connecting-IP") ?? "unknown";
-  if (isRateLimited(ip)) return json({ error: "Too many requests. Max 20 invoices/minute per IP." }, 429);
+  if (await isRateLimited(ip, env)) return json({ error: "Too many requests. Max 20 invoices/minute per IP." }, 429);
 
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const amountSats = Number(body?.amountSats);

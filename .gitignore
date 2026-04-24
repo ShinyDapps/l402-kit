@@ -33,3 +33,9 @@ COCKPIT.md
 
 .vercel
 backend/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
