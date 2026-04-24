@@ -52,22 +52,32 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
   const inv = await createInvoice(PRICE_SATS, env);
   if (!inv) return json({ error: "Lightning provider unavailable" }, 503);
 
-  return new Response(
-    JSON.stringify({
-      error: "Payment Required",
-      priceSats: PRICE_SATS,
-      invoice: inv.paymentRequest,
-      macaroon: inv.macaroon,
-      blinkPaymentHash: inv.paymentHash,
-    }),
-    {
+  const payload = {
+    error: "Payment Required",
+    priceSats: PRICE_SATS,
+    invoice: inv.paymentRequest,
+    macaroon: inv.macaroon,
+    blinkPaymentHash: inv.paymentHash,
+  };
+
+  const accept = req.headers.get("Accept") ?? "";
+  if (accept.includes("text/html")) {
+    return new Response(render402Page(payload), {
       status: 402,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "text/html;charset=utf-8",
         "WWW-Authenticate": `L402 macaroon="${inv.macaroon}", invoice="${inv.paymentRequest}"`,
       },
+    });
+  }
+
+  return new Response(JSON.stringify(payload), {
+    status: 402,
+    headers: {
+      "Content-Type": "application/json",
+      "WWW-Authenticate": `L402 macaroon="${inv.macaroon}", invoice="${inv.paymentRequest}"`,
     },
-  );
+  });
 }
 
 // Returns the server-generated preimage once the Blink invoice is paid.
@@ -94,6 +104,81 @@ export async function handleDemoPreimage(req: Request, env: Env): Promise<Respon
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────────
+
+function render402Page(payload: Record<string, unknown>): string {
+  const pretty = JSON.stringify(payload, null, 2)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"([^"]+)":/g, '<span class="jk">"$1"</span>:')
+    .replace(/: "([^"]*)"([,\n])/g, ': <span class="js">"$1"</span>$2')
+    .replace(/: (\d+)([,\n])/g, ': <span class="jn">$1</span>$2');
+
+  return `<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>402 Payment Required — l402-kit demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#e6edf3;font-family:'Cascadia Code','Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px}
+.wrap{display:flex;gap:32px;max-width:980px;width:100%;align-items:flex-start}
+.left{flex:1;min-width:0}
+.right{flex:1;min-width:0}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.4);color:#f85149;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:20px}
+.status{font-size:36px;font-weight:800;color:#e6edf3;margin-bottom:8px;line-height:1.1}
+.status span{color:#f85149}
+.desc{font-size:15px;color:#6e7681;line-height:1.7;margin-bottom:24px}
+.steps{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.step{display:flex;gap:12px;align-items:flex-start}
+.step-num{width:24px;height:24px;border-radius:50%;background:#f7931a;color:#000;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-text{font-size:14px;color:#8b949e;line-height:1.6}
+.step-text strong{color:#e6edf3}
+.cmd{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 16px;font-size:13px;color:#a5d6ff;margin-bottom:20px;overflow-x:auto;white-space:pre}
+.links{display:flex;gap:12px;flex-wrap:wrap}
+.btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;display:inline-block}
+.btn-primary{background:#f7931a;color:#000}
+.btn-secondary{background:#21262d;color:#e6edf3;border:1px solid #30363d}
+.json-wrap{background:#161b22;border:1px solid #30363d;border-radius:10px;overflow:hidden}
+.json-titlebar{background:#21262d;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:#6e7681}
+.dot{width:10px;height:10px;border-radius:50%}
+.json-body{padding:18px 20px;overflow-x:auto}
+.json-body pre{font-size:13px;line-height:1.7;white-space:pre}
+.jk{color:#79c0ff}.js{color:#a5d6ff}.jn{color:#ffa657}
+.note{font-size:11px;color:#444;margin-top:12px;text-align:center}
+@media(max-width:680px){.wrap{flex-direction:column}}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="left">
+    <div class="badge">⚡ HTTP 402</div>
+    <div class="status"><span>Payment Required</span><br>to access this API</div>
+    <p class="desc">This endpoint is protected by the <strong style="color:#e6edf3">L402 protocol</strong> — the open standard for pay-per-call APIs using Bitcoin Lightning. Pay <strong style="color:#f7931a">1 sat</strong> (~$0.001) and get instant access.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text">Server returns <strong>invoice BOLT11</strong> + macaroon (this page)</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">Client pays invoice with any <strong>Lightning wallet</strong> — settles in &lt;1s</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">Client sends <strong>Authorization: L402 macaroon:preimage</strong></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text">Server verifies <strong>SHA256(preimage) == hash</strong> → 200 OK + data</div></div>
+    </div>
+    <pre class="cmd">curl -H "Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;" \\
+  https://l402kit.com/api/demo/btc-price</pre>
+    <div class="links">
+      <a href="https://l402kit.com" class="btn btn-primary">← Back to l402kit.com</a>
+      <a href="https://l402kit.com/docs" class="btn btn-secondary">Docs →</a>
+    </div>
+  </div>
+  <div class="right">
+    <div class="json-wrap">
+      <div class="json-titlebar">
+        <div class="dot" style="background:#f85149"></div>
+        <div class="dot" style="background:#d29922"></div>
+        <div class="dot" style="background:#3fb950"></div>
+        <span style="margin-left:6px">HTTP 402 response</span>
+      </div>
+      <div class="json-body"><pre>${pretty}</pre></div>
+    </div>
+    <p class="note">invoice expires in 1h · each preimage works exactly once · SHA256 verified locally</p>
+  </div>
+</div>
+</body></html>`;
+}
 
 async function verifyToken(token: string): Promise<{ ok: boolean; reason?: string }> {
   const colon = token.lastIndexOf(":");
