@@ -23,7 +23,7 @@ def verify_token(token: str) -> bool:
         if not payload.get("hash") or not payload.get("exp"):
             return False
 
-        if int(time.time()) > payload["exp"]:
+        if int(time.time() * 1000) > payload["exp"]:
             return False
 
         digest = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()

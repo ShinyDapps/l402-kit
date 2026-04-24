@@ -295,3 +295,314 @@ class TestAlbyWallet:
         call_kwargs = mock_post.call_args
         headers = call_kwargs.kwargs.get("headers") or call_kwargs[1].get("headers", {})
         assert headers.get("Authorization") == "Bearer alby_token_xyz"
+
+
+# ─── BlinkWallet ─────────────────────────────────────────────────────────────
+
+class TestBlinkWallet:
+    def setup_method(self):
+        from l402kit.wallets.blink import BlinkWallet
+        self.wallet = BlinkWallet(api_key="blink_key", wallet_id="wallet_123")
+
+    def test_pay_invoice_success(self):
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json.return_value = {
+            "data": {
+                "lnInvoicePaymentSend": {
+                    "status": "SUCCESS",
+                    "transaction": {"settlementVia": {"preImage": "deadbeef" * 8}},
+                    "errors": [],
+                }
+            }
+        }
+        with patch("httpx.post", return_value=resp):
+            preimage = self.wallet.pay_invoice("lnbc1...")
+        assert preimage == "deadbeef" * 8
+
+    def test_pay_invoice_blink_error_raises(self):
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json.return_value = {
+            "data": {
+                "lnInvoicePaymentSend": {
+                    "errors": [{"message": "Insufficient balance"}],
+                    "transaction": None,
+                }
+            }
+        }
+        with patch("httpx.post", return_value=resp):
+            with pytest.raises(ValueError, match="Insufficient balance"):
+                self.wallet.pay_invoice("lnbc1...")
+
+    def test_pay_invoice_missing_preimage_raises(self):
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json.return_value = {
+            "data": {
+                "lnInvoicePaymentSend": {
+                    "errors": [],
+                    "transaction": {"settlementVia": {}},
+                }
+            }
+        }
+        with patch("httpx.post", return_value=resp):
+            with pytest.raises(ValueError, match="missing preimage"):
+                self.wallet.pay_invoice("lnbc1...")
+
+    def test_pay_invoice_http_error_raises(self):
+        resp = MagicMock()
+        resp.raise_for_status.side_effect = Exception("HTTP 503")
+        with patch("httpx.post", return_value=resp):
+            with pytest.raises(Exception, match="HTTP 503"):
+                self.wallet.pay_invoice("lnbc1...")
+
+
+# ─── verify_token ─────────────────────────────────────────────────────────────
+
+class TestVerifyToken:
+    def _make_token(self, exp_offset_s: int = 3600) -> str:
+        import os, hashlib, base64, json, time
+        preimage = os.urandom(32).hex()
+        payment_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+        exp = int((time.time() + exp_offset_s) * 1000)
+        macaroon = base64.b64encode(json.dumps({"hash": payment_hash, "exp": exp}).encode()).decode()
+        return f"{macaroon}:{preimage}"
+
+    def test_valid_token_returns_true(self):
+        from l402kit.verify import verify_token
+        assert verify_token(self._make_token()) is True
+
+    def test_expired_token_returns_false(self):
+        from l402kit.verify import verify_token
+        assert verify_token(self._make_token(exp_offset_s=-10)) is False
+
+    def test_wrong_preimage_returns_false(self):
+        from l402kit.verify import verify_token
+        token = self._make_token()
+        macaroon = token.rsplit(":", 1)[0]
+        assert verify_token(f"{macaroon}:{'aa' * 32}") is False
+
+    def test_malformed_token_returns_false(self):
+        from l402kit.verify import verify_token
+        assert verify_token("not-a-valid-token") is False
+
+    def test_short_preimage_returns_false(self):
+        from l402kit.verify import verify_token
+        import base64, json, time
+        exp = int((time.time() + 3600) * 1000)
+        mac = base64.b64encode(json.dumps({"hash": "a" * 64, "exp": exp}).encode()).decode()
+        assert verify_token(f"{mac}:tooshort") is False
+
+    def test_garbage_macaroon_returns_false(self):
+        from l402kit.verify import verify_token
+        assert verify_token(f"notbase64!!:{'aa' * 32}") is False
+
+
+# ─── DevProvider + DevWallet ──────────────────────────────────────────────────
+
+class TestDevProvider:
+    def setup_method(self):
+        from l402kit.dev import DevProvider
+        self.provider = DevProvider()
+
+    async def test_create_invoice_returns_dev_payment_request(self):
+        inv = await self.provider.create_invoice(5)
+        assert inv.payment_request.startswith("DEV:")
+        assert inv.amount_sats == 5
+        assert inv.payment_hash in inv.payment_request
+
+    async def test_create_invoice_macaroon_contains_hash(self):
+        import base64, json
+        inv = await self.provider.create_invoice(1)
+        payload = json.loads(base64.b64decode(inv.macaroon))
+        assert payload["hash"] == inv.payment_hash
+
+    async def test_check_payment_true_after_create(self):
+        inv = await self.provider.create_invoice(1)
+        assert await self.provider.check_payment(inv.payment_hash) is True
+
+    async def test_check_payment_false_for_unknown(self):
+        assert await self.provider.check_payment("unknown" * 8) is False
+
+    async def test_get_preimage_verifies_cryptographically(self):
+        import hashlib
+        inv = await self.provider.create_invoice(1)
+        preimage = self.provider.get_preimage(inv.payment_hash)
+        assert hashlib.sha256(bytes.fromhex(preimage)).hexdigest() == inv.payment_hash
+
+    async def test_each_invoice_has_unique_preimage(self):
+        inv1 = await self.provider.create_invoice(1)
+        inv2 = await self.provider.create_invoice(1)
+        assert inv1.payment_hash != inv2.payment_hash
+        assert self.provider.get_preimage(inv1.payment_hash) != self.provider.get_preimage(inv2.payment_hash)
+
+
+class TestDevWallet:
+    def setup_method(self):
+        from l402kit.dev import DevProvider, DevWallet
+        self.provider = DevProvider()
+        self.wallet = DevWallet(self.provider)
+
+    async def test_pay_invoice_returns_correct_preimage(self):
+        import hashlib
+        inv = await self.provider.create_invoice(1)
+        preimage = self.wallet.pay_invoice(inv.payment_request)
+        assert hashlib.sha256(bytes.fromhex(preimage)).hexdigest() == inv.payment_hash
+
+    def test_pay_non_dev_invoice_raises(self):
+        with pytest.raises(ValueError, match="DevWallet only works with DevProvider"):
+            self.wallet.pay_invoice("lnbc1realinvoice...")
+
+
+# ─── L402Client ───────────────────────────────────────────────────────────────
+
+class TestL402Client:
+    def setup_method(self):
+        from l402kit.dev import DevProvider, DevWallet
+        from l402kit.client import L402Client
+        self.provider = DevProvider()
+        self.wallet = DevWallet(self.provider)
+        self.client = L402Client(wallet=self.wallet)
+
+    async def test_non_402_response_returned_as_is(self):
+        ok_resp = MagicMock()
+        ok_resp.status_code = 200
+        with patch.object(self.client._http, "request", return_value=ok_resp):
+            result = self.client.get("http://example.com/api")
+        assert result.status_code == 200
+
+    async def test_402_triggers_payment_and_retry(self):
+        import asyncio, base64, json, time, hashlib, os
+        # Build a valid invoice + macaroon
+        preimage = os.urandom(32).hex()
+        payment_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+        exp = int((time.time() + 3600) * 1000)
+        macaroon = base64.b64encode(json.dumps({"hash": payment_hash, "exp": exp}).encode()).decode()
+        bolt11 = f"DEV:{payment_hash}"
+
+        # Pre-register preimage so DevWallet.pay_invoice succeeds
+        self.provider._store[payment_hash] = preimage
+
+        resp_402 = MagicMock()
+        resp_402.status_code = 402
+        resp_402.json.return_value = {"invoice": bolt11, "macaroon": macaroon}
+        resp_402.headers = {}
+
+        resp_200 = MagicMock()
+        resp_200.status_code = 200
+
+        with patch.object(self.client._http, "request", side_effect=[resp_402, resp_200]) as mock_req:
+            result = self.client.get("http://example.com/premium")
+
+        assert result.status_code == 200
+        # Second call must include L402 Authorization header
+        second_call_kwargs = mock_req.call_args_list[1]
+        auth = second_call_kwargs.kwargs.get("headers", {}).get("Authorization", "")
+        assert auth.startswith("L402 ")
+
+    async def test_402_missing_invoice_raises(self):
+        from l402kit.client import L402Error
+        resp_402 = MagicMock()
+        resp_402.status_code = 402
+        resp_402.json.return_value = {}
+        resp_402.headers = {}
+        with patch.object(self.client._http, "request", return_value=resp_402):
+            with pytest.raises(L402Error, match="missing invoice or macaroon"):
+                self.client.get("http://example.com/premium")
+
+    def test_context_manager_closes_client(self):
+        from l402kit.client import L402Client
+        with patch("httpx.Client") as mock_cls:
+            mock_http = MagicMock()
+            mock_cls.return_value = mock_http
+            with L402Client(wallet=self.wallet):
+                pass
+            mock_http.close.assert_called_once()
+
+
+# ─── l402_required — FastAPI middleware ───────────────────────────────────────
+
+class TestL402RequiredFastAPI:
+    async def test_no_auth_returns_402(self):
+        from l402kit.dev import DevProvider
+        from l402kit.middleware import l402_required
+        from fastapi import Request as FARequest
+        from starlette.testclient import TestClient
+        from fastapi import FastAPI
+
+        provider = DevProvider()
+        app = FastAPI()
+
+        @app.get("/premium")
+        @l402_required(price_sats=1, lightning=provider)
+        async def premium(request: FARequest):
+            return {"data": "ok"}
+
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/premium")
+        assert resp.status_code == 402
+        body = resp.json()
+        assert "invoice" in body
+        assert "macaroon" in body
+
+    async def test_valid_token_returns_200(self):
+        from l402kit.dev import DevProvider, DevWallet
+        from l402kit.middleware import l402_required
+        from l402kit.replay import _used_preimages as replay_store
+        from fastapi import Request as FARequest
+        from starlette.testclient import TestClient
+        from fastapi import FastAPI
+        import hashlib, base64, json, os, time
+
+        replay_store.clear()
+
+        provider = DevProvider()
+        app = FastAPI()
+
+        @app.get("/premium")
+        @l402_required(price_sats=1, lightning=provider)
+        async def premium(request: FARequest):
+            return {"data": "ok"}
+
+        # Generate a valid token
+        preimage = os.urandom(32).hex()
+        payment_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+        exp = int((time.time() + 3600) * 1000)
+        macaroon = base64.b64encode(json.dumps({"hash": payment_hash, "exp": exp}).encode()).decode()
+
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.get("/premium", headers={"Authorization": f"L402 {macaroon}:{preimage}"})
+        assert resp.status_code == 200
+
+    async def test_replayed_token_returns_401(self):
+        from l402kit.dev import DevProvider
+        from l402kit.middleware import l402_required
+        from l402kit.replay import _used_preimages as replay_store
+        from fastapi import Request as FARequest
+        from starlette.testclient import TestClient
+        from fastapi import FastAPI
+        import hashlib, base64, json, os, time
+
+        replay_store.clear()
+
+        provider = DevProvider()
+        app = FastAPI()
+
+        @app.get("/premium")
+        @l402_required(price_sats=1, lightning=provider)
+        async def premium(request: FARequest):
+            return {"data": "ok"}
+
+        preimage = os.urandom(32).hex()
+        payment_hash = hashlib.sha256(bytes.fromhex(preimage)).hexdigest()
+        exp = int((time.time() + 3600) * 1000)
+        macaroon = base64.b64encode(json.dumps({"hash": payment_hash, "exp": exp}).encode()).decode()
+
+        client = TestClient(app, raise_server_exceptions=False)
+        # First call succeeds
+        client.get("/premium", headers={"Authorization": f"L402 {macaroon}:{preimage}"})
+        # Second call with same token is a replay
+        resp = client.get("/premium", headers={"Authorization": f"L402 {macaroon}:{preimage}"})
+        assert resp.status_code == 401
+        assert "already used" in resp.json().get("error", "").lower()
