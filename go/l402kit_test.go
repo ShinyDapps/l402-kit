@@ -483,3 +483,170 @@ func TestMiddleware_POST_Returns200_WithValidToken(t *testing.T) {
 		t.Errorf("expected 200 on POST with valid token, got %d", rec.Code)
 	}
 }
+
+// ─── BlinkProvider ────────────────────────────────────────────────────────────
+
+func blinkServer(t *testing.T, resp interface{}, status int) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+func TestBlinkProvider_CreateInvoice_Success(t *testing.T) {
+	payload := map[string]interface{}{
+		"data": map[string]interface{}{
+			"lnInvoiceCreate": map[string]interface{}{
+				"invoice": map[string]interface{}{
+					"paymentRequest": "lnbc10n1...",
+					"paymentHash":    strings.Repeat("a", 64),
+				},
+				"errors": []interface{}{},
+			},
+		},
+	}
+	srv := blinkServer(t, payload, http.StatusOK)
+
+	p := l402kit.NewBlinkProvider("test_key", "wallet_id")
+	p.SetBaseURL(srv.URL)
+
+	inv, err := p.CreateInvoice(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if inv.PaymentRequest != "lnbc10n1..." {
+		t.Errorf("expected payment request 'lnbc10n1...', got %q", inv.PaymentRequest)
+	}
+	if inv.AmountSats != 10 {
+		t.Errorf("expected amount 10, got %d", inv.AmountSats)
+	}
+}
+
+func TestBlinkProvider_CreateInvoice_BlinkError(t *testing.T) {
+	payload := map[string]interface{}{
+		"data": map[string]interface{}{
+			"lnInvoiceCreate": map[string]interface{}{
+				"invoice": nil,
+				"errors":  []interface{}{map[string]interface{}{"message": "Insufficient balance"}},
+			},
+		},
+	}
+	srv := blinkServer(t, payload, http.StatusOK)
+
+	p := l402kit.NewBlinkProvider("test_key", "wallet_id")
+	p.SetBaseURL(srv.URL)
+
+	_, err := p.CreateInvoice(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error for blink API error, got nil")
+	}
+	if !strings.Contains(err.Error(), "Insufficient balance") {
+		t.Errorf("expected 'Insufficient balance' in error, got %q", err.Error())
+	}
+}
+
+func TestBlinkProvider_CreateInvoice_HTTPError(t *testing.T) {
+	srv := blinkServer(t, map[string]interface{}{}, http.StatusServiceUnavailable)
+
+	p := l402kit.NewBlinkProvider("test_key", "wallet_id")
+	p.SetBaseURL(srv.URL)
+
+	_, err := p.CreateInvoice(context.Background(), 10)
+	if err == nil {
+		t.Fatal("expected error on HTTP 503, got nil")
+	}
+}
+
+func TestBlinkProvider_CreateInvoice_ContextCancelled(t *testing.T) {
+	// Server that delays response longer than the cancelled context
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-r.Context().Done()
+	}))
+	t.Cleanup(srv.Close)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // immediately cancel
+
+	p := l402kit.NewBlinkProvider("test_key", "wallet_id")
+	p.SetBaseURL(srv.URL)
+
+	_, err := p.CreateInvoice(ctx, 10)
+	if err == nil {
+		t.Fatal("expected error for cancelled context, got nil")
+	}
+}
+
+func TestBlinkProvider_CreateInvoice_MacaroonEncoded(t *testing.T) {
+	hash := strings.Repeat("b", 64)
+	payload := map[string]interface{}{
+		"data": map[string]interface{}{
+			"lnInvoiceCreate": map[string]interface{}{
+				"invoice": map[string]interface{}{
+					"paymentRequest": "lnbc1...",
+					"paymentHash":    hash,
+				},
+				"errors": []interface{}{},
+			},
+		},
+	}
+	srv := blinkServer(t, payload, http.StatusOK)
+
+	p := l402kit.NewBlinkProvider("test_key", "wallet_id")
+	p.SetBaseURL(srv.URL)
+
+	inv, err := p.CreateInvoice(context.Background(), 21)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Macaroon must be valid base64 containing hash and exp fields
+	raw, err := base64.StdEncoding.DecodeString(inv.Macaroon)
+	if err != nil {
+		t.Fatalf("macaroon is not valid base64: %v", err)
+	}
+	var mac map[string]interface{}
+	if err := json.Unmarshal(raw, &mac); err != nil {
+		t.Fatalf("macaroon is not valid JSON: %v", err)
+	}
+	if mac["hash"] != hash {
+		t.Errorf("macaroon hash mismatch: want %q, got %q", hash, mac["hash"])
+	}
+	if _, ok := mac["exp"]; !ok {
+		t.Error("macaroon missing 'exp' field")
+	}
+}
+
+func TestBlinkProvider_SendsAPIKeyHeader(t *testing.T) {
+	var capturedKey string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedKey = r.Header.Get("X-API-KEY")
+		payload := map[string]interface{}{
+			"data": map[string]interface{}{
+				"lnInvoiceCreate": map[string]interface{}{
+					"invoice": map[string]interface{}{
+						"paymentRequest": "lnbc1...", "paymentHash": strings.Repeat("c", 64),
+					},
+					"errors": []interface{}{},
+				},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(payload)
+	}))
+	t.Cleanup(srv.Close)
+
+	p := l402kit.NewBlinkProvider("my_api_key", "wallet_id")
+	p.SetBaseURL(srv.URL)
+
+	_, err := p.CreateInvoice(context.Background(), 5)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if capturedKey != "my_api_key" {
+		t.Errorf("expected X-API-KEY header 'my_api_key', got %q", capturedKey)
+	}
+}

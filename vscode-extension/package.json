@@ -175,12 +175,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "watch": "tsc -watch -p tsconfig.json",
-    "package": "vsce package"
+    "package": "vsce package",
+    "test": "jest"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^2.24.0",
+    "jest": "^29.7.0",
     "sharp": "^0.34.5",
+    "ts-jest": "^29.4.9",
     "typescript": "^5.4.0"
   },
   "overrides": {

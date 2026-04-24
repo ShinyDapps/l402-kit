@@ -16,12 +16,16 @@ import (
 type BlinkProvider struct {
 	apiKey   string
 	walletID string
+	baseURL  string // overridable for tests; defaults to production Blink API
 }
 
 // NewBlinkProvider returns a BlinkProvider ready to use with Middleware.
 func NewBlinkProvider(apiKey, walletID string) *BlinkProvider {
-	return &BlinkProvider{apiKey: apiKey, walletID: walletID}
+	return &BlinkProvider{apiKey: apiKey, walletID: walletID, baseURL: "https://api.blink.sv/graphql"}
 }
+
+// SetBaseURL overrides the Blink API endpoint. Intended for tests only.
+func (b *BlinkProvider) SetBaseURL(url string) { b.baseURL = url }
 
 func (b *BlinkProvider) CreateInvoice(ctx context.Context, amountSats int) (Invoice, error) {
 	body := fmt.Sprintf(
@@ -29,7 +33,7 @@ func (b *BlinkProvider) CreateInvoice(ctx context.Context, amountSats int) (Invo
 		b.walletID, amountSats,
 	)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.blink.sv/graphql", bytes.NewBufferString(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, b.baseURL, bytes.NewBufferString(body))
 	if err != nil {
 		return Invoice{}, err
 	}
@@ -41,6 +45,9 @@ func (b *BlinkProvider) CreateInvoice(ctx context.Context, amountSats int) (Invo
 		return Invoice{}, fmt.Errorf("blink: %w", err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return Invoice{}, fmt.Errorf("blink: HTTP %d", resp.StatusCode)
+	}
 
 	var gql struct {
 		Data struct {

@@ -29,6 +29,9 @@
   "engines": {
     "node": ">=18"
   },
+  "scripts": {
+    "test": "node --test test/templates.test.mjs"
+  },
   "dependencies": {
     "@clack/prompts": "^0.9.1"
   }

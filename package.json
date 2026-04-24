@@ -90,27 +90,58 @@
     }
   },
   "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/src"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.ts"
-    ],
-    "testPathIgnorePatterns": [
-      "lnurl-auth\\.test\\.ts",
-      "delete-data\\.test\\.ts",
-      "visual\\.test\\.ts"
-    ],
-    "transform": {
-      "^.+\\.ts$": [
-        "ts-jest",
-        {
-          "tsconfig": "tsconfig.json"
+    "projects": [
+      {
+        "displayName": "sdk",
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "roots": [
+          "<rootDir>/src"
+        ],
+        "testMatch": [
+          "**/__tests__/**/*.test.ts"
+        ],
+        "testPathIgnorePatterns": [
+          "lnurl-auth\\.test\\.ts",
+          "delete-data\\.test\\.ts",
+          "visual\\.test\\.ts"
+        ],
+        "transform": {
+          "^.+\\.ts$": [
+            "ts-jest",
+            {
+              "tsconfig": "tsconfig.json"
+            }
+          ]
         }
-      ]
-    }
+      },
+      {
+        "displayName": "workers",
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "roots": [
+          "<rootDir>/cloudflare/src"
+        ],
+        "testMatch": [
+          "**/__tests__/**/*.test.ts"
+        ],
+        "transform": {
+          "^.+\\.ts$": [
+            "ts-jest",
+            {
+              "tsconfig": "<rootDir>/cloudflare/tsconfig.test.json"
+            }
+          ]
+        }
+      },
+      "<rootDir>/vscode-extension/jest.config.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "cloudflare/src/**/*.ts",
+      "!src/**/__tests__/**",
+      "!cloudflare/src/**/__tests__/**"
+    ]
   },
   "devDependencies": {
     "@noble/curves": "^1.9.7",
