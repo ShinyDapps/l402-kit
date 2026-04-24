@@ -295,6 +295,106 @@ async function fetchBtcPrice(): Promise<{ usd: number; eur: number; gbp: number;
   return { usd: 0, eur: 0, gbp: 0, source: "unavailable" };
 }
 
+// ── Pay-to-address demo: l402kit.com acts as L402Client, pays visitor 1 sat ──
+
+export async function handleDemoPayAddress(req: Request, env: Env): Promise<Response> {
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const body = await req.json().catch(() => ({})) as { address?: string };
+  const address = (body.address ?? "").trim().toLowerCase();
+
+  if (!address || !address.includes("@") || !address.includes(".")) {
+    return json({ error: "Invalid Lightning address" }, 400);
+  }
+
+  // Rate limit by IP: 2 demo payments per IP per hour
+  const ip = req.headers.get("CF-Connecting-IP") ?? req.headers.get("X-Forwarded-For") ?? "unknown";
+  const rlKey = `demo-pay-rl:${ip}`;
+  const rlRaw = await env.demo_preimages.get(rlKey);
+  const now = Math.floor(Date.now() / 1000);
+  if (rlRaw) {
+    const { count, reset } = JSON.parse(rlRaw) as { count: number; reset: number };
+    if (now < reset && count >= 2) return json({ error: "Rate limited — try again in 1 hour" }, 429);
+    const newCount = now < reset ? count + 1 : 1;
+    const newReset = now < reset ? reset : now + 3600;
+    await env.demo_preimages.put(rlKey, JSON.stringify({ count: newCount, reset: newReset }), { expirationTtl: 3600 });
+  } else {
+    await env.demo_preimages.put(rlKey, JSON.stringify({ count: 1, reset: now + 3600 }), { expirationTtl: 3600 });
+  }
+
+  // Rate limit per address: 1 per address per 24h
+  const addrKey = `demo-pay-addr:${address}`;
+  const addrUsed = await env.demo_preimages.get(addrKey);
+  if (addrUsed) return json({ error: "Already sent a demo payment to this address today" }, 429);
+
+  try {
+    const [user, domain] = address.split("@");
+
+    // Resolve LNURL-pay metadata
+    const lnurlRes = await fetch(`https://${domain}/.well-known/lnurlp/${user}`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!lnurlRes.ok) return json({ error: "Could not resolve Lightning address — is it correct?" }, 400);
+
+    const lnurlData = await lnurlRes.json() as {
+      tag?: string; callback?: string; minSendable?: number; maxSendable?: number;
+    };
+    if (lnurlData.tag !== "payRequest" || !lnurlData.callback) {
+      return json({ error: "Address returned an invalid LNURL-pay response" }, 400);
+    }
+
+    const amountMsat = 1000; // 1 sat = 1000 msat
+    if (lnurlData.minSendable && amountMsat < lnurlData.minSendable) {
+      const minSats = Math.ceil(lnurlData.minSendable / 1000);
+      return json({ error: `Minimum payment for this wallet is ${minSats} sats` }, 400);
+    }
+
+    // Get invoice from their wallet
+    const cbUrl = new URL(lnurlData.callback);
+    cbUrl.searchParams.set("amount", String(amountMsat));
+    const invRes = await fetch(cbUrl.toString(), {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!invRes.ok) return json({ error: "Failed to request invoice from wallet" }, 503);
+
+    const invData = await invRes.json() as { pr?: string; reason?: string };
+    if (!invData.pr) return json({ error: invData.reason ?? "Wallet did not return an invoice" }, 503);
+
+    // Pay via Blink (l402kit.com acts as the L402Client)
+    const payRes = await fetch("https://api.blink.sv/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      body: JSON.stringify({
+        query: `mutation Pay($input: LnInvoicePaymentInput!) {
+          lnInvoicePaymentSend(input: $input) { status errors { message } }
+        }`,
+        variables: { input: { walletId: env.BLINK_WALLET_ID, paymentRequest: invData.pr } },
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+
+    if (!payRes.ok) return json({ error: "Payment service unavailable — try again" }, 503);
+    const payData = await payRes.json() as {
+      data?: { lnInvoicePaymentSend?: { status: string; errors?: { message: string }[] } };
+    };
+    const result = payData?.data?.lnInvoicePaymentSend;
+    if (result?.errors?.length) return json({ error: result.errors[0].message }, 503);
+    if (result?.status !== "SUCCESS" && result?.status !== "PENDING") {
+      return json({ error: "Payment did not go through — check your address" }, 503);
+    }
+
+    // Mark address as used (24h)
+    await env.demo_preimages.put(addrKey, "1", { expirationTtl: 86400 });
+
+    return json({ paid: true, amountSats: 1 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return json({ error: msg }, 503);
+  }
+}
+
 function hexToBytes(hex: string): Uint8Array {
   const arr = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) arr[i / 2] = parseInt(hex.slice(i, i + 2), 16);

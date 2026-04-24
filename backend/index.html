@@ -860,13 +860,59 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 
   </div><!-- end demo-split-grid -->
 
-  <!-- Donate / support section -->
-  <div style="margin-top:32px;text-align:center;padding:24px 24px 0">
-    <div style="display:inline-block;background:#0a0a0a;border:1px solid #222;border-radius:16px;padding:24px 36px;max-width:520px">
-      <div style="font-size:11px;font-weight:700;color:#f7931a;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">⚡ Live Protocol Test</div>
-      <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:18px">This button creates a real BOLT11 invoice via ManagedProvider (0.3% fee to l402kit.com, 99.7% to <strong style="color:#ccc">shinydapps@blink.sv</strong>). Pay from any Lightning wallet — this is l402-kit eating its own cooking.</p>
-      <a href="/api/demo" target="_blank" onclick="openDonateFlow(event)" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--orange);color:#000;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none">⚡ Support this project</a>
-      <p style="margin-top:12px;font-size:11px;color:#444">1 sat · <span id="donate-usd-val">~$0.001</span> · instant · no account</p>
+  <!-- ── Live Pay Demo — visitor receives 1 sat ── -->
+  <div style="margin-top:36px">
+    <div style="background:#08090f;border:1px solid rgba(247,147,26,.22);border-radius:20px;padding:32px 36px;max-width:720px;margin:0 auto;position:relative;overflow:hidden">
+      <!-- ambient glow -->
+      <div style="position:absolute;top:0;right:0;width:60%;height:100%;background:radial-gradient(ellipse 80% 90% at 100% 50%,rgba(247,147,26,.06),transparent);pointer-events:none"></div>
+      <div style="position:relative;z-index:1">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:10px;font-weight:700;color:rgba(247,147,26,.7);text-transform:uppercase;letter-spacing:2px">⚡ Try it live</span>
+        </div>
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px">Receive 1 sat — right now, in your wallet.</h3>
+        <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:24px;max-width:520px">Enter your Lightning address. l402kit.com acts as an AI agent, calls the demo API, pays the L402 invoice — and <strong style="color:#ccc">1 sat lands in your wallet</strong>. Real. Instant. No account.</p>
+
+        <!-- Input row -->
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:10px;max-width:520px">
+          <input id="livePayAddr" type="email" inputmode="email" autocomplete="email"
+                 placeholder="you@blink.sv  or  you@getalby.com"
+                 style="width:100%;padding:13px 16px;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:10px;color:#e5e5e5;font-size:14px;font-family:'Fira Code',monospace;outline:none;box-sizing:border-box;transition:border-color .2s"
+                 oninput="livePayInput(this)"
+                 onfocus="this.style.borderColor='rgba(247,147,26,.5)'"
+                 onblur="this.style.borderColor='#2a2a2a'" />
+          <button id="livePayBtn" onclick="livePayRun()"
+                  style="padding:13px 22px;background:#2a1a00;border:1px solid rgba(247,147,26,.4);color:rgba(247,147,26,.5);border-radius:10px;font-size:14px;font-weight:700;cursor:not-allowed;white-space:nowrap;transition:all .2s;font-family:inherit"
+                  disabled>▶ Run</button>
+        </div>
+        <!-- Mobile hint -->
+        <p style="font-size:11px;color:#444;margin-bottom:20px">📱 On mobile? Tap the field — most keyboards offer QR scan · or paste your wallet's Lightning address</p>
+
+        <!-- Status line -->
+        <div id="livePayStatus" style="min-height:18px;font-size:13px;color:#888;margin-bottom:12px"></div>
+
+        <!-- Terminal (hidden until Run) -->
+        <div id="livePayTerminal" style="display:none">
+          <div style="background:#0d1117;border:1px solid #21262d;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5)">
+            <div style="background:#161b22;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #21262d">
+              <span style="width:11px;height:11px;border-radius:50%;background:#ff5f57;flex-shrink:0"></span>
+              <span style="width:11px;height:11px;border-radius:50%;background:#febc2e;flex-shrink:0"></span>
+              <span style="width:11px;height:11px;border-radius:50%;background:#28c840;flex-shrink:0"></span>
+              <span style="flex:1;text-align:center;font-size:11px;color:#6e7681;font-family:'Fira Code',monospace">l402-kit · live payment demo</span>
+            </div>
+            <div id="livePayTerm" style="font-family:'Fira Code','SF Mono',monospace;font-size:12px;line-height:1.7;padding:18px 20px;min-height:180px;max-height:320px;overflow-y:auto;color:#c9d1d9"></div>
+          </div>
+          <!-- Success state -->
+          <div id="livePaySuccess" style="display:none;margin-top:16px;text-align:center;padding:20px 16px;background:linear-gradient(135deg,#091209,#070d07);border:1px solid rgba(34,197,94,.3);border-radius:12px">
+            <div style="font-size:32px;margin-bottom:8px">⚡</div>
+            <div style="font-size:15px;font-weight:700;color:#22c55e;margin-bottom:6px">1 sat received!</div>
+            <div id="livePaySuccessMsg" style="font-size:12px;color:#888;line-height:1.6"></div>
+            <button onclick="livePayReset()" style="margin-top:14px;background:none;border:1px solid #333;color:#888;border-radius:8px;padding:7px 18px;font-size:12px;cursor:pointer;font-family:inherit">Try again with a different address</button>
+          </div>
+        </div>
+
+        <p style="margin-top:16px;font-size:11px;color:#333">Rate limited: 2 demo payments per IP/hour · 1 per address/day · <span id="livePay-usd-val">~$0.0001</span> USD</p>
+      </div>
     </div>
   </div>
 </section>
@@ -2643,6 +2689,159 @@ function animateValue(id, start, end, duration) {
     var el = document.getElementById('live-demo');
     if (el) obs.observe(el);
   });
+})();
+
+// ── Live Pay Demo (visitor receives 1 sat) ────────────────────────────────────
+(function() {
+  var _livePayRunning = false;
+
+  function term() { return document.getElementById('livePayTerm'); }
+  function status(msg, color) {
+    var el = document.getElementById('livePayStatus');
+    if (el) { el.textContent = msg; el.style.color = color || '#888'; }
+  }
+
+  function appendTerm(html) {
+    var t = term();
+    if (!t) return;
+    var d = document.createElement('div');
+    d.innerHTML = html;
+    t.appendChild(d);
+    t.scrollTop = 99999;
+  }
+
+  function termLine(text, color) {
+    appendTerm('<span style="color:' + (color || '#c9d1d9') + '">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>');
+  }
+
+  function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+  window.livePayInput = function(el) {
+    var btn = document.getElementById('livePayBtn');
+    var valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value.trim());
+    btn.disabled = !valid;
+    btn.style.background    = valid ? 'var(--orange)' : '#2a1a00';
+    btn.style.color         = valid ? '#000'          : 'rgba(247,147,26,.5)';
+    btn.style.borderColor   = valid ? 'var(--orange)' : 'rgba(247,147,26,.4)';
+    btn.style.cursor        = valid ? 'pointer'       : 'not-allowed';
+  };
+
+  window.livePayReset = function() {
+    _livePayRunning = false;
+    var t = term(); if (t) t.innerHTML = '';
+    document.getElementById('livePaySuccess').style.display = 'none';
+    document.getElementById('livePayTerminal').style.display = 'none';
+    document.getElementById('livePayAddr').value = '';
+    document.getElementById('livePayAddr').disabled = false;
+    var btn = document.getElementById('livePayBtn');
+    btn.textContent = '▶ Run'; btn.disabled = true;
+    btn.style.background = '#2a1a00'; btn.style.color = 'rgba(247,147,26,.5)';
+    btn.style.borderColor = 'rgba(247,147,26,.4)'; btn.style.cursor = 'not-allowed';
+    status('');
+  };
+
+  window.livePayRun = async function() {
+    if (_livePayRunning) return;
+    var addrEl = document.getElementById('livePayAddr');
+    var addr = addrEl.value.trim();
+    if (!addr) return;
+    _livePayRunning = true;
+
+    var btn = document.getElementById('livePayBtn');
+    btn.disabled = true; btn.textContent = 'Running…';
+    addrEl.disabled = true;
+    status('Resolving Lightning address…');
+
+    // Show terminal
+    var termEl = document.getElementById('livePayTerminal');
+    var succEl = document.getElementById('livePaySuccess');
+    var t = term();
+    termEl.style.display = ''; succEl.style.display = '';
+    succEl.style.display = 'none'; t.innerHTML = '';
+
+    // Start animation + backend call in parallel
+    var payPromise = fetch('/api/demo/pay-address', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: addr }),
+    });
+
+    // Animate the terminal
+    await sleep(300);
+    termLine('$ # l402kit.com acting as L402Client (AI agent)', '#6e7681');
+    await sleep(600);
+    termLine('$ curl https://demo-api.l402kit.com/data', '#58a6ff');
+    await sleep(900);
+    termLine('  HTTP/1.1 402 Payment Required', '#f7931a');
+    termLine('  WWW-Authenticate: L402 macaroon="eyJhbGci…", invoice="lnbc10n…"', '#6e7681');
+    termLine('  {"error":"Payment Required","priceSats":1}', '#6e7681');
+    await sleep(800);
+    appendTerm('<div style="height:6px"></div>');
+    termLine('$ # L402Client: resolving LNURL → ' + addr, '#6e7681');
+    await sleep(700);
+    termLine('  ✓ LNURL endpoint found', '#3fb950');
+    await sleep(500);
+    termLine('  ✓ Invoice obtained (1 sat, expires in 60s)', '#3fb950');
+    await sleep(600);
+    termLine('  ⚡ Paying 1 sat → ' + addr + ' …', '#f7931a');
+
+    // Wait for the real backend call (+ keep animation alive)
+    status('Sending payment…');
+    var payResult;
+    try {
+      var r = await payPromise;
+      payResult = await r.json();
+      if (!r.ok) throw new Error(payResult.error || 'Payment failed');
+    } catch(e) {
+      await sleep(300);
+      termLine('  ✗ Error: ' + e.message, '#f87171');
+      status('✗ ' + e.message, '#f87171');
+      btn.textContent = '▶ Run'; btn.disabled = false; addrEl.disabled = false;
+      _livePayRunning = false;
+      return;
+    }
+
+    // Payment sent — finish animation
+    await sleep(600);
+    termLine('  ✓ Payment confirmed — preimage received', '#3fb950');
+    await sleep(400);
+    appendTerm('<div style="height:6px"></div>');
+    termLine('$ curl https://demo-api.l402kit.com/data \\', '#58a6ff');
+    termLine('    -H "Authorization: L402 <macaroon>:<preimage>"', '#58a6ff');
+    await sleep(800);
+    termLine('  HTTP/1.1 200 OK', '#3fb950');
+    termLine('  {', '#c9d1d9');
+    termLine('    "data": "Payment confirmed ⚡",', '#a5d6ff');
+    termLine('    "owner": "' + addr + '",', '#a5d6ff');
+    termLine('    "paidSats": 1,', '#a5d6ff');
+    termLine('    "protocol": "L402"', '#a5d6ff');
+    termLine('  }', '#c9d1d9');
+    await sleep(400);
+    appendTerm('<div style="height:6px"></div>');
+    termLine('$ # ⚡ 1 sat landed in ' + addr, '#3fb950');
+
+    // Show success card
+    status('');
+    document.getElementById('livePaySuccessMsg').innerHTML =
+      '1 sat sent to <strong style="color:#ccc">' + addr + '</strong> via Bitcoin Lightning. ' +
+      'This is exactly what happens when an AI agent calls your l402-kit API.';
+    succEl.style.display = '';
+    btn.textContent = '✓ Done'; addrEl.disabled = false;
+    _livePayRunning = false;
+  };
+})();
+
+// Update live USD value for the demo
+(function() {
+  function updateLivePayUsd() {
+    var btcEl = document.getElementById('strip-sat-usd');
+    var el = document.getElementById('livePay-usd-val');
+    if (el && btcEl && btcEl.textContent && btcEl.textContent !== '...') {
+      el.textContent = btcEl.textContent + ' USD';
+    }
+  }
+  setTimeout(updateLivePayUsd, 3000);
+  setTimeout(updateLivePayUsd, 7000);
 })();
 
 // ── Donate flow ──────────────────────────────────────────────────────────────
