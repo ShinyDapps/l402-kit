@@ -476,6 +476,66 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <a href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" class="hero-scaffold-link">View quickstart →</a>
   </div>
 </section><hr class="section-sep">
+
+<!-- STATS BAR -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat-item">
+    <div class="stat-num">MIT</div>
+    <div class="stat-label">License</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="stat-stars">—</div>
+    <div class="stat-label">GitHub stars</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="stat-tests">—</div>
+    <div class="stat-label">Tests passing</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="stat-installs">—</div>
+    <div class="stat-label">Total installs</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">&lt;1s</div>
+    <div class="stat-label">Settlement time</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">0</div>
+    <div class="stat-label">Countries blocked</div>
+  </div>
+</div><hr class="section-sep">
+
+<!-- PROBLEM SECTION -->
+<section class="problem">
+  <h2>Why credit cards fail for APIs</h2>
+  <p class="problem-sub">Stripe was built for humans buying products. APIs charge per-call — and that breaks everything.</p>
+  <div class="problem-grid">
+    <div class="problem-card" data-reveal="">
+      <div class="pc-icon">🤖</div>
+      <div class="pc-title">AI agents can't hold cards</div>
+      <div class="pc-desc">Autonomous agents have no billing address, no CVV, no human to click "confirm". Card payment fails.</div>
+    </div>
+    <div class="problem-card" data-reveal="">
+      <div class="pc-icon">💸</div>
+      <div class="pc-title">$0.30 minimum fee</div>
+      <div class="pc-desc">A 1-cent API call costs $0.30 in card fees. You lose money on every request under that threshold.</div>
+    </div>
+    <div class="problem-card" data-reveal="">
+      <div class="pc-icon">🌍</div>
+      <div class="pc-title">50+ countries blocked</div>
+      <div class="pc-desc">Stripe and PayPal don't operate everywhere. Your API is global — your payment processor shouldn't decide who gets in.</div>
+    </div>
+    <div class="problem-card" data-reveal="">
+      <div class="pc-icon">↩️</div>
+      <div class="pc-title">APIs can't be "returned"</div>
+      <div class="pc-desc">You already delivered the data. A chargeback lets the caller take it for free — and you pay the fee.</div>
+    </div>
+  </div>
+  <div class="problem-footer">
+    <strong>l402-kit</strong> uses the HTTP 402 standard + Bitcoin Lightning to eliminate all four problems at once — no accounts, no minimums, no chargebacks, no borders.
+  </div>
+</section><hr class="section-sep">
+
 <section class="for-who">
   <span class="eyebrow">Built for</span>
   <h2>Who is this for?</h2>
@@ -518,6 +578,77 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     </div>
   </div>
 </section><hr class="section-sep">
+
+<!-- FEATURES GRID -->
+<section class="features">
+  <span class="eyebrow">Why l402-kit</span>
+  <h2>Everything you need</h2>
+  <div class="features-grid">
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Zero setup</div>
+      <div class="feature-desc">Just set your Lightning Address. No node, no wallet setup, no config files.</div>
+    </div>
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">🔧</div>
+      <div class="feature-title">4 languages</div>
+      <div class="feature-desc">TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Same protocol, any stack.</div>
+    </div>
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">🤖</div>
+      <div class="feature-title">AI agent native</div>
+      <div class="feature-desc">Machines can pay machines. No human in the loop. Perfect for autonomous AI agents.</div>
+    </div>
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">🔐</div>
+      <div class="feature-title">Cryptographic proof</div>
+      <div class="feature-desc">SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.</div>
+    </div>
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">🔌</div>
+      <div class="feature-title">Provider agnostic</div>
+      <div class="feature-desc">Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.</div>
+    </div>
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">🪪</div>
+      <div class="feature-title">The wallet is the identity</div>
+      <div class="feature-desc">No email, no password, no account. Pay and access. The Lightning wallet IS the user identity.</div>
+    </div>
+  </div>
+</section><hr class="section-sep">
+
+<!-- USE CASES -->
+<section class="usecases">
+  <span class="eyebrow">What will you build?</span>
+  <h2>Use cases</h2>
+  <div class="usecase-grid">
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">AI / Agents</div>
+      <div class="usecase-title">Monetize your AI tool</div>
+      <div class="usecase-desc">Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.</div>
+      <div class="usecase-code">l402({ priceSats: 100, lightning })</div>
+    </div>
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">Data APIs</div>
+      <div class="usecase-title">Pay-per-query data</div>
+      <div class="usecase-desc">Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.</div>
+      <div class="usecase-code">l402({ priceSats: 10, lightning })</div>
+    </div>
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">Content</div>
+      <div class="usecase-title">Paywalled endpoints</div>
+      <div class="usecase-desc">Articles, research papers, PDFs, audio. No account creation required from your users.</div>
+      <div class="usecase-code">l402({ priceSats: 50, lightning })</div>
+    </div>
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">Compute</div>
+      <div class="usecase-title">Serverless billing</div>
+      <div class="usecase-desc">Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.</div>
+      <div class="usecase-code">l402({ priceSats: 500, lightning })</div>
+    </div>
+  </div>
+</section><hr class="section-sep">
+
 <section class="cmp-section">
   <div style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:16px" data-i18n="cmpTitle">Cost comparison — live BTC price</div>
   <div style="overflow-x:auto">
@@ -1044,7 +1175,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Pro plan today</div>
         <div style="font-size:16px;font-weight:700;color:#ccc" id="extProSats">~11,000 sats/mo</div>
       </div>
-      <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.dapp-agent-forge-vscode" target="_blank" rel="noopener" style="display:block;text-align:center;padding:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.3);border-radius:10px;font-size:13px;font-weight:600;color:var(--orange);text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(247,147,26,0.15)'" onmouseout="this.style.background='rgba(247,147,26,0.08)'">Install ShinyDapps — Wallet Lab Forge ↗</a>
+      <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.dapp-agent-forge-vscode" target="_blank" rel="noopener" style="display:block;text-align:center;padding:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.3);border-radius:10px;font-size:13px;font-weight:600;color:var(--orange);text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(247,147,26,0.15)'" onmouseout="this.style.background='rgba(247,147,26,0.08)'">Install Dapp Agent Forge — Free ↗</a>
     </div>
   </div>
 </section><hr class="section-sep">
