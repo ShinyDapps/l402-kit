@@ -228,10 +228,10 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .fw-cta:hover { transform: translateY(-1px); }
 .for-who-card[data-who="api"] .fw-cta { color: var(--orange); border-color: rgba(247,147,26,0.35); background: rgba(247,147,26,0.07); }
 .for-who-card[data-who="api"] .fw-cta:hover { background: rgba(247,147,26,0.18); }
-.for-who-card[data-who="ai"] .fw-cta { color: #22c55e; border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.07); }
-.for-who-card[data-who="ai"] .fw-cta:hover { background: rgba(34,197,94,0.18); }
-.for-who-card[data-who="oss"] .fw-cta { color: #a78bfa; border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.07); }
-.for-who-card[data-who="oss"] .fw-cta:hover { background: rgba(167,139,250,0.18); }
+.for-who-card[data-who="ai"] .fw-cta { color: #2ddc6e; border-color: rgba(45,220,110,0.4); background: rgba(45,220,110,0.07); }
+.for-who-card[data-who="ai"] .fw-cta:hover { background: rgba(45,220,110,0.16); }
+.for-who-card[data-who="oss"] .fw-cta { color: #b89dff; border-color: rgba(184,157,255,0.4); background: rgba(184,157,255,0.07); }
+.for-who-card[data-who="oss"] .fw-cta:hover { background: rgba(184,157,255,0.16); }
 .usecases { max-width: 860px; margin: 0 auto 56px; padding: 0 24px; }
 .usecases h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
 .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
@@ -292,17 +292,19 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .usecase-card:hover { border-color: rgba(247,147,26,0.3); transform: translateY(-2px); }
 
 /* ── FOR-WHO CARDS ── */
-.for-who-card { border-top-width: 2px; border-top-style: solid; transition: box-shadow .2s, transform .2s; }
-.for-who-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.4); transform: translateY(-3px); }
-.for-who-card[data-who="api"] { border-top-color: var(--orange); }
-.for-who-card[data-who="ai"]  { border-top-color: #22c55e; }
-.for-who-card[data-who="ai"] .fw-role { color: #22c55e; }
-.for-who-card[data-who="oss"] { border-top-color: #a78bfa; }
-.for-who-card[data-who="oss"] .fw-role { color: #a78bfa; }
+.for-who-card { border-top-width: 2px; border-top-style: solid; transition: box-shadow .25s, transform .25s; }
+.for-who-card[data-who="api"] { border-top-color: #ffa033; }
+.for-who-card[data-who="api"]:hover { box-shadow: 0 14px 44px rgba(0,0,0,0.45), 0 0 28px rgba(255,160,51,0.13); transform: translateY(-3px); }
+.for-who-card[data-who="ai"]  { border-top-color: #2ddc6e; }
+.for-who-card[data-who="ai"]:hover  { box-shadow: 0 14px 44px rgba(0,0,0,0.45), 0 0 28px rgba(45,220,110,0.13); transform: translateY(-3px); }
+.for-who-card[data-who="ai"] .fw-role { color: #2ddc6e; }
+.for-who-card[data-who="oss"] { border-top-color: #b89dff; }
+.for-who-card[data-who="oss"]:hover { box-shadow: 0 14px 44px rgba(0,0,0,0.45), 0 0 28px rgba(184,157,255,0.13); transform: translateY(-3px); }
+.for-who-card[data-who="oss"] .fw-role { color: #b89dff; }
 .for-who-card ul { list-style: none; padding: 0; }
 .for-who-card ul li::before { content: "✓"; color: var(--orange); margin-right: 8px; font-weight: 700; }
-.for-who-card[data-who="ai"] ul li::before { color: #22c55e; }
-.for-who-card[data-who="oss"] ul li::before { color: #a78bfa; }
+.for-who-card[data-who="ai"] ul li::before { color: #2ddc6e; }
+.for-who-card[data-who="oss"] ul li::before { color: #b89dff; }
 
 /* ── FLOW CONNECTOR ── */
 .flow-step:not(:last-child)::after { content: ''; position: absolute; right: -14px; top: 36px; width: 26px; height: 2px; background: linear-gradient(90deg, rgba(247,147,26,0.7), rgba(247,147,26,0.1)); font-size: 0; transform: none; border-radius: 2px; }
@@ -464,7 +466,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
       <div class="hmc-icon">🤖</div>
       <div class="hmc-label">AI Agents</div>
       <div class="hmc-title">L402Client · autonomous pay</div>
-      <div class="hmc-sub" style="color:#22c55e">Claude · GPT · any agent</div>
+      <div class="hmc-sub" style="color:#2ddc6e">Claude · GPT · any agent</div>
     </a>
   </div>
 
@@ -736,7 +738,76 @@ lightning = <span class="c-fn">BlinkProvider</span>(
       <p style="margin-top:12px;font-size:11px;color:#444">1 sat · <span id="donate-usd-val">~$0.001</span> · instant · no account</p>
     </div>
   </div>
+</section>
+
+<!-- ── QUICKSTART CTA — appears right after the demo so momentum carries into install ── -->
+<section style="max-width:940px;margin:0 auto 0;padding:48px 24px 56px">
+  <div style="position:relative;background:linear-gradient(135deg,#0e0e0e 0%,#0a0a0a 100%);border:1px solid rgba(247,147,26,.22);border-radius:24px;padding:52px 48px;overflow:hidden" id="quickstartCta">
+    <!-- ambient glow right -->
+    <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse 80% 90% at 100% 50%,rgba(247,147,26,.09),transparent);pointer-events:none"></div>
+    <!-- ambient glow left -->
+    <div style="position:absolute;top:0;left:0;width:30%;height:100%;background:radial-gradient(ellipse 80% 100% at 0% 50%,rgba(247,147,26,.04),transparent);pointer-events:none"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;position:relative;z-index:1" id="ctaGrid">
+
+      <!-- LEFT ─────────────────────────────────────────── -->
+      <div>
+        <span style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:rgba(247,147,26,.7);margin-bottom:16px">Get started in 2 minutes</span>
+        <h2 style="font-size:clamp(28px,4vw,42px);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:18px">Your API.<br><span style="background:linear-gradient(135deg,#f7931a,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Your Bitcoin.</span><br>No middleman.</h2>
+        <p style="font-size:15px;color:#8a8f98;line-height:1.65;margin-bottom:28px;max-width:340px">3 lines of middleware. Zero config option. Every sat lands directly in your Lightning wallet.</p>
+
+        <!-- trust row -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px">
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#666;background:#111;border:1px solid #222;border-radius:20px;padding:4px 12px">🔓 MIT License</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#666;background:#111;border:1px solid #222;border-radius:20px;padding:4px 12px">⚡ TypeScript · Python · Go · Rust</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#666;background:#111;border:1px solid #222;border-radius:20px;padding:4px 12px">🚫 No account needed</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#666;background:#111;border:1px solid #222;border-radius:20px;padding:4px 12px">0️⃣ 0% fee (self-host)</span>
+        </div>
+
+        <!-- action buttons -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <a href="https://docs.l402kit.com/quickstart" target="_blank" class="btn-primary" style="font-size:15px;padding:14px 28px;text-decoration:none">Read the docs →</a>
+          <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s;background:#111" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#2a2a2a'">⭐ Star on GitHub</a>
+        </div>
+      </div>
+
+      <!-- RIGHT — code block ───────────────────────────── -->
+      <div>
+        <!-- install strip -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#0a0a0a;border:1px solid #222;border-radius:12px 12px 0 0;padding:10px 16px;border-bottom:none">
+          <span style="font-family:'Fira Code',monospace;font-size:13px;color:#f7931a;font-weight:700">$ npm install l402-kit</span>
+          <button onclick="(function(b){navigator.clipboard.writeText('npm install l402-kit').then(()=>{b.textContent='✓';setTimeout(()=>b.textContent='copy',1500)})})(this)" style="background:#1a1a1a;border:1px solid #333;color:#666;border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit;transition:color .2s" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='#666'">copy</button>
+        </div>
+        <!-- code snippet -->
+        <div style="background:linear-gradient(160deg,#0d0d0d,#0a0a0a);border:1px solid #222;border-radius:0 0 12px 12px;padding:20px 20px 24px;font-family:'Fira Code','SF Mono',monospace;font-size:13px;line-height:1.75">
+          <div><span style="color:#555">// 3 lines. Managed mode — no node, no wallet setup</span></div>
+          <div style="margin-top:8px"><span style="color:#c792ea">import</span> <span style="color:#e5e5e5">{ l402, ManagedProvider }</span> <span style="color:#c792ea">from</span> <span style="color:#c3e88d">"l402-kit"</span><span style="color:#555">;</span></div>
+          <div style="height:10px"></div>
+          <div><span style="color:#555">// Payments go straight to your ⚡ address</span></div>
+          <div><span style="color:#c792ea">const</span> <span style="color:#82aaff">lightning</span> <span style="color:#e5e5e5">= ManagedProvider.</span><span style="color:#82aaff">fromAddress</span><span style="color:#e5e5e5">(</span><span style="color:#c3e88d">"you@yourdomain.com"</span><span style="color:#e5e5e5">);</span></div>
+          <div style="height:10px"></div>
+          <div><span style="color:#e5e5e5">app.</span><span style="color:#82aaff">get</span><span style="color:#e5e5e5">(</span><span style="color:#c3e88d">"/api/data"</span><span style="color:#e5e5e5">, </span><span style="color:#82aaff">l402</span><span style="color:#e5e5e5">({ priceSats: </span><span style="color:#f7931a">10</span><span style="color:#e5e5e5">, lightning }), handler);</span></div>
+          <div style="height:14px"></div>
+          <div style="border-top:1px solid #1a1a1a;padding-top:14px;display:flex;justify-content:space-between;align-items:center">
+            <span style="color:#555;font-size:11px">0.3% managed fee · <span style="color:#4ade80">or 0% self-host</span></span>
+            <a href="https://docs.l402kit.com/quickstart" target="_blank" style="font-size:11px;color:#f7931a;text-decoration:none;font-weight:600" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Full quickstart →</a>
+          </div>
+        </div>
+
+        <!-- scaffold chip -->
+        <div style="margin-top:12px;display:flex;align-items:center;gap:10px;background:#0a0a0a;border:1px solid rgba(247,147,26,.2);border-radius:10px;padding:10px 16px">
+          <span style="font-size:11px;color:#555;font-weight:600;white-space:nowrap">Or scaffold:</span>
+          <span style="font-family:'Fira Code',monospace;font-size:12px;color:#f7931a;flex:1">npx create-l402-app my-api</span>
+          <button onclick="(function(b){navigator.clipboard.writeText('npx create-l402-app my-api').then(()=>{b.textContent='✓';setTimeout(()=>b.textContent='copy',1500)})})(this)" style="background:transparent;border:none;color:#555;font-size:11px;cursor:pointer;font-family:inherit;transition:color .2s;white-space:nowrap" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='#555'">copy</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- mobile stack -->
+  <style>@media(max-width:700px){#ctaGrid{grid-template-columns:1fr!important}#quickstartCta{padding:32px 24px!important}}</style>
 </section><hr class="section-sep">
+
 <section class="flow" id="how">
   <span class="eyebrow">How it works</span>
   <h2 data-reveal="">Como funciona</h2>
@@ -951,15 +1022,15 @@ lightning = <span class="c-fn">BlinkProvider</span>(
   </div>
 </section><hr class="section-sep">
 
-<section class="cta" style="margin-bottom:40px">
-  <span class="eyebrow">Ready?</span>
-  <h2 style="font-size:36px;font-weight:900;margin-bottom:12px;line-height:1.15" data-reveal="">Your API.<br><span style="color:var(--orange)">Your Bitcoin.</span> No middleman.</h2>
-  <p style="font-size:17px;color:var(--muted);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6">3 lines of code. No Stripe. No account. Start now or read the full docs.</p>
+<section style="text-align:center;padding:64px 24px 48px;border-top:1px solid var(--border);background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(247,147,26,.05),transparent)">
+  <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:rgba(247,147,26,.55)">Still here?</span>
+  <h2 style="font-size:clamp(26px,4vw,40px);font-weight:800;margin:14px 0 12px;letter-spacing:-1px">You already know it works.<br><span style="color:var(--orange)">Time to ship.</span></h2>
+  <p style="color:var(--muted);font-size:15px;max-width:400px;margin:0 auto 28px;line-height:1.6">No account. No Stripe. No middleman. Just<br>Bitcoin Lightning — instant, global, final.</p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a href="https://docs.l402kit.com/introduction" target="_blank" class="btn-primary" style="font-size:15px">Read the docs →</a>
-    <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:16px 28px;border:1px solid #333;border-radius:12px;font-size:15px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">⭐ Star on GitHub</a>
+    <a href="https://docs.l402kit.com/quickstart" target="_blank" class="btn-primary" style="font-size:15px;text-decoration:none">Start in 2 minutes →</a>
+    <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:16px 24px;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;color:#e5e5e5;text-decoration:none;background:#0d0d0d;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#2a2a2a'">⭐ Star on GitHub</a>
   </div>
-  <p style="margin-top:20px;font-size:12px;color:#444">Open source · MIT · No account required</p>
+  <p style="margin-top:16px;font-size:11px;color:#333">MIT · Open source · <span id="stat-stars-footer">—</span> stars</p>
 </section>
 
 
@@ -2124,12 +2195,15 @@ document.getElementById('proModal').addEventListener('click', function(e) {
     const d = await r.json();
     const n = d.stargazers_count;
     if (typeof n === 'number') {
+      const txt = n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
       const el = document.getElementById('stat-stars');
-      if (el) el.textContent = n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
+      if (el) el.textContent = txt;
+      const elF = document.getElementById('stat-stars-footer');
+      if (elF) elF.textContent = txt;
     }
   } catch {
     const el = document.getElementById('stat-stars');
-    if (el && el.textContent === '—' || el && el.textContent === '') el.textContent = '0';
+    if (el && (el.textContent === '—' || el.textContent === '')) el.textContent = '0';
   }
 })();
 
