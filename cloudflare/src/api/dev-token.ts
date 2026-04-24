@@ -17,7 +17,10 @@ export async function handleDevToken(req: Request, env: Env): Promise<Response> 
       body: JSON.stringify({ amountSats: 9000, memo: `ShinyDapps Pro — ${address}` }),
     });
     if (!r.ok) return json({ error: "Failed to create invoice" }, 503);
-    const { paymentRequest, paymentHash, macaroon } = await r.json() as { paymentRequest: string; paymentHash: string; macaroon: string };
+    const { paymentRequest, paymentHash, macaroon: rawMacaroon } = await r.json() as { paymentRequest: string; paymentHash: string; macaroon: string };
+    // Inject address into macaroon so POST handler can read it back
+    const rawPayload = JSON.parse(atob(rawMacaroon)) as { hash: string; exp: number };
+    const macaroon = btoa(JSON.stringify({ ...rawPayload, address }));
 
     return json({ access: false, priceSats: 9000, invoice: paymentRequest, macaroon });
   }
