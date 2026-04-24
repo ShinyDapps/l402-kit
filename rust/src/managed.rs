@@ -49,7 +49,10 @@ impl ManagedProvider {
         let res = self
             .client
             .post(format!("{SHINYDAPPS_API}/api/invoice"))
-            .json(&serde_json::json!({ "amountSats": amount_sats }))
+            .json(&serde_json::json!({
+                "amountSats":   amount_sats,
+                "ownerAddress": self.owner_address,
+            }))
             .send()
             .await
             .map_err(|e| L402Error::InvoiceCreationFailed(e.to_string()))?;

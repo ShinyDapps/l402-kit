@@ -28,6 +28,24 @@ export async function handleBlinkHook(req: Request, env: Env): Promise<Response>
     return json({ error: "Invalid signature" }, 401);
   }
 
+  // Extrai paymentHash do payload Blink para buscar ownerAddress no KV
+  let enrichedBody = body;
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>;
+    const initiationVia = (parsed?.data as Record<string, unknown>)?.initiationVia as Record<string, unknown> | undefined;
+    const paymentHash   = initiationVia?.paymentHash as string | undefined;
+
+    if (paymentHash) {
+      const raw = await env.demo_preimages.get(`l402_inv:${paymentHash}`);
+      if (raw) {
+        const { ownerAddress, amountSats } = JSON.parse(raw) as { ownerAddress: string; amountSats: number };
+        enrichedBody = JSON.stringify({ ...parsed, _ownerAddress: ownerAddress, _amountSats: amountSats });
+      }
+    }
+  } catch {
+    // Se o parse falhar, repassa o body original — nunca bloqueia o webhook
+  }
+
   const r = await fetch(`${env.SUPABASE_URL}/functions/v1/blink-webhook`, {
     method: "POST",
     headers: {
@@ -37,7 +55,7 @@ export async function handleBlinkHook(req: Request, env: Env): Promise<Response>
       "svix-timestamp": req.headers.get("svix-timestamp") ?? "",
       "svix-signature": req.headers.get("svix-signature") ?? "",
     },
-    body,
+    body: enrichedBody,
   });
 
   const data = await r.json();

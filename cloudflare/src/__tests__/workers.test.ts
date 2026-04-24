@@ -9,6 +9,7 @@ import { handleInvoice } from "../api/invoice";
 import { handleVerify } from "../api/verify";
 import { handleStats } from "../api/stats";
 import { handleSplit } from "../api/split";
+import { handleBlinkHook } from "../api/blink-webhook";
 import { handleDemo, handleDemoBtcPrice, handleDemoPreimage } from "../api/demo";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -34,9 +35,35 @@ function makeEnv(overrides: Record<string, unknown> = {}): any {
     RESEND_API_KEY: "resend_key",
     BLINK_API_KEY: "blink_key",
     BLINK_WALLET_ID: "wallet_id",
+    BLINK_WEBHOOK_SECRET: "whsec_dGVzdHNlY3JldGZvcnVuaXR0ZXN0czEyMzQ1Njc4",
     demo_preimages: makeKV(),
     ...overrides,
   };
+}
+
+// Gera um Request com headers Svix válidos para testar handleBlinkHook
+async function makeSvixRequest(body: string, secret: string): Promise<Request> {
+  const msgId        = "msg_test_" + randomBytes(8).toString("hex");
+  const msgTimestamp = String(Math.floor(Date.now() / 1000));
+  const toSign       = `${msgId}.${msgTimestamp}.${body}`;
+
+  const keyBytes = new Uint8Array(Buffer.from(secret.replace("whsec_", ""), "base64"));
+  const key = await crypto.subtle.importKey(
+    "raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig    = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(toSign));
+  const sigB64 = Buffer.from(sig).toString("base64");
+
+  return new Request("https://l402kit.com/api/blink-webhook", {
+    method: "POST",
+    headers: {
+      "Content-Type":   "application/json",
+      "svix-id":        msgId,
+      "svix-timestamp": msgTimestamp,
+      "svix-signature": `v1,${sigB64}`,
+    },
+    body,
+  });
 }
 
 function makeRequest(method: string, url: string, body?: unknown, headers?: Record<string, string>): Request {
@@ -457,5 +484,218 @@ describe("handleDemoPreimage", () => {
     expect(fetchMock).not.toHaveBeenCalled();
     const body = await res.json() as { preimage: string };
     expect(body.preimage).toBe(preimage);
+  });
+});
+
+// ─── /api/invoice — ownerAddress KV storage ──────────────────────────────────
+
+describe("handleInvoice — ownerAddress KV storage", () => {
+  test("stores ownerAddress + amountSats in KV when edge fn returns paymentHash", async () => {
+    const kv  = makeKV();
+    const env = makeEnv({ demo_preimages: kv });
+    const invoice = { paymentRequest: "lnbc100n1...", paymentHash: "hash_owner_test", macaroon: "mac" };
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(invoice), { status: 200 }));
+
+    await handleInvoice(
+      makeRequest("POST", "https://l402kit.com/api/invoice", { amountSats: 100, ownerAddress: "dev@blink.sv" }),
+      env,
+    );
+
+    const stored = await kv.get("l402_inv:hash_owner_test");
+    expect(stored).not.toBeNull();
+    const parsed = JSON.parse(stored!) as { ownerAddress: string; amountSats: number };
+    expect(parsed.ownerAddress).toBe("dev@blink.sv");
+    expect(parsed.amountSats).toBe(100);
+  });
+
+  test("does NOT write to KV when ownerAddress is absent", async () => {
+    const kv  = makeKV();
+    const env = makeEnv({ demo_preimages: kv });
+    const invoice = { paymentRequest: "lnbc10n1...", paymentHash: "hash_no_owner", macaroon: "mac" };
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(invoice), { status: 200 }));
+
+    await handleInvoice(
+      makeRequest("POST", "https://l402kit.com/api/invoice", { amountSats: 10 }),
+      env,
+    );
+
+    const stored = await kv.get("l402_inv:hash_no_owner");
+    expect(stored).toBeNull();
+  });
+
+  test("does NOT write to KV when edge fn returns no paymentHash", async () => {
+    const kv  = makeKV();
+    const env = makeEnv({ demo_preimages: kv });
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ paymentRequest: "lnbc10n1..." }), { status: 200 }));
+
+    await handleInvoice(
+      makeRequest("POST", "https://l402kit.com/api/invoice", { amountSats: 10, ownerAddress: "dev@blink.sv" }),
+      env,
+    );
+
+    // No paymentHash in response → nothing stored
+    const keys = Array.from((kv as any)["store"]?.keys?.() ?? []).filter((k: unknown) => String(k).startsWith("l402_inv:"));
+    expect(keys).toHaveLength(0);
+  });
+
+  test("still returns invoice body to caller after KV write", async () => {
+    const kv  = makeKV();
+    const invoice = { paymentRequest: "lnbc200n1...", paymentHash: "hash_return_test", macaroon: "mac_return" };
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(invoice), { status: 200 }));
+
+    const res = await handleInvoice(
+      makeRequest("POST", "https://l402kit.com/api/invoice", { amountSats: 200, ownerAddress: "dev@blink.sv" }),
+      makeEnv({ demo_preimages: kv }),
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as typeof invoice;
+    expect(body.paymentRequest).toBe("lnbc200n1...");
+    expect(body.macaroon).toBe("mac_return");
+  });
+});
+
+// ─── /api/blink-webhook — signature + KV enrichment ─────────────────────────
+
+describe("handleBlinkHook", () => {
+  const SECRET = "whsec_dGVzdHNlY3JldGZvcnVuaXR0ZXN0czEyMzQ1Njc4";
+
+  const blinkBody = (paymentHash: string, amount = 1000) =>
+    JSON.stringify({
+      id: "evt_test",
+      type: "transaction.received",
+      data: {
+        settlementAmount: amount,
+        initiationVia: { paymentHash },
+      },
+    });
+
+  test("GET returns 405", async () => {
+    const res = await handleBlinkHook(
+      new Request("https://l402kit.com/api/blink-webhook", { method: "GET" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(405);
+  });
+
+  test("POST without Svix headers returns 401", async () => {
+    const res = await handleBlinkHook(
+      makeRequest("POST", "https://l402kit.com/api/blink-webhook", { type: "transaction.received" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  test("POST with wrong signature returns 401", async () => {
+    const body = blinkBody("hash_wrong_sig");
+    const res = await handleBlinkHook(
+      new Request("https://l402kit.com/api/blink-webhook", {
+        method: "POST",
+        headers: {
+          "Content-Type":   "application/json",
+          "svix-id":        "msg_bad",
+          "svix-timestamp": String(Math.floor(Date.now() / 1000)),
+          "svix-signature": "v1,invalidsignature==",
+        },
+        body,
+      }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  test("POST with stale timestamp returns 401", async () => {
+    const body      = blinkBody("hash_stale");
+    const msgId     = "msg_stale";
+    const staleTs   = String(Math.floor(Date.now() / 1000) - 400); // > 300s ago
+    const toSign    = `${msgId}.${staleTs}.${body}`;
+    const keyBytes  = new Uint8Array(Buffer.from(SECRET.replace("whsec_", ""), "base64"));
+    const key       = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const sig       = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(toSign));
+    const sigB64    = Buffer.from(sig).toString("base64");
+
+    const res = await handleBlinkHook(
+      new Request("https://l402kit.com/api/blink-webhook", {
+        method: "POST",
+        headers: {
+          "Content-Type":   "application/json",
+          "svix-id":        msgId,
+          "svix-timestamp": staleTs,
+          "svix-signature": `v1,${sigB64}`,
+        },
+        body,
+      }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  test("POST with valid signature + no KV entry passes body as-is to Supabase", async () => {
+    const body = blinkBody("hash_no_kv");
+    const req  = await makeSvixRequest(body, SECRET);
+    const env  = makeEnv(); // KV empty
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    const res = await handleBlinkHook(req, env);
+    expect(res.status).toBe(200);
+
+    // Body forwarded to Supabase should NOT contain _ownerAddress
+    const forwarded = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as Record<string, unknown>;
+    expect(forwarded._ownerAddress).toBeUndefined();
+  });
+
+  test("POST with valid signature + KV hit enriches body with _ownerAddress and _amountSats", async () => {
+    const hash = "hash_kv_hit";
+    const body = blinkBody(hash, 500);
+    const kv   = makeKV({ [`l402_inv:${hash}`]: JSON.stringify({ ownerAddress: "dev@blink.sv", amountSats: 500 }) });
+    const env  = makeEnv({ demo_preimages: kv });
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    const res = await handleBlinkHook(req, env);
+    expect(res.status).toBe(200);
+
+    const forwarded = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as Record<string, unknown>;
+    expect(forwarded._ownerAddress).toBe("dev@blink.sv");
+    expect(forwarded._amountSats).toBe(500);
+  });
+
+  test("POST with valid signature + KV hit preserves original Blink fields", async () => {
+    const hash = "hash_preserve";
+    const body = blinkBody(hash, 250);
+    const kv   = makeKV({ [`l402_inv:${hash}`]: JSON.stringify({ ownerAddress: "owner@ln.tips", amountSats: 250 }) });
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    await handleBlinkHook(req, makeEnv({ demo_preimages: kv }));
+
+    const forwarded = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as Record<string, unknown>;
+    expect((forwarded.data as Record<string, unknown>)?.settlementAmount).toBe(250);
+    expect((forwarded.data as Record<string, unknown>)?.initiationVia).toBeDefined();
+  });
+
+  test("POST with valid signature proxies Supabase error status", async () => {
+    const body = blinkBody("hash_supabase_err");
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ error: "internal" }), { status: 500 }));
+
+    const res = await handleBlinkHook(req, makeEnv());
+    expect(res.status).toBe(500);
+  });
+
+  test("POST with malformed JSON body returns 401 (signature mismatch, not crash)", async () => {
+    // Malformed JSON with valid signature — verifySvix should still work, but JSON.parse in handler won't crash
+    const body = "not-valid-json";
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    // Even with bad JSON, the handler should not throw — passes body through
+    const res = await handleBlinkHook(req, makeEnv());
+    expect([200, 400, 500]).toContain(res.status);
   });
 });

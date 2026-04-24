@@ -28,7 +28,7 @@ export class ManagedProvider implements LightningProvider {
     const res = await fetch(`${SHINYDAPPS_API}/api/invoice`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountSats }),
+      body: JSON.stringify({ amountSats, ownerAddress: this.ownerAddress }),
     });
     if (!res.ok) throw new Error("ManagedProvider: invoice creation failed");
     const data = await res.json() as { paymentRequest: string; paymentHash: string; macaroon: string };
