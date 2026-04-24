@@ -729,9 +729,9 @@ footer a:hover { color: var(--orange); text-decoration: none; }
       <span style="color:#555;font-size:11px">Add 3 lines, start earning</span>
     </div>
   <div class="demo-tabs">
+    <div class="tab" onclick="showTab('managed',this)" data-accent-color="#f7931a" data-accent-border="rgba(247,147,26,.2)" style="color:#f7931a;border-color:rgba(247,147,26,.2)">Managed ☁</div>
     <div class="tab active" onclick="showTab('agent',this)" data-accent-color="#22c55e" data-accent-border="rgba(34,197,94,.3)" style="color:#22c55e;border-color:rgba(34,197,94,.3)">⚡ AI Agent</div>
     <div class="tab" onclick="showTab('ts',this)">TypeScript</div>
-    <div class="tab" onclick="showTab('managed',this)" data-accent-color="#f7931a" data-accent-border="rgba(247,147,26,.2)" style="color:#f7931a;border-color:rgba(247,147,26,.2)">Managed ☁</div>
     <div class="tab" onclick="showTab('py',this)">Python</div>
     <div class="tab" onclick="showTab('go',this)">Go</div>
     <div class="tab" onclick="showTab('rs',this)">Rust</div>
@@ -897,7 +897,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
               <button id="donateCopyBtn" onclick="copyDonateInvoice()" style="width:100%;margin-bottom:8px;padding:9px;background:#1a1a1a;border:1px solid #2a2a2a;color:#e5e5e5;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">⎘ Copy invoice</button>
               <div style="font-size:12px;color:#555;display:flex;align-items:center;gap:6px">
                 <span id="donatePollDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f7931a;animation:pulse 1.5s infinite;flex-shrink:0"></span>
-                Waiting for payment from your wallet…
+                Waiting for payment… <span id="donateCountdown" style="margin-left:4px;color:#3a3a3a;font-family:'Fira Code',monospace"></span>
               </div>
             </div>
           </div>
@@ -927,9 +927,9 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 
       <!-- LEFT ─────────────────────────────────────────── -->
       <div>
-        <span style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:rgba(247,147,26,.7);margin-bottom:16px">Get started in 2 minutes</span>
+        <span style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:rgba(247,147,26,.7);margin-bottom:16px" id="qs-eyebrow">Get started in 2 minutes</span>
         <h2 style="font-size:clamp(28px,4vw,42px);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:18px">Your API.<br><span style="background:linear-gradient(135deg,#f7931a,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Your Bitcoin.</span><br>No middleman.</h2>
-        <p style="font-size:15px;color:#8a8f98;line-height:1.65;margin-bottom:28px;max-width:340px">3 lines of middleware. Zero config option. Every sat lands directly in your Lightning wallet.</p>
+        <p id="qs-desc" style="font-size:15px;color:#8a8f98;line-height:1.65;margin-bottom:28px;max-width:340px">3 lines of middleware. Zero config option. Every sat lands directly in your Lightning wallet.</p>
 
         <!-- trust row -->
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px">
@@ -941,7 +941,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 
         <!-- action buttons -->
         <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <a href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" class="btn-primary" style="font-size:15px;padding:14px 28px;text-decoration:none">Read the docs →</a>
+          <a id="qs-read-docs" href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" class="btn-primary" style="font-size:15px;padding:14px 28px;text-decoration:none">Read the docs →</a>
           <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s;background:#111" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#2a2a2a'">⭐ Star on GitHub</a>
         </div>
       </div>
@@ -976,7 +976,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
           <span style="font-family:'Fira Code',monospace;font-size:15px;color:#2d5f99;letter-spacing:2px;user-select:none;line-height:1;flex-shrink:0">[·-·]&nbsp;[·-·]</span>
           <div>
             <div style="font-size:12px;color:#58a6ff;font-weight:600;letter-spacing:.2px">AI agents pay natively</div>
-            <div style="font-size:11px;color:#2d4a6e;margin-top:2px">machines pay machines</div>
+            <div style="font-size:11px;color:#5a8ab0;margin-top:2px">machines pay machines</div>
           </div>
         </div>
 
@@ -1012,7 +1012,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 
 <section class="flow" id="how">
   <span class="eyebrow">How it works</span>
-  <h2 data-reveal="">Como funciona</h2>
+  <h2 data-reveal="">How it works</h2>
   <div class="flow-steps" data-reveal="">
     <div class="flow-step">
       <div class="step-icon">📡</div>
@@ -1045,7 +1045,13 @@ lightning = <span class="c-fn">BlinkProvider</span>(
   <span class="eyebrow">Pricing</span>
   <h2>Precos simples</h2>
   <p class="pricing-sub">Pague com Bitcoin Lightning. Sem cartao. Sem conta. Instantaneo.</p>
-  <div style="text-align:center;margin-bottom:36px;margin-top:-20px"><span style="display:inline-block;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:10px 20px;font-size:13px;color:#86efac">⚡ The <strong>SDK is always free</strong> — MIT, open source, no account. <span style="color:#666">Plans below are for the <strong style="color:#aaa">analytics dashboard</strong>.</span></span></div>
+  <div style="text-align:center;margin-bottom:36px;margin-top:-20px">
+    <span style="display:inline-block;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:10px 20px;font-size:13px;color:#86efac">
+      ⚡ The <strong>SDK is always free</strong> — MIT, open source, no account. &nbsp;<span style="color:#444">|</span>&nbsp;
+      <span style="color:#666"><strong style="color:#f7931a">0.3% fee</strong> applies only in <strong style="color:#aaa">managed mode</strong> — self-host for <strong style="color:#86efac">0%</strong>.</span>
+      &nbsp;<span style="color:#444">|</span>&nbsp; <span style="color:#555">Plans below: <strong style="color:#888">analytics dashboard</strong>.</span>
+    </span>
+  </div>
   <div class="pricing-cards">
     <div class="pricing-card" data-reveal="">
       <div class="pricing-name">Gratis</div>
@@ -1973,6 +1979,12 @@ function applyFullPageCopy(lang) {
   if (ctaH2) ctaH2.textContent = d.ctaTitle;
   if (ctaP) ctaP.textContent = d.ctaDesc;
   if (ctaDocs) ctaDocs.innerHTML = d.ctaDocs;
+
+  // Quickstart CTA block
+  const qsEyebrow = document.getElementById('qs-eyebrow');
+  const qsReadDocs = document.getElementById('qs-read-docs');
+  if (qsEyebrow && d.ctaTitle) qsEyebrow.textContent = d.ctaTitle;
+  if (qsReadDocs && d.heroReadDocs) qsReadDocs.textContent = d.heroReadDocs;
 }
 
 function initLanguageSelector() {
@@ -2658,7 +2670,7 @@ function animateValue(id, start, end, duration) {
 // ── Donate / Live L402 Demo (visitor pays 1 sat) ──────────────────────────────
 (function() {
   var _running = false;
-  var _invoice = '', _macaroon = '', _pollTimer = null;
+  var _invoice = '', _macaroon = '', _pollTimer = null, _expireTimer = null, _countdownTimer = null;
 
   function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
@@ -2685,6 +2697,8 @@ function animateValue(id, start, end, duration) {
 
   window.donateReset = function() {
     if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+    if (_expireTimer) { clearTimeout(_expireTimer); _expireTimer = null; }
+    if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
     _running = false; _invoice = ''; _macaroon = '';
     var t = term(); if (t) { t.innerHTML = '<span style="color:#6e7681"># Click ▶ Run to generate a real BOLT11 invoice via L402</span>'; }
     document.getElementById('donateInvoiceArea').style.display = 'none';
@@ -2747,6 +2761,45 @@ function animateValue(id, start, end, duration) {
       'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' +
       encodeURIComponent(_invoice.toUpperCase());
 
+    // Countdown display + auto-refresh at expiry (55 min, under Blink's 1h expiry)
+    var EXPIRY_SECS = 55 * 60;
+    var secsLeft = EXPIRY_SECS;
+    function fmtCountdown(s) {
+      var m = Math.floor(s / 60), sec = s % 60;
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+    var cdEl = document.getElementById('donateCountdown');
+    if (cdEl) cdEl.textContent = '(' + fmtCountdown(secsLeft) + ')';
+    _countdownTimer = setInterval(function() {
+      secsLeft--;
+      if (cdEl) cdEl.textContent = secsLeft > 0 ? '(' + fmtCountdown(secsLeft) + ')' : '';
+    }, 1000);
+    _expireTimer = setTimeout(async function() {
+      if (!_running) return;
+      clearInterval(_countdownTimer); _countdownTimer = null;
+      appendTerm('<div style="height:6px"></div>');
+      termLine('$ # Invoice expired — fetching new one…', '#6e7681');
+      try {
+        var nr = await fetch('/api/demo/btc-price');
+        var nd = await nr.json();
+        if (nr.status === 402 && nd.invoice) {
+          _invoice = nd.invoice; _macaroon = nd.macaroon || '';
+          blinkHash = nd.blinkPaymentHash || '';
+          document.getElementById('donateInvoiceBox').textContent = _invoice;
+          document.getElementById('donateQrImg').src =
+            'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' +
+            encodeURIComponent(_invoice.toUpperCase());
+          secsLeft = EXPIRY_SECS;
+          if (cdEl) cdEl.textContent = '(' + fmtCountdown(secsLeft) + ')';
+          _countdownTimer = setInterval(function() {
+            secsLeft--;
+            if (cdEl) cdEl.textContent = secsLeft > 0 ? '(' + fmtCountdown(secsLeft) + ')' : '';
+          }, 1000);
+          termLine('  ✓ New invoice ready — scan again', '#3fb950');
+        }
+      } catch(_) {}
+    }, EXPIRY_SECS * 1000);
+
     // Poll for payment
     _pollTimer = setInterval(async function() {
       try {
@@ -2755,6 +2808,8 @@ function animateValue(id, start, end, duration) {
         var pd = await pr.json();
         if (!pd.preimage) return;
         clearInterval(_pollTimer); _pollTimer = null;
+        if (_expireTimer) { clearTimeout(_expireTimer); _expireTimer = null; }
+        if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
 
         // Verify L402 token
         var verify = await fetch('/api/demo/btc-price', { headers: { 'Authorization': 'L402 ' + _macaroon + ':' + pd.preimage } });
