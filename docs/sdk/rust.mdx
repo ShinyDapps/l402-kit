@@ -85,6 +85,18 @@ let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
 | `lightning` | `Arc<dyn LightningProvider>` | Your Lightning backend (**required**) |
 | `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | Callback fired after each verified payment |
 
+### Deprecated: `with_address()`
+
+`Options::with_address(address)` was removed in v1.4.0. Use `Options::new(sats, ManagedProvider::new(address))` instead:
+
+```rust
+use l402kit::{Options, ManagedProvider};
+use std::sync::Arc;
+
+let provider = Arc::new(ManagedProvider::new("you@yourdomain.com"));
+let opts = Arc::new(Options::new(10, provider));
+```
+
 ---
 
 ## `l402_middleware(opts: Options)`
@@ -138,7 +150,7 @@ axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
 Disable `axum-middleware` to use only the core verification functions without axum or reqwest:
 
 ```toml
-l402kit = { version = "1.4", default-features = false }
+l402kit = { version = "1.6", default-features = false }
 ```
 
 ---

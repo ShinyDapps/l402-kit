@@ -58,10 +58,7 @@ type MyProvider struct{}
 
 func (p *MyProvider) CreateInvoice(ctx context.Context, amountSats int) (l402.Invoice, error) {
     // create invoice with your Lightning node
-}
-
-func (p *MyProvider) CheckPayment(ctx context.Context, paymentHash string) (bool, error) {
-    // check if paid
+    // return l402.Invoice{PaymentRequest: "lnbc...", PaymentHash: "...", Macaroon: "..."}
 }
 
 mux.Handle("/api/data", l402.Middleware(l402.Options{
@@ -79,7 +76,6 @@ mux.Handle("/api/data", l402.Middleware(l402.Options{
 | `PriceSats` | `int` | **required** | Price per call in satoshis |
 | `Lightning` | `LightningProvider` | **required** | Your Lightning backend (use `NewBlinkProvider`) |
 | `OnPayment` | `func(L402Token, int)` | — | Callback fired after each verified payment |
-| `OwnerLightningAddress` | `string` | — | **Deprecated** — use `Lightning` instead |
 
 ---
 
@@ -114,7 +110,6 @@ Returns an `http.Handler` compatible with `net/http`, Chi, Gorilla Mux, and any 
 ```go
 type LightningProvider interface {
     CreateInvoice(ctx context.Context, amountSats int) (Invoice, error)
-    CheckPayment(ctx context.Context, paymentHash string) (bool, error)
 }
 ```
 
@@ -123,9 +118,11 @@ type LightningProvider interface {
 ## `OnPayment` callback
 
 ```go
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
 mux.Handle("/api/data", l402.Middleware(l402.Options{
-    PriceSats:             10,
-    OwnerLightningAddress: "you@yourdomain.com",
+    PriceSats: 10,
+    Lightning: lightning,
     OnPayment: func(token l402.L402Token, amountSats int) {
         log.Printf("payment: %d sats, preimage: %s", amountSats, token.Preimage)
     },
@@ -136,11 +133,15 @@ mux.Handle("/api/data", l402.Middleware(l402.Options{
 
 ## Verification
 
-`SHA256(preimage) == paymentHash` is verified locally in memory — no network call on the hot path. Token expiry (`exp` field in the macaroon) is checked in the same operation.
+`SHA256(preimage) == paymentHash` is verified locally in memory — **sub-millisecond, no network call** on the hot path. Token expiry (`exp` field in the macaroon) is checked in the same operation.
+
+The replay guard uses an in-memory map by default (safe for a single process). For multi-instance deployments, use a shared store (Redis or similar) — which adds a **5–50 ms** round-trip per verified request.
 
 ---
 
 ## Chi router example
+
+`l402.Middleware` returns a standard `http.Handler`, so it works directly with Chi's `r.Handle`:
 
 ```go
 import (
@@ -149,10 +150,12 @@ import (
 )
 
 r := chi.NewRouter()
-r.With(l402.ChiMiddleware(l402.Options{
-    PriceSats:             10,
-    OwnerLightningAddress: "you@yourdomain.com",
-})).Get("/api/data", handler)
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+r.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+}, http.HandlerFunc(handler)))
 ```
 
 ---
