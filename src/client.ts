@@ -50,6 +50,14 @@ export interface L402ClientOptions {
   tokenStore?: TokenStore;
   /** Maximum retry attempts after a payment. Default: 1. */
   maxRetries?: number;
+  /** Maximum total sats the client may spend in this session. */
+  budgetSats?: number;
+  /** Maximum sats per domain (hostname). e.g. { "api.example.com": 200 } */
+  budgetPerDomain?: Record<string, number>;
+  /** Called after every successful payment. */
+  onSpend?: (sats: number, url: string) => void;
+  /** Called when a payment is blocked due to budget. */
+  onBudgetExceeded?: (url: string, sats: number) => void;
 }
 
 class MemoryTokenStore implements TokenStore {
@@ -66,11 +74,29 @@ export class L402Client {
   private wallet: L402Wallet;
   private tokenStore: TokenStore;
   private maxRetries: number;
+  private budget: import("./agent/budget").BudgetTracker | null = null;
 
   constructor(options: L402ClientOptions) {
     this.wallet     = options.wallet;
     this.tokenStore = options.tokenStore ?? new MemoryTokenStore();
     this.maxRetries = options.maxRetries ?? 1;
+
+    if (options.budgetSats !== undefined) {
+      // lazy import to keep bundle size minimal when budget unused
+      const { BudgetTracker } = require("./agent/budget") as typeof import("./agent/budget");
+      this.budget = new BudgetTracker(
+        options.budgetSats,
+        options.budgetPerDomain,
+        options.onSpend,
+        options.onBudgetExceeded,
+      );
+    }
+  }
+
+  /** Returns a spending report. Only available when budgetSats is configured. */
+  spendingReport() {
+    if (!this.budget) return null;
+    return this.budget.report();
   }
 
   /**
@@ -92,7 +118,12 @@ export class L402Client {
     if (res402.status !== 402) return res402;
 
     // Parse 402 response — supports both L402 and x402 formats
-    const { macaroon, invoice } = await this._parse402(res402);
+    const { macaroon, invoice, priceSats } = await this._parse402(res402);
+
+    // Check budget before paying
+    if (this.budget && priceSats !== undefined) {
+      this.budget.check(url, priceSats);
+    }
 
     // Pay invoice
     let preimage: string;
@@ -101,6 +132,11 @@ export class L402Client {
       preimage = result.preimage;
     } catch (err) {
       throw new L402PaymentError(`Payment failed: ${String(err)}`, invoice);
+    }
+
+    // Record spend
+    if (this.budget && priceSats !== undefined && priceSats > 0) {
+      this.budget.record(url, priceSats);
     }
 
     // Cache token for future calls
@@ -130,13 +166,14 @@ export class L402Client {
     });
   }
 
-  private async _parse402(res: Response): Promise<{ macaroon: string; invoice: string }> {
+  private async _parse402(res: Response): Promise<{ macaroon: string; invoice: string; priceSats?: number }> {
     let body: Record<string, unknown> = {};
     try { body = await res.clone().json() as Record<string, unknown>; } catch { /* non-JSON 402 */ }
 
-    // L402 format: { macaroon, invoice }
-    const macaroon = body.macaroon as string | undefined;
-    const invoice  = (body.invoice ?? body.paymentRequest ?? body.payment_request) as string | undefined;
+    // L402 format: { macaroon, invoice, priceSats }
+    const macaroon  = body.macaroon as string | undefined;
+    const invoice   = (body.invoice ?? body.paymentRequest ?? body.payment_request) as string | undefined;
+    const priceSats = (body.priceSats ?? body.price_sats) as number | undefined;
 
     // x402 (Coinbase) format: X-Payment-Required header with JSON
     if (!macaroon || !invoice) {
@@ -156,7 +193,7 @@ export class L402Client {
     if (!macaroon) throw new L402ParseError("402 response missing macaroon field", body);
     if (!invoice)  throw new L402ParseError("402 response missing invoice field", body);
 
-    return { macaroon, invoice };
+    return { macaroon, invoice, priceSats };
   }
 }
 

@@ -9,3 +9,7 @@ export { verifyWebhook, buildSignatureHeader } from "./webhook";
 export type { Invoice, L402Token, L402Options, LightningProvider, PaymentRecord } from "./types";
 export type { WebhookEvent } from "./webhook";
 export type { ReplayAdapter, RedisLike } from "./replay";
+
+// Agent SDK — wallets and budget control
+export { BlinkWallet, AlbyWallet, BudgetExceededError } from "./agent";
+export type { SpendingReport } from "./agent";
