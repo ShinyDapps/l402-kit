@@ -326,10 +326,31 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 footer { border-top: 1px solid var(--border); padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 16px; }
 footer a { color: var(--muted); }
 footer a:hover { color: var(--orange); text-decoration: none; }
+/* Hamburger button */
+.nav-hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; z-index: 200; }
+.nav-hamburger span { display: block; width: 22px; height: 2px; background: #e5e5e5; border-radius: 2px; transition: all .25s; }
+.nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-hamburger.open span:nth-child(2) { opacity: 0; }
+.nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
 @media (max-width: 700px) {
-  nav { padding: 14px 12px; align-items: flex-start; gap: 10px; }
-  .nav-links { gap: 10px; flex-wrap: wrap; justify-content: flex-end; font-size: 12px; }
-  .lang-picker { padding: 6px 8px; }
+  nav { padding: 14px 16px; }
+  .nav-hamburger { display: flex; }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(5,5,5,.97);
+    z-index: 150;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    font-size: 18px;
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a { font-size: 17px; }
+  .nav-links .nav-cta { font-size: 16px; padding: 12px 32px; }
+  .lang-picker { font-size: 15px; }
   .language-console-row { grid-template-columns: 1fr; }
   #extension > div { grid-template-columns: 1fr !important; }
   #extension > div > div:last-child { order: -1; }
@@ -376,14 +397,14 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   border-top: 7px solid rgba(247,147,26,0.45);
 }
 /* HERO MODES */
-.hero-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 720px; margin: 40px auto 0; }
+.hero-modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 560px; margin: 40px auto 0; }
 .hero-mode-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 20px 18px; text-align: center; text-decoration: none; color: inherit; transition: all .2s; display: block; }
 .hero-mode-card:hover { border-color: rgba(247,147,26,0.4); background: rgba(247,147,26,0.06); transform: translateY(-2px); text-decoration: none; }
 .hmc-icon { font-size: 22px; margin-bottom: 8px; }
 .hmc-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px; }
 .hmc-title { font-size: 13px; color: #ddd; font-weight: 600; margin-bottom: 6px; }
 .hmc-sub { font-size: 11px; font-weight: 500; }
-@media (max-width: 600px) { .hero-modes { grid-template-columns: 1fr; max-width: 320px; } }
+@media (max-width: 600px) { .hero-modes { grid-template-columns: 1fr; max-width: 340px; } }
 .hero-scaffold { margin-top: 40px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .hero-scaffold-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
 .scaffold-btn { font-family: monospace; font-size: 14px; background: #0d0d0d; border: 1px solid rgba(247,147,26,0.35); color: #f7931a; border-radius: 10px; padding: 11px 22px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 12px; }
@@ -400,10 +421,13 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 
 <nav>
   <a href="#" class="nav-logo" style="text-decoration:none;color:inherit">⚡ <span>l402-kit</span> <small style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px">by ShinyDapps</small></a>
-  <div class="nav-links">
-    <a href="#how" data-i18n="navHow">Como funciona</a>
-    <a href="#extension">Extensao</a>
-    <a href="#pricing" data-i18n="navPricing">Precos</a>
+  <button class="nav-hamburger" id="navHamburger" aria-label="Open menu" onclick="toggleMobileNav()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="nav-links" id="navLinks">
+    <a href="#how" data-i18n="navHow" onclick="closeMobileNav()">Como funciona</a>
+    <a href="#extension" onclick="closeMobileNav()">Extensao</a>
+    <a href="#pricing" data-i18n="navPricing" onclick="closeMobileNav()">Precos</a>
     <a href="https://shinydapps-bd9fa40b.mintlify.app/pt/introduction" id="navDocsLink" data-docs-link="1" target="_blank" rel="noopener">Docs</a>
     <a href="dashboard.html" target="_blank" rel="noopener">Painel</a>
     <label class="lang-picker" for="languageSelect">
@@ -446,34 +470,32 @@ footer a:hover { color: var(--orange); text-decoration: none; }
       <button onclick="setLang('rust')" id="lang-rust" class="lang-tab">Rust</button>
     </div>
     <button onclick="copyInstall()" class="btn-primary" id="installBtn" style="font-family:monospace;font-size:16px;letter-spacing:-0.5px">npm install l402-kit &nbsp;<span id="installIcon" style="font-family:sans-serif;font-size:14px;opacity:.8">⚡</span></button>
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/pt/introduction" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Ler docs →</a>
+    <a href="https://docs.l402kit.com/introduction" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Read the docs →</a>
   </div>
 
   <div class="hero-modes">
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/providers" target="_blank" class="hero-mode-card hero-mode-sovereign">
-      <div class="hmc-icon">🔑</div>
-      <div class="hmc-label">Your wallet (0% fee)</div>
-      <div class="hmc-title">BTCPay · Alby Hub · LNbits</div>
-      <div class="hmc-sub" style="color:#4ade80">0% fee · your node · your keys</div>
+    <a href="https://docs.l402kit.com/quickstart" target="_blank" class="hero-mode-card hero-mode-managed" data-i18n-card="dev">
+      <div class="hmc-icon">🏗️</div>
+      <div class="hmc-label" data-i18n="heroCardDevLabel">API Developer</div>
+      <div class="hmc-title" data-i18n="heroCardDevTitle">Monetize your API</div>
+      <div class="hmc-sub" style="color:#f7931a" data-i18n="heroCardDevSub">0.3% flat · no node · no Stripe</div>
     </a>
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/introduction" target="_blank" class="hero-mode-card hero-mode-managed">
-      <div class="hmc-icon">⚡</div>
-      <div class="hmc-label">Plug &amp; Play</div>
-      <div class="hmc-title">Hosted Lightning endpoint</div>
-      <div class="hmc-sub" style="color:#f7931a">0.3% · no node needed</div>
-    </a>
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/guides/ai-agents" target="_blank" class="hero-mode-card hero-mode-ai">
+    <a href="https://docs.l402kit.com/guides/ai-agents" target="_blank" class="hero-mode-card hero-mode-ai" data-i18n-card="ai">
       <div class="hmc-icon">🤖</div>
-      <div class="hmc-label">AI Agents</div>
-      <div class="hmc-title">L402Client · autonomous pay</div>
-      <div class="hmc-sub" style="color:#2ddc6e">Claude · GPT · any agent</div>
+      <div class="hmc-label" data-i18n="heroCardAiLabel">AI Builder</div>
+      <div class="hmc-title" data-i18n="heroCardAiTitle">Your agent pays APIs</div>
+      <div class="hmc-sub" style="color:#2ddc6e" data-i18n="heroCardAiSub">0.3% flat · autonomous · no card</div>
     </a>
   </div>
 
+  <div style="margin-top:14px;text-align:center">
+    <a href="https://docs.l402kit.com/providers" target="_blank" class="hero-scaffold-link" data-i18n="heroSelfHost">or self-host for free (0% fee) →</a>
+  </div>
+
   <div class="hero-scaffold">
-    <span class="hero-scaffold-label">Or scaffold a full project in one command</span>
+    <span class="hero-scaffold-label" data-i18n="heroScaffoldLabel">Start in one command</span>
     <button onclick="copyScaffold()" id="scaffoldBtn" class="scaffold-btn">npx create-l402-app my-api<span class="scaffold-hint"> — click to copy</span></button>
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" class="hero-scaffold-link">View quickstart →</a>
+    <a href="https://docs.l402kit.com/quickstart" target="_blank" class="hero-scaffold-link" data-i18n="heroQuickstart">View quickstart →</a>
   </div>
 </section><hr class="section-sep">
 
@@ -494,6 +516,10 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="stat-item">
     <div class="stat-num" id="stat-installs">—</div>
     <div class="stat-label">Total installs</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="stat-weekly">—</div>
+    <div class="stat-label">npm downloads/wk</div>
   </div>
   <div class="stat-item">
     <div class="stat-num">&lt;1s</div>
@@ -536,119 +562,41 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   </div>
 </section><hr class="section-sep">
 
-<section class="for-who">
-  <span class="eyebrow">Built for</span>
-  <h2>Who is this for?</h2>
-  <div class="for-who-grid">
-    <div class="for-who-card" data-who="api">
-      <div class="fw-icon">🛠️</div>
-      <div class="fw-role">API Owner</div>
-      <div class="fw-title">You sell data or compute</div>
-      <div class="fw-desc">You built an API — weather, AI inference, market data, media — and want to monetize it per call without Stripe, subscriptions, or billing dashboards.</div>
-      <ul>
-        <li>Add 3 lines of middleware</li>
-        <li>Set your price in sats</li>
-        <li>Receive Bitcoin instantly</li>
-      </ul>
-      <a href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" class="fw-cta">Quickstart — 3 lines of code →</a>
+<!-- MANAGED MODE HIGHLIGHT -->
+<section style="max-width:960px;margin:0 auto 0;padding:48px 24px 8px">
+  <span class="eyebrow">Managed mode</span>
+  <h2 style="font-size:clamp(22px,3.5vw,34px);font-weight:800;margin-bottom:12px;letter-spacing:-1px">No node. No wallet setup.<br>Just your Lightning Address.</h2>
+  <p style="color:#666;font-size:15px;max-width:520px;margin-bottom:36px;line-height:1.6">l402kit.com hosts the Lightning node for you. Every payment splits automatically: <strong style="color:#e5e5e5">99.7% goes straight to your address</strong>, 0.3% keeps the project alive. Or self-host for 0%.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px;background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;padding:14px 16px">
+        <span style="font-size:18px;flex-shrink:0">⚡</span>
+        <div><div style="font-weight:700;font-size:14px;margin-bottom:2px">No Lightning node required</div><div style="font-size:13px;color:#666">We host the infrastructure — you just receive sats.</div></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;padding:14px 16px">
+        <span style="font-size:18px;flex-shrink:0">🌍</span>
+        <div><div style="font-weight:700;font-size:14px;margin-bottom:2px">Any Lightning Address works</div><div style="font-size:13px;color:#666">Blink, Alby, Strike, Wallet of Satoshi — if it has a Lightning Address, you're good.</div></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;padding:14px 16px">
+        <span style="font-size:18px;flex-shrink:0">🔀</span>
+        <div><div style="font-weight:700;font-size:14px;margin-bottom:2px">Switch to self-host anytime</div><div style="font-size:13px;color:#666">Change one line to Blink, LNbits, or BTCPay — 0% fee, your node, your rules.</div></div>
+      </div>
     </div>
-    <div class="for-who-card" data-who="ai">
-      <div class="fw-icon">🤖</div>
-      <div class="fw-role">AI Builder</div>
-      <div class="fw-title">Your agent needs to pay for tools</div>
-      <div class="fw-desc">You're building autonomous AI agents that call external APIs. L402 is the native payment protocol for agents — no OAuth, no card on file, no human approval loop.</div>
-      <ul>
-        <li>Agent gets 402 → pays invoice</li>
-        <li>Retries with proof → gets data</li>
-        <li>Works with any LLM framework</li>
-      </ul>
-      <a href="https://shinydapps-bd9fa40b.mintlify.app/guides/ai-agents" target="_blank" class="fw-cta">L402Client for agents →</a>
-    </div>
-    <div class="for-who-card" data-who="oss">
-      <div class="fw-icon">📦</div>
-      <div class="fw-role">OSS Developer</div>
-      <div class="fw-title">You want sustainable open source</div>
-      <div class="fw-desc">Your library or tool is free and open source, but you want paid tiers — premium endpoints, higher rate limits — without the overhead of a payment SaaS.</div>
-      <ul>
-        <li>Free endpoints stay free</li>
-        <li>Paid tiers in 10 minutes</li>
-        <li>No Stripe account needed</li>
-      </ul>
-      <a href="https://shinydapps-bd9fa40b.mintlify.app/providers" target="_blank" class="fw-cta">Choose your wallet provider →</a>
+    <div style="background:#08090f;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden">
+      <div style="background:#0a0a0f;border-bottom:1px solid #1e1e1e;padding:10px 16px;font-size:11px;color:#444;font-family:'Fira Code',monospace">managed vs. sovereign</div>
+      <div style="padding:18px 20px;font-family:'Fira Code',monospace;font-size:13px;line-height:1.9">
+        <div><span style="color:#555">// Managed — no setup, 0.3% fee</span></div>
+        <div><span style="color:#c792ea">const</span> <span style="color:#82aaff">lightning</span> = <span style="color:#e5e5e5">ManagedProvider.</span><span style="color:#82aaff">fromAddress</span>(<span style="color:#c3e88d">"you@domain.com"</span>);</div>
+        <div style="margin-top:14px"><span style="color:#555">// Sovereign — your node, 0% fee</span></div>
+        <div><span style="color:#c792ea">const</span> <span style="color:#82aaff">lightning</span> = <span style="color:#e5e5e5">new </span><span style="color:#82aaff">BlinkProvider</span>(<span style="color:#e5e5e5">process.env.</span><span style="color:#82aaff">BLINK_TOKEN</span>);</div>
+        <div style="margin-top:14px"><span style="color:#555">// Same middleware either way ↓</span></div>
+        <div><span style="color:#e5e5e5">app.get(</span><span style="color:#c3e88d">"/api/data"</span><span style="color:#e5e5e5">, </span><span style="color:#82aaff">l402</span><span style="color:#e5e5e5">({ priceSats: 10, lightning }), handler);</span></div>
+      </div>
     </div>
   </div>
 </section><hr class="section-sep">
 
-<!-- FEATURES GRID -->
-<section class="features">
-  <span class="eyebrow">Why l402-kit</span>
-  <h2>Everything you need</h2>
-  <div class="features-grid">
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">⚡</div>
-      <div class="feature-title">Zero setup</div>
-      <div class="feature-desc">Just set your Lightning Address. No node, no wallet setup, no config files.</div>
-    </div>
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">🔧</div>
-      <div class="feature-title">4 languages</div>
-      <div class="feature-desc">TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Same protocol, any stack.</div>
-    </div>
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">🤖</div>
-      <div class="feature-title">AI agent native</div>
-      <div class="feature-desc">Machines can pay machines. No human in the loop. Perfect for autonomous AI agents.</div>
-    </div>
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">🔐</div>
-      <div class="feature-title">Cryptographic proof</div>
-      <div class="feature-desc">SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.</div>
-    </div>
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">🔌</div>
-      <div class="feature-title">Provider agnostic</div>
-      <div class="feature-desc">Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.</div>
-    </div>
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">🪪</div>
-      <div class="feature-title">The wallet is the identity</div>
-      <div class="feature-desc">No email, no password, no account. Pay and access. The Lightning wallet IS the user identity.</div>
-    </div>
-  </div>
-</section><hr class="section-sep">
-
-<!-- USE CASES -->
-<section class="usecases">
-  <span class="eyebrow">What will you build?</span>
-  <h2>Use cases</h2>
-  <div class="usecase-grid">
-    <div class="usecase-card" data-reveal="">
-      <div class="usecase-tag">AI / Agents</div>
-      <div class="usecase-title">Monetize your AI tool</div>
-      <div class="usecase-desc">Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.</div>
-      <div class="usecase-code">l402({ priceSats: 100, lightning })</div>
-    </div>
-    <div class="usecase-card" data-reveal="">
-      <div class="usecase-tag">Data APIs</div>
-      <div class="usecase-title">Pay-per-query data</div>
-      <div class="usecase-desc">Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.</div>
-      <div class="usecase-code">l402({ priceSats: 10, lightning })</div>
-    </div>
-    <div class="usecase-card" data-reveal="">
-      <div class="usecase-tag">Content</div>
-      <div class="usecase-title">Paywalled endpoints</div>
-      <div class="usecase-desc">Articles, research papers, PDFs, audio. No account creation required from your users.</div>
-      <div class="usecase-code">l402({ priceSats: 50, lightning })</div>
-    </div>
-    <div class="usecase-card" data-reveal="">
-      <div class="usecase-tag">Compute</div>
-      <div class="usecase-title">Serverless billing</div>
-      <div class="usecase-desc">Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.</div>
-      <div class="usecase-code">l402({ priceSats: 500, lightning })</div>
-    </div>
-  </div>
-</section><hr class="section-sep">
-
+<!-- COMPARISON TABLE (moved up) -->
 <section class="cmp-section">
   <div style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:16px" data-i18n="cmpTitle">Cost comparison — live BTC price</div>
   <div style="overflow-x:auto">
@@ -714,6 +662,61 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   </table>
   </div>
   <p style="font-size:11px;color:#444;text-align:right;margin-top:8px;padding-right:4px">⚡ <span data-i18n="cmpFooter">Assuming 100 sats/call at current BTC price — updates live</span></p>
+</section><hr class="section-sep">
+
+<!-- FEATURES GRID -->
+<section class="features">
+  <span class="eyebrow">Why l402-kit</span>
+  <h2>Everything you need</h2>
+  <div class="features-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Zero setup</div>
+      <div class="feature-desc">Pass your Lightning Address — managed mode handles the rest. No node, no wallet config, no infrastructure.</div>
+    </div>
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">🤖</div>
+      <div class="feature-title">AI agent native</div>
+      <div class="feature-desc">Machines can pay machines. No human in the loop. The only payment protocol built for autonomous agents.</div>
+    </div>
+    <div class="feature-card" data-reveal="">
+      <div class="feature-icon">🔐</div>
+      <div class="feature-title">No chargebacks. Ever.</div>
+      <div class="feature-desc">SHA256(preimage) == paymentHash. Mathematically unforgeable. You already delivered the data — it stays paid.</div>
+    </div>
+  </div>
+</section><hr class="section-sep">
+
+<!-- USE CASES -->
+<section class="usecases">
+  <span class="eyebrow">What will you build?</span>
+  <h2>Use cases</h2>
+  <div class="usecase-grid">
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">AI / Agents</div>
+      <div class="usecase-title">Monetize your AI tool</div>
+      <div class="usecase-desc">Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.</div>
+      <div class="usecase-code">l402({ priceSats: 100, lightning })</div>
+    </div>
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">Data APIs</div>
+      <div class="usecase-title">Pay-per-query data</div>
+      <div class="usecase-desc">Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.</div>
+      <div class="usecase-code">l402({ priceSats: 10, lightning })</div>
+    </div>
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">Content</div>
+      <div class="usecase-title">Paywalled endpoints</div>
+      <div class="usecase-desc">Articles, research papers, PDFs, audio. No account creation required from your users.</div>
+      <div class="usecase-code">l402({ priceSats: 50, lightning })</div>
+    </div>
+    <div class="usecase-card" data-reveal="">
+      <div class="usecase-tag">Compute</div>
+      <div class="usecase-title">Serverless billing</div>
+      <div class="usecase-desc">Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.</div>
+      <div class="usecase-code">l402({ priceSats: 500, lightning })</div>
+    </div>
+  </div>
 </section><hr class="section-sep">
 <section class="demo-split-section" id="live-demo" style="border-top:1px solid #1a1a1a;margin-top:48px">
   <div class="demo-split-header">
@@ -866,12 +869,12 @@ lightning = <span class="c-fn">BlinkProvider</span>(
       <div style="position:absolute;top:0;right:0;width:60%;height:100%;background:radial-gradient(ellipse 80% 90% at 100% 50%,rgba(247,147,26,.06),transparent);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
-          <span style="font-size:10px;font-weight:700;color:rgba(247,147,26,.7);text-transform:uppercase;letter-spacing:2px">⚡ Donate</span>
+          <span style="font-size:10px;font-weight:700;color:rgba(247,147,26,.7);text-transform:uppercase;letter-spacing:2px">⚡ Live Demo</span>
           <button id="donateRunBtn" onclick="donateRun()"
                   style="padding:9px 20px;background:var(--orange);border:none;color:#000;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s">▶ Run</button>
         </div>
-        <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px">Donate 1 sat to l402-kit ⚡</h3>
-        <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:20px;max-width:540px">Click ▶ Run — you get a real BOLT11 invoice. Pay 1 sat from any Lightning wallet and watch the full L402 flow happen live: <strong style="color:#ccc">402 → invoice → pay → 200 OK</strong>. No account. No friction.</p>
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px">Try L402 live — pay 1 sat ⚡</h3>
+        <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:20px;max-width:540px">Click ▶ Run — you get a real BOLT11 invoice. Pay 1 sat from any Lightning wallet and watch the full L402 flow live: <strong style="color:#ccc">402 → invoice → pay → 200 OK</strong>. No account. No signup.</p>
 
         <!-- Terminal -->
         <div style="background:#0d1117;border:1px solid #21262d;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5)">
@@ -879,10 +882,10 @@ lightning = <span class="c-fn">BlinkProvider</span>(
             <span style="width:11px;height:11px;border-radius:50%;background:#ff5f57;flex-shrink:0"></span>
             <span style="width:11px;height:11px;border-radius:50%;background:#febc2e;flex-shrink:0"></span>
             <span style="width:11px;height:11px;border-radius:50%;background:#28c840;flex-shrink:0"></span>
-            <span style="flex:1;text-align:center;font-size:11px;color:#6e7681;font-family:'Fira Code',monospace">l402-kit · live L402 payment</span>
+            <span style="flex:1;text-align:center;font-size:11px;color:#6e7681;font-family:'Fira Code',monospace">l402-kit · live L402 demo</span>
           </div>
           <div id="donateTerm" style="font-family:'Fira Code','SF Mono',monospace;font-size:12px;line-height:1.7;padding:18px 20px;min-height:80px;max-height:320px;overflow-y:auto;color:#c9d1d9">
-            <span style="color:#6e7681"># Click ▶ Run to generate a real BOLT11 invoice via L402</span>
+            <span style="color:#6e7681"># Click ▶ Run — get a real BOLT11 invoice via L402</span>
           </div>
         </div>
 
@@ -907,7 +910,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
         <div id="donateSuccess" style="display:none;margin-top:16px;text-align:center;padding:20px 16px;background:linear-gradient(135deg,#091209,#070d07);border:1px solid rgba(34,197,94,.3);border-radius:12px">
           <div style="font-size:32px;margin-bottom:8px">⚡</div>
           <div style="font-size:15px;font-weight:700;color:#22c55e;margin-bottom:6px">Payment received!</div>
-          <div style="font-size:12px;color:#888;line-height:1.6">1 sat landed. The L402 protocol worked — real money, real cryptographic proof, under 1 second.</div>
+          <div style="font-size:12px;color:#888;line-height:1.6">1 sat settled. L402 protocol complete — real money, cryptographic proof, under 1 second.</div>
           <button onclick="donateReset()" style="margin-top:14px;background:none;border:1px solid #333;color:#888;border-radius:8px;padding:7px 18px;font-size:12px;cursor:pointer;font-family:inherit">Run again</button>
         </div>
       </div>
@@ -1088,13 +1091,14 @@ lightning = <span class="c-fn">BlinkProvider</span>(
       <div class="pricing-name">Builder</div>
       <div class="pricing-price">$99 <span>/month</span></div>
       <div class="pricing-sats" id="tier-business-sats">≈ 126k sats today/mo</div>
-      <div class="pricing-desc">Para times e APIs de alto volume</div>
+      <div class="pricing-desc">For teams and high-volume APIs</div>
+      <div style="font-size:11px;color:#3fb950;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:7px 10px;margin-bottom:10px">💡 At 100k API calls/mo at 10 sats each → ~$<span class="builder-roi">...</span> revenue. Builder pays for itself.</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> Everything in Pro</li>
         <li><span class="check">✓</span> Monitor up to 5 Lightning addresses</li>
         <li><span class="check">✓</span> Webhook on every payment received</li>
         <li><span class="check">✓</span> Programmatic API access to your data</li>
-        <li><span class="check">✓</span> 0% fee — bring your own provider</li>
+        <li><span class="check">✓</span> Priority support + SLA</li>
       </ul>
       <button onclick="openProModal('business')" style="width:100%;margin-top:24px;padding:12px;background:#1a1a1a;border:1px solid var(--orange);color:var(--orange);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Assinar com Lightning</button>
     </div>
@@ -1332,9 +1336,14 @@ const I18N = {
   en: {
     navHow: 'How it works', navPricing: 'Pricing', navWallet: 'Connect wallet', navStart: 'Get started',
     heroTitle: 'Every <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> is a trade.<br>Now paid via <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>no middleman.</span>',
-    heroSubtitle: '3 lines of code. No Stripe. No account. AI agents pay natively — machines pay machines.',
+    heroSubtitle: '3 lines of code. No Stripe. No account. 0.3% managed mode — or self-host for free. AI agents pay natively.',
     heroAiText: '⚡ <b>Stripe minimum: $0.30/call.</b> <span style="color:var(--orange)">l402-kit minimum: 1 sat ≈ $0.0006.</span> That\'s <b>500× cheaper.</b>',
     heroReadDocs: 'Read the docs →',
+    heroCardDevLabel: 'API Developer', heroCardDevTitle: 'Monetize your API', heroCardDevSub: '0.3% flat · no node · no Stripe',
+    heroCardAiLabel: 'AI Builder', heroCardAiTitle: 'Your agent pays APIs', heroCardAiSub: '0.3% flat · autonomous · no card',
+    heroSelfHost: 'or self-host for free (0% fee) →',
+    heroScaffoldLabel: 'Start in one command',
+    heroQuickstart: 'View quickstart →',
     walletTitle: 'Connect your wallet',
     walletSub: 'Use Lightning for payments, and optionally connect an EVM wallet (MetaMask-compatible) for identity and app flows.',
     walletEvmTitle: 'EVM wallet (MetaMask, Rabby, OKX, etc.)',
@@ -1348,9 +1357,14 @@ const I18N = {
   pt: {
     navHow: 'Como funciona', navPricing: 'Precos', navWallet: 'Conectar wallet', navStart: 'Comecar',
     heroTitle: 'Toda <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> é uma troca.<br>Paga via <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>sem intermediário.</span>',
-    heroSubtitle: '3 linhas de código. Sem Stripe. Sem cadastro. Agentes de IA pagam nativo — máquinas pagam máquinas.',
+    heroSubtitle: '3 linhas de código. Sem Stripe. Sem cadastro. Modo gerenciado 0.3% — ou hospede grátis. Agentes de IA pagam nativo.',
     heroAiText: '⚡ <b>Mínimo Stripe: $0,30/chamada.</b> <span style="color:var(--orange)">Mínimo l402-kit: 1 sat ≈ $0,0006.</span> <b>500× mais barato.</b>',
     heroReadDocs: 'Ler docs →',
+    heroCardDevLabel: 'Dev de API', heroCardDevTitle: 'Monetize sua API', heroCardDevSub: '0.3% flat · sem node · sem Stripe',
+    heroCardAiLabel: 'AI Builder', heroCardAiTitle: 'Seu agente paga APIs', heroCardAiSub: '0.3% flat · autônomo · sem cartão',
+    heroSelfHost: 'ou hospede você mesmo grátis (0% fee) →',
+    heroScaffoldLabel: 'Comece com um comando',
+    heroQuickstart: 'Ver quickstart →',
     walletTitle: 'Conecte sua wallet',
     walletSub: 'Use Lightning para pagamentos, e opcionalmente conecte uma wallet EVM (MetaMask e similares) para identidade.',
     walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX etc.)',
@@ -1364,9 +1378,12 @@ const I18N = {
   es: {
     navHow: 'Cómo funciona', navPricing: 'Precios', navWallet: 'Conectar wallet', navStart: 'Empezar',
     heroTitle: 'Toda <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> es un intercambio.<br>Paga vía <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>sin intermediario.</span>',
-    heroSubtitle: '3 líneas de código. Sin Stripe. Sin cuenta. Agentes IA pagan nativo — máquinas pagan máquinas.',
+    heroSubtitle: '3 líneas de código. Sin Stripe. Sin cuenta. Modo gestionado 0.3% — o aloja gratis. Agentes IA pagan nativo.',
     heroAiText: '⚡ <b>Mínimo Stripe: $0,30/llamada.</b> <span style="color:var(--orange)">Mínimo l402-kit: 1 sat ≈ $0,0006.</span> <b>500× más barato.</b>',
     heroReadDocs: 'Leer docs →',
+    heroCardDevLabel: 'Dev de API', heroCardDevTitle: 'Monetiza tu API', heroCardDevSub: '0.3% flat · sin nodo · sin Stripe',
+    heroCardAiLabel: 'AI Builder', heroCardAiTitle: 'Tu agente paga APIs', heroCardAiSub: '0.3% flat · autónomo · sin tarjeta',
+    heroSelfHost: 'o alójate gratis (0% fee) →', heroScaffoldLabel: 'Empieza con un comando', heroQuickstart: 'Ver quickstart →',
     walletTitle: 'Conecta tu wallet',
     walletSub: 'Usa Lightning para pagos y opcionalmente conecta una wallet EVM para identidad.',
     walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX, etc.)',
@@ -1380,9 +1397,12 @@ const I18N = {
   fr: {
     navHow: 'Comment ça marche', navPricing: 'Tarifs', navWallet: 'Connecter wallet', navStart: 'Commencer',
     heroTitle: 'Toute <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> est un échange.<br>Payée via <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>sans intermédiaire.</span>',
-    heroSubtitle: '3 lignes de code. Pas de Stripe. Pas de compte. Les agents IA paient nativement — les machines paient les machines.',
+    heroSubtitle: '3 lignes de code. Pas de Stripe. Pas de compte. Mode géré 0.3% — ou hébergez gratuitement. Agents IA paient nativement.',
     heroAiText: '⚡ <b>Minimum Stripe : $0,30/appel.</b> <span style="color:var(--orange)">Minimum l402-kit : 1 sat ≈ $0,0006.</span> <b>500× moins cher.</b>',
     heroReadDocs: 'Lire docs →',
+    heroCardDevLabel: 'Dev API', heroCardDevTitle: 'Monétisez votre API', heroCardDevSub: '0.3% flat · sans nœud · sans Stripe',
+    heroCardAiLabel: 'AI Builder', heroCardAiTitle: 'Votre agent paye des APIs', heroCardAiSub: '0.3% flat · autonome · sans carte',
+    heroSelfHost: 'ou hébergez gratuitement (0% fee) →', heroScaffoldLabel: 'Commencez avec une commande', heroQuickstart: 'Voir quickstart →',
     walletTitle: 'Connectez votre wallet',
     walletSub: 'Utilisez Lightning pour les paiements et connectez optionnellement un wallet EVM pour l\'identité.',
     walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX, etc.)',
@@ -1396,9 +1416,12 @@ const I18N = {
   de: {
     navHow: 'So funktioniert es', navPricing: 'Preise', navWallet: 'Wallet verbinden', navStart: 'Loslegen',
     heroTitle: 'Jede <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> ist ein Handel.<br>Jetzt per <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>kein Mittelsmann.</span>',
-    heroSubtitle: '3 Zeilen Code. Kein Stripe. Kein Konto. KI-Agenten zahlen nativ — Maschinen zahlen Maschinen.',
+    heroSubtitle: '3 Zeilen Code. Kein Stripe. Kein Konto. 0.3% Managed Mode — oder gratis selbst hosten. KI-Agenten zahlen nativ.',
     heroAiText: '⚡ <b>Stripe-Minimum: $0,30/Anfrage.</b> <span style="color:var(--orange)">l402-kit-Minimum: 1 sat ≈ $0,0006.</span> <b>500× günstiger.</b>',
     heroReadDocs: 'Docs lesen →',
+    heroCardDevLabel: 'API-Entwickler', heroCardDevTitle: 'API monetarisieren', heroCardDevSub: '0.3% flat · kein Node · kein Stripe',
+    heroCardAiLabel: 'AI Builder', heroCardAiTitle: 'Ihr Agent zahlt APIs', heroCardAiSub: '0.3% flat · autonom · keine Karte',
+    heroSelfHost: 'oder gratis selbst hosten (0% Fee) →', heroScaffoldLabel: 'Starten Sie mit einem Befehl', heroQuickstart: 'Quickstart anzeigen →',
     walletTitle: 'Wallet verbinden',
     walletSub: 'Verwende Lightning für Zahlungen und verbinde optional ein EVM-Wallet für Identität.',
     walletEvmTitle: 'EVM-Wallet (MetaMask, Rabby, OKX, etc.)',
@@ -1412,9 +1435,12 @@ const I18N = {
   it: {
     navHow: 'Come funziona', navPricing: 'Prezzi', navWallet: 'Connetti wallet', navStart: 'Inizia',
     heroTitle: 'Ogni <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> è uno scambio.<br>Pagata via <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>nessun intermediario.</span>',
-    heroSubtitle: '3 righe di codice. Niente Stripe. Niente account. Gli agenti IA pagano nativo — le macchine pagano le macchine.',
+    heroSubtitle: '3 righe di codice. Niente Stripe. Niente account. Managed mode 0.3% — o self-host gratis. Agenti IA pagano nativo.',
     heroAiText: '⚡ <b>Minimo Stripe: $0,30/chiamata.</b> <span style="color:var(--orange)">Minimo l402-kit: 1 sat ≈ $0,0006.</span> <b>500× più economico.</b>',
     heroReadDocs: 'Leggi docs →',
+    heroCardDevLabel: 'Dev API', heroCardDevTitle: 'Monetizza la tua API', heroCardDevSub: '0.3% flat · nessun nodo · nessun Stripe',
+    heroCardAiLabel: 'AI Builder', heroCardAiTitle: 'Il tuo agente paga le API', heroCardAiSub: '0.3% flat · autonomo · nessuna carta',
+    heroSelfHost: 'o self-host gratis (0% fee) →', heroScaffoldLabel: 'Inizia con un comando', heroQuickstart: 'Vedi quickstart →',
     walletTitle: 'Connetti il tuo wallet',
     walletSub: 'Usa Lightning per i pagamenti e connetti opzionalmente un wallet EVM per l\'identità.',
     walletEvmTitle: 'Wallet EVM (MetaMask, Rabby, OKX, ecc.)',
@@ -1428,9 +1454,12 @@ const I18N = {
   ja: {
     navHow: '仕組み', navPricing: '料金', navWallet: 'ウォレット接続', navStart: '開始',
     heroTitle: 'あらゆる<span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span>は取引だ。<br><span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span>で支払う — <span>仲介なし。</span>',
-    heroSubtitle: '3行のコード。Stripeなし。アカウントなし。AIエージェントがネイティブに支払う — 機械が機械に支払う。',
+    heroSubtitle: '3行のコード。Stripeなし。アカウントなし。マネージドモード0.3% — または無料でセルフホスト。AIエージェントがネイティブに支払う。',
     heroAiText: '⚡ <b>Stripe最低額: $0.30/呼出し。</b> <span style="color:var(--orange)">l402-kit最低額: 1 sat ≈ $0.0006。</span> <b>500×安い。</b>',
     heroReadDocs: 'ドキュメント →',
+    heroCardDevLabel: 'API開発者', heroCardDevTitle: 'APIを収益化', heroCardDevSub: '0.3% フラット · ノード不要 · Stripe不要',
+    heroCardAiLabel: 'AIビルダー', heroCardAiTitle: 'エージェントがAPIを支払う', heroCardAiSub: '0.3% フラット · 自律的 · カード不要',
+    heroSelfHost: 'または無料でセルフホスト (0% fee) →', heroScaffoldLabel: '1コマンドで開始', heroQuickstart: 'クイックスタートを見る →',
     walletTitle: 'ウォレットを接続',
     walletSub: 'Lightningで決済し、オプションでEVMウォレットをID用に接続できます。',
     walletEvmTitle: 'EVMウォレット（MetaMask、Rabby、OKXなど）',
@@ -1444,9 +1473,12 @@ const I18N = {
   ru: {
     navHow: 'Как это работает', navPricing: 'Тарифы', navWallet: 'Подключить кошелёк', navStart: 'Начать',
     heroTitle: 'Любой <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> — это сделка.<br>Оплата через <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>без посредников.</span>',
-    heroSubtitle: '3 строки кода. Без Stripe. Без аккаунта. ИИ-агенты платят нативно — машины платят машинам.',
+    heroSubtitle: '3 строки кода. Без Stripe. Без аккаунта. Managed mode 0.3% — или бесплатный self-host. ИИ-агенты платят нативно.',
     heroAiText: '⚡ <b>Минимум Stripe: $0,30/запрос.</b> <span style="color:var(--orange)">Минимум l402-kit: 1 sat ≈ $0,0006.</span> <b>В 500× дешевле.</b>',
     heroReadDocs: 'Документация →',
+    heroCardDevLabel: 'API-разработчик', heroCardDevTitle: 'Монетизируй свой API', heroCardDevSub: '0.3% flat · без ноды · без Stripe',
+    heroCardAiLabel: 'AI Builder', heroCardAiTitle: 'Агент платит за API', heroCardAiSub: '0.3% flat · автономно · без карты',
+    heroSelfHost: 'или self-host бесплатно (0% fee) →', heroScaffoldLabel: 'Начни с одной команды', heroQuickstart: 'Смотреть quickstart →',
     walletTitle: 'Подключить кошелёк',
     walletSub: 'Используй Lightning для платежей и при желании подключи EVM-кошелёк для идентификации.',
     walletEvmTitle: 'EVM-кошелёк (MetaMask, Rabby, OKX и др.)',
@@ -1460,9 +1492,12 @@ const I18N = {
   zh: {
     navHow: '工作原理', navPricing: '定价', navWallet: '连接钱包', navStart: '开始使用',
     heroTitle: '每个<span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span>都是一笔交易。<br>通过<span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span>支付 — <span>无中间商。</span>',
-    heroSubtitle: '3行代码。无需Stripe。无需账户。AI智能体原生支付 — 机器向机器付款。',
+    heroSubtitle: '3行代码。无需Stripe。无需账户。0.3%托管模式 — 或免费自托管。AI智能体原生支付。',
     heroAiText: '⚡ <b>Stripe最低：$0.30/次。</b> <span style="color:var(--orange)">l402-kit最低：1 sat ≈ $0.0006。</span> <b>便宜500倍。</b>',
     heroReadDocs: '查看文档 →',
+    heroCardDevLabel: 'API开发者', heroCardDevTitle: '变现你的API', heroCardDevSub: '0.3% 固定 · 无需节点 · 无需Stripe',
+    heroCardAiLabel: 'AI构建者', heroCardAiTitle: '智能体支付API', heroCardAiSub: '0.3% 固定 · 自主 · 无需信用卡',
+    heroSelfHost: '或免费自托管 (0% fee) →', heroScaffoldLabel: '一条命令即可开始', heroQuickstart: '查看快速入门 →',
     walletTitle: '连接钱包',
     walletSub: '使用 Lightning 付款，可选连接 EVM 钱包用于身份验证。',
     walletEvmTitle: 'EVM 钱包（MetaMask、Rabby、OKX 等）',
@@ -1476,9 +1511,12 @@ const I18N = {
   hi: {
     navHow: 'कैसे काम करता है', navPricing: 'प्राइसिंग', navWallet: 'वॉलेट कनेक्ट करें', navStart: 'शुरू करें',
     heroTitle: 'हर <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> एक लेन-देन है।<br><span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> से भुगतान — <span>बिना बिचौलिए।</span>',
-    heroSubtitle: '3 लाइनें। Stripe नहीं। Account नहीं। AI एजेंट नेटिव भुगतान करते हैं — मशीनें मशीनों को भुगतान करती हैं।',
+    heroSubtitle: '3 लाइनें। Stripe नहीं। Account नहीं। Managed mode 0.3% — या मुफ्त self-host। AI एजेंट नेटिव भुगतान।',
     heroAiText: '⚡ <b>Stripe न्यूनतम: $0.30/कॉल।</b> <span style="color:var(--orange)">l402-kit न्यूनतम: 1 sat ≈ $0.0006।</span> <b>500× सस्ता।</b>',
     heroReadDocs: 'डॉक्स पढ़ें →',
+    heroCardDevLabel: 'API डेवलपर', heroCardDevTitle: 'अपना API मोनेटाइज करें', heroCardDevSub: '0.3% फ्लैट · नोड नहीं · Stripe नहीं',
+    heroCardAiLabel: 'AI बिल्डर', heroCardAiTitle: 'आपका एजेंट APIs को भुगतान करे', heroCardAiSub: '0.3% फ्लैट · स्वायत्त · कार्ड नहीं',
+    heroSelfHost: 'या मुफ्त self-host करें (0% fee) →', heroScaffoldLabel: 'एक कमांड से शुरू करें', heroQuickstart: 'Quickstart देखें →',
     walletTitle: 'वॉलेट कनेक्ट करें',
     walletSub: 'Lightning से भुगतान लें और वैकल्पिक रूप से पहचान के लिए EVM वॉलेट कनेक्ट करें।',
     walletEvmTitle: 'EVM वॉलेट (MetaMask, Rabby, OKX आदि)',
@@ -1492,9 +1530,12 @@ const I18N = {
   ar: {
     navHow: 'كيف يعمل', navPricing: 'الأسعار', navWallet: 'ربط المحفظة', navStart: 'ابدأ',
     heroTitle: 'كل <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> هي صفقة.<br>تُدفع عبر <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>بلا وسيط.</span>',
-    heroSubtitle: '3 أسطر فقط. بدون Stripe. بدون حساب. وكلاء الذكاء الاصطناعي يدفعون بشكل أصلي — الآلات تدفع للآلات.',
+    heroSubtitle: '3 أسطر فقط. بدون Stripe. بدون حساب. وضع مُدار 0.3% — أو استضف مجاناً. وكلاء الذكاء الاصطناعي يدفعون بشكل أصلي.',
     heroAiText: '⚡ <b>حد Stripe الأدنى: $0.30/طلب.</b> <span style="color:var(--orange)">حد l402-kit الأدنى: 1 sat ≈ $0.0006.</span> <b>أرخص بـ500 مرة.</b>',
     heroReadDocs: 'اقرأ التوثيق →',
+    heroCardDevLabel: 'مطور API', heroCardDevTitle: 'حقق دخلاً من API', heroCardDevSub: '0.3% ثابت · بدون عقدة · بدون Stripe',
+    heroCardAiLabel: 'بناء الذكاء الاصطناعي', heroCardAiTitle: 'وكيلك يدفع لـ APIs', heroCardAiSub: '0.3% ثابت · مستقل · بدون بطاقة',
+    heroSelfHost: 'أو استضف مجاناً (0% fee) →', heroScaffoldLabel: 'ابدأ بأمر واحد', heroQuickstart: 'عرض البداية السريعة →',
     walletTitle: 'ربط المحفظة',
     walletSub: 'استخدم Lightning للمدفوعات وربط محفظة EVM اختيارياً للهوية.',
     walletEvmTitle: 'محفظة EVM (MetaMask, Rabby, OKX إلخ)',
@@ -1889,21 +1930,6 @@ function applyFullPageCopy(lang) {
     if (fd) fd.textContent = d.features[i][1];
   });
 
-  // For-who section
-  const fwH2 = document.querySelector('.for-who h2');
-  if (fwH2 && d.forWhoTitle) fwH2.textContent = d.forWhoTitle;
-  if (d.forWhoCards) {
-    document.querySelectorAll('.for-who-card').forEach((card, i) => {
-      if (!d.forWhoCards[i]) return;
-      const role = card.querySelector('.fw-role'), title = card.querySelector('.fw-title'), desc = card.querySelector('.fw-desc');
-      const lis = card.querySelectorAll('li');
-      if (role) role.textContent = d.forWhoCards[i][0];
-      if (title) title.textContent = d.forWhoCards[i][1];
-      if (desc) desc.textContent = d.forWhoCards[i][2];
-      d.forWhoCards[i][3].forEach((txt, j) => { if (lis[j]) lis[j].textContent = txt; });
-    });
-  }
-
   // Use cases
   const ucH2 = document.querySelector('.usecases h2');
   if (ucH2) ucH2.textContent = d.usecasesTitle;
@@ -1985,6 +2011,21 @@ function applyFullPageCopy(lang) {
   const qsReadDocs = document.getElementById('qs-read-docs');
   if (qsEyebrow && d.ctaTitle) qsEyebrow.textContent = d.ctaTitle;
   if (qsReadDocs && d.heroReadDocs) qsReadDocs.textContent = d.heroReadDocs;
+}
+
+function toggleMobileNav() {
+  var links = document.getElementById('navLinks');
+  var btn = document.getElementById('navHamburger');
+  var open = links.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeMobileNav() {
+  var links = document.getElementById('navLinks');
+  var btn = document.getElementById('navHamburger');
+  links.classList.remove('open');
+  btn.classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function initLanguageSelector() {
@@ -2265,8 +2306,10 @@ initWalletPrefs();
     if (e('cmp-sat-val')) e('cmp-sat-val').textContent = fmtSat(satUsd);
     if (e('cmp-1k-val')) e('cmp-1k-val').textContent = '$' + (satsPer100 * 1000).toFixed(2);
     if (e('cmp-1m-val')) e('cmp-1m-val').textContent = '$' + Math.round(satsPer100 * 1_000_000).toLocaleString();
-    const donateUsd = e('donate-usd-val');
-    if (donateUsd) donateUsd.textContent = '~' + fmtSat(satUsd);
+    // Builder ROI: 100k calls × 10 sats each
+    document.querySelectorAll('.builder-roi').forEach(el => {
+      el.textContent = Math.round(satUsd * 10 * 100_000).toLocaleString();
+    });
   } catch {}
 })();
 
@@ -2447,6 +2490,14 @@ function setLang(lang) {
   if (el && total > 0) {
     el.textContent = total >= 1000 ? Math.round(total/100)*100/1000 + 'k+' : total.toLocaleString();
   }
+  // Weekly downloads
+  try {
+    const rw = await fetch('https://api.npmjs.org/downloads/point/last-week/l402-kit');
+    const dw = await rw.json();
+    const weekly = dw.downloads || 0;
+    const elW = document.getElementById('stat-weekly');
+    if (elW && weekly > 0) elW.textContent = weekly >= 1000 ? (weekly/1000).toFixed(1) + 'k' : weekly.toLocaleString();
+  } catch {}
 })();
 
 
@@ -2667,7 +2718,7 @@ function animateValue(id, start, end, duration) {
   });
 })();
 
-// ── Donate / Live L402 Demo (visitor pays 1 sat) ──────────────────────────────
+// ── Live L402 Demo (visitor pays 1 sat, sees protocol in action) ──────────────
 (function() {
   var _running = false;
   var _invoice = '', _macaroon = '', _pollTimer = null, _expireTimer = null, _countdownTimer = null;
@@ -2700,7 +2751,7 @@ function animateValue(id, start, end, duration) {
     if (_expireTimer) { clearTimeout(_expireTimer); _expireTimer = null; }
     if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
     _running = false; _invoice = ''; _macaroon = '';
-    var t = term(); if (t) { t.innerHTML = '<span style="color:#6e7681"># Click ▶ Run to generate a real BOLT11 invoice via L402</span>'; }
+    var t = term(); if (t) { t.innerHTML = '<span style="color:#6e7681"># Click ▶ Run — get a real BOLT11 invoice via L402</span>'; }
     document.getElementById('donateInvoiceArea').style.display = 'none';
     document.getElementById('donateSuccess').style.display = 'none';
     var btn = document.getElementById('donateRunBtn');
