@@ -345,9 +345,9 @@ describe("[Visual] landing page — for-who section", () => {
     expect(html).not.toMatch(/data-who=\\?"oss\\?"/);
   });
 
-  it("contém fw-cta links para docs", () => {
+  it("contém fw-cta links para docs via l402kit.com/docs", () => {
     expect(html).toMatch(/class="fw-cta"/);
-    expect(html).toMatch(/docs\.l402kit\.com/);
+    expect(html).toMatch(/l402kit\.com\/docs/);
   });
 });
 
@@ -385,8 +385,68 @@ describe("[Visual] landing page — pricing (3 tiers)", () => {
     expect(html).toMatch(/ManagedProvider|0\.3%/);
   });
 
-  it("URLs de pricing apontam para docs.l402kit.com (não mintlify)", () => {
+  it("URLs de pricing apontam para l402kit.com/docs (não mintlify, não docs.l402kit.com direto)", () => {
     expect(html).not.toMatch(/shinydapps-bd9fa40b\.mintlify\.app/);
+  });
+});
+
+describe("[Visual] landing page — docs links (todos via l402kit.com/docs)", () => {
+  let html: string;
+  beforeAll(() => { html = readHtml("index.html"); });
+
+  it("nenhum link aponta diretamente para docs.l402kit.com", () => {
+    const direct = (html.match(/href="https:\/\/docs\.l402kit\.com/g) || []).length;
+    expect(direct).toBe(0);
+  });
+
+  it("links de docs passam por l402kit.com/docs", () => {
+    expect(html).toMatch(/href="https:\/\/l402kit\.com\/docs\//);
+  });
+
+  it("worker.ts aponta para mintlify (não docs.l402kit.com)", () => {
+    const worker = fs.readFileSync(
+      path.resolve(__dirname, "../../cloudflare/src/worker.ts"), "utf-8"
+    );
+    expect(worker).toMatch(/shinydapps-bd9fa40b\.mintlify\.app/);
+    expect(worker).not.toMatch(/MINTLIFY.*docs\.l402kit\.com/);
+  });
+});
+
+describe("[Visual] landing page — agent economy (v2.0)", () => {
+  let html: string;
+  beforeAll(() => { html = readHtml("index.html"); });
+
+  it("tem aba Agent no quickstart", () => {
+    expect(html).toMatch(/switchQsLang\('agent'/);
+    expect(html).toMatch(/🤖 Agent/);
+  });
+
+  it("código do Agent usa L402Client (não L402Agent)", () => {
+    expect(html).toMatch(/L402Client/);
+    expect(html).not.toMatch(/L402Agent/);
+  });
+
+  it("código do Agent usa AlbyWallet", () => {
+    expect(html).toMatch(/AlbyWallet/);
+  });
+
+  it("tem seção Agent Economy (#agent-economy)", () => {
+    expect(html).toMatch(/id="agent-economy"/);
+  });
+
+  it("tem logos de compatibilidade (MCP, LangChain, Vercel AI)", () => {
+    expect(html).toMatch(/Claude MCP/);
+    expect(html).toMatch(/LangChain/);
+    expect(html).toMatch(/Vercel AI/);
+  });
+
+  it("How it works tem dois painéis (sell + buy)", () => {
+    expect(html).toMatch(/API Developer.*sell|sell.*API Developer/is);
+    expect(html).toMatch(/AI Builder.*buy|buy.*AI Builder/is);
+  });
+
+  it("QS_LANGS tem entrada 'agent'", () => {
+    expect(html).toMatch(/agent:\s*\{/);
   });
 });
 

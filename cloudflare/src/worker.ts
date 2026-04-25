@@ -27,7 +27,7 @@ export interface Env {
   demo_preimages: KVNamespace;
 }
 
-const MINTLIFY = "https://docs.l402kit.com";
+const MINTLIFY = "https://shinydapps-bd9fa40b.mintlify.app";
 
 function handleDocsRedirect(request: Request): Response {
   const url = new URL(request.url);
