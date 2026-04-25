@@ -41,7 +41,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                            // ~$0.06 за вызов
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!),     // вы получаете 99.7%
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),     // sovereign mode — 0% fee
 }), (_req, res) => {
   res.json({ data: "Оплата подтверждена." });
 });
@@ -60,7 +60,7 @@ app = FastAPI()
 @app.get("/premium")
 @l402_required(
     price_sats=100,
-    lightning=AlbyProvider(os.environ["ALBY_TOKEN"]),
+    lightning=ManagedProvider.from_address("you@blink.sv"),
 )
 async def premium(request: Request):
     return {"data": "Оплата подтверждена."}
