@@ -9,11 +9,14 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "l402-kit-mcp": "dist/mcp/mcp/server.js"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npx tsc --project mcp/tsconfig.json",
     "dev": "tsc --watch",
     "test": "jest --passWithNoTests",
     "lint": "tsc --noEmit",
@@ -160,6 +163,7 @@
     "typescript": "^5.4.0"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "dotenv": "^17.4.2"
   }
 }
