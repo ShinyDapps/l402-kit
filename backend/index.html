@@ -197,9 +197,8 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .pricing { max-width: 1180px; margin: 0 auto 56px; padding: 0 24px; }
 .pricing h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 12px; }
 .pricing-sub { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 40px; }
-.pricing-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 900px) { .pricing-cards { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .pricing-cards { grid-template-columns: 1fr; } }
+.pricing-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 900px; margin: 0 auto; }
+@media (max-width: 780px) { .pricing-cards { grid-template-columns: 1fr; } }
 .pricing-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; position: relative; }
 .pricing-card.featured { border-color: var(--orange); }
 .pricing-name { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
@@ -217,7 +216,8 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 /* USE CASES */
 .for-who { max-width: 960px; margin: 0 auto 64px; padding: 0 24px; }
 .for-who h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-.for-who-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.for-who-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 700px; margin: 0 auto; }
+@media (max-width: 600px) { .for-who-grid { grid-template-columns: 1fr; } }
 .for-who-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px 24px; }
 .for-who-card .fw-icon { font-size: 32px; margin-bottom: 12px; }
 .for-who-card .fw-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
@@ -230,8 +230,6 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .for-who-card[data-who="api"] .fw-cta:hover { background: rgba(247,147,26,0.18); }
 .for-who-card[data-who="ai"] .fw-cta { color: #2ddc6e; border-color: rgba(45,220,110,0.4); background: rgba(45,220,110,0.07); }
 .for-who-card[data-who="ai"] .fw-cta:hover { background: rgba(45,220,110,0.16); }
-.for-who-card[data-who="oss"] .fw-cta { color: #b89dff; border-color: rgba(184,157,255,0.4); background: rgba(184,157,255,0.07); }
-.for-who-card[data-who="oss"] .fw-cta:hover { background: rgba(184,157,255,0.16); }
 .usecases { max-width: 860px; margin: 0 auto 56px; padding: 0 24px; }
 .usecases h2 { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 40px; }
 .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
@@ -298,13 +296,9 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .for-who-card[data-who="ai"]  { border-top-color: #2ddc6e; }
 .for-who-card[data-who="ai"]:hover  { box-shadow: 0 14px 44px rgba(0,0,0,0.45), 0 0 28px rgba(45,220,110,0.13); transform: translateY(-3px); }
 .for-who-card[data-who="ai"] .fw-role { color: #2ddc6e; }
-.for-who-card[data-who="oss"] { border-top-color: #b89dff; }
-.for-who-card[data-who="oss"]:hover { box-shadow: 0 14px 44px rgba(0,0,0,0.45), 0 0 28px rgba(184,157,255,0.13); transform: translateY(-3px); }
-.for-who-card[data-who="oss"] .fw-role { color: #b89dff; }
 .for-who-card ul { list-style: none; padding: 0; }
 .for-who-card ul li::before { content: "✓"; color: var(--orange); margin-right: 8px; font-weight: 700; }
 .for-who-card[data-who="ai"] ul li::before { color: #2ddc6e; }
-.for-who-card[data-who="oss"] ul li::before { color: #b89dff; }
 
 /* ── FLOW CONNECTOR ── */
 .flow-step:not(:last-child)::after { content: ''; position: absolute; right: -14px; top: 36px; width: 26px; height: 2px; background: linear-gradient(90deg, rgba(247,147,26,0.7), rgba(247,147,26,0.1)); font-size: 0; transform: none; border-radius: 2px; }
@@ -428,7 +422,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <a href="#how" data-i18n="navHow" onclick="closeMobileNav()">Como funciona</a>
     <a href="#extension" onclick="closeMobileNav()">Extensao</a>
     <a href="#pricing" data-i18n="navPricing" onclick="closeMobileNav()">Precos</a>
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/pt/introduction" id="navDocsLink" data-docs-link="1" target="_blank" rel="noopener">Docs</a>
+    <a href="https://docs.l402kit.com/pt/introduction" id="navDocsLink" data-docs-link="1" target="_blank" rel="noopener">Docs</a>
     <a href="dashboard.html" target="_blank" rel="noopener">Painel</a>
     <label class="lang-picker" for="languageSelect">
       <span>🌐</span>
@@ -447,7 +441,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
       </select>
     </label>
     <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" title="Star l402-kit on GitHub" style="display:inline-flex;align-items:center;gap:0;text-decoration:none;border-radius:7px;overflow:hidden;border:1px solid #333;transition:border-color 0.2s;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'"><span style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#1a1a1a;color:#e5e5e5">⭐ Star</span><span id="ghStarCount" style="display:inline-flex;align-items:center;padding:5px 9px;background:#111;color:#f7931a;border-left:1px solid #333">–</span></a>
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/pt/introduction" class="nav-cta" id="navStartLink" data-docs-link="1" data-i18n="navStart">Comecar</a>
+    <a href="https://docs.l402kit.com/pt/introduction" class="nav-cta" id="navStartLink" data-docs-link="1" data-i18n="navStart">Comecar</a>
   </div>
 </nav>
 
@@ -530,6 +524,18 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <div class="stat-label">Countries blocked</div>
   </div>
 </div><hr class="section-sep">
+
+<!-- DIFERENCIAIS -->
+<section style="max-width:860px;margin:0 auto;padding:48px 24px 16px;text-align:center">
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">🔓 <span data-i18n="diffOpenSource">Open Source · MIT</span></span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">⚡ <span data-i18n="diffBitcoin">Bitcoin Lightning</span></span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid rgba(247,147,26,.3);border-radius:24px;padding:8px 18px;font-size:13px;color:#f7931a;font-weight:600">0.3% <span data-i18n="diffManaged">managed · no node</span></span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid rgba(45,220,110,.2);border-radius:24px;padding:8px 18px;font-size:13px;color:#2ddc6e;font-weight:500">🤖 <span data-i18n="diffAiReady">AI agent native</span></span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">🌐 <span data-i18n="diffNoKyc">No KYC · no account</span></span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">🏠 <span data-i18n="diffSelfHost">Self-host = 0% fee</span></span>
+  </div>
+</section><hr class="section-sep">
 
 <!-- PROBLEM SECTION -->
 <section class="problem">
@@ -944,7 +950,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 
         <!-- action buttons -->
         <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <a id="qs-read-docs" href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" class="btn-primary" style="font-size:15px;padding:14px 28px;text-decoration:none">Read the docs →</a>
+          <a id="qs-read-docs" href="https://docs.l402kit.com/quickstart" target="_blank" class="btn-primary" style="font-size:15px;padding:14px 28px;text-decoration:none">Read the docs →</a>
           <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s;background:#111" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#2a2a2a'">⭐ Star on GitHub</a>
         </div>
       </div>
@@ -970,7 +976,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
           <!-- Footer -->
           <div style="background:#0a0a0a;border-top:1px solid #141414;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
             <span style="color:#444;font-size:11px">0.3% managed fee · <span style="color:#2ddc6e">or 0% self-host</span></span>
-            <a id="qs-docs-link" href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" rel="noopener" style="font-size:11px;color:#f7931a;text-decoration:none;font-weight:600" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Full quickstart →</a>
+            <a id="qs-docs-link" href="https://docs.l402kit.com/quickstart" target="_blank" rel="noopener" style="font-size:11px;color:#f7931a;text-decoration:none;font-weight:600" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Full quickstart →</a>
           </div>
         </div>
 
@@ -1011,6 +1017,39 @@ lightning = <span class="c-fn">BlinkProvider</span>(
       .qs-tab{font-size:11px;padding:8px 10px}
     }
   </style>
+</section><hr class="section-sep">
+
+<!-- ── FOR WHO ─────────────────────────────────────────── -->
+<section class="for-who" id="for-who">
+  <span class="eyebrow">Two kinds of builders</span>
+  <h2 id="fw-title">Who is this for?</h2>
+  <p id="fw-sub" style="text-align:center;color:var(--muted);margin-bottom:32px;font-size:15px">You own the API. You keep 99.7% of every sat.</p>
+  <div class="for-who-grid">
+    <div class="for-who-card" data-who="api">
+      <div class="fw-icon">🏗️</div>
+      <div class="fw-role" id="fw-role-0">API Developer</div>
+      <div class="fw-title" id="fw-title-0">You sell data or compute</div>
+      <div class="fw-desc" id="fw-desc-0">You built an API — weather, AI inference, market data, media — and want to monetize it per call without Stripe, subscriptions, or billing dashboards.</div>
+      <ul>
+        <li id="fw-li-0-0">Add 3 lines of middleware</li>
+        <li id="fw-li-0-1">Set your price in sats</li>
+        <li id="fw-li-0-2">Receive Bitcoin instantly</li>
+      </ul>
+      <a href="https://docs.l402kit.com/quickstart" target="_blank" class="fw-cta">Start building →</a>
+    </div>
+    <div class="for-who-card" data-who="ai">
+      <div class="fw-icon">🤖</div>
+      <div class="fw-role" id="fw-role-1">AI Builder</div>
+      <div class="fw-title" id="fw-title-1">Your agent needs to pay for tools</div>
+      <div class="fw-desc" id="fw-desc-1">You're building autonomous AI agents that call external APIs. L402 is the native payment protocol for agents — no OAuth, no card on file, no human approval loop.</div>
+      <ul>
+        <li id="fw-li-1-0">Agent gets 402 → pays invoice</li>
+        <li id="fw-li-1-1">Retries with proof → gets data</li>
+        <li id="fw-li-1-2">Works with any LLM framework</li>
+      </ul>
+      <a href="https://docs.l402kit.com/guides/ai-agents" target="_blank" class="fw-cta">Agent guide →</a>
+    </div>
+  </div>
 </section><hr class="section-sep">
 
 <section class="flow" id="how">
@@ -1056,65 +1095,54 @@ lightning = <span class="c-fn">BlinkProvider</span>(
     </span>
   </div>
   <div class="pricing-cards">
+    <!-- Sovereign -->
     <div class="pricing-card" data-reveal="">
-      <div class="pricing-name">Gratis</div>
+      <div class="pricing-name">Sovereign</div>
       <div class="pricing-price">$0 <span>forever</span></div>
-      <div class="pricing-sats">0 sats — always free</div>
-      <div class="pricing-desc">Self-host: <strong style="color:#86efac">0% de taxa</strong> · Gerenciado: 0,3%</div>
+      <div class="pricing-sats">0% fee — SDK always free</div>
+      <div class="pricing-desc">Self-host with your own Lightning node</div>
       <ul class="pricing-features">
         <li><span class="check">✓</span> TypeScript, Python, Go, Rust</li>
-        <li><span class="check">✓</span> Self-host = 0% de taxa, para sempre</li>
-        <li><span class="check">✓</span> Chamadas ilimitadas</li>
-        <li><span class="check">✓</span> Histórico de pagamentos (7 dias)</li>
-        <li><span class="check">✓</span> Gráficos 1D / 7D</li>
+        <li><span class="check">✓</span> Self-host = 0% fee, forever</li>
+        <li><span class="check">✓</span> Unlimited API calls</li>
+        <li><span class="check">✓</span> Payment history (7 days)</li>
+        <li><span class="check">✓</span> Charts 1D / 7D</li>
         <li><span class="check">✓</span> Open source — MIT</li>
       </ul>
-      <a href="https://shinydapps-bd9fa40b.mintlify.app/pt/introduction" data-docs-link="1" style="display:block;margin-top:24px;text-align:center;padding:10px;background:#1a1a1a;border-radius:8px;font-size:13px;font-weight:600">Comecar →</a>
+      <a href="https://docs.l402kit.com/providers" target="_blank" data-docs-link="1" style="display:block;margin-top:24px;text-align:center;padding:10px;background:#1a1a1a;border-radius:8px;font-size:13px;font-weight:600">Set up your node →</a>
     </div>
+    <!-- Managed — FEATURED -->
     <div class="pricing-card featured" data-reveal="">
-      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:#000;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px">POPULAR</div>
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:#000;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px">RECOMMENDED</div>
+      <div class="pricing-name">Managed</div>
+      <div class="pricing-price">0.3% <span>per sat</span></div>
+      <div class="pricing-sats">No monthly fee — pay per use</div>
+      <div class="pricing-desc">No Lightning node — just add your Lightning address</div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span> No Lightning node needed</li>
+        <li><span class="check">✓</span> Add your Lightning address to start</li>
+        <li><span class="check">✓</span> 99.7% of every sat goes to you</li>
+        <li><span class="check">✓</span> All 4 SDKs (TS / Python / Go / Rust)</li>
+        <li><span class="check">✓</span> Instant activation</li>
+        <li><span class="check">✓</span> Upgrade to Pro for full analytics</li>
+      </ul>
+      <a href="https://docs.l402kit.com/quickstart" target="_blank" style="display:block;margin-top:24px;text-align:center;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Start in 2 minutes →</a>
+    </div>
+    <!-- Pro analytics -->
+    <div class="pricing-card" data-reveal="">
       <div class="pricing-name">Pro</div>
       <div class="pricing-price">$9 <span>/month</span></div>
       <div class="pricing-sats" id="tier-pro-sats">≈ 11k sats today/mo</div>
-      <div class="pricing-desc">Pague com Lightning — ativacao instantanea</div>
+      <div class="pricing-desc">Pay with Lightning — instant activation</div>
       <ul class="pricing-features">
-        <li><span class="check">✓</span> Everything in Free</li>
+        <li><span class="check">✓</span> Everything in Sovereign</li>
         <li><span class="check">✓</span> Full history — no 7-day limit</li>
         <li><span class="check">✓</span> All chart ranges (30D / 1Y / ALL)</li>
         <li><span class="check">✓</span> CSV export</li>
         <li><span class="check">✓</span> Lightning receipt — verifiable proof</li>
         <li><span class="check">✓</span> Delete all your data anytime</li>
       </ul>
-      <button onclick="openProModal('pro')" style="width:100%;margin-top:24px;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Assinar com Lightning</button>
-    </div>
-    <div class="pricing-card" data-reveal="">
-      <div class="pricing-name">Builder</div>
-      <div class="pricing-price">$99 <span>/month</span></div>
-      <div class="pricing-sats" id="tier-business-sats">≈ 126k sats today/mo</div>
-      <div class="pricing-desc">For teams and high-volume APIs</div>
-      <div style="font-size:11px;color:#3fb950;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:7px 10px;margin-bottom:10px">💡 At 100k API calls/mo at 10 sats each → ~$<span class="builder-roi">...</span> revenue. Builder pays for itself.</div>
-      <ul class="pricing-features">
-        <li><span class="check">✓</span> Everything in Pro</li>
-        <li><span class="check">✓</span> Monitor up to 5 Lightning addresses</li>
-        <li><span class="check">✓</span> Webhook on every payment received</li>
-        <li><span class="check">✓</span> Programmatic API access to your data</li>
-        <li><span class="check">✓</span> Priority support + SLA</li>
-      </ul>
-      <button onclick="openProModal('business')" style="width:100%;margin-top:24px;padding:12px;background:#1a1a1a;border:1px solid var(--orange);color:var(--orange);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Assinar com Lightning</button>
-    </div>
-    <div class="pricing-card" data-reveal="">
-      <div class="pricing-name">Founder</div>
-      <div class="pricing-price">$999 <span>one-time</span></div>
-      <div class="pricing-sats" id="tier-lifetime-sats">≈ 1.27M sats — one-time</div>
-      <div class="pricing-desc">Pague uma vez. Use para sempre.</div>
-      <ul class="pricing-features">
-        <li><span class="check">✓</span> Everything in Builder — forever</li>
-        <li><span class="check">✓</span> Early access to DCA agent</li>
-        <li><span class="check">✓</span> Listed as founding supporter</li>
-        <li><span class="check">✓</span> Input on the roadmap</li>
-        <li><span class="check">✓</span> No renewal. Ever.</li>
-      </ul>
-      <button onclick="openProModal('lifetime')" style="width:100%;margin-top:24px;padding:12px;background:linear-gradient(135deg,#f7931a,#ff6b35);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Comprar acesso vitalicio</button>
+      <button onclick="openProModal('pro')" style="width:100%;margin-top:24px;padding:12px;background:var(--orange);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⚡ Subscribe with Lightning</button>
     </div>
   </div>
   <p style="text-align:center;font-size:12px;color:#444;margin-top:20px;letter-spacing:.2px">
@@ -1209,7 +1237,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
       </ul>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.dapp-agent-forge-vscode" target="_blank" rel="noopener" class="btn-primary" style="font-size:14px;padding:12px 22px">Install Free on Marketplace</a>
-        <a href="https://shinydapps-bd9fa40b.mintlify.app/introduction" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:12px 22px;border:1px solid #333;border-radius:12px;font-size:14px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">Documentation →</a>
+        <a href="https://docs.l402kit.com/introduction" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:12px 22px;border:1px solid #333;border-radius:12px;font-size:14px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">Documentation →</a>
       </div>
     </div>
     <!-- Right: live stats widget -->
@@ -1239,7 +1267,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
   <h2 style="font-size:clamp(26px,4vw,40px);font-weight:800;margin:14px 0 12px;letter-spacing:-1px">You already know it works.<br><span style="color:var(--orange)">Time to ship.</span></h2>
   <p style="color:var(--muted);font-size:15px;max-width:400px;margin:0 auto 28px;line-height:1.6">No account. No Stripe. No middleman. Just<br>Bitcoin Lightning — instant, global, final.</p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/quickstart" target="_blank" class="btn-primary" style="font-size:15px;text-decoration:none">Start in 2 minutes →</a>
+    <a href="https://docs.l402kit.com/quickstart" target="_blank" class="btn-primary" style="font-size:15px;text-decoration:none">Start in 2 minutes →</a>
     <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:16px 24px;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;color:#e5e5e5;text-decoration:none;background:#0d0d0d;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#2a2a2a'">⭐ Star on GitHub</a>
   </div>
   <p style="margin-top:16px;font-size:11px;color:#333">MIT · Open source · <span id="stat-stars-footer">—</span> stars</p>
@@ -1292,7 +1320,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 <footer>
   <div>⚡ <strong>l402-kit</strong> &nbsp;·&nbsp; by <a href="https://github.com/ShinyDapps" style="color:var(--muted)">ShinyDapps</a> · MIT License</div>
   <div style="display:flex;gap:20px">
-    <a href="https://shinydapps-bd9fa40b.mintlify.app/pt/introduction" id="footerDocsLink" data-docs-link="1">Docs</a>
+    <a href="https://docs.l402kit.com/pt/introduction" id="footerDocsLink" data-docs-link="1">Docs</a>
     <a href="https://npmjs.com/package/l402-kit" target="_blank" rel="noopener">npm</a>
     <a href="https://pypi.org/project/l402kit">PyPI</a>
     <a href="dashboard.html">Dashboard</a>
@@ -1352,7 +1380,8 @@ const I18N = {
     walletLnDesc: 'Set your Lightning Address to receive sats via l402-kit (Blink, Alby, Wallet of Satoshi and others).',
     evmConnectBtn: 'Connect EVM wallet', lnSaveBtn: 'Save address', lnClearBtn: 'Clear',
     langConsoleLabel: 'Language', langConsoleHint: 'Applies to the entire page',
-    statTests: 'Tests passing', cmpTitle: 'Cost comparison - live BTC price', cmpFeature: 'Feature', cmpMin: 'Min. fee per call', cmp1k: 'Cost: 1,000 calls', cmp1m: 'Cost: 1M calls', cmpSettle: 'Settlement', cmpDays27: '2-7 days', cmpDays35: '3-5 days', cmpSec: '< 1 second', cmpAccount: 'Requires account', cmpYes: 'Yes', cmpNo: 'No', cmpAI: 'AI agent native', cmpNo2: 'No', cmpYes2: 'Yes', cmpCountries: 'Countries blocked', cmpZero: '0 - global', cmpChargeback: 'Chargeback risk', cmpImpossible: 'Impossible', cmpFooter: 'Assuming 100 sats/call at current BTC price - updates live'
+    statTests: 'Tests passing', cmpTitle: 'Cost comparison - live BTC price', cmpFeature: 'Feature', cmpMin: 'Min. fee per call', cmp1k: 'Cost: 1,000 calls', cmp1m: 'Cost: 1M calls', cmpSettle: 'Settlement', cmpDays27: '2-7 days', cmpDays35: '3-5 days', cmpSec: '< 1 second', cmpAccount: 'Requires account', cmpYes: 'Yes', cmpNo: 'No', cmpAI: 'AI agent native', cmpNo2: 'No', cmpYes2: 'Yes', cmpCountries: 'Countries blocked', cmpZero: '0 - global', cmpChargeback: 'Chargeback risk', cmpImpossible: 'Impossible', cmpFooter: 'Assuming 100 sats/call at current BTC price - updates live',
+    diffOpenSource: 'Open Source · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'managed · no node', diffAiReady: 'AI agent native', diffNoKyc: 'No KYC · no account', diffSelfHost: 'Self-host = 0% fee'
   },
   pt: {
     navHow: 'Como funciona', navPricing: 'Precos', navWallet: 'Conectar wallet', navStart: 'Comecar',
@@ -1373,7 +1402,8 @@ const I18N = {
     walletLnDesc: 'Defina seu Lightning Address para receber sats via l402-kit (Blink, Alby, Wallet of Satoshi e outras).',
     evmConnectBtn: 'Conectar wallet EVM', lnSaveBtn: 'Salvar endereco', lnClearBtn: 'Limpar',
     langConsoleLabel: 'Idioma', langConsoleHint: 'Aplica na pagina inteira',
-    statTests: 'Testes passando', cmpTitle: 'Comparacao de custos - preco BTC ao vivo', cmpFeature: 'Caracteristica', cmpMin: 'Taxa minima por chamada', cmp1k: 'Custo: 1.000 chamadas', cmp1m: 'Custo: 1M chamadas', cmpSettle: 'Liquidacao', cmpDays27: '2-7 dias', cmpDays35: '3-5 dias', cmpSec: '< 1 segundo', cmpAccount: 'Requer conta', cmpYes: 'Sim', cmpNo: 'Nao', cmpAI: 'Agente IA nativo', cmpNo2: 'Nao', cmpYes2: 'Sim', cmpCountries: 'Paises bloqueados', cmpZero: '0 - global', cmpChargeback: 'Risco de chargeback', cmpImpossible: 'Impossivel', cmpFooter: 'Assumindo 100 sats/chamada ao preco atual do BTC - atualiza ao vivo'
+    statTests: 'Testes passando', cmpTitle: 'Comparacao de custos - preco BTC ao vivo', cmpFeature: 'Caracteristica', cmpMin: 'Taxa minima por chamada', cmp1k: 'Custo: 1.000 chamadas', cmp1m: 'Custo: 1M chamadas', cmpSettle: 'Liquidacao', cmpDays27: '2-7 dias', cmpDays35: '3-5 dias', cmpSec: '< 1 segundo', cmpAccount: 'Requer conta', cmpYes: 'Sim', cmpNo: 'Nao', cmpAI: 'Agente IA nativo', cmpNo2: 'Nao', cmpYes2: 'Sim', cmpCountries: 'Paises bloqueados', cmpZero: '0 - global', cmpChargeback: 'Risco de chargeback', cmpImpossible: 'Impossivel', cmpFooter: 'Assumindo 100 sats/chamada ao preco atual do BTC - atualiza ao vivo',
+    diffOpenSource: 'Open Source · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'gerenciado · sem node', diffAiReady: 'Nativo para agentes IA', diffNoKyc: 'Sem KYC · sem cadastro', diffSelfHost: 'Self-host = 0% fee'
   },
   es: {
     navHow: 'Cómo funciona', navPricing: 'Precios', navWallet: 'Conectar wallet', navStart: 'Empezar',
@@ -1392,7 +1422,8 @@ const I18N = {
     walletLnDesc: 'Configura tu Lightning Address para recibir sats vía l402-kit.',
     evmConnectBtn: 'Conectar wallet EVM', lnSaveBtn: 'Guardar dirección', lnClearBtn: 'Borrar',
     langConsoleLabel: 'Idioma', langConsoleHint: 'Se aplica a toda la página',
-    statTests: 'Tests pasando', cmpTitle: 'Comparacion de costos - precio BTC en vivo', cmpFeature: 'Caracteristica', cmpMin: 'Tarifa minima por llamada', cmp1k: 'Costo: 1.000 llamadas', cmp1m: 'Costo: 1M llamadas', cmpSettle: 'Liquidacion', cmpDays27: '2-7 dias', cmpDays35: '3-5 dias', cmpSec: '< 1 segundo', cmpAccount: 'Requiere cuenta', cmpYes: 'Si', cmpNo: 'No', cmpAI: 'Agente IA nativo', cmpNo2: 'No', cmpYes2: 'Si', cmpCountries: 'Paises bloqueados', cmpZero: '0 - global', cmpChargeback: 'Riesgo de contracargo', cmpImpossible: 'Imposible', cmpFooter: 'Asumiendo 100 sats/llamada al precio actual de BTC - actualiza en vivo'
+    statTests: 'Tests pasando', cmpTitle: 'Comparacion de costos - precio BTC en vivo', cmpFeature: 'Caracteristica', cmpMin: 'Tarifa minima por llamada', cmp1k: 'Costo: 1.000 llamadas', cmp1m: 'Costo: 1M llamadas', cmpSettle: 'Liquidacion', cmpDays27: '2-7 dias', cmpDays35: '3-5 dias', cmpSec: '< 1 segundo', cmpAccount: 'Requiere cuenta', cmpYes: 'Si', cmpNo: 'No', cmpAI: 'Agente IA nativo', cmpNo2: 'No', cmpYes2: 'Si', cmpCountries: 'Paises bloqueados', cmpZero: '0 - global', cmpChargeback: 'Riesgo de contracargo', cmpImpossible: 'Imposible', cmpFooter: 'Asumiendo 100 sats/llamada al precio actual de BTC - actualiza en vivo',
+    diffOpenSource: 'Open Source · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'gestionado · sin nodo', diffAiReady: 'Agentes IA nativos', diffNoKyc: 'Sin KYC · sin cuenta', diffSelfHost: 'Self-host = 0% fee'
   },
   fr: {
     navHow: 'Comment ça marche', navPricing: 'Tarifs', navWallet: 'Connecter wallet', navStart: 'Commencer',
@@ -1411,7 +1442,8 @@ const I18N = {
     walletLnDesc: 'Définissez votre Lightning Address pour recevoir des sats via l402-kit.',
     evmConnectBtn: 'Connecter wallet EVM', lnSaveBtn: 'Enregistrer', lnClearBtn: 'Effacer',
     langConsoleLabel: 'Langue', langConsoleHint: 'S\'applique à toute la page',
-    statTests: 'Tests réussis', cmpTitle: 'Comparaison des couts - prix BTC en direct', cmpFeature: 'Fonctionnalite', cmpMin: 'Frais min. par appel', cmp1k: 'Cout: 1 000 appels', cmp1m: 'Cout: 1M appels', cmpSettle: 'Reglement', cmpDays27: '2-7 jours', cmpDays35: '3-5 jours', cmpSec: '< 1 seconde', cmpAccount: 'Compte requis', cmpYes: 'Oui', cmpNo: 'Non', cmpAI: 'Agent IA natif', cmpNo2: 'Non', cmpYes2: 'Oui', cmpCountries: 'Pays bloques', cmpZero: '0 - mondial', cmpChargeback: 'Risque de retrofacturation', cmpImpossible: 'Impossible', cmpFooter: '100 sats/appel au prix BTC actuel - mise a jour en direct'
+    statTests: 'Tests réussis', cmpTitle: 'Comparaison des couts - prix BTC en direct', cmpFeature: 'Fonctionnalite', cmpMin: 'Frais min. par appel', cmp1k: 'Cout: 1 000 appels', cmp1m: 'Cout: 1M appels', cmpSettle: 'Reglement', cmpDays27: '2-7 jours', cmpDays35: '3-5 jours', cmpSec: '< 1 seconde', cmpAccount: 'Compte requis', cmpYes: 'Oui', cmpNo: 'Non', cmpAI: 'Agent IA natif', cmpNo2: 'Non', cmpYes2: 'Oui', cmpCountries: 'Pays bloques', cmpZero: '0 - mondial', cmpChargeback: 'Risque de retrofacturation', cmpImpossible: 'Impossible', cmpFooter: '100 sats/appel au prix BTC actuel - mise a jour en direct',
+    diffOpenSource: 'Open Source · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'géré · sans nœud', diffAiReady: 'Agents IA natifs', diffNoKyc: 'Sans KYC · sans compte', diffSelfHost: 'Self-host = 0% fee'
   },
   de: {
     navHow: 'So funktioniert es', navPricing: 'Preise', navWallet: 'Wallet verbinden', navStart: 'Loslegen',
@@ -1430,7 +1462,8 @@ const I18N = {
     walletLnDesc: 'Setze deine Lightning-Adresse, um Sats über l402-kit zu empfangen.',
     evmConnectBtn: 'EVM-Wallet verbinden', lnSaveBtn: 'Speichern', lnClearBtn: 'Löschen',
     langConsoleLabel: 'Sprache', langConsoleHint: 'Gilt für die gesamte Seite',
-    statTests: 'Tests bestanden', cmpTitle: 'Kostenvergleich - BTC-Preis live', cmpFeature: 'Merkmal', cmpMin: 'Mindestgebuehr pro Anfrage', cmp1k: 'Kosten: 1.000 Anfragen', cmp1m: 'Kosten: 1M Anfragen', cmpSettle: 'Abwicklung', cmpDays27: '2-7 Tage', cmpDays35: '3-5 Tage', cmpSec: '< 1 Sekunde', cmpAccount: 'Konto erforderlich', cmpYes: 'Ja', cmpNo: 'Nein', cmpAI: 'KI-Agenten nativ', cmpNo2: 'Nein', cmpYes2: 'Ja', cmpCountries: 'Gesperrte Laender', cmpZero: '0 - global', cmpChargeback: 'Rueckbuchungsrisiko', cmpImpossible: 'Unmoeglich', cmpFooter: '100 sats/Anfrage zum aktuellen BTC-Preis - wird live aktualisiert'
+    statTests: 'Tests bestanden', cmpTitle: 'Kostenvergleich - BTC-Preis live', cmpFeature: 'Merkmal', cmpMin: 'Mindestgebuehr pro Anfrage', cmp1k: 'Kosten: 1.000 Anfragen', cmp1m: 'Kosten: 1M Anfragen', cmpSettle: 'Abwicklung', cmpDays27: '2-7 Tage', cmpDays35: '3-5 Tage', cmpSec: '< 1 Sekunde', cmpAccount: 'Konto erforderlich', cmpYes: 'Ja', cmpNo: 'Nein', cmpAI: 'KI-Agenten nativ', cmpNo2: 'Nein', cmpYes2: 'Ja', cmpCountries: 'Gesperrte Laender', cmpZero: '0 - global', cmpChargeback: 'Rueckbuchungsrisiko', cmpImpossible: 'Unmoeglich', cmpFooter: '100 sats/Anfrage zum aktuellen BTC-Preis - wird live aktualisiert',
+    diffOpenSource: 'Open Source · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'verwaltet · kein Node', diffAiReady: 'KI-Agenten nativ', diffNoKyc: 'Kein KYC · kein Konto', diffSelfHost: 'Self-host = 0% Fee'
   },
   it: {
     navHow: 'Come funziona', navPricing: 'Prezzi', navWallet: 'Connetti wallet', navStart: 'Inizia',
@@ -1449,7 +1482,8 @@ const I18N = {
     walletLnDesc: 'Imposta il tuo Lightning Address per ricevere sats tramite l402-kit.',
     evmConnectBtn: 'Connetti wallet EVM', lnSaveBtn: 'Salva', lnClearBtn: 'Cancella',
     langConsoleLabel: 'Lingua', langConsoleHint: 'Si applica all\'intera pagina',
-    statTests: 'Test superati', cmpTitle: 'Confronto costi - prezzo BTC in tempo reale', cmpFeature: 'Caratteristica', cmpMin: 'Tariffa min. per chiamata', cmp1k: 'Costo: 1.000 chiamate', cmp1m: 'Costo: 1M chiamate', cmpSettle: 'Liquidazione', cmpDays27: '2-7 giorni', cmpDays35: '3-5 giorni', cmpSec: '< 1 secondo', cmpAccount: 'Account richiesto', cmpYes: 'Si', cmpNo: 'No', cmpAI: 'Agente IA nativo', cmpNo2: 'No', cmpYes2: 'Si', cmpCountries: 'Paesi bloccati', cmpZero: '0 - globale', cmpChargeback: 'Rischio chargeback', cmpImpossible: 'Impossibile', cmpFooter: '100 sats/chiamata al prezzo BTC attuale - aggiorna in tempo reale'
+    statTests: 'Test superati', cmpTitle: 'Confronto costi - prezzo BTC in tempo reale', cmpFeature: 'Caratteristica', cmpMin: 'Tariffa min. per chiamata', cmp1k: 'Costo: 1.000 chiamate', cmp1m: 'Costo: 1M chiamate', cmpSettle: 'Liquidazione', cmpDays27: '2-7 giorni', cmpDays35: '3-5 giorni', cmpSec: '< 1 secondo', cmpAccount: 'Account richiesto', cmpYes: 'Si', cmpNo: 'No', cmpAI: 'Agente IA nativo', cmpNo2: 'No', cmpYes2: 'Si', cmpCountries: 'Paesi bloccati', cmpZero: '0 - globale', cmpChargeback: 'Rischio chargeback', cmpImpossible: 'Impossibile', cmpFooter: '100 sats/chiamata al prezzo BTC attuale - aggiorna in tempo reale',
+    diffOpenSource: 'Open Source · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'gestito · nessun nodo', diffAiReady: 'Agenti IA nativi', diffNoKyc: 'Nessun KYC · nessun account', diffSelfHost: 'Self-host = 0% fee'
   },
   ja: {
     navHow: '仕組み', navPricing: '料金', navWallet: 'ウォレット接続', navStart: '開始',
@@ -1468,7 +1502,8 @@ const I18N = {
     walletLnDesc: 'l402-kit経由でsatを受け取るためにLightningアドレスを設定してください。',
     evmConnectBtn: 'EVMウォレットを接続', lnSaveBtn: '保存', lnClearBtn: 'クリア',
     langConsoleLabel: '言語', langConsoleHint: 'ページ全体に適用されます',
-    statTests: 'テスト合格', cmpTitle: 'コスト比較 BTC価格リアルタイム', cmpFeature: '機能', cmpMin: '1呼出しあたりの最低料金', cmp1k: 'コスト：1,000回', cmp1m: 'コスト：100万回', cmpSettle: '決済', cmpDays27: '2〘7日', cmpDays35: '3〘5日', cmpSec: '1秒未満', cmpAccount: 'アカウント必要', cmpYes: 'あり', cmpNo: 'なし', cmpAI: 'AIエージェント対応', cmpNo2: 'なし', cmpYes2: 'あり', cmpCountries: 'ブロック国数', cmpZero: '0 — グローバル', cmpChargeback: 'チャージバックリスク', cmpImpossible: '不可能', cmpFooter: '現在のBTC価格で100 sats/呼出し想定 — リアルタイム更新'
+    statTests: 'テスト合格', cmpTitle: 'コスト比較 BTC価格リアルタイム', cmpFeature: '機能', cmpMin: '1呼出しあたりの最低料金', cmp1k: 'コスト：1,000回', cmp1m: 'コスト：100万回', cmpSettle: '決済', cmpDays27: '2〘7日', cmpDays35: '3〘5日', cmpSec: '1秒未満', cmpAccount: 'アカウント必要', cmpYes: 'あり', cmpNo: 'なし', cmpAI: 'AIエージェント対応', cmpNo2: 'なし', cmpYes2: 'あり', cmpCountries: 'ブロック国数', cmpZero: '0 — グローバル', cmpChargeback: 'チャージバックリスク', cmpImpossible: '不可能', cmpFooter: '現在のBTC価格で100 sats/呼出し想定 — リアルタイム更新',
+    diffOpenSource: 'オープンソース · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'マネージド · ノード不要', diffAiReady: 'AIエージェント対応', diffNoKyc: 'KYC不要 · 登録不要', diffSelfHost: 'セルフホスト = 0% fee'
   },
   ru: {
     navHow: 'Как это работает', navPricing: 'Тарифы', navWallet: 'Подключить кошелёк', navStart: 'Начать',
@@ -1487,7 +1522,8 @@ const I18N = {
     walletLnDesc: 'Задай свой Lightning-адрес для получения сатошей через l402-kit.',
     evmConnectBtn: 'Подключить EVM-кошелёк', lnSaveBtn: 'Сохранить', lnClearBtn: 'Очистить',
     langConsoleLabel: 'Язык', langConsoleHint: 'Применяется ко всей странице',
-    statTests: 'Тестов пройдено', cmpTitle: 'Сравнение стоимости — цена BTC в реальном времени', cmpFeature: 'Параметр', cmpMin: 'Мин. комиссия за запрос', cmp1k: 'Стоимость: 1 000 запросов', cmp1m: 'Стоимость: 1М запросов', cmpSettle: 'Расчёт', cmpDays27: '2–7 дней', cmpDays35: '3–5 дней', cmpSec: '< 1 секунды', cmpAccount: 'Нужен аккаунт', cmpYes: 'Да', cmpNo: 'Нет', cmpAI: 'Нативная ИИ поддержка', cmpNo2: 'Нет', cmpYes2: 'Да', cmpCountries: 'Заблокированных стран', cmpZero: '0 — глобально', cmpChargeback: 'Риск возврата платежа', cmpImpossible: 'Невозможно', cmpFooter: '100 sats/запрос по текущей цене BTC — обновляется в реальном времени'
+    statTests: 'Тестов пройдено', cmpTitle: 'Сравнение стоимости — цена BTC в реальном времени', cmpFeature: 'Параметр', cmpMin: 'Мин. комиссия за запрос', cmp1k: 'Стоимость: 1 000 запросов', cmp1m: 'Стоимость: 1М запросов', cmpSettle: 'Расчёт', cmpDays27: '2–7 дней', cmpDays35: '3–5 дней', cmpSec: '< 1 секунды', cmpAccount: 'Нужен аккаунт', cmpYes: 'Да', cmpNo: 'Нет', cmpAI: 'Нативная ИИ поддержка', cmpNo2: 'Нет', cmpYes2: 'Да', cmpCountries: 'Заблокированных стран', cmpZero: '0 — глобально', cmpChargeback: 'Риск возврата платежа', cmpImpossible: 'Невозможно', cmpFooter: '100 sats/запрос по текущей цене BTC — обновляется в реальном времени',
+    diffOpenSource: 'Открытый код · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'управляемый · без ноды', diffAiReady: 'ИИ-агенты нативно', diffNoKyc: 'Без KYC · без аккаунта', diffSelfHost: 'Self-host = 0% fee'
   },
   zh: {
     navHow: '工作原理', navPricing: '定价', navWallet: '连接钱包', navStart: '开始使用',
@@ -1506,7 +1542,8 @@ const I18N = {
     walletLnDesc: '设置你的 Lightning 地址，通过 l402-kit 接收 sats。',
     evmConnectBtn: '连接 EVM 钱包', lnSaveBtn: '保存地址', lnClearBtn: '清除',
     langConsoleLabel: '语言', langConsoleHint: '应用于整个页面',
-    statTests: '测试通过', cmpTitle: '成本对比 — BTC实时价格', cmpFeature: '功能', cmpMin: '每次调用最低费用', cmp1k: '成本：1,000次调用', cmp1m: '成本：100万次调用', cmpSettle: '结算', cmpDays27: '2–7天', cmpDays35: '3–5天', cmpSec: '< 1秒', cmpAccount: '需要账户', cmpYes: '是', cmpNo: '否', cmpAI: '原生AI代理支持', cmpNo2: '否', cmpYes2: '是', cmpCountries: '封锁国家数', cmpZero: '0 — 全球', cmpChargeback: '退款风险', cmpImpossible: '不可能', cmpFooter: '按当前BTC价格100 sats/调用估算 — 实时更新'
+    statTests: '测试通过', cmpTitle: '成本对比 — BTC实时价格', cmpFeature: '功能', cmpMin: '每次调用最低费用', cmp1k: '成本：1,000次调用', cmp1m: '成本：100万次调用', cmpSettle: '结算', cmpDays27: '2–7天', cmpDays35: '3–5天', cmpSec: '< 1秒', cmpAccount: '需要账户', cmpYes: '是', cmpNo: '否', cmpAI: '原生AI代理支持', cmpNo2: '否', cmpYes2: '是', cmpCountries: '封锁国家数', cmpZero: '0 — 全球', cmpChargeback: '退款风险', cmpImpossible: '不可能', cmpFooter: '按当前BTC价格100 sats/调用估算 — 实时更新',
+    diffOpenSource: '开源 · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: '托管 · 无需节点', diffAiReady: 'AI智能体原生', diffNoKyc: '无KYC · 无需账户', diffSelfHost: '自托管 = 0% fee'
   },
   hi: {
     navHow: 'कैसे काम करता है', navPricing: 'प्राइसिंग', navWallet: 'वॉलेट कनेक्ट करें', navStart: 'शुरू करें',
@@ -1525,7 +1562,8 @@ const I18N = {
     walletLnDesc: 'l402-kit के ज़रिए sats प्राप्त करने के लिए अपना Lightning Address सेट करें।',
     evmConnectBtn: 'EVM वॉलेट कनेक्ट करें', lnSaveBtn: 'सेव करें', lnClearBtn: 'साफ़ करें',
     langConsoleLabel: 'भाषा', langConsoleHint: 'पूरे पेज पर लागू होता है',
-    statTests: 'परीक्षण पास', cmpTitle: 'लागत तुलना — BTC मूल्य लाइव', cmpFeature: 'विशेषता', cmpMin: 'प्रति कॉल न्यूनतम शुल्क', cmp1k: 'लागत: 1,000 कॉल', cmp1m: 'लागत: 10 लाख कॉल', cmpSettle: 'निपटान', cmpDays27: '2–7 दिन', cmpDays35: '3–5 दिन', cmpSec: '< 1 सेकंड', cmpAccount: 'खाता आवश्यक', cmpYes: 'हाँ', cmpNo: 'नहीं', cmpAI: 'AI एजेंट नेटिव', cmpNo2: 'नहीं', cmpYes2: 'हाँ', cmpCountries: 'अवरुद्ध देश', cmpZero: '0 — वैश्विक', cmpChargeback: 'चार्जबैक जोखिम', cmpImpossible: 'असंभव', cmpFooter: 'वर्तमान BTC मूल्य पर 100 sats/कॉल मानते हुए — लाइव अपडेट'
+    statTests: 'परीक्षण पास', cmpTitle: 'लागत तुलना — BTC मूल्य लाइव', cmpFeature: 'विशेषता', cmpMin: 'प्रति कॉल न्यूनतम शुल्क', cmp1k: 'लागत: 1,000 कॉल', cmp1m: 'लागत: 10 लाख कॉल', cmpSettle: 'निपटान', cmpDays27: '2–7 दिन', cmpDays35: '3–5 दिन', cmpSec: '< 1 सेकंड', cmpAccount: 'खाता आवश्यक', cmpYes: 'हाँ', cmpNo: 'नहीं', cmpAI: 'AI एजेंट नेटिव', cmpNo2: 'नहीं', cmpYes2: 'हाँ', cmpCountries: 'अवरुद्ध देश', cmpZero: '0 — वैश्विक', cmpChargeback: 'चार्जबैक जोखिम', cmpImpossible: 'असंभव', cmpFooter: 'वर्तमान BTC मूल्य पर 100 sats/कॉल मानते हुए — लाइव अपडेट',
+    diffOpenSource: 'ओपन सोर्स · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'प्रबंधित · नोड नहीं', diffAiReady: 'AI एजेंट नेटिव', diffNoKyc: 'KYC नहीं · खाता नहीं', diffSelfHost: 'Self-host = 0% fee'
   },
   ar: {
     navHow: 'كيف يعمل', navPricing: 'الأسعار', navWallet: 'ربط المحفظة', navStart: 'ابدأ',
@@ -1544,22 +1582,23 @@ const I18N = {
     walletLnDesc: 'حدد عنوان Lightning الخاص بك لتلقي sats عبر l402-kit.',
     evmConnectBtn: 'ربط محفظة EVM', lnSaveBtn: 'حفظ العنوان', lnClearBtn: 'مسح',
     langConsoleLabel: 'اللغة', langConsoleHint: 'يطبق على الصفحة بالكامل',
-    statTests: 'اختبارات ناجحة', cmpTitle: 'مقارنة التكاليف — سعر BTC مباشر', cmpFeature: 'الميزة', cmpMin: 'الحد الأدنى للرسوم', cmp1k: 'التكلفة: 1,000 طلب', cmp1m: 'التكلفة: مليون طلب', cmpSettle: 'التسوية', cmpDays27: '2–7 أيام', cmpDays35: '3–5 أيام', cmpSec: '< ثانية واحدة', cmpAccount: 'يتطلب حساباً', cmpYes: 'نعم', cmpNo: 'لا', cmpAI: 'وكيل ذكاء اصطناعي أصلي', cmpNo2: 'لا', cmpYes2: 'نعم', cmpCountries: 'الدول المحجوبة', cmpZero: '0 — عالمي', cmpChargeback: 'مخاطر الاسترداد', cmpImpossible: 'مستحيل', cmpFooter: '100 sats/طلب بسعر BTC الحالي — تحديث مباشر'
+    statTests: 'اختبارات ناجحة', cmpTitle: 'مقارنة التكاليف — سعر BTC مباشر', cmpFeature: 'الميزة', cmpMin: 'الحد الأدنى للرسوم', cmp1k: 'التكلفة: 1,000 طلب', cmp1m: 'التكلفة: مليون طلب', cmpSettle: 'التسوية', cmpDays27: '2–7 أيام', cmpDays35: '3–5 أيام', cmpSec: '< ثانية واحدة', cmpAccount: 'يتطلب حساباً', cmpYes: 'نعم', cmpNo: 'لا', cmpAI: 'وكيل ذكاء اصطناعي أصلي', cmpNo2: 'لا', cmpYes2: 'نعم', cmpCountries: 'الدول المحجوبة', cmpZero: '0 — عالمي', cmpChargeback: 'مخاطر الاسترداد', cmpImpossible: 'مستحيل', cmpFooter: '100 sats/طلب بسعر BTC الحالي — تحديث مباشر',
+    diffOpenSource: 'مفتوح المصدر · MIT', diffBitcoin: 'Bitcoin Lightning', diffManaged: 'مُدار · بدون عقدة', diffAiReady: 'وكلاء الذكاء الاصطناعي أصليون', diffNoKyc: 'بدون KYC · بدون حساب', diffSelfHost: 'Self-host = 0% fee'
   }
 };
 
 const LANG_INFO = {
-  en: { docs: 'https://shinydapps-bd9fa40b.mintlify.app', nameEn: 'English', namePt: 'Ingles' },
-  pt: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/pt/introduction', nameEn: 'Portuguese', namePt: 'Portugues' },
-  es: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/es/introduction', nameEn: 'Spanish', namePt: 'Espanhol' },
-  fr: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/fr/introduction', nameEn: 'French', namePt: 'Frances' },
-  de: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/de/introduction', nameEn: 'German', namePt: 'Alemao' },
-  it: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/it/introduction', nameEn: 'Italian', namePt: 'Italiano' },
-  ja: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/ja/introduction', nameEn: 'Japanese', namePt: 'Japones' },
-  ru: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/ru/introduction', nameEn: 'Russian', namePt: 'Russo' },
-  zh: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/zh/introduction', nameEn: 'Chinese', namePt: 'Chines' },
-  hi: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/hi/introduction', nameEn: 'Hindi', namePt: 'Hindi' },
-  ar: { docs: 'https://shinydapps-bd9fa40b.mintlify.app/ar/introduction', nameEn: 'Arabic', namePt: 'Arabe' }
+  en: { docs: 'https://docs.l402kit.com', nameEn: 'English', namePt: 'Ingles' },
+  pt: { docs: 'https://docs.l402kit.com/pt/introduction', nameEn: 'Portuguese', namePt: 'Portugues' },
+  es: { docs: 'https://docs.l402kit.com/es/introduction', nameEn: 'Spanish', namePt: 'Espanhol' },
+  fr: { docs: 'https://docs.l402kit.com/fr/introduction', nameEn: 'French', namePt: 'Frances' },
+  de: { docs: 'https://docs.l402kit.com/de/introduction', nameEn: 'German', namePt: 'Alemao' },
+  it: { docs: 'https://docs.l402kit.com/it/introduction', nameEn: 'Italian', namePt: 'Italiano' },
+  ja: { docs: 'https://docs.l402kit.com/ja/introduction', nameEn: 'Japanese', namePt: 'Japones' },
+  ru: { docs: 'https://docs.l402kit.com/ru/introduction', nameEn: 'Russian', namePt: 'Russo' },
+  zh: { docs: 'https://docs.l402kit.com/zh/introduction', nameEn: 'Chinese', namePt: 'Chines' },
+  hi: { docs: 'https://docs.l402kit.com/hi/introduction', nameEn: 'Hindi', namePt: 'Hindi' },
+  ar: { docs: 'https://docs.l402kit.com/ar/introduction', nameEn: 'Arabic', namePt: 'Arabe' }
 };
 
 function syncDocsLinks(lang) {
@@ -1604,18 +1643,18 @@ const T = {
     usecases: [['AI / Agents','Monetize your AI tool','Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.'],['Data APIs','Pay-per-query data','Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.'],['Content','Paywalled endpoints','Articles, research papers, PDFs, audio. No account creation required from your users.'],['Compute','Serverless billing','Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.']],
     ext: {badge:'VS CODE EXTENSION',h2:'Watch your sats roll in — without leaving your editor',p:'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart.',lis:['✓ Live payment feed with amount & endpoint','✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Light / dark / auto theme','✓ Zero config — just set your Lightning address'],links:['Install Free on Marketplace','Documentation →']},
     pricingTitle: 'Simple pricing', pricingSub: 'Pay with Bitcoin Lightning. No credit card. No account. Instant.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% fee, forever','Unlimited API calls','Payment history (7 days)','Charts 1D / 7D','Open source — MIT'],['Everything in Free','Full history — no 7-day limit','All chart ranges (30D / 1Y / ALL)','CSV export','Lightning receipt — verifiable proof','Delete all your data anytime'],['Everything in Pro','Monitor up to 5 Lightning addresses','Webhook on every payment received','Programmatic API access to your data','0% fee — bring your own provider'],['Everything in Builder — forever','Early access to DCA agent','Listed as founding supporter','Input on the roadmap','No renewal. Ever.']],
-    pricing: [['Free','Self-host: 0% fee · Managed: 0.3%','Get started →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning'],[null,'For teams and high-volume APIs','⚡ Subscribe with Lightning'],[null,'Pay once. Use forever.','⚡ Buy Lifetime Access']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% fee, forever','Unlimited API calls','Payment history (7 days)','Charts 1D / 7D','Open source — MIT'],['No Lightning node needed','Add your Lightning address to start','99.7% of every sat goes to you','All 4 SDKs (TS / Python / Go / Rust)','Instant activation','Upgrade to Pro for full analytics'],['Everything in Sovereign','Full history — no 7-day limit','All chart ranges (30D / 1Y / ALL)','CSV export','Lightning receipt — verifiable proof','Delete all your data anytime']],
+    pricing: [['Sovereign','Self-host: 0% fee forever · your own node','Set up your node →'],['Managed','No Lightning node — just add your Lightning address','Start in 2 minutes →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning']],
     faqTitle: 'Common questions',
     faq: [['Do my users need a Lightning wallet?','Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.'],['What happens if the Lightning network is down?','Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.'],['Is this production-ready?','Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.'],['How does the 0.3% fee work?','When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.'],['Can I use it without Blink?','Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.'],['Why Lightning and not on-chain Bitcoin?','On-chain Bitcoin takes 10+ minutes to confirm and costs $1-5 per transaction. Lightning settles in under a second for fractions of a cent making micropayments economically viable. Your keys never leave your control and payment proof is verified locally.'],['How is this different from Coinbase x402?','x402 is a protocol spec. l402-kit is a production SDK that implements it today in TypeScript, Python, Go, and Rust. Coinbase targets USDC/stablecoins; l402-kit targets Bitcoin Lightning. Complementary, not competing.'],['Is the 0.3% fee always charged?','No. The fee only applies in managed mode. Connect your own wallet (Blink, OpenNode, LNbits, BTCPay) and the fee is 0%. MIT license means you can self-host everything for free, forever.']],
-    ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://shinydapps-bd9fa40b.mintlify.app">read the docs &rarr;</a>',
+    ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://docs.l402kit.com">read the docs &rarr;</a>',
     problemTitle: 'Why credit cards fail for APIs',
     problemSub: 'Stripe was built for humans buying products. APIs charge per-call — and that breaks everything.',
     problemCards: [['AI agents can\'t hold cards','Autonomous agents have no billing address, no CVV, no human to click "confirm". Card payment fails.'],['$0.30 minimum fee','A 1-cent API call costs $0.30 in card fees. You lose money on every request under that threshold.'],['50+ countries blocked','Stripe and PayPal don\'t operate everywhere. Your API is global — your payment processor shouldn\'t decide who gets in.'],['APIs can\'t be "returned"','You already delivered the data. A chargeback lets the caller take it for free — and you pay the fee.']],
     problemFooter: 'l402-kit uses the HTTP 402 standard + Bitcoin Lightning to eliminate all four problems at once — no accounts, no minimums, no chargebacks, no borders.',
     forWhoTitle: 'Who is this for?',
     forWhoSub: 'You own the API. You keep 99.7% of every sat.',
-    forWhoCards: [['API Owner','You sell data or compute','You built an API — weather, AI inference, market data, media — and want to monetize it per call without Stripe, subscriptions, or billing dashboards.',['Add 3 lines of middleware','Set your price in sats','Receive Bitcoin instantly']],['AI Builder','Your agent needs to pay for tools','You\'re building autonomous AI agents that call external APIs. L402 is the native payment protocol for agents — no OAuth, no card on file, no human approval loop.',['Agent gets 402 → pays invoice','Retries with proof → gets data','Works with any LLM framework']],['OSS Developer','You want sustainable open source','Your library or tool is free and open source, but you want paid tiers — premium endpoints, higher rate limits — without the overhead of a payment SaaS.',['Free endpoints stay free','Paid tiers in 10 minutes','No Stripe account needed']]]
+    forWhoCards: [['API Owner','You sell data or compute','You built an API — weather, AI inference, market data, media — and want to monetize it per call without Stripe, subscriptions, or billing dashboards.',['Add 3 lines of middleware','Set your price in sats','Receive Bitcoin instantly']],['AI Builder','Your agent needs to pay for tools','You\'re building autonomous AI agents that call external APIs. L402 is the native payment protocol for agents — no OAuth, no card on file, no human approval loop.',['Agent gets 402 → pays invoice','Retries with proof → gets data','Works with any LLM framework']]]
   },
   pt: {
     nav: ['Extensao','Painel'],
@@ -1629,18 +1668,18 @@ const T = {
     usecases: [['IA / Agentes','Monetize sua ferramenta de IA','Cobre por chamada de inferencia. Wrappers de LLM, geracao de imagem, OCR APIs. Funciona com agentes LangChain e AutoGPT.'],['APIs de Dados','Dados por consulta','Clima, financas, esportes, mapas. Sem assinatura: usuarios pagam so pelo uso.'],['Conteudo','Endpoints com paywall','Artigos, pesquisas, PDFs, audio. Sem exigir criacao de conta do usuario.'],['Computacao','Billing serverless','Cobre por tarefas pesadas: render, transcricao, compressao. 100% por uso.']],
     ext: {badge:'EXTENSAO VS CODE',h2:'Veja os sats entrando sem sair do editor',p:'Dashboard de pagamentos Lightning em tempo real dentro do VS Code. Veja cada pagamento no instante em que cai.',lis:['✓ Feed de pagamentos ao vivo com valor e endpoint','✓ Grafico de barras — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Tema claro / escuro / automatico','✓ Zero config — so definir seu Lightning address'],links:['Instalar gratis no Marketplace','Documentacao →']},
     pricingTitle: 'Precos simples', pricingSub: 'Pague com Bitcoin Lightning. Sem cartao. Sem conta. Instantaneo.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% de taxa, para sempre','Chamadas ilimitadas','Histórico de pagamentos (7 dias)','Gráficos 1D / 7D','Open source — MIT'],['Tudo do Free','Histórico completo — sem limite de 7 dias','Todos os gráficos (30D / 1Y / ALL)','Exportar CSV','Recibo Lightning — prova verificável','Exclua todos os seus dados a qualquer hora'],['Tudo do Pro','Monitore até 5 endereços Lightning','Webhook a cada pagamento recebido','Acesso programático via API','0% de taxa — use seu provider'],['Tudo do Builder — para sempre','Acesso antecipado ao agente DCA','Listado como apoiador fundador','Voz no roadmap','Sem renovação. Nunca.']],
-    pricing: [['Gratis','Self-host: 0% de taxa · Gerenciado: 0,3%','Comecar →'],[null,'Pague com Lightning — ativacao instantanea','⚡ Assinar com Lightning'],[null,'Para times e APIs de alto volume','⚡ Assinar com Lightning'],[null,'Pague uma vez. Use para sempre.','⚡ Comprar acesso vitalicio']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% de taxa, para sempre','Chamadas ilimitadas','Histórico de pagamentos (7 dias)','Gráficos 1D / 7D','Open source — MIT'],['Sem nó Lightning','Adicione seu Lightning address para começar','99,7% de cada sat vai para você','Todos os 4 SDKs (TS / Python / Go / Rust)','Ativação instantânea','Upgrade para Pro para analytics completo'],['Tudo do Sovereign','Histórico completo — sem limite de 7 dias','Todos os gráficos (30D / 1Y / ALL)','Exportar CSV','Recibo Lightning — prova verificável','Exclua todos os seus dados a qualquer hora']],
+    pricing: [['Sovereign','Self-host: 0% de taxa · traga seu próprio nó','Começar →'],['Managed','Sem nó Lightning — adicione seu Lightning address','Começar em 2 minutos →'],[null,'Pague com Lightning — ativação instantânea','⚡ Assinar com Lightning']],
     faqTitle: 'Perguntas comuns',
     faq: [['Meus usuarios precisam de wallet Lightning?','Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.'],['E se a Lightning ficar fora do ar?','A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.'],['Ja esta pronto para producao?','Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.'],['Como funciona a taxa de 0.3%?','No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.'],['Posso usar sem Blink?','Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.'],['Por que Lightning e nao Bitcoin on-chain?','Bitcoin on-chain leva 10+ minutos para confirmar e custa $1-5 por transacao. O Lightning liquida em menos de 1 segundo por fracoes de centavo tornando micropagamentos economicamente viaveis. Suas chaves ficam com voce.'],['Como isso e diferente do x402 da Coinbase?','x402 e uma especificacao de protocolo. l402-kit e um SDK em producao que implementa isso hoje em TypeScript, Python, Go e Rust. A Coinbase foca em USDC/stablecoins; l402-kit foca em Bitcoin Lightning.'],['A taxa de 0,3% e sempre cobrada?','Nao. A taxa so se aplica no modo managed. Conecte sua propria wallet (Blink, OpenNode, LNbits, BTCPay) e a taxa e 0%. A licenca MIT permite self-host completo sem nenhuma taxa, para sempre.']],
-    ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://shinydapps-bd9fa40b.mintlify.app/pt/introduction">leia a documentacao &rarr;</a>',
+    ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://docs.l402kit.com/pt/introduction">leia a documentacao &rarr;</a>',
     problemTitle: 'Por que cartões falham para APIs',
     problemSub: 'Stripe foi construído para humanos comprando produtos. APIs cobram por chamada — e isso quebra tudo.',
     problemCards: [['Agentes de IA não têm cartão','Agentes autônomos não têm endereço de cobrança, CVV ou humano para clicar "confirmar". O pagamento falha.'],['Taxa mínima de $0,30','Uma chamada de 1 centavo custa $0,30 em taxas de cartão. Você perde dinheiro em cada requisição abaixo desse limite.'],['50+ países bloqueados','Stripe e PayPal não operam em todo lugar. Sua API é global — seu processador não deveria decidir quem tem acesso.'],['APIs não podem ser "devolvidas"','Você já entregou os dados. Um chargeback permite que o chamador os pegue de graça — e você paga a taxa.']],
     problemFooter: 'l402-kit usa o padrão HTTP 402 + Bitcoin Lightning para eliminar os quatro problemas de uma vez — sem contas, sem mínimos, sem chargebacks, sem fronteiras.',
     forWhoTitle: 'Para quem é?',
     forWhoSub: 'Você é dono da API. Fica com 99,7% de cada sat.',
-    forWhoCards: [['Dono de API','Você vende dados ou compute','Você construiu uma API — clima, inferência de IA, dados de mercado, mídia — e quer monetizar por chamada sem Stripe, assinaturas ou dashboards de cobrança.',['Adicione 3 linhas de middleware','Defina seu preço em sats','Receba Bitcoin instantaneamente']],['Builder de IA','Seu agente precisa pagar por ferramentas','Você está criando agentes de IA autônomos que chamam APIs externas. L402 é o protocolo de pagamento nativo para agentes — sem OAuth, sem cartão salvo, sem aprovação humana.',['Agente recebe 402 → paga invoice','Retenta com prova → recebe dados','Funciona com qualquer framework de LLM']],['Dev OSS','Você quer open source sustentável','Sua biblioteca é gratuita e open source, mas você quer camadas pagas — endpoints premium, rate limits maiores — sem o overhead de um SaaS de pagamento.',['Endpoints gratuitos continuam gratuitos','Camadas pagas em 10 minutos','Sem conta no Stripe']]]
+    forWhoCards: [['Dono de API','Você vende dados ou compute','Você construiu uma API — clima, inferência de IA, dados de mercado, mídia — e quer monetizar por chamada sem Stripe, assinaturas ou dashboards de cobrança.',['Adicione 3 linhas de middleware','Defina seu preço em sats','Receba Bitcoin instantaneamente']],['Builder de IA','Seu agente precisa pagar por ferramentas','Você está criando agentes de IA autônomos que chamam APIs externas. L402 é o protocolo de pagamento nativo para agentes — sem OAuth, sem cartão salvo, sem aprovação humana.',['Agente recebe 402 → paga invoice','Retenta com prova → recebe dados','Funciona com qualquer framework de LLM']]]
   },
   es: {
     nav: ['Extensión','Panel'],
@@ -1654,18 +1693,18 @@ const T = {
     usecases: [['IA / Agentes','Monetiza tu herramienta de IA','Cobra por llamada de inferencia. Wrappers de LLM, generación de imágenes, APIs OCR. Compatible con LangChain y AutoGPT.'],['APIs de datos','Datos por consulta','Clima, finanzas, deportes, mapas. Sin suscripción: los usuarios pagan solo por lo que usan.'],['Contenido','Endpoints con paywall','Artículos, papers, PDFs, audio. Sin requerir creación de cuenta.'],['Cómputo','Facturación serverless','Cobra por tareas pesadas: renderizado, transcripción, compresión. 100% por uso.']],
     ext: {badge:'EXTENSIÓN VS CODE',h2:'Mira cómo llegan tus sats — sin salir del editor',p:'Dashboard de pagos Lightning en tiempo real dentro de VS Code. Ve cada pago en el instante en que llega.',lis:['✓ Feed de pagos en vivo con monto y endpoint','✓ Gráfico de barras — 1D / 7D (gratis) · 30D / 1Y / ALL (Pro)','✓ 11 idiomas (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Tema claro / oscuro / automático','✓ Zero config — solo define tu Lightning address'],links:['Instalar gratis en Marketplace','Documentación →']},
     pricingTitle: 'Precios simples', pricingSub: 'Paga con Bitcoin Lightning. Sin tarjeta. Sin cuenta. Instantáneo.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% de comisión, para siempre','Llamadas ilimitadas','Historial de pagos (7 días)','Gráficos 1D / 7D','Open source — MIT'],['Todo lo de Free','Historial completo — sin límite de 7 días','Todos los rangos (30D / 1Y / ALL)','Exportar CSV','Recibo Lightning — prueba verificable','Elimina todos tus datos cuando quieras'],['Todo lo de Pro','Monitorea hasta 5 direcciones Lightning','Webhook en cada pago recibido','Acceso programático a tus datos vía API','0% de comisión — usa tu propio provider'],['Todo lo de Builder — para siempre','Acceso anticipado al agente DCA','Listado como fundador','Voz en el roadmap','Sin renovación. Nunca.']],
-    pricing: [['Gratis','Self-host: 0% · Gestionado: 0,3%','Empezar →'],[null,'Paga con Lightning — activación instantánea','⚡ Suscribirse con Lightning'],[null,'Para equipos y APIs de alto volumen','⚡ Suscribirse con Lightning'],[null,'Paga una vez. Usa para siempre.','⚡ Comprar acceso de por vida']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% de comisión, para siempre','Llamadas ilimitadas','Historial de pagos (7 días)','Gráficos 1D / 7D','Open source — MIT'],['Sin nodo Lightning','Agrega tu Lightning address para comenzar','El 99,7% de cada sat va a ti','Los 4 SDKs (TS / Python / Go / Rust)','Activación instantánea','Actualiza a Pro para analytics completo'],['Todo lo de Sovereign','Historial completo — sin límite de 7 días','Todos los rangos (30D / 1Y / ALL)','Exportar CSV','Recibo Lightning — prueba verificable','Elimina todos tus datos cuando quieras']],
+    pricing: [['Sovereign','Self-host: 0% · trae tu propio nodo','Empezar →'],['Managed','Sin nodo Lightning — solo agrega tu Lightning address','Comenzar en 2 minutos →'],[null,'Paga con Lightning — activación instantánea','⚡ Suscribirse con Lightning']],
     faqTitle: 'Preguntas frecuentes',
     faq: [['¿Mis usuarios necesitan una wallet Lightning?','Sí — necesitan una wallet Lightning para pagar. Apps como Strike, Cash App, Blink y Phoenix se configuran en menos de 60 segundos.'],['¿Qué pasa si la red Lightning cae?','Lightning es una red descentralizada con casi 100% de disponibilidad. Si tu proveedor falla, cambias en una línea de código.'],['¿Está listo para producción?','Sí. Prueba criptográfica (SHA256), protección anti-replay y registro en Supabase están integrados.'],['¿Cómo funciona la comisión del 0.3%?','En modo gestionado, se deduce automáticamente el 0.3%. En self-host con tu propio nodo, no hay comisión.'],['¿Puedo usarlo sin Blink?','Sí. OpenNode, LNbits o cualquier proveedor que implemente LightningProvider.'],['Por que Lightning y no Bitcoin on-chain?','El Bitcoin on-chain tarda mas de 10 minutos en confirmar y cuesta $1-5 por transaccion. Lightning liquida en menos de 1 segundo por fracciones de centavo haciendo viables los micropagos.'],['En que se diferencia del x402 de Coinbase?','x402 es una especificacion de protocolo. l402-kit es un SDK en produccion que lo implementa hoy en TypeScript, Python, Go y Rust. Coinbase apunta a USDC/stablecoins; l402-kit a Bitcoin Lightning.'],['Siempre se cobra la tarifa del 0,3%?','No. La tarifa solo aplica en modo managed. Conecta tu propia wallet (Blink, OpenNode, LNbits, BTCPay) y la tarifa es 0%. La licencia MIT permite self-host completo sin ninguna tarifa, para siempre.']],
-    ctaTitle: 'Empieza en 2 minutos', ctaDesc: 'Sin cuenta. Sin tarjeta. Solo Bitcoin.', ctaDocs: 'o <a href="https://shinydapps-bd9fa40b.mintlify.app/es/introduction">lee los docs &rarr;</a>',
+    ctaTitle: 'Empieza en 2 minutos', ctaDesc: 'Sin cuenta. Sin tarjeta. Solo Bitcoin.', ctaDocs: 'o <a href="https://docs.l402kit.com/es/introduction">lee los docs &rarr;</a>',
     problemTitle: 'Por qué las tarjetas fallan para APIs',
     problemSub: 'Stripe fue diseñado para humanos comprando productos. Las APIs cobran por llamada — y eso rompe todo.',
     problemCards: [['Los agentes IA no tienen tarjetas','Los agentes autónomos no tienen dirección de facturación, CVV ni humano que confirme. El pago falla.'],['Tarifa mínima de $0,30','Una llamada de 1 centavo cuesta $0,30 en comisiones de tarjeta. Pierdes dinero en cada solicitud bajo ese umbral.'],['Más de 50 países bloqueados','Stripe y PayPal no operan en todas partes. Tu API es global — tu procesador no debería decidir quién accede.'],['Las APIs no se pueden "devolver"','Ya entregaste los datos. Un chargeback permite al cliente tomarlos gratis — y tú pagas la comisión.']],
     problemFooter: 'l402-kit usa el estándar HTTP 402 + Bitcoin Lightning para eliminar los cuatro problemas a la vez — sin cuentas, sin mínimos, sin chargebacks, sin fronteras.',
     forWhoTitle: '¿Para quién es?',
     forWhoSub: 'Eres dueño de la API. Te quedas con el 99,7% de cada sat.',
-    forWhoCards: [['Dueño de API','Vendes datos o cómputo','Construiste una API — clima, inferencia IA, datos de mercado, medios — y quieres cobrar por llamada sin Stripe, suscripciones ni dashboards.',['Agrega 3 líneas de middleware','Configura tu precio en sats','Recibe Bitcoin al instante']],['Builder de IA','Tu agente necesita pagar por herramientas','Construyes agentes IA autónomos que llaman APIs externas. L402 es el protocolo de pago nativo para agentes — sin OAuth, sin tarjeta guardada, sin aprobación humana.',['Agente recibe 402 → paga factura','Reintenta con prueba → obtiene datos','Compatible con cualquier framework LLM']],['Dev OSS','Quieres open source sostenible','Tu librería es gratuita y open source, pero quieres capas de pago — endpoints premium, rate limits mayores — sin el overhead de un SaaS de pagos.',['Endpoints gratuitos siguen gratuitos','Capas pagas en 10 minutos','Sin cuenta en Stripe']]]
+    forWhoCards: [['Dueño de API','Vendes datos o cómputo','Construiste una API — clima, inferencia IA, datos de mercado, medios — y quieres cobrar por llamada sin Stripe, suscripciones ni dashboards.',['Agrega 3 líneas de middleware','Configura tu precio en sats','Recibe Bitcoin al instante']],['Builder de IA','Tu agente necesita pagar por herramientas','Construyes agentes IA autónomos que llaman APIs externas. L402 es el protocolo de pago nativo para agentes — sin OAuth, sin tarjeta guardada, sin aprobación humana.',['Agente recibe 402 → paga factura','Reintenta con prueba → obtiene datos','Compatible con cualquier framework LLM']]]
   },
   fr: {
     nav: ['Extension','Tableau de bord'],
@@ -1679,18 +1718,18 @@ const T = {
     usecases: [['IA / Agents','Monétisez votre outil IA','Facturez par appel d\'inférence. Wrappers LLM, génération d\'images, APIs OCR. Compatible LangChain et AutoGPT.'],['APIs de données','Données à la requête','Météo, finance, sport, cartes. Sans abonnement — les utilisateurs paient uniquement ce qu\'ils consomment.'],['Contenu','Endpoints avec paywall','Articles, papers, PDFs, audio. Aucune création de compte requise.'],['Calcul','Facturation serverless','Facturez les tâches intensives : rendu, transcription, compression. 100% à l\'usage.']],
     ext: {badge:'EXTENSION VS CODE',h2:'Regardez vos sats arriver — sans quitter votre éditeur',p:'Tableau de bord de paiements Lightning en temps réel dans VS Code. Voyez chaque paiement à l\'instant où il arrive.',lis:['✓ Flux de paiements en direct avec montant et endpoint','✓ Graphique en barres — 1D / 7D (gratuit) · 30D / 1Y / ALL (Pro)','✓ 11 langues (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Thème clair / sombre / automatique','✓ Zéro config — juste définir votre Lightning address'],links:['Installer gratuitement sur le Marketplace','Documentation →']},
     pricingTitle: 'Tarification simple', pricingSub: 'Payez avec Bitcoin Lightning. Sans carte. Sans compte. Instantané.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% de frais, pour toujours','Appels illimités','Historique des paiements (7 jours)','Graphiques 1D / 7D','Open source — MIT'],['Tout ce qui est dans Free','Historique complet — sans limite de 7 jours','Toutes les plages (30D / 1Y / ALL)','Export CSV','Reçu Lightning — preuve vérifiable','Supprimez toutes vos données à tout moment'],['Tout ce qui est dans Pro','Surveillez jusqu\'à 5 adresses Lightning','Webhook à chaque paiement reçu','Accès API programmatique à vos données','0% de frais — utilisez votre propre provider'],['Tout ce qui est dans Builder — pour toujours','Accès anticipé à l\'agent DCA','Listé comme fondateur','Voix dans la feuille de route','Pas de renouvellement. Jamais.']],
-    pricing: [['Gratuit','Self-host : 0% · Géré : 0,3%','Commencer →'],[null,'Payez avec Lightning — activation instantanée','⚡ S\'abonner avec Lightning'],[null,'Pour les équipes et APIs à fort volume','⚡ S\'abonner avec Lightning'],[null,'Payez une fois. Utilisez pour toujours.','⚡ Acheter l\'accès à vie']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% de frais, pour toujours','Appels illimités','Historique des paiements (7 jours)','Graphiques 1D / 7D','Open source — MIT'],['Aucun nœud Lightning requis','Ajoutez votre Lightning address pour commencer','99,7% de chaque sat vous revient','Les 4 SDKs (TS / Python / Go / Rust)','Activation instantanée','Passez à Pro pour analytics complet'],['Tout ce qui est dans Sovereign','Historique complet — sans limite de 7 jours','Toutes les plages (30D / 1Y / ALL)','Export CSV','Reçu Lightning — preuve vérifiable','Supprimez toutes vos données à tout moment']],
+    pricing: [['Sovereign','Self-host : 0% · votre propre nœud','Commencer →'],['Managed','Aucun nœud Lightning — ajoutez votre Lightning address','Commencer en 2 minutes →'],[null,'Payez avec Lightning — activation instantanée','⚡ S\'abonner avec Lightning']],
     faqTitle: 'Questions fréquentes',
     faq: [['Mes utilisateurs ont-ils besoin d\'un wallet Lightning ?','Oui — ils ont besoin d\'un wallet Lightning pour payer. Des apps comme Strike, Cash App, Blink et Phoenix se configurent en moins de 60 secondes.'],['Que se passe-t-il si le réseau Lightning tombe ?','Lightning est un réseau décentralisé avec une disponibilité proche de 100%. Si votre fournisseur tombe, changez-en en une ligne de code.'],['Est-ce prêt pour la production ?','Oui. Preuve cryptographique (SHA256), protection anti-replay et journalisation Supabase sont intégrés.'],['Comment fonctionnent les frais de 0.3% ?','En mode géré, une commission de 0.3% est déduite automatiquement. En self-host, pas de frais.'],['Puis-je l\'utiliser sans Blink ?','Oui. OpenNode, LNbits ou tout fournisseur implémentant l\'interface LightningProvider.'],['Pourquoi Lightning et non Bitcoin on-chain ?','Le Bitcoin on-chain prend plus de 10 minutes et coute $1-5 par transaction. Lightning regle en moins d une seconde pour des fractions de centime. Vos cles restent chez vous.'],['En quoi est-ce different du x402 de Coinbase ?','x402 est une specification de protocole. l402-kit est un SDK production qui l implemente aujourd hui en TypeScript, Python, Go et Rust. Coinbase cible USDC; l402-kit cible Bitcoin Lightning.'],['Les frais de 0,3 % sont-ils toujours preleves ?','Non. Les frais s appliquent uniquement en mode gere. Connectez votre propre wallet (Blink, OpenNode, LNbits, BTCPay) et les frais sont 0 %. La licence MIT permet un self-host complet sans frais, pour toujours.']],
-    ctaTitle: 'Démarrez en 2 minutes', ctaDesc: 'Sans compte. Sans carte. Juste Bitcoin.', ctaDocs: 'ou <a href="https://shinydapps-bd9fa40b.mintlify.app/fr/introduction">lisez les docs &rarr;</a>',
+    ctaTitle: 'Démarrez en 2 minutes', ctaDesc: 'Sans compte. Sans carte. Juste Bitcoin.', ctaDocs: 'ou <a href="https://docs.l402kit.com/fr/introduction">lisez les docs &rarr;</a>',
     problemTitle: 'Pourquoi les cartes échouent pour les APIs',
     problemSub: 'Stripe a été conçu pour des humains achetant des produits. Les APIs facturent par appel — et ça brise tout.',
     problemCards: [['Les agents IA n\'ont pas de carte','Les agents autonomes n\'ont ni adresse de facturation, ni CVV, ni humain pour cliquer "confirmer". Le paiement échoue.'],['Frais minimum de 0,30$','Un appel API à 1 centime coûte 0,30$ en frais de carte. Vous perdez de l\'argent sur chaque requête sous ce seuil.'],['Plus de 50 pays bloqués','Stripe et PayPal ne fonctionnent pas partout. Votre API est mondiale — votre processeur ne devrait pas décider qui y accède.'],['Les APIs ne peuvent pas être "retournées"','Vous avez déjà livré les données. Un chargeback permet au client de les prendre gratuitement — et vous payez les frais.']],
     problemFooter: 'l402-kit utilise le standard HTTP 402 + Bitcoin Lightning pour éliminer les quatre problèmes en une seule fois — sans comptes, sans minimums, sans chargebacks, sans frontières.',
     forWhoTitle: 'Pour qui?',
     forWhoSub: 'Vous possédez l\'API. Vous gardez 99,7% de chaque sat.',
-    forWhoCards: [['Propriétaire API','Vous vendez des données ou du compute','Vous avez créé une API — météo, IA, données marché, médias — et souhaitez la monétiser par appel sans Stripe, abonnements ni dashboards.',['Ajoutez 3 lignes de middleware','Définissez votre prix en sats','Recevez Bitcoin instantanément']],['Builder IA','Votre agent doit payer pour des outils','Vous créez des agents IA autonomes qui appellent des APIs externes. L402 est le protocole de paiement natif pour agents — sans OAuth, sans carte enregistrée, sans validation humaine.',['Agent reçoit 402 → paye la facture','Réessaie avec preuve → obtient données','Compatible avec tout framework LLM']],['Dev OSS','Vous voulez un open source viable','Votre bibliothèque est gratuite et open source, mais vous voulez des niveaux payants — endpoints premium, limites plus élevées — sans la complexité d\'un SaaS de paiement.',['Endpoints gratuits restent gratuits','Niveaux payants en 10 minutes','Sans compte Stripe']]]
+    forWhoCards: [['Propriétaire API','Vous vendez des données ou du compute','Vous avez créé une API — météo, IA, données marché, médias — et souhaitez la monétiser par appel sans Stripe, abonnements ni dashboards.',['Ajoutez 3 lignes de middleware','Définissez votre prix en sats','Recevez Bitcoin instantanément']],['Builder IA','Votre agent doit payer pour des outils','Vous créez des agents IA autonomes qui appellent des APIs externes. L402 est le protocole de paiement natif pour agents — sans OAuth, sans carte enregistrée, sans validation humaine.',['Agent reçoit 402 → paye la facture','Réessaie avec preuve → obtient données','Compatible avec tout framework LLM']]]
   },
   de: {
     nav: ['Erweiterung','Dashboard'],
@@ -1704,18 +1743,18 @@ const T = {
     usecases: [['KI / Agenten','Monetarisiere dein KI-Tool','Pro Inferenzaufruf abrechnen. LLM-Wrapper, Bildgenerierung, OCR-APIs. Funktioniert nativ mit LangChain und AutoGPT.'],['Daten-APIs','Pay-per-Query-Daten','Wetter, Finanzen, Sport, Karten. Kein Abo — Nutzer zahlen genau für das, was sie nutzen.'],['Inhalte','Paywall-Endpunkte','Artikel, Forschungsarbeiten, PDFs, Audio. Keine Kontoerstellung erforderlich.'],['Compute','Serverless-Abrechnung','Berechne CPU-intensive Aufgaben: Rendering, Transkription, Kompression. Rein nutzungsbasiert.']],
     ext: {badge:'VS CODE ERWEITERUNG',h2:'Sieh zu, wie deine Sats eintreffen — ohne den Editor zu verlassen',p:'Echtzeit-Lightning-Zahlungs-Dashboard in VS Code. Sieh jede Zahlung sofort wenn sie eintrifft.',lis:['✓ Live-Zahlungsfeed mit Betrag & Endpunkt','✓ Balkendiagramm — 1D / 7D (kostenlos) · 30D / 1Y / ALL (Pro)','✓ 11 Sprachen (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Helles / dunkles / automatisches Theme','✓ Kein Setup — einfach Lightning-Adresse setzen'],links:['Kostenlos im Marketplace installieren','Dokumentation →']},
     pricingTitle: 'Einfache Preise', pricingSub: 'Zahle mit Bitcoin Lightning. Keine Kreditkarte. Kein Konto. Sofort.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% Gebühr, für immer','Unbegrenzte API-Aufrufe','Zahlungshistorie (7 Tage)','Charts 1D / 7D','Open source — MIT'],['Alles aus Free','Vollständige Historie — kein 7-Tage-Limit','Alle Chart-Bereiche (30D / 1Y / ALL)','CSV-Export','Lightning-Quittung — nachweisbarer Beweis','Lösche alle Daten jederzeit'],['Alles aus Pro','Bis zu 5 Lightning-Adressen überwachen','Webhook bei jeder empfangenen Zahlung','Programmatischer API-Zugriff auf Daten','0% Gebühr — bringe deinen eigenen Provider'],['Alles aus Builder — für immer','Früher Zugang zum DCA-Agenten','Als Gründungsunterstützer gelistet','Mitsprache beim Roadmap','Keine Verlängerung. Nie.']],
-    pricing: [['Kostenlos','Self-host: 0% · Verwaltet: 0,3%','Loslegen →'],[null,'Mit Lightning zahlen — sofortige Aktivierung','⚡ Mit Lightning abonnieren'],[null,'Für Teams und APIs mit hohem Volumen','⚡ Mit Lightning abonnieren'],[null,'Einmal zahlen. Für immer nutzen.','⚡ Lebenslangen Zugang kaufen']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% Gebühr, für immer','Unbegrenzte API-Aufrufe','Zahlungshistorie (7 Tage)','Charts 1D / 7D','Open source — MIT'],['Kein Lightning-Knoten nötig','Lightning-Adresse hinzufügen — fertig','99,7% jedes Sats gehen an dich','Alle 4 SDKs (TS / Python / Go / Rust)','Sofortige Aktivierung','Upgrade auf Pro für Analytics'],['Alles aus Sovereign','Vollständige Historie — kein 7-Tage-Limit','Alle Chart-Bereiche (30D / 1Y / ALL)','CSV-Export','Lightning-Quittung — nachweisbarer Beweis','Lösche alle Daten jederzeit']],
+    pricing: [['Sovereign','Self-host: 0% · eigener Knoten','Loslegen →'],['Managed','Kein Lightning-Knoten — einfach Lightning-Adresse hinzufügen','In 2 Minuten starten →'],[null,'Mit Lightning zahlen — sofortige Aktivierung','⚡ Mit Lightning abonnieren']],
     faqTitle: 'Häufige Fragen',
     faq: [['Brauchen meine Nutzer ein Lightning-Wallet?','Ja — sie brauchen ein Lightning-Wallet zum Bezahlen. Apps wie Strike, Cash App, Blink und Phoenix sind in unter 60 Sekunden eingerichtet.'],['Was passiert, wenn das Lightning-Netzwerk ausfällt?','Lightning ist ein dezentrales Netzwerk mit nahezu 100% Verfügbarkeit. Wenn dein Provider ausfällt, wechselst du in einer Zeile Code.'],['Ist das produktionsreif?','Ja. Kryptografischer Beweis (SHA256), Replay-Schutz und Supabase-Zahlungsprotokoll sind eingebaut.'],['Wie funktioniert die 0.3%-Gebühr?','Im verwalteten Modus wird automatisch 0.3% abgezogen. Im Self-Host-Modus gibt es keine Gebühr.'],['Kann ich es ohne Blink verwenden?','Ja. OpenNode, LNbits oder jeder Provider, der LightningProvider implementiert.'],['Warum Lightning und nicht On-Chain-Bitcoin?','On-Chain-Bitcoin braucht über 10 Minuten und kostet 1-5 USD pro Transaktion. Lightning wird in unter einer Sekunde für Bruchteile eines Cents abgerechnet. Deine Schlüssel bleiben bei dir.'],['Wie unterscheidet sich das von Coinbases x402?','x402 ist eine Protokollspezifikation. l402-kit ist ein produktionsreifes SDK, das es heute in TypeScript, Python, Go und Rust implementiert. Coinbase zielt auf USDC; l402-kit auf Bitcoin Lightning.'],['Wird die 0,3%-Gebühr immer erhoben?','Nein. Die Gebühr gilt nur im verwalteten Modus. Verbinde dein eigenes Wallet (Blink, OpenNode, LNbits, BTCPay) und die Gebühr beträgt 0 %. Die MIT-Lizenz erlaubt vollständiges Self-Hosting für immer kostenlos.']],
-    ctaTitle: 'In 2 Minuten starten', ctaDesc: 'Kein Konto. Keine Karte. Nur Bitcoin.', ctaDocs: 'oder <a href="https://shinydapps-bd9fa40b.mintlify.app/de/introduction">Docs lesen &rarr;</a>',
+    ctaTitle: 'In 2 Minuten starten', ctaDesc: 'Kein Konto. Keine Karte. Nur Bitcoin.', ctaDocs: 'oder <a href="https://docs.l402kit.com/de/introduction">Docs lesen &rarr;</a>',
     problemTitle: 'Warum Karten für APIs versagen',
     problemSub: 'Stripe wurde für Menschen entwickelt, die Produkte kaufen. APIs berechnen pro Aufruf — und das bricht alles.',
     problemCards: [['KI-Agenten haben keine Karten','Autonome Agenten haben keine Rechnungsadresse, kein CVV und keinen Menschen, der auf "Bestätigen" klickt. Zahlung schlägt fehl.'],['Mindestgebühr von 0,30$','Ein 1-Cent-API-Aufruf kostet 0,30$ an Kartengebühren. Du verlierst bei jeder Anfrage darunter Geld.'],['50+ Länder gesperrt','Stripe und PayPal operieren nicht überall. Deine API ist global — dein Zahlungsanbieter sollte nicht entscheiden, wer Zugang hat.'],['APIs können nicht "zurückgegeben" werden','Du hast die Daten bereits geliefert. Ein Chargeback erlaubt dem Aufrufer, sie gratis zu nehmen — und du zahlst die Gebühr.']],
     problemFooter: 'l402-kit nutzt den HTTP 402-Standard + Bitcoin Lightning, um alle vier Probleme auf einmal zu lösen — keine Konten, keine Mindestbeträge, keine Chargebacks, keine Grenzen.',
     forWhoTitle: 'Für wen?',
     forWhoSub: 'Du besitzt die API. Du behältst 99,7% jedes Sat.',
-    forWhoCards: [['API-Anbieter','Du verkaufst Daten oder Rechenleistung','Du hast eine API gebaut — Wetter, KI-Inferenz, Marktdaten, Medien — und möchtest sie pro Aufruf monetarisieren ohne Stripe, Abos oder Abrechnungs-Dashboards.',['3 Middleware-Zeilen hinzufügen','Deinen Preis in Sats festlegen','Bitcoin sofort empfangen']],['KI-Builder','Dein Agent muss für Tools bezahlen','Du baust autonome KI-Agenten, die externe APIs aufrufen. L402 ist das native Zahlungsprotokoll für Agenten — kein OAuth, keine hinterlegte Karte, keine menschliche Freigabe.',['Agent erhält 402 → zahlt Invoice','Retry mit Beweis → erhält Daten','Funktioniert mit jedem LLM-Framework']],['OSS-Entwickler','Du willst nachhaltiges Open Source','Deine Bibliothek ist kostenlos und open source, aber du willst kostenpflichtige Stufen — Premium-Endpoints, höhere Rate Limits — ohne den Aufwand eines Payment-SaaS.',['Kostenlose Endpoints bleiben kostenlos','Kostenpflichtige Stufen in 10 Minuten','Kein Stripe-Konto nötig']]]
+    forWhoCards: [['API-Anbieter','Du verkaufst Daten oder Rechenleistung','Du hast eine API gebaut — Wetter, KI-Inferenz, Marktdaten, Medien — und möchtest sie pro Aufruf monetarisieren ohne Stripe, Abos oder Abrechnungs-Dashboards.',['3 Middleware-Zeilen hinzufügen','Deinen Preis in Sats festlegen','Bitcoin sofort empfangen']],['KI-Builder','Dein Agent muss für Tools bezahlen','Du baust autonome KI-Agenten, die externe APIs aufrufen. L402 ist das native Zahlungsprotokoll für Agenten — kein OAuth, keine hinterlegte Karte, keine menschliche Freigabe.',['Agent erhält 402 → zahlt Invoice','Retry mit Beweis → erhält Daten','Funktioniert mit jedem LLM-Framework']]]
   },
   it: {
     nav: ['Estensione','Dashboard'],
@@ -1729,18 +1768,18 @@ const T = {
     usecases: [['IA / Agenti','Monetizza il tuo tool IA','Addebita per chiamata di inferenza. Wrapper LLM, generazione immagini, API OCR. Compatibile con LangChain e AutoGPT.'],['API dati','Dati pay-per-query','Meteo, finanza, sport, mappe. Nessun abbonamento — gli utenti pagano esattamente per ciò che usano.'],['Contenuti','Endpoint con paywall','Articoli, paper, PDF, audio. Nessuna creazione di account richiesta.'],['Calcolo','Fatturazione serverless','Addebita task intensivi: rendering, trascrizione, compressione. Puramente basato sull\'uso.']],
     ext: {badge:'ESTENSIONE VS CODE',h2:'Guarda i tuoi sats arrivare — senza lasciare l\'editor',p:'Dashboard pagamenti Lightning in tempo reale dentro VS Code. Vedi ogni pagamento nell\'istante in cui arriva.',lis:['✓ Feed pagamenti live con importo ed endpoint','✓ Grafico a barre — 1D / 7D (gratuito) · 30D / 1Y / ALL (Pro)','✓ 11 lingue (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Tema chiaro / scuro / automatico','✓ Zero config — imposta solo il tuo Lightning address'],links:['Installa gratis sul Marketplace','Documentazione →']},
     pricingTitle: 'Prezzi semplici', pricingSub: 'Paga con Bitcoin Lightning. Senza carta. Senza account. Istantaneo.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% di commissione, per sempre','Chiamate illimitate','Cronologia pagamenti (7 giorni)','Grafici 1D / 7D','Open source — MIT'],['Tutto di Free','Cronologia completa — nessun limite di 7 giorni','Tutti i range (30D / 1Y / ALL)','Esportazione CSV','Ricevuta Lightning — prova verificabile','Elimina tutti i tuoi dati in qualsiasi momento'],['Tutto di Pro','Monitora fino a 5 indirizzi Lightning','Webhook ad ogni pagamento ricevuto','Accesso API programmatico ai tuoi dati','0% commissione — porta il tuo provider'],['Tutto di Builder — per sempre','Accesso anticipato all\'agente DCA','Elencato come sostenitore fondatore','Voce nel roadmap','Nessun rinnovo. Mai.']],
-    pricing: [['Gratuito','Self-host: 0% · Gestito: 0,3%','Inizia →'],[null,'Paga con Lightning — attivazione istantanea','⚡ Abbonati con Lightning'],[null,'Per team e API ad alto volume','⚡ Abbonati con Lightning'],[null,'Paga una volta. Usa per sempre.','⚡ Acquista accesso a vita']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% di commissione, per sempre','Chiamate illimitate','Cronologia pagamenti (7 giorni)','Grafici 1D / 7D','Open source — MIT'],['Nessun nodo Lightning richiesto','Aggiungi il tuo Lightning address per iniziare','Il 99,7% di ogni sat va a te','Tutti e 4 i SDK (TS / Python / Go / Rust)','Attivazione istantanea','Passa a Pro per analytics completi'],['Tutto di Sovereign','Cronologia completa — nessun limite di 7 giorni','Tutti i range (30D / 1Y / ALL)','Esportazione CSV','Ricevuta Lightning — prova verificabile','Elimina tutti i tuoi dati in qualsiasi momento']],
+    pricing: [['Sovereign','Self-host: 0% · nodo tuo','Inizia →'],['Managed','Nessun nodo Lightning — aggiungi il tuo Lightning address','Inizia in 2 minuti →'],[null,'Paga con Lightning — attivazione istantanea','⚡ Abbonati con Lightning']],
     faqTitle: 'Domande frequenti',
     faq: [['I miei utenti hanno bisogno di un wallet Lightning?','Sì — hanno bisogno di un wallet Lightning per pagare. App come Strike, Cash App, Blink e Phoenix si configurano in meno di 60 secondi.'],['Cosa succede se la rete Lightning è giù?','Lightning è una rete decentralizzata con disponibilità vicina al 100%. Se il tuo provider ha un downtime, cambi in una riga di codice.'],['È pronto per la produzione?','Sì. Prova crittografica (SHA256), protezione anti-replay e logging Supabase sono integrati.'],['Come funziona la commissione dello 0.3%?','In modalità gestita, lo 0.3% viene dedotto automaticamente. In self-host con il tuo nodo, non c\'è commissione.'],['Posso usarlo senza Blink?','Sì. OpenNode, LNbits o qualsiasi provider che implementi l\'interfaccia LightningProvider.'],['Perche Lightning e non Bitcoin on-chain?','Il Bitcoin on-chain richiede 10+ minuti per confermare e costa $1-5 per transazione. Lightning si chiude in meno di un secondo per frazioni di centesimo rendendo i micropagamenti sostenibili.'],['In cosa differisce dall x402 di Coinbase?','x402 e una specifica di protocollo. l402-kit e un SDK production-ready che lo implementa oggi in TypeScript, Python, Go e Rust. Coinbase punta a USDC/stablecoin; l402-kit a Bitcoin Lightning.'],['La commissione dello 0,3% viene sempre addebitata?','No. La commissione si applica solo in modalita managed. Collega il tuo wallet (Blink, OpenNode, LNbits, BTCPay) e la commissione e 0%. La licenza MIT consente il self-host completo senza commissioni, per sempre.']],
-    ctaTitle: 'Inizia in 2 minuti', ctaDesc: 'Senza account. Senza carta. Solo Bitcoin.', ctaDocs: 'o <a href="https://shinydapps-bd9fa40b.mintlify.app/it/introduction">leggi i docs &rarr;</a>',
+    ctaTitle: 'Inizia in 2 minuti', ctaDesc: 'Senza account. Senza carta. Solo Bitcoin.', ctaDocs: 'o <a href="https://docs.l402kit.com/it/introduction">leggi i docs &rarr;</a>',
     problemTitle: 'Perché le carte falliscono per le API',
     problemSub: 'Stripe è stato progettato per persone che acquistano prodotti. Le API addebitano per chiamata — e questo rompe tutto.',
     problemCards: [['Gli agenti IA non hanno carte','Gli agenti autonomi non hanno indirizzo di fatturazione, CVV né umano che confermi. Il pagamento fallisce.'],['Commissione minima di $0,30','Una chiamata da 1 centesimo costa $0,30 in commissioni di carta. Perdi soldi su ogni richiesta sotto questa soglia.'],['50+ paesi bloccati','Stripe e PayPal non operano ovunque. La tua API è globale — il tuo processore non dovrebbe decidere chi può accedere.'],['Le API non possono essere "restituite"','Hai già consegnato i dati. Un chargeback permette al chiamante di prenderli gratis — e tu paghi la commissione.']],
     problemFooter: 'l402-kit usa lo standard HTTP 402 + Bitcoin Lightning per eliminare tutti e quattro i problemi in una volta — niente account, niente minimi, niente chargeback, niente confini.',
     forWhoTitle: 'Per chi è?',
     forWhoSub: 'Possiedi l\'API. Tieni il 99,7% di ogni sat.',
-    forWhoCards: [['Proprietario API','Vendi dati o potenza di calcolo','Hai costruito un\'API — meteo, inferenza IA, dati di mercato, media — e vuoi monetizzarla per chiamata senza Stripe, abbonamenti o dashboard di fatturazione.',['Aggiungi 3 righe di middleware','Imposta il prezzo in sats','Ricevi Bitcoin istantaneamente']],['Builder IA','Il tuo agente deve pagare per gli strumenti','Stai costruendo agenti IA autonomi che chiamano API esterne. L402 è il protocollo di pagamento nativo per agenti — senza OAuth, senza carta salvata, senza approvazione umana.',['L\'agente riceve 402 → paga la fattura','Riprova con prova → ottiene dati','Funziona con qualsiasi framework LLM']],['Dev OSS','Vuoi open source sostenibile','La tua libreria è gratuita e open source, ma vuoi livelli a pagamento — endpoint premium, rate limit maggiori — senza il peso di un SaaS di pagamento.',['Gli endpoint gratuiti rimangono gratuiti','Livelli a pagamento in 10 minuti','Senza account Stripe']]]
+    forWhoCards: [['Proprietario API','Vendi dati o potenza di calcolo','Hai costruito un\'API — meteo, inferenza IA, dati di mercato, media — e vuoi monetizzarla per chiamata senza Stripe, abbonamenti o dashboard di fatturazione.',['Aggiungi 3 righe di middleware','Imposta il prezzo in sats','Ricevi Bitcoin istantaneamente']],['Builder IA','Il tuo agente deve pagare per gli strumenti','Stai costruendo agenti IA autonomi che chiamano API esterne. L402 è il protocollo di pagamento nativo per agenti — senza OAuth, senza carta salvata, senza approvazione umana.',['L\'agente riceve 402 → paga la fattura','Riprova con prova → ottiene dati','Funziona con qualsiasi framework LLM']]]
   },
   ja: {
     nav: ['拡張機能','ダッシュボード'],
@@ -1754,18 +1793,18 @@ const T = {
     usecases: [['AI / エージェント','AIツールを収益化','推論呼び出しごとに課金。LLMラッパー、画像生成、OCR API。LangChainやAutoGPTと動作。'],['データAPI','クエリ課金データ','天気、金融、スポーツ、地図。サブスクリプション不要。'],['コンテンツ','ペイウォール付きエンドポイント','記事、論文、PDF、音声。アカウント登録不要。'],['コンピュート','サーバーレス課金','レンダリング、文字起こし、圧縮などの重いタスクに課金。完全使用量ベース。']],
     ext: {badge:'VS CODE 拡張機能',h2:'エディタを離れずにsatが入ってくるのを見守ろう',p:'VS Code内のリアルタイムLightning支払いダッシュボード。すべての支払いを即座に確認できます。',lis:['✓ 金額とエンドポイント付きのライブ支払いフィード','✓ 棒グラフ — 1D / 7D (無料) · 30D / 1Y / ALL (Pro)','✓ 11言語対応 (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ ライト / ダーク / 自動テーマ','✓ ゼロ設定 — Lightning addressを設定するだけ'],links:['Marketplaceで無料インストール','ドキュメント →']},
     pricingTitle: 'シンプルな料金', pricingSub: 'Bitcoin Lightningで支払い。クレジットカード不要。アカウント不要。即時。',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','セルフホスト = 0%手数料、永久に','無制限APIコール','支払い履歴（7日間）','チャート1D / 7D','オープンソース — MIT'],['Freeのすべて','完全な履歴 — 7日制限なし','全チャート範囲（30D / 1Y / ALL）','CSVエクスポート','Lightningレシート — 検証可能な証明','いつでもデータを完全削除'],['Proのすべて','最大5つのLightningアドレスを監視','支払いごとにWebhook','データへのプログラマティックAPIアクセス','0%手数料 — 独自プロバイダを使用'],['Builderのすべて — 永久に','DCAエージェントへの早期アクセス','創業支援者として掲載','ロードマップへの意見','更新なし。永遠に。']],
-    pricing: [['無料','セルフホスト: 0% · マネージド: 0.3%','始める →'],[null,'Lightningで支払い — 即時有効化','⚡ Lightningでサブスクライブ'],[null,'チームと高ボリュームAPI向け','⚡ Lightningでサブスクライブ'],[null,'一度支払って永遠に使う。','⚡ 生涯アクセスを購入']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','セルフホスト = 0%手数料、永久に','無制限APIコール','支払い履歴（7日間）','チャート1D / 7D','オープンソース — MIT'],['Lightningノード不要','Lightning Addressを追加するだけ','各satの99.7%があなたに','全4 SDK（TS / Python / Go / Rust）','即時有効化','Proにアップグレードでフル分析'],['Sovereignのすべて','完全な履歴 — 7日制限なし','全チャート範囲（30D / 1Y / ALL）','CSVエクスポート','Lightningレシート — 検証可能な証明','いつでもデータを完全削除']],
+    pricing: [['Sovereign','セルフホスト: 0% · 独自ノード','始める →'],['Managed','Lightningノード不要 — Lightning Addressを追加するだけ','2分で始める →'],[null,'Lightningで支払い — 即時有効化','⚡ Lightningでサブスクライブ']],
     faqTitle: 'よくある質問',
     faq: [['ユーザーはLightningウォレットが必要ですか？','はい。支払いにはLightningウォレットが必要です。Strike、Cash App、Blink、Phoenixなどは60秒以内に設定できます。'],['Lightningネットワークがダウンした場合は？','Lightningはほぼ100%の稼働時間を持つ分散型ネットワークです。プロバイダーに問題が生じても、1行のコードで切り替えられます。'],['本番環境で使用できますか？','はい。暗号学的証明(SHA256)、リプレイ攻撃防御、Supabaseによるログが組み込まれています。'],['0.3%手数料の仕組みは？','マネージドモードでは0.3%が自動的に差し引かれます。自己ホストの場合は手数料なし。'],['Blinkなしで使えますか？','はい。OpenNode、LNbits、またはLightningProviderインターフェースを実装する任意のプロバイダーが使えます。'],['なぜLightningでオンチェーnBitcoinではないのか','オンチェーnBitcoinは確認に10分以上かかり手数料は1-5ドルかかります。Lightningは1秒未満で決済し、手数料は1セント以下でマイクロペイメントを実現します。'],['CoinbaseのX402とどう違うのか','x402はプロトコル仕様です。l402-kitはTypeScript・Python・Go・Rustで今日から使える本番SDKです。CoinbaseはUSDCを対象とし、l402-kitはBitcoin Lightningを対象とします。'],['0.3％の手数料は常にかかりますか','いいえ。手数料はマネージドモード使用時のみです。自分のウォレットを接続すれば手数料は0％です。MITライセンスにより完全なセルフホストが永久に無料で可能です。']],
-    ctaTitle: '2分で始める', ctaDesc: 'アカウント不要。クレジットカード不要。Bitcoinだけ。', ctaDocs: 'または <a href="https://shinydapps-bd9fa40b.mintlify.app/ja/introduction">ドキュメントを読む &rarr;</a>',
+    ctaTitle: '2分で始める', ctaDesc: 'アカウント不要。クレジットカード不要。Bitcoinだけ。', ctaDocs: 'または <a href="https://docs.l402kit.com/ja/introduction">ドキュメントを読む &rarr;</a>',
     problemTitle: 'クレジットカードがAPIに向かない理由',
     problemSub: 'Stripeは製品を購入する人間向けに作られました。APIは呼び出しごとに課金します — それが全てを壊します。',
     problemCards: [['AIエージェントはカードを持てない','自律エージェントには請求先住所、CVV、確認する人間がいません。支払いが失敗します。'],['最低手数料$0.30','1セントのAPI呼び出しにカード手数料$0.30がかかります。この閾値以下のリクエストは赤字です。'],['50以上の国がブロック','StripeとPayPalは世界中で使えません。あなたのAPIはグローバル — 決済業者がアクセスを決めるべきではありません。'],['APIは「返品」できない','データはすでに提供済みです。チャージバックで呼び出し元が無料で取得できます — 手数料はあなたが払います。']],
     problemFooter: 'l402-kitはHTTP 402標準 + Bitcoin Lightningを使用して4つの問題を一度に解決します — アカウント不要、最低額なし、チャージバックなし、国境なし。',
     forWhoTitle: '誰のために？',
     forWhoSub: 'APIを所有し、全satの99.7%を受け取れます。',
-    forWhoCards: [['API提供者','データや計算能力を販売','天気、AI推論、市場データ、メディアなどのAPIを構築し、Stripe、サブスクリプション、請求ダッシュボードなしで呼び出しごとに収益化したい方。',['ミドルウェア3行を追加','satsで価格を設定','Bitcoinを即時受け取り']],['AIビルダー','エージェントがツールに支払う必要がある','外部APIを呼び出す自律AIエージェントを構築中の方。L402はエージェント向けのネイティブ決済プロトコル — OAuth不要、カード登録不要、人間の承認不要。',['エージェントが402を受信→請求書を支払い','証明付きで再試行→データ取得','あらゆるLLMフレームワークに対応']],['OSSデベロッパー','持続可能なオープンソースを実現','ライブラリは無料でオープンソースだが、プレミアムエンドポイントや高レートリミットなどの有料ティアが欲しい方。',['無料エンドポイントは無料のまま','10分で有料ティア設定','Stripeアカウント不要']]]
+    forWhoCards: [['API提供者','データや計算能力を販売','天気、AI推論、市場データ、メディアなどのAPIを構築し、Stripe、サブスクリプション、請求ダッシュボードなしで呼び出しごとに収益化したい方。',['ミドルウェア3行を追加','satsで価格を設定','Bitcoinを即時受け取り']],['AIビルダー','エージェントがツールに支払う必要がある','外部APIを呼び出す自律AIエージェントを構築中の方。L402はエージェント向けのネイティブ決済プロトコル — OAuth不要、カード登録不要、人間の承認不要。',['エージェントが402を受信→請求書を支払い','証明付きで再試行→データ取得','あらゆるLLMフレームワークに対応']]]
   },
   ru: {
     nav: ['Расширение','Дашборд'],
@@ -1779,18 +1818,18 @@ const T = {
     usecases: [['ИИ / Агенты','Монетизируй свой ИИ-инструмент','Плата за каждый вызов инференса. LLM-обёртки, генерация изображений, OCR API.'],['Дата-API','Данные за запрос','Погода, финансы, спорт, карты. Без подписки.'],['Контент','Эндпоинты с пейволом','Статьи, PDF, аудио. Без регистрации аккаунта.'],['Вычисления','Serverless-биллинг','Берите плату за рендеринг, транскрипцию, сжатие. Чистая модель «по использованию».']],
     ext: {badge:'РАСШИРЕНИЕ VS CODE',h2:'Наблюдай за поступлением сатошей — не выходя из редактора',p:'Дашборд Lightning-платежей в реальном времени прямо в VS Code.',lis:['✓ Живая лента платежей с суммой и эндпоинтом','✓ Столбчатый график — 1D / 7D (бесплатно) · 30D / 1Y / ALL (Pro)','✓ 11 языков (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Светлая / тёмная / авто тема','✓ Нет настройки — просто задай Lightning-адрес'],links:['Установить бесплатно в Marketplace','Документация →']},
     pricingTitle: 'Простые тарифы', pricingSub: 'Платите Bitcoin Lightning. Без карты. Без аккаунта. Мгновенно.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% комиссии навсегда','Неограниченные API-вызовы','История платежей (7 дней)','Графики 1D / 7D','Open source — MIT'],['Всё из Free','Полная история — без лимита 7 дней','Все диапазоны (30D / 1Y / ALL)','Экспорт CSV','Квитанция Lightning — проверяемое доказательство','Удаляй все данные в любой момент'],['Всё из Pro','Мониторинг до 5 Lightning-адресов','Webhook при каждом платеже','Программный доступ к данным через API','0% комиссии — используй свой провайдер'],['Всё из Builder — навсегда','Ранний доступ к DCA-агенту','Указан как основатель','Влияние на roadmap','Без продления. Никогда.']],
-    pricing: [['Бесплатно','Self-host: 0% · Managed: 0.3%','Начать →'],[null,'Платите Lightning — мгновенная активация','⚡ Подписаться через Lightning'],[null,'Для команд и высоконагруженных API','⚡ Подписаться через Lightning'],[null,'Оплатите раз. Используйте всегда.','⚡ Купить пожизненный доступ']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% комиссии навсегда','Неограниченные API-вызовы','История платежей (7 дней)','Графики 1D / 7D','Open source — MIT'],['Без Lightning-узла','Добавь Lightning-адрес — и готово','99,7% каждого сата идёт тебе','Все 4 SDK (TS / Python / Go / Rust)','Мгновенная активация','Upgrade на Pro для аналитики'],['Всё из Sovereign','Полная история — без лимита 7 дней','Все диапазоны (30D / 1Y / ALL)','Экспорт CSV','Квитанция Lightning — проверяемое доказательство','Удаляй все данные в любой момент']],
+    pricing: [['Sovereign','Self-host: 0% · свой узел','Начать →'],['Managed','Без Lightning-узла — просто добавь Lightning-адрес','Начать за 2 минуты →'],[null,'Платите Lightning — мгновенная активация','⚡ Подписаться через Lightning']],
     faqTitle: 'Частые вопросы',
     faq: [['Нужен ли моим пользователям Lightning-кошелёк?','Да — им нужен Lightning-кошелёк для оплаты. Приложения Strike, Cash App, Blink, Phoenix настраиваются менее чем за 60 секунд.'],['Что будет, если сеть Lightning упадёт?','Lightning — децентрализованная сеть с почти 100% аптаймом. Смена провайдера — одна строка кода.'],['Готово ли к продакшену?','Да. Криптодоказательство (SHA256), защита от реплей-атак и лог Supabase — всё встроено.'],['Как работает комиссия 0.3%?','В managed-режиме 0.3% вычитается автоматически. В self-host нет никакой комиссии.'],['Можно ли без Blink?','Да. OpenNode, LNbits или любой провайдер, реализующий интерфейс LightningProvider.'],['Почему Lightning, а не on-chain Bitcoin?','On-chain Bitcoin требует 10+ минут и стоит $1-5 за транзакцию. Lightning расчитывается менее чем за секунду за доли цента.'],['Чем это отличается от x402 Coinbase?','x402 — это спецификация протокола. l402-kit — готовый SDK на TypeScript, Python, Go и Rust. Coinbase целит USDC; l402-kit — Bitcoin Lightning.'],['Всегда ли взимается комиссия 0,3%?','Нет. Комиссия применяется только в managed-режиме. Подключите свой кошелёк (Blink, OpenNode, LNbits, BTCPay) и комиссия равна 0%.']],
-    ctaTitle: 'Начни за 2 минуты', ctaDesc: 'Без аккаунта. Без карты. Только Bitcoin.', ctaDocs: 'или <a href="https://shinydapps-bd9fa40b.mintlify.app/ru/introduction">читай документацию &rarr;</a>',
+    ctaTitle: 'Начни за 2 минуты', ctaDesc: 'Без аккаунта. Без карты. Только Bitcoin.', ctaDocs: 'или <a href="https://docs.l402kit.com/ru/introduction">читай документацию &rarr;</a>',
     problemTitle: 'Почему карты не работают для API',
     problemSub: 'Stripe создан для людей, покупающих товары. API берут плату за каждый вызов — и это всё ломает.',
     problemCards: [['ИИ-агенты не могут держать карты','Автономные агенты не имеют платёжного адреса, CVV и человека для нажатия «подтвердить». Оплата не проходит.'],['Минимальная комиссия $0,30','Вызов API за 1 цент стоит $0,30 в карточных комиссиях. Вы теряете деньги на каждом запросе ниже этого порога.'],['50+ стран заблокировано','Stripe и PayPal работают не везде. Ваш API глобален — провайдер платежей не должен решать, кто получит доступ.'],['API нельзя «вернуть»','Данные уже доставлены. Чарджбек позволяет вызывающей стороне получить их бесплатно — а вы платите комиссию.']],
     problemFooter: 'l402-kit использует стандарт HTTP 402 + Bitcoin Lightning для устранения всех четырёх проблем сразу — без аккаунтов, без минимумов, без чарджбеков, без границ.',
     forWhoTitle: 'Для кого?',
     forWhoSub: 'Вы владеете API. Вы оставляете 99,7% каждого сат.',
-    forWhoCards: [['Владелец API','Продаёте данные или вычисления','Вы создали API — погода, AI-инференс, рыночные данные, медиа — и хотите монетизировать его за вызов без Stripe, подписок и биллинг-дашбордов.',['Добавьте 3 строки middleware','Установите цену в satoshi','Получайте Bitcoin мгновенно']],['AI-разработчик','Ваш агент должен платить за инструменты','Вы создаёте автономных AI-агентов, вызывающих внешние API. L402 — нативный протокол платежей для агентов: без OAuth, без карты, без одобрения человека.',['Агент получает 402 → оплачивает инвойс','Повторяет с доказательством → получает данные','Работает с любым LLM-фреймворком']],['OSS-разработчик','Хотите устойчивый open source','Ваша библиотека бесплатна и открыта, но нужны платные уровни — премиум-эндпоинты, высокие лимиты — без сложности платёжного SaaS.',['Бесплатные эндпоинты остаются бесплатными','Платные уровни за 10 минут','Без аккаунта Stripe']]]
+    forWhoCards: [['Владелец API','Продаёте данные или вычисления','Вы создали API — погода, AI-инференс, рыночные данные, медиа — и хотите монетизировать его за вызов без Stripe, подписок и биллинг-дашбордов.',['Добавьте 3 строки middleware','Установите цену в satoshi','Получайте Bitcoin мгновенно']],['AI-разработчик','Ваш агент должен платить за инструменты','Вы создаёте автономных AI-агентов, вызывающих внешние API. L402 — нативный протокол платежей для агентов: без OAuth, без карты, без одобрения человека.',['Агент получает 402 → оплачивает инвойс','Повторяет с доказательством → получает данные','Работает с любым LLM-фреймворком']]]
   },
   zh: {
     nav: ['扩展','仪表盘'],
@@ -1804,18 +1843,18 @@ const T = {
     usecases: [['AI / 代理','将你的 AI 工具变现','按推理调用收费。LLM 包装器、图像生成、OCR API。原生兼容 LangChain 和 AutoGPT。'],['数据 API','按查询付费的数据','天气、金融、体育、地图。无需订阅。'],['内容','付费端点','文章、论文、PDF、音频。无需用户创建账户。'],['计算','Serverless 计费','对渲染、转录、压缩等高 CPU 任务收费。纯粹按使用量计费。']],
     ext: {badge:'VS CODE 扩展',h2:'看着你的 sats 滚滚而来 — 无需离开编辑器',p:'VS Code 内置实时 Lightning 支付仪表盘。即时看到每笔支付。',lis:['✓ 包含金额和端点的实时支付流','✓ 柱状图 — 1D / 7D（免费）· 30D / 1Y / ALL（Pro）','✓ 11 种语言（EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT）','✓ 亮色 / 暗色 / 自动主题','✓ 零配置 — 只需设置你的 Lightning address'],links:['在 Marketplace 免费安装','文档 →']},
     pricingTitle: '简单定价', pricingSub: '使用 Bitcoin Lightning 支付。无需信用卡。无需账户。即时到账。',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','自托管 = 0%手续费，永久有效','无限API调用','支付历史（7天）','图表1D / 7D','开源 — MIT'],['包含Free的所有功能','完整历史 — 无7天限制','所有图表范围（30D / 1Y / ALL）','CSV导出','Lightning收据 — 可验证证明','随时删除所有数据'],['包含Pro的所有功能','监控多达5个Lightning地址','每次收款时触发Webhook','程序化API访问数据','0%手续费 — 使用自己的提供商'],['包含Builder所有功能 — 永久','DCA代理早期访问权','列为创始支持者','参与路线图决策','无需续费。永远。']],
-    pricing: [['免费','自托管: 0% · 托管模式: 0.3%','立即开始 →'],[null,'使用 Lightning 支付 — 即时激活','⚡ 使用 Lightning 订阅'],[null,'适合团队和高流量 API','⚡ 使用 Lightning 订阅'],[null,'一次付款，永久使用。','⚡ 购买终身访问']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','自托管 = 0%手续费，永久有效','无限API调用','支付历史（7天）','图表1D / 7D','开源 — MIT'],['无需Lightning节点','添加你的Lightning Address即可开始','每笔sat的99.7%归你所有','全部4个SDK（TS / Python / Go / Rust）','即时激活','升级Pro获得完整分析'],['包含Sovereign的所有功能','完整历史 — 无7天限制','所有图表范围（30D / 1Y / ALL）','CSV导出','Lightning收据 — 可验证证明','随时删除所有数据']],
+    pricing: [['Sovereign','自托管: 0%手续费 · 自己的节点','立即开始 →'],['Managed','无需Lightning节点 — 只需添加你的Lightning Address','2分钟内开始 →'],[null,'使用 Lightning 支付 — 即时激活','⚡ 使用 Lightning 订阅']],
     faqTitle: '常见问题',
     faq: [['我的用户需要 Lightning 钱包吗？','是的——他们需要 Lightning 钱包来付款。Strike、Cash App、Blink 和 Phoenix 等应用可在 60 秒内设置完成。'],['如果 Lightning 网络宕机怎么办？','Lightning 是一个去中心化网络，正常运行时间接近 100%。如果你的提供商宕机，一行代码即可切换。'],['这是否可用于生产环境？','是的。密码学证明（SHA256）、防重放保护和 Supabase 支付日志都已内置。'],['0.3% 手续费如何运作？','使用托管模式时，自动扣除 0.3% 路由费。自托管时，无任何费用。'],['可以不用 Blink 吗？','可以。OpenNode、LNbits 或任何实现 LightningProvider 接口的提供商都可以。'],['为什么选择Lightning而不是链上Bitcoin','链上Bitcoin需要10多分钟确认，每笔交易费用1-5美元。Lightning在不到61秒内结算，手续费仅为分之一美分，让微支付在经济上可行。'],['这与Coinbase的x402有何不同','x402是一个协议规范。l402-kit是一个生产就绪的SDK，今天就能在TypeScript、Python、Go和Rust中使用。Coinbase针对USDC；l402-kit针对Bitcoin Lightning。'],['0.3%的费用总是收取吗','不。费用仅在托管模式下适用。连接你自己的钉子(Blink、OpenNode、LNbits、BTCPay)，费用0%。MIT许可证允许完全自托管，永久免费。']],
-    ctaTitle: '2分钟内开始', ctaDesc: '无需账户。无需信用卡。只需 Bitcoin。', ctaDocs: '或 <a href="https://shinydapps-bd9fa40b.mintlify.app/zh/introduction">查看文档 &rarr;</a>',
+    ctaTitle: '2分钟内开始', ctaDesc: '无需账户。无需信用卡。只需 Bitcoin。', ctaDocs: '或 <a href="https://docs.l402kit.com/zh/introduction">查看文档 &rarr;</a>',
     problemTitle: '为什么信用卡不适合API',
     problemSub: 'Stripe是为人类购买商品而设计的。API按调用收费 — 这使一切都崩溃了。',
     problemCards: [['AI智能体无法持有信用卡','自主智能体没有账单地址、CVV或人来点击"确认"。支付失败。'],['最低$0.30手续费','一个1分钱的API调用需要$0.30的卡片手续费。低于该阈值的每个请求您都在亏钱。'],['50+个国家被封锁','Stripe和PayPal并非在所有地方都可用。您的API是全球性的 — 支付处理商不应决定谁可以访问。'],['API无法"退货"','数据已经交付。退款允许调用方免费获取数据 — 而您支付手续费。']],
     problemFooter: 'l402-kit使用HTTP 402标准 + Bitcoin Lightning一次性消除所有四个问题 — 无需账户、无最低金额、无退款、无边界。',
     forWhoTitle: '适合谁？',
     forWhoSub: '您拥有API。您保留99.7%的每一聪。',
-    forWhoCards: [['API 所有者','您销售数据或算力','您构建了一个API——天气、AI推理、市场数据、媒体——并希望按调用收费，无需Stripe、订阅或账单仪表板。',['添加3行中间件','以聪为单位定价','即时接收比特币']],['AI 构建者','您的代理需要为工具付费','您正在构建调用外部API的自主AI代理。L402是代理的原生支付协议——无需OAuth、无需保存卡片、无需人工批准。',['代理收到402→支付发票','携带证明重试→获取数据','适用于任何LLM框架']],['OSS 开发者','您希望开源项目可持续','您的库是免费开源的，但希望有付费层——高级端点、更高速率限制——无需支付SaaS的开销。',['免费端点保持免费','10分钟内设置付费层','无需Stripe账户']]]
+    forWhoCards: [['API 所有者','您销售数据或算力','您构建了一个API——天气、AI推理、市场数据、媒体——并希望按调用收费，无需Stripe、订阅或账单仪表板。',['添加3行中间件','以聪为单位定价','即时接收比特币']],['AI 构建者','您的代理需要为工具付费','您正在构建调用外部API的自主AI代理。L402是代理的原生支付协议——无需OAuth、无需保存卡片、无需人工批准。',['代理收到402→支付发票','携带证明重试→获取数据','适用于任何LLM框架']]]
   },
   hi: {
     nav: ['एक्सटेंशन','डैशबोर्ड'],
@@ -1829,18 +1868,18 @@ const T = {
     usecases: [['AI / एजेंट','अपने AI टूल से कमाई करें','प्रति इनफरेंस कॉल चार्ज करें। LangChain और AutoGPT के साथ काम करता है।'],['डेटा API','प्रति-क्वेरी डेटा','मौसम, वित्त, खेल, मानचित्र। कोई सदस्यता नहीं।'],['कंटेंट','पेवॉल्ड एंडपॉइंट','लेख, शोध पत्र, PDF, ऑडियो। खाता बनाने की जरूरत नहीं।'],['कंप्यूट','सर्वरलेस बिलिंग','रेंडरिंग, ट्रांसक्रिप्शन, कंप्रेशन के लिए चार्ज करें। शुद्ध उपयोग-आधारित।']],
     ext: {badge:'VS CODE एक्सटेंशन',h2:'अपने sats को एडिटर छोड़े बिना आते देखें',p:'VS Code के अंदर रियल-टाइम Lightning पेमेंट डैशबोर्ड।',lis:['✓ राशि और endpoint के साथ लाइव भुगतान फीड','✓ बार चार्ट — 1D / 7D (फ्री) · 30D / 1Y / ALL (Pro)','✓ 11 भाषाएं (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ लाइट / डार्क / ऑटो थीम','✓ जीरो कॉन्फिग — बस अपना Lightning address सेट करें'],links:['Marketplace पर मुफ्त इंस्टॉल करें','दस्तावेज़ →']},
     pricingTitle: 'सरल मूल्य निर्धारण', pricingSub: 'Bitcoin Lightning से भुगतान करें। कोई क्रेडिट कार्ड नहीं। कोई खाता नहीं। तत्काल।',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% शुल्क, हमेशा के लिए','असीमित API calls','भुगतान इतिहास (7 दिन)','चार्ट 1D / 7D','Open source — MIT'],['Free का सब कुछ','पूरा इतिहास — 7 दिन की सीमा नहीं','सभी चार्ट रेंज (30D / 1Y / ALL)','CSV export','Lightning रसीद — सत्यापन योग्य प्रमाण','अपना सभी डेटा कभी भी हटाएं'],['Pro का सब कुछ','5 Lightning addresses तक मॉनिटर करें','हर भुगतान पर Webhook','डेटा तक प्रोग्रामेटिक API access','0% शुल्क — अपना provider लाएं'],['Builder का सब कुछ — हमेशा के लिए','DCA एजेंट तक पहले पहुंच','संस्थापक समर्थक के रूप में सूचीबद्ध','Roadmap पर राय','कोई नवीनीकरण नहीं। कभी नहीं।']],
-    pricing: [['मुफ्त','Self-host: 0% शुल्क · Managed: 0.3%','शुरू करें →'],[null,'Lightning से भुगतान — तत्काल सक्रियण','⚡ Lightning से सब्सक्राइब करें'],[null,'टीम और उच्च-वॉल्यूम API के लिए','⚡ Lightning से सब्सक्राइब करें'],[null,'एक बार भुगतान करें। हमेशा के लिए उपयोग करें।','⚡ आजीवन एक्सेस खरीदें']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% शुल्क, हमेशा के लिए','असीमित API calls','भुगतान इतिहास (7 दिन)','चार्ट 1D / 7D','Open source — MIT'],['Lightning नोड की जरूरत नहीं','अपना Lightning address जोड़ें — शुरू करें','हर sat का 99.7% आपको मिलता है','सभी 4 SDKs (TS / Python / Go / Rust)','तत्काल सक्रियण','Pro में अपग्रेड करें analytics के लिए'],['Sovereign का सब कुछ','पूरा इतिहास — 7 दिन की सीमा नहीं','सभी चार्ट रेंज (30D / 1Y / ALL)','CSV export','Lightning रसीद — सत्यापन योग्य प्रमाण','अपना सभी डेटा कभी भी हटाएं']],
+    pricing: [['Sovereign','Self-host: 0% शुल्क · अपना नोड','शुरू करें →'],['Managed','Lightning नोड नहीं — बस Lightning address जोड़ें','2 मिनट में शुरू करें →'],[null,'Lightning से भुगतान — तत्काल सक्रियण','⚡ Lightning से सब्सक्राइब करें']],
     faqTitle: 'सामान्य प्रश्न',
     faq: [['क्या मेरे उपयोगकर्ताओं को Lightning वॉलेट चाहिए?','हां — भुगतान के लिए Lightning वॉलेट की जरूरत है। Strike, Cash App, Blink, Phoenix 60 सेकंड में सेट हो जाते हैं।'],['अगर Lightning नेटवर्क डाउन हो तो?','Lightning एक विकेंद्रीकृत नेटवर्क है जिसमें लगभग 100% अपटाइम है। एक लाइन कोड से प्रदाता बदला जा सकता है।'],['क्या यह प्रोडक्शन के लिए तैयार है?','हां। SHA256 क्रिप्टोग्राफिक प्रमाण, रिप्ले सुरक्षा और Supabase लॉगिंग बिल्ट-इन हैं।'],['0.3% शुल्क कैसे काम करता है?','मैनेज्ड मोड में 0.3% स्वचालित रूप से काटा जाता है। सेल्फ-होस्ट में कोई शुल्क नहीं।'],['क्या मैं Blink के बिना इस्तेमाल कर सकता हूं?','हां। OpenNode, LNbits या कोई भी LightningProvider लागू करने वाला प्रदाता।'],['Lightning kyon aur on-chain Bitcoin kyon nahin','On-chain Bitcoin ki pushti mein 10+ minute lagte hain aur prati len-den $1-5 ka kharch hota hai. Lightning 1 second se kam mein settle hoti hai micropayments ko sambhav banati hai.'],['Yah Coinbase ke x402 se kaise alag hai','x402 ek protocol specification hai. l402-kit ek production SDK hai jo ise aaj TypeScript Python Go aur Rust mein implement karta hai. Coinbase USDC par dhyan deta hai; l402-kit Bitcoin Lightning par.'],['0.3% shulk hamesha liya jata hai','Nahin. Shulk kewal managed mode mein lagoo hota hai. Apna wallet connect karen aur shulk 0% hai. MIT license poorn self-host ko hamesha ke liye muft banati hai.']],
-    ctaTitle: '2 मिनट में शुरू करें', ctaDesc: 'कोई खाता नहीं। कोई कार्ड नहीं। सिर्फ Bitcoin।', ctaDocs: 'या <a href="https://shinydapps-bd9fa40b.mintlify.app/hi/introduction">डॉक्स पढ़ें &rarr;</a>',
+    ctaTitle: '2 मिनट में शुरू करें', ctaDesc: 'कोई खाता नहीं। कोई कार्ड नहीं। सिर्फ Bitcoin।', ctaDocs: 'या <a href="https://docs.l402kit.com/hi/introduction">डॉक्स पढ़ें &rarr;</a>',
     problemTitle: 'क्रेडिट कार्ड API के लिए क्यों काम नहीं करते',
     problemSub: 'Stripe को उन लोगों के लिए बनाया गया था जो उत्पाद खरीदते हैं। API प्रति-कॉल चार्ज करती है — और यह सब कुछ तोड़ देता है।',
     problemCards: [['AI एजेंट कार्ड नहीं रख सकते','स्वायत्त एजेंटों के पास billing address, CVV या confirm करने वाला इंसान नहीं होता। भुगतान विफल हो जाता है।'],['$0.30 न्यूनतम शुल्क','1 सेंट की API कॉल पर $0.30 की कार्ड फीस लगती है। इस सीमा से नीचे हर अनुरोध पर आप घाटे में रहते हैं।'],['50+ देश अवरुद्ध','Stripe और PayPal हर जगह काम नहीं करते। आपकी API global है — payment processor को नहीं तय करना चाहिए कि कौन access करे।'],['API को "वापस" नहीं किया जा सकता','आपने data पहले ही दे दिया है। Chargeback से caller इसे मुफ्त में ले सकता है — और आप शुल्क भरते हैं।']],
     problemFooter: 'l402-kit HTTP 402 मानक + Bitcoin Lightning का उपयोग करके एक साथ चारों समस्याओं को समाप्त करता है — कोई account नहीं, कोई न्यूनतम राशि नहीं, कोई chargeback नहीं, कोई सीमा नहीं।',
     forWhoTitle: 'यह किसके लिए है?',
     forWhoSub: 'API आपकी है। हर sat का 99.7% आप रखते हैं।',
-    forWhoCards: [['API स्वामी','आप डेटा या कम्प्यूट बेचते हैं','आपने एक API बनाई — मौसम, AI इनफेरेंस, बाजार डेटा, मीडिया — और Stripe, सदस्यता या बिलिंग डैशबोर्ड के बिना प्रति कॉल monetize करना चाहते हैं।',['3 middleware लाइनें जोड़ें','sats में कीमत सेट करें','तुरंत Bitcoin प्राप्त करें']],['AI बिल्डर','आपके एजेंट को टूल्स के लिए भुगतान चाहिए','आप बाहरी APIs कॉल करने वाले स्वायत्त AI एजेंट बना रहे हैं। L402 एजेंट्स के लिए नेटिव भुगतान प्रोटोकॉल है — कोई OAuth नहीं, कोई कार्ड नहीं, कोई मानव अनुमोदन नहीं।',['एजेंट 402 पाता है → invoice भुगतान','प्रमाण के साथ पुनः प्रयास → डेटा मिलता है','किसी भी LLM framework के साथ काम करता है']],['OSS डेवलपर','आप टिकाऊ ओपन सोर्स चाहते हैं','आपकी लाइब्रेरी मुफ्त और ओपन सोर्स है, लेकिन आप paid tiers चाहते हैं — premium endpoints, higher rate limits — payment SaaS के बिना।',['मुफ्त endpoints मुफ्त रहते हैं','10 मिनट में paid tiers','Stripe account की जरूरत नहीं']]]
+    forWhoCards: [['API स्वामी','आप डेटा या कम्प्यूट बेचते हैं','आपने एक API बनाई — मौसम, AI इनफेरेंस, बाजार डेटा, मीडिया — और Stripe, सदस्यता या बिलिंग डैशबोर्ड के बिना प्रति कॉल monetize करना चाहते हैं।',['3 middleware लाइनें जोड़ें','sats में कीमत सेट करें','तुरंत Bitcoin प्राप्त करें']],['AI बिल्डर','आपके एजेंट को टूल्स के लिए भुगतान चाहिए','आप बाहरी APIs कॉल करने वाले स्वायत्त AI एजेंट बना रहे हैं। L402 एजेंट्स के लिए नेटिव भुगतान प्रोटोकॉल है — कोई OAuth नहीं, कोई कार्ड नहीं, कोई मानव अनुमोदन नहीं।',['एजेंट 402 पाता है → invoice भुगतान','प्रमाण के साथ पुनः प्रयास → डेटा मिलता है','किसी भी LLM framework के साथ काम करता है']]]
   },
   ar: {
     nav: ['الإضافة','لوحة التحكم'],
@@ -1854,18 +1893,18 @@ const T = {
     usecases: [['AI / وكلاء','حقق عوائد من أداة AI','احسب رسوماً لكل استدعاء استنتاج. يعمل مع LangChain وAutoGPT.'],['APIs البيانات','بيانات بالدفع مقابل الاستعلام','طقس، مالية، رياضة، خرائط. بدون اشتراك.'],['المحتوى','نقاط نهاية مدفوعة','مقالات، بحوث، PDFs، صوت. لا إنشاء حساب مطلوب.'],['الحوسبة','فوترة serverless','احسب رسوماً للمهام الثقيلة: التصيير، النسخ، الضغط. مبني على الاستخدام فقط.']],
     ext: {badge:'إضافة VS CODE',h2:'شاهد الـ sats تتدفق — دون مغادرة المحرر',p:'لوحة مدفوعات Lightning في الوقت الفعلي داخل VS Code.',lis:['✓ تغذية مدفوعات مباشرة مع المبلغ والنقطة النهائية','✓ مخطط أعمدة — 1D / 7D (مجاني) · 30D / 1Y / ALL (Pro)','✓ 11 لغة (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ ثيم فاتح / داكن / تلقائي','✓ إعداد صفري — فقط حدد Lightning address'],links:['تثبيت مجاناً على Marketplace','التوثيق →']},
     pricingTitle: 'تسعير بسيط', pricingSub: 'ادفع بـ Bitcoin Lightning. بدون بطاقة. بدون حساب. فوري.',
-    pricingFeatures: [['TypeScript, Python, Go, Rust','استضافة ذاتية = 0% رسوم، إلى الأبد','مكالمات API غير محدودة','سجل المدفوعات (7 أيام)','مخططات 1D / 7D','مفتوح المصدر — MIT'],['كل ما في Free','سجل كامل — بدون حد 7 أيام','جميع نطاقات المخططات (30D / 1Y / ALL)','تصدير CSV','إيصال Lightning — دليل قابل للتحقق','احذف جميع بياناتك في أي وقت'],['كل ما في Pro','مراقبة حتى 5 عناوين Lightning','Webhook عند كل دفعة مستلمة','وصول API برمجي لبياناتك','0% رسوم — أحضر مزودك الخاص'],['كل ما في Builder — للأبد','وصول مبكر لوكيل DCA','مدرج كمؤسس داعم','رأي في خارطة الطريق','لا تجديد. أبداً.']],
-    pricing: [['مجاني','Self-host: 0% · مُدار: 0.3%','ابدأ →'],[null,'ادفع بـ Lightning — تفعيل فوري','⚡ اشترك بـ Lightning'],[null,'للفرق وAPIs عالية الحجم','⚡ اشترك بـ Lightning'],[null,'ادفع مرة واحدة. استخدم للأبد.','⚡ شراء وصول مدى الحياة']],
+    pricingFeatures: [['TypeScript, Python, Go, Rust','استضافة ذاتية = 0% رسوم، إلى الأبد','مكالمات API غير محدودة','سجل المدفوعات (7 أيام)','مخططات 1D / 7D','مفتوح المصدر — MIT'],['لا حاجة لعقدة Lightning','أضف Lightning address للبدء','99.7% من كل ساتوشي يذهب إليك','جميع الـ 4 SDKs (TS / Python / Go / Rust)','تفعيل فوري','ارقَ إلى Pro للتحليلات الكاملة'],['كل ما في Sovereign','سجل كامل — بدون حد 7 أيام','جميع نطاقات المخططات (30D / 1Y / ALL)','تصدير CSV','إيصال Lightning — دليل قابل للتحقق','احذف جميع بياناتك في أي وقت']],
+    pricing: [['Sovereign','استضافة ذاتية: 0% · عقدتك الخاصة','ابدأ →'],['Managed','لا حاجة لعقدة Lightning — أضف Lightning address فقط','ابدأ في دقيقتين →'],[null,'ادفع بـ Lightning — تفعيل فوري','⚡ اشترك بـ Lightning']],
     faqTitle: 'أسئلة شائعة',
     faq: [['هل يحتاج مستخدمي محفظة Lightning؟','نعم — يحتاجون محفظة Lightning للدفع. تطبيقات مثل Strike وCash App وBlink وPhoenix تُعدّ في أقل من 60 ثانية.'],['ماذا يحدث إذا توقفت شبكة Lightning؟','Lightning شبكة لامركزية بوقت تشغيل يقارب 100%. إذا تعطل مزودك، يمكنك التبديل بسطر كود واحد.'],['هل هو جاهز للإنتاج؟','نعم. الإثبات التشفيري (SHA256)، الحماية من إعادة التشغيل، وتسجيل Supabase مدمجة.'],['كيف تعمل رسوم 0.3%؟','في الوضع المُدار، يُخصم 0.3% تلقائياً. في التثبيت الذاتي، لا توجد رسوم.'],['هل يمكن الاستخدام بدون Blink؟','نعم. OpenNode وLNbits أو أي مزود ينفذ واجهة LightningProvider.'],['لماذا Lightning وليس Bitcoin on-chain؟','يستغرق Bitcoin on-chain أكثر من 10 دقائق ويكلف $1-5 لكل معاملة. تتم تسوية Lightning في أقل من ثانية بكسور من السنت.'],['كيف يختلف هذا عن x402 من Coinbase؟','x402 مواصفات بروتوكول. l402-kit SDK جاهز للإنتاج في TypeScript وPython وGo وRust. تستهدف Coinbase USDC؛ l402-kit يستهدف Bitcoin Lightning.'],['هل يتم تحصيل رسوم 0.3% دائما؟','لا. تُطبَّق الرسوم فقط في الوضع المُدار. قم بتوصيل محفظتك الخاصة (Blink أو OpenNode) وستكون الرسوم 0٪.']],
-    ctaTitle: 'ابدأ في دقيقتين', ctaDesc: 'بدون حساب. بدون بطاقة. فقط Bitcoin.', ctaDocs: 'أو <a href="https://shinydapps-bd9fa40b.mintlify.app/ar/introduction">اقرأ التوثيق &rarr;</a>',
+    ctaTitle: 'ابدأ في دقيقتين', ctaDesc: 'بدون حساب. بدون بطاقة. فقط Bitcoin.', ctaDocs: 'أو <a href="https://docs.l402kit.com/ar/introduction">اقرأ التوثيق &rarr;</a>',
     problemTitle: 'لماذا تفشل بطاقات الائتمان في APIs',
     problemSub: 'صُمم Stripe للبشر الذين يشترون المنتجات. تفرض APIs رسوماً لكل استدعاء — وهذا يكسر كل شيء.',
     problemCards: [['وكلاء الذكاء الاصطناعي لا يملكون بطاقات','لا تملك الوكلاء المستقلون عنوان فوترة، ولا CVV، ولا إنساناً للنقر على "تأكيد". يفشل الدفع.'],['رسوم أدنى $0.30','تكلف مكالمة API بقيمة 1 سنت $0.30 في رسوم البطاقة. تخسر المال في كل طلب دون هذا الحد.'],['أكثر من 50 دولة محظورة','Stripe وPayPal لا يعملان في كل مكان. API الخاص بك عالمي — لا يجب أن يقرر معالج الدفع من يصل إليه.'],['لا يمكن "إعادة" APIs','لقد سلّمت البيانات بالفعل. يتيح الاسترداد للمتصل أخذها مجاناً — وأنت تدفع الرسوم.']],
     problemFooter: 'يستخدم l402-kit معيار HTTP 402 + Bitcoin Lightning للقضاء على المشكلات الأربع دفعة واحدة — بدون حسابات، بدون حدود دنيا، بدون استردادات، بدون حدود.',
     forWhoTitle: 'لمن هذا؟',
     forWhoSub: 'أنت تمتلك الـ API. تحتفظ بـ 99.7% من كل ساتوشي.',
-    forWhoCards: [['مالك API','تبيع البيانات أو القدرة الحسابية','بنيت API — طقس، استنتاج AI، بيانات السوق، وسائط — وتريد تحقيق الدخل منها لكل استدعاء بدون Stripe أو اشتراكات.',['أضف 3 أسطر middleware','حدد سعرك بالساتوشي','استقبل بيتكوين فوراً']],['مطور AI','وكيلك يحتاج للدفع مقابل الأدوات','تبني وكلاء AI مستقلين يستدعون APIs خارجية. L402 هو بروتوكول الدفع الأصلي للوكلاء — بدون OAuth، بدون بطاقة، بدون موافقة بشرية.',['الوكيل يستقبل 402 → يدفع الفاتورة','يعيد المحاولة بالدليل → يحصل على البيانات','يعمل مع أي إطار عمل LLM']],['مطور OSS','تريد مصدراً مفتوحاً مستداماً','مكتبتك مجانية ومفتوحة المصدر، لكنك تريد مستويات مدفوعة — نقاط نهاية متميزة، حدود معدل أعلى — بدون تعقيدات SaaS الدفع.',['نقاط النهاية المجانية تبقى مجانية','مستويات مدفوعة في 10 دقائق','لا حاجة لحساب Stripe']]]
+    forWhoCards: [['مالك API','تبيع البيانات أو القدرة الحسابية','بنيت API — طقس، استنتاج AI، بيانات السوق، وسائط — وتريد تحقيق الدخل منها لكل استدعاء بدون Stripe أو اشتراكات.',['أضف 3 أسطر middleware','حدد سعرك بالساتوشي','استقبل بيتكوين فوراً']],['مطور AI','وكيلك يحتاج للدفع مقابل الأدوات','تبني وكلاء AI مستقلين يستدعون APIs خارجية. L402 هو بروتوكول الدفع الأصلي للوكلاء — بدون OAuth، بدون بطاقة، بدون موافقة بشرية.',['الوكيل يستقبل 402 → يدفع الفاتورة','يعيد المحاولة بالدليل → يحصل على البيانات','يعمل مع أي إطار عمل LLM']]]
   }
 };
 
@@ -2011,6 +2050,28 @@ function applyFullPageCopy(lang) {
   const qsReadDocs = document.getElementById('qs-read-docs');
   if (qsEyebrow && d.ctaTitle) qsEyebrow.textContent = d.ctaTitle;
   if (qsReadDocs && d.heroReadDocs) qsReadDocs.textContent = d.heroReadDocs;
+
+  // For-who section
+  const fwTitle = document.getElementById('fw-title');
+  const fwSub = document.getElementById('fw-sub');
+  if (fwTitle && d.forWhoTitle) fwTitle.textContent = d.forWhoTitle;
+  if (fwSub && d.forWhoSub) fwSub.textContent = d.forWhoSub;
+  if (d.forWhoCards) {
+    d.forWhoCards.slice(0, 2).forEach((card, i) => {
+      const role = document.getElementById('fw-role-' + i);
+      const title = document.getElementById('fw-title-' + i);
+      const desc = document.getElementById('fw-desc-' + i);
+      if (role) role.textContent = card[0];
+      if (title) title.textContent = card[1];
+      if (desc) desc.textContent = card[2];
+      if (card[3]) {
+        card[3].forEach((li, j) => {
+          const el = document.getElementById('fw-li-' + i + '-' + j);
+          if (el) el.textContent = li;
+        });
+      }
+    });
+  }
 }
 
 function toggleMobileNav() {
@@ -2909,7 +2970,7 @@ function animateValue(id, start, end, duration) {
 var QS_LANGS = {
   ts: {
     install: 'npm install l402-kit', display: '$ npm install l402-kit',
-    docs: 'https://shinydapps-bd9fa40b.mintlify.app/quickstart',
+    docs: 'https://docs.l402kit.com/quickstart',
     scaffoldLabel: 'Or scaffold:', scaffold: 'npx create-l402-app my-api',
     html: '<div><span style="color:#555">// 3 lines. Managed mode — no node, no wallet setup</span></div>' +
           '<div style="margin-top:8px"><span style="color:#c792ea">import</span> <span style="color:#e5e5e5">{ l402, ManagedProvider }</span> <span style="color:#c792ea">from</span> <span style="color:#c3e88d">"l402-kit"</span><span style="color:#555">;</span></div>' +
@@ -2922,7 +2983,7 @@ var QS_LANGS = {
   },
   py: {
     install: 'pip install l402-kit', display: '$ pip install l402-kit',
-    docs: 'https://shinydapps-bd9fa40b.mintlify.app/sdks/python',
+    docs: 'https://docs.l402kit.com/sdks/python',
     scaffoldLabel: 'Install:', scaffold: 'pip install l402-kit',
     html: '<div><span style="color:#555"># 3 lines. ManagedProvider — no node, no wallet</span></div>' +
           '<div style="margin-top:8px"><span style="color:#c792ea">from</span> <span style="color:#c3e88d">l402_kit</span> <span style="color:#c792ea">import</span> <span style="color:#e5e5e5">l402, ManagedProvider</span></div>' +
@@ -2936,7 +2997,7 @@ var QS_LANGS = {
   },
   go: {
     install: 'go get github.com/ShinyDapps/l402-kit/go', display: '$ go get github.com/ShinyDapps/l402-kit/go',
-    docs: 'https://shinydapps-bd9fa40b.mintlify.app/sdks/go',
+    docs: 'https://docs.l402kit.com/sdks/go',
     scaffoldLabel: 'Install:', scaffold: 'go get github.com/ShinyDapps/l402-kit/go',
     html: '<div><span style="color:#555">// 3 lines. ManagedProvider — no node, no wallet</span></div>' +
           '<div style="margin-top:8px"><span style="color:#c792ea">import</span> <span style="color:#e5e5e5">l402kit <span style="color:#c3e88d">"github.com/ShinyDapps/l402-kit/go"</span></span></div>' +
@@ -2949,7 +3010,7 @@ var QS_LANGS = {
   },
   rust: {
     install: 'cargo add l402_kit', display: '$ cargo add l402_kit',
-    docs: 'https://shinydapps-bd9fa40b.mintlify.app/sdks/rust',
+    docs: 'https://docs.l402kit.com/sdks/rust',
     scaffoldLabel: 'Install:', scaffold: 'cargo add l402_kit',
     html: '<div><span style="color:#555">// 3 lines. ManagedProvider — no node, no wallet</span></div>' +
           '<div style="margin-top:8px"><span style="color:#c792ea">use</span> <span style="color:#e5e5e5">l402_kit::{<span style="color:#82aaff">L402Layer</span>, <span style="color:#82aaff">ManagedProvider</span>};</span></div>' +

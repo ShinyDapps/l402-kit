@@ -21,16 +21,15 @@ L402 solves this natively:
 
 ## Setting up your paid API
 
+The fastest path: `ManagedProvider` — add your Lightning address, no node required.
+
 <CodeGroup>
 ```typescript Express (TypeScript)
 import express from "express";
-import { l402, BlinkProvider } from "l402-kit";
+import { l402, ManagedProvider } from "l402-kit";
 
 const app = express();
-const lightning = new BlinkProvider(
-  process.env.BLINK_API_KEY!,
-  process.env.BLINK_WALLET_ID!,
-);
+const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
 
 // AI agents call this — 21 sats per request
 app.get("/ai/weather", l402({ priceSats: 21, lightning }), (_req, res) => {
@@ -38,25 +37,63 @@ app.get("/ai/weather", l402({ priceSats: 21, lightning }), (_req, res) => {
 });
 
 app.listen(3000);
+// 0.3% fee · no node setup · ready in seconds
 ```
 
 ```python FastAPI (Python)
 from fastapi import FastAPI, Request
-from l402kit import l402_required, BlinkProvider
-import os
+from l402kit import l402_required, ManagedProvider
 
 app = FastAPI()
-lightning = BlinkProvider(
-    api_key=os.environ["BLINK_API_KEY"],
-    wallet_id=os.environ["BLINK_WALLET_ID"],
-)
+lightning = ManagedProvider.from_address("you@yourdomain.com")
 
 @app.get("/ai/weather")
 @l402_required(price_sats=21, lightning=lightning)
 async def weather(request: Request):
     return {"temp": 22, "unit": "C", "city": "São Paulo"}
 ```
+
+```go Go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+    l402kit "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    provider := l402kit.NewManagedProvider("you@yourdomain.com")
+    http.Handle("/ai/weather", l402kit.Middleware(l402kit.Options{
+        PriceSats: 21,
+        Lightning: provider,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        json.NewEncoder(w).Encode(map[string]any{"temp": 22, "unit": "C", "city": "São Paulo"})
+    })))
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+```rust Rust (axum)
+use axum::{middleware, routing::get, Router};
+use l402kit::{l402_middleware, Options};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let opts = Arc::new(Options::new(21).with_address("you@yourdomain.com"));
+    let app = Router::new()
+        .route("/ai/weather", get(|| async { r#"{"temp":22,"unit":"C","city":"São Paulo"}"# }))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
 </CodeGroup>
+
+<Note>
+Prefer 0% fee? Use `BlinkProvider` or any [Sovereign provider](/providers) instead. Same 3-line integration.
+</Note>
 
 ---
 

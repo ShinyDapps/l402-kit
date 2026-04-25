@@ -14,9 +14,11 @@ description: How l402-kit compares to Stripe, Paddle, x402, BTCPay, and every ot
 | 3-line integration | ❌ | ❌ | ❌ (manual) | ❌ | **✅** |
 | TypeScript SDK | ❌ | ❌ | partial | ❌ | **✅** |
 | Python SDK | ❌ | ❌ | ❌ | ❌ | **✅** |
+| Go SDK | ❌ | ❌ | ❌ | ❌ | **✅** |
+| Rust SDK | ❌ | ❌ | ❌ | ❌ | **✅** |
+| No-node managed mode | ❌ | ❌ | ❌ | ❌ | **✅ (0.3% flat)** |
 | Countries blocked | ~50 | ~40 | 0 | 0 | **0** |
 | Open source | ❌ | ❌ | partial | ✅ | **✅ MIT** |
-| Zero config mode | ❌ | ❌ | ❌ | ❌ | **✅** |
 | Monthly cost | $0–hundreds | $0–hundreds | 0 | self-host cost | **$0** |
 
 ---
@@ -51,10 +53,9 @@ This is our closest competitor. x402 is a protocol proposal (not an SDK) to stan
 - USDC support (stablecoin, not just Bitcoin)
 
 **l402-kit strengths**:
-- **Exists today** — x402 is a draft protocol, we're a working SDK
-- **3-line integration** — x402 has no official SDK, developers implement manually
-- **Python support** — x402 has no Python SDK
-- **Zero config** — our managed mode means no Lightning node needed
+- **Ships code, not specs** — x402 is a draft protocol; l402-kit is a working SDK you install today
+- **4-language SDK** — TypeScript, Python, Go, Rust. x402 has no production SDK in any language
+- **Managed mode** — `ManagedProvider` means zero Lightning node setup; x402 requires you to run infrastructure
 - **11-language docs** — x402 has English-only docs
 - **Open source + MIT** — x402 spec is open but no reference implementation is published
 
@@ -92,12 +93,22 @@ These are Lightning infrastructure providers — they provide invoice creation A
 Every competitor is either a payment processor (Stripe) or a protocol spec (x402). We're the only ready-to-use middleware SDK for both TypeScript and Python.
 
 ### 2. Three lines, any Lightning backend
+
+**Managed mode** (no Lightning node — 0.3% flat):
 ```typescript
-import { AlbyProvider } from "l402-kit";
-const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+import { ManagedProvider } from "l402-kit";
+const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
 app.get("/premium", l402({ priceSats: 100, lightning }), handler);
 ```
-Sovereign mode — you keep 100%, zero fees. Or use `ManagedProvider` for cloud-hosted invoices. Works in **seconds** — while Stripe takes 30 minutes of forms, KYC, and waiting for bank verification.
+
+**Sovereign mode** (your own node — 0% fee):
+```typescript
+import { BlinkProvider } from "l402-kit";
+const lightning = new BlinkProvider(process.env.BLINK_KEY!, process.env.BLINK_WALLET_ID!);
+app.get("/premium", l402({ priceSats: 100, lightning }), handler);
+```
+
+Works in **seconds** — while Stripe takes 30 minutes of forms, KYC, and bank verification.
 
 ### 3. Python support
 No other L402/x402 solution has a Python SDK. The entire FastAPI/Flask ecosystem (~40% of API developers) has no other option.
@@ -120,7 +131,7 @@ Docs, extension UI, and READMEs in EN/PT/ES/ZH/JA/FR/DE/RU/HI/AR/IT — targetin
 | Coinbase ships full x402 SDK | Medium | Add x402 spec compatibility, become the x402 reference impl |
 | Lightning adoption stalls | Low | Add USDC/USDT support via same protocol |
 | Stripe adds micropayments | Very low | They've had 15 years and haven't — structurally incompatible with their model |
-| Major security bug | Low | 392 automated tests across 5 runtimes, SHA256 verification, anti-replay |
+| Major security bug | Low | 409 automated tests across 5 runtimes, SHA256 verification, anti-replay |
 | Provider (Blink) goes down | Medium | Provider-agnostic — swap to OpenNode/LNbits in 1 line |
 
 <CardGroup cols={2}>

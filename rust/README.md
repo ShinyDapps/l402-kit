@@ -19,6 +19,8 @@ cargo add l402kit
 
 ## Usage (axum)
 
+**Managed mode** — just your Lightning address, no node setup (0.3% flat fee):
+
 ```rust
 use axum::{middleware, routing::get, Router};
 use l402kit::{l402_middleware, Options};

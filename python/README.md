@@ -46,24 +46,22 @@ Money flow (managed mode):
                        → 0.3% fee to ShinyDapps
 ```
 
-### FastAPI quickstart
+### FastAPI quickstart (Managed — 0.3% fee, no node needed)
 
 ```python
 from fastapi import FastAPI, Request
-from l402kit import l402_required
+from l402kit import l402_required, ManagedProvider
 
 app = FastAPI()
+lightning = ManagedProvider.from_address("you@yourdomain.com")
 
 @app.get("/")
 async def root():
     return {"message": "Try GET /premium"}
 
-# Costs 100 sats (~$0.10) per call
+# Costs 100 sats (~$0.10) per call — 99.7% goes directly to your Lightning address
 @app.get("/premium")
-@l402_required(
-    price_sats=100,
-    owner_lightning_address="you@yourdomain.com",  # your Lightning Address — receives 99.7%
-)
+@l402_required(price_sats=100, lightning=lightning)
 async def premium(request: Request):
     return {"data": "Payment confirmed. Here is your data."}
 ```
@@ -72,12 +70,13 @@ async def premium(request: Request):
 
 ```python
 from flask import Flask, jsonify
-from l402kit import l402_required
+from l402kit import l402_required, ManagedProvider
 
 app = Flask(__name__)
+lightning = ManagedProvider.from_address("you@yourdomain.com")
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="you@yourdomain.com")
+@l402_required(price_sats=100, lightning=lightning)
 def premium():
     return jsonify({"data": "Payment confirmed."})
 ```
@@ -118,15 +117,13 @@ Adicione pagamentos por chamada via Bitcoin Lightning em qualquer API Python. Fu
 
 ```python
 from fastapi import FastAPI, Request
-from l402kit import l402_required
+from l402kit import l402_required, ManagedProvider
 
 app = FastAPI()
+lightning = ManagedProvider.from_address("você@seudominio.com")
 
 @app.get("/premium")
-@l402_required(
-    price_sats=100,
-    owner_lightning_address="você@seudominio.com",  # recebe 99.7% de cada pagamento
-)
+@l402_required(price_sats=100, lightning=lightning)
 async def premium(request: Request):
     return {"data": "Pagamento confirmado."}
 ```
@@ -135,12 +132,13 @@ async def premium(request: Request):
 
 ```python
 from flask import Flask, jsonify
-from l402kit import l402_required
+from l402kit import l402_required, ManagedProvider
 
 app = Flask(__name__)
+lightning = ManagedProvider.from_address("você@seudominio.com")
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="você@seudominio.com")
+@l402_required(price_sats=100, lightning=lightning)
 def premium():
     return jsonify({"data": "Pagamento confirmado."})
 ```
@@ -163,12 +161,13 @@ Agrega pagos por llamada en Bitcoin Lightning a cualquier API Python.
 
 ```python
 from fastapi import FastAPI, Request
-from l402kit import l402_required
+from l402kit import l402_required, ManagedProvider
 
 app = FastAPI()
+lightning = ManagedProvider.from_address("tu@tudominio.com")
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="tu@tudominio.com")
+@l402_required(price_sats=100, lightning=lightning)
 async def premium(request: Request):
     return {"data": "Pago confirmado."}
 ```
@@ -183,15 +182,13 @@ Aggiungi pagamenti pay-per-call in Bitcoin Lightning a qualsiasi API Python. Fun
 
 ```python
 from fastapi import FastAPI, Request
-from l402kit import l402_required
+from l402kit import l402_required, ManagedProvider
 
 app = FastAPI()
+lightning = ManagedProvider.from_address("tu@tudominio.com")
 
 @app.get("/premium")
-@l402_required(
-    price_sats=100,
-    owner_lightning_address="tu@tudominio.com",  # riceve il 99.7% di ogni pagamento
-)
+@l402_required(price_sats=100, lightning=lightning)
 async def premium(request: Request):
     return {"data": "Pagamento confermato."}
 ```
@@ -200,12 +197,13 @@ async def premium(request: Request):
 
 ```python
 from flask import Flask, jsonify
-from l402kit import l402_required
+from l402kit import l402_required, ManagedProvider
 
 app = Flask(__name__)
+lightning = ManagedProvider.from_address("tu@tudominio.com")
 
 @app.get("/premium")
-@l402_required(price_sats=100, owner_lightning_address="tu@tudominio.com")
+@l402_required(price_sats=100, lightning=lightning)
 def premium():
     return jsonify({"data": "Pagamento confermato."})
 ```
@@ -222,7 +220,7 @@ def premium():
 
 ---
 
-## Advanced mode — bring your own Lightning wallet
+## Sovereign mode — bring your own Lightning wallet (0% fee)
 
 ```python
 import os
@@ -258,10 +256,11 @@ SHA256(preimage) == paymentHash
 
 ---
 
-## Get a free Lightning Address
+## Get started in seconds
 
-Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card.
-Your address: `yourname@yourdomain.com`
+**Managed mode** — just pass your Lightning address. l402kit.com handles invoices and routes 99.7% to you. 0.3% flat fee.
+
+**Sovereign mode (0% fee)** — sign up at [dashboard.blink.sv](https://dashboard.blink.sv) (free, no credit card) and use `BlinkProvider` with your API key.
 
 ---
 

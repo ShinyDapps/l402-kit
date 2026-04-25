@@ -13,10 +13,12 @@ L402 (HTTP 402 + Lightning Network) middleware for Go. Works with `net/http`, Ch
 ## Install
 
 ```bash
-go get github.com/ShinyDapps/l402-kit/go@v1.0.2
+go get github.com/shinydapps/l402-kit/go@v1.6.0
 ```
 
 ## Usage
+
+**Managed mode** (no Lightning node — 0.3% flat fee):
 
 ```go
 package main
@@ -25,21 +27,28 @@ import (
     "fmt"
     "net/http"
 
-    l402kit "github.com/ShinyDapps/l402-kit/go"
+    l402kit "github.com/shinydapps/l402-kit/go"
 )
 
 func main() {
     mux := http.NewServeMux()
 
+    provider := l402kit.NewManagedProvider("you@yourdomain.com")
     mux.Handle("/api/data", l402kit.Middleware(l402kit.Options{
-        PriceSats:             10,
-        OwnerLightningAddress: "you@yourdomain.com",
+        PriceSats: 10,
+        Lightning: provider,
     }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintln(w, `{"message": "paid access"}`)
     })))
 
     http.ListenAndServe(":8080", mux)
 }
+```
+
+**Sovereign mode** (your own wallet — 0% fee):
+
+```go
+provider := l402kit.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
 ```
 
 ## How it works
@@ -54,8 +63,7 @@ func main() {
 | Field | Type | Description |
 |---|---|---|
 | `PriceSats` | `int` | Price per call in satoshis |
-| `OwnerLightningAddress` | `string` | Your Lightning Address (zero-config mode) |
-| `Lightning` | `LightningProvider` | Custom provider (advanced) |
+| `Lightning` | `LightningProvider` | Provider: `NewManagedProvider(addr)`, `NewBlinkProvider(...)`, etc. |
 | `OnPayment` | `func(L402Token, int)` | Called after each verified payment |
 
 ## Custom provider

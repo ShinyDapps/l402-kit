@@ -1,23 +1,111 @@
 ---
 title: Providers
-description: Lightning providers supported by l402-kit — Blink, LNbits, OpenNode.
+description: Two modes — Managed (0.3% flat, no node) or Sovereign (0%, your own Lightning node). ManagedProvider, Blink, LNbits, OpenNode, and custom.
 ---
 
-## Overview
+## Two modes
 
-A **Lightning Provider** is the service that creates invoices and checks payment status. l402-kit ships with 3 built-in providers and a simple interface for custom ones.
-
-| Provider | Free tier | Self-hosted | Recommended |
+| Mode | Provider | Fee | Setup |
 |---|---|---|---|
-| **Blink** | ✅ Unlimited | ❌ Custodial | ✅ Yes |
-| **LNbits** | ✅ (self-host) | ✅ Full control | For self-hosters |
-| **OpenNode** | ✅ Sandbox | ❌ Custodial | Sandbox testing |
+| **Managed** ⭐ | `ManagedProvider` | 0.3% per sat | Lightning address only |
+| **Sovereign** | Blink | 0% | Free custodial account |
+| **Sovereign** | LNbits | 0% | Self-host or public instance |
+| **Sovereign** | OpenNode | 0% | Sandbox testing |
+| **Sovereign** | Custom | 0% | Any Lightning backend |
+
+**Managed mode** — l402kit.com hosts the Lightning node. You add your Lightning address. We forward 99.7% of every sat to you automatically.
+
+**Sovereign mode** — You connect your own Lightning wallet/node. 0% fee, full custody, works with any provider.
 
 ---
 
-## Blink (Recommended)
+## ManagedProvider (Recommended)
 
-[Blink](https://blink.sv) is a free custodial Bitcoin Lightning wallet with a GraphQL API. No KYC, no monthly fee, instant setup.
+No Lightning node needed. Add your Lightning address and start earning — l402kit.com handles all invoice creation and payment routing.
+
+**Fee:** 0.3% per sat received. 99.7% lands directly in your Lightning wallet. No monthly fee.
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, ManagedProvider } from 'l402-kit';
+import express from 'express';
+
+const app = express();
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/premium', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'Payment confirmed ⚡' });
+});
+
+app.listen(3000);
+// 0.3% fee · no node setup · works immediately
+```
+
+```python Python
+from l402kit import l402_required, ManagedProvider
+from fastapi import FastAPI
+
+app = FastAPI()
+lightning = ManagedProvider.from_address("you@yourdomain.com")
+
+@app.get("/premium")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium():
+    return {"data": "Payment confirmed ⚡"}
+# 0.3% fee · no Lightning node required
+```
+
+```go Go
+import (
+    "fmt"
+    "net/http"
+    l402kit "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    provider := l402kit.NewManagedProvider("you@yourdomain.com")
+    http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+        PriceSats: 10,
+        Lightning: provider,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintln(w, `{"data":"Payment confirmed ⚡"}`)
+    })))
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+```rust Rust
+use axum::{middleware, routing::get, Router};
+use l402kit::{l402_middleware, Options};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let opts = Arc::new(Options::new(10).with_address("you@yourdomain.com"));
+    let app = Router::new()
+        .route("/premium", get(|| async { r#"{"data":"Payment confirmed ⚡"}"# }))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
+</CodeGroup>
+
+**How it works:**
+1. Your API calls `ManagedProvider.fromAddress("you@domain.com")`
+2. When a caller hits your endpoint, l402kit.com creates a Lightning invoice
+3. Caller pays → Lightning settles → 99.7% forwarded to your Lightning address instantly
+4. Your API verifies the cryptographic proof and returns `200 OK`
+
+<Note>
+The 0.3% routing fee is the only cost. No monthly fee. No account registration. Any Lightning address works (Blink, Phoenix, Alby, Strike, Wallet of Satoshi, etc.).
+</Note>
+
+---
+
+## Blink (Sovereign — 0% fee)
+
+[Blink](https://blink.sv) is a free custodial Bitcoin Lightning wallet with a GraphQL API. No KYC, no monthly fee, instant setup. Use it to run in sovereign mode with 0% fee.
 
 **Get started:**
 1. Create account at [dashboard.blink.sv](https://dashboard.blink.sv)
@@ -61,7 +149,7 @@ BLINK_WALLET_ID=9da6b07e-7aaa-44e0-bc96-f1e22610b4d1
 
 ---
 
-## LNbits
+## LNbits (Sovereign — 0% fee)
 
 [LNbits](https://lnbits.com) is an open-source Lightning wallet server. Self-host it or use a public instance.
 
@@ -97,7 +185,7 @@ LNBITS_URL=https://your-lnbits-instance.com
 
 ---
 
-## OpenNode
+## OpenNode (Sovereign — 0% fee)
 
 [OpenNode](https://opennode.com) is a Lightning provider with a free sandbox for testing.
 
@@ -127,7 +215,7 @@ opennode = OpenNodeProvider(
 
 ---
 
-## Custom provider
+## Custom provider (Sovereign — 0% fee)
 
 Implement the `LightningProvider` interface to use any Lightning backend:
 

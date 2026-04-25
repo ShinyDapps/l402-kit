@@ -318,6 +318,78 @@ describe("[Visual] privacy.mdx — Privacy Architecture", () => {
   });
 });
 
+describe("[Visual] landing page — for-who section", () => {
+  let html: string;
+  beforeAll(() => { html = readHtml("index.html"); });
+
+  it("tem seção for-who com id correto", () => {
+    expect(html).toMatch(/id="for-who"/);
+  });
+
+  it("tem exatamente 2 cards (API Developer + AI Builder)", () => {
+    const cards = html.match(/class="for-who-card"/g);
+    expect(cards).not.toBeNull();
+    expect(cards!.length).toBe(2);
+  });
+
+  it("tem card API Developer (data-who=api)", () => {
+    expect(html).toMatch(/data-who="api"/);
+  });
+
+  it("tem card AI Builder (data-who=ai)", () => {
+    expect(html).toMatch(/data-who="ai"/);
+  });
+
+  it("não tem 3º card (OSS Developer removido do HTML e CSS)", () => {
+    expect(html).not.toMatch(/data-who="oss"/);
+    expect(html).not.toMatch(/data-who=\\?"oss\\?"/);
+  });
+
+  it("contém fw-cta links para docs", () => {
+    expect(html).toMatch(/class="fw-cta"/);
+    expect(html).toMatch(/docs\.l402kit\.com/);
+  });
+});
+
+describe("[Visual] landing page — pricing (3 tiers)", () => {
+  let html: string;
+  beforeAll(() => { html = readHtml("index.html"); });
+
+  it("tem exatamente 3 pricing-card elements", () => {
+    const cards = html.match(/class="pricing-card[^"]*"/g);
+    expect(cards).not.toBeNull();
+    const nonContainer = cards!.filter(c => !c.includes("pricing-cards"));
+    expect(nonContainer.length).toBe(3);
+  });
+
+  it("não tem card Builder nem Founder", () => {
+    expect(html).not.toMatch(/pricingTitle.*Builder|Builder.*pricingTitle/);
+    expect(html).not.toMatch(/pricingTitle.*Founder|Founder.*pricingTitle/);
+  });
+
+  it("tem tier Sovereign (0% fee)", () => {
+    expect(html).toMatch(/Sovereign/);
+  });
+
+  it("tem tier Managed (featured)", () => {
+    expect(html).toMatch(/featured/);
+    expect(html).toMatch(/Managed/i);
+  });
+
+  it("não tem modal de donate (removido — live demo substituiu)", () => {
+    expect(html).not.toMatch(/donateModal/i);
+    expect(html).not.toMatch(/id="donateBtn"/i);
+  });
+
+  it("ManagedProvider é mencionado ou 0.3% aparece", () => {
+    expect(html).toMatch(/ManagedProvider|0\.3%/);
+  });
+
+  it("URLs de pricing apontam para docs.l402kit.com (não mintlify)", () => {
+    expect(html).not.toMatch(/shinydapps-bd9fa40b\.mintlify\.app/);
+  });
+});
+
 describe("[Visual] OG image — backend/logos/og-1200x630.png", () => {
   const PNG_PATH = path.resolve(__dirname, "../../backend/logos/og-1200x630.png");
 

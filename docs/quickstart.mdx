@@ -39,11 +39,16 @@ npm run dev
 
 ## Option B — Add to an existing project
 
-### 1. Get a free Lightning wallet
+### 1. Choose your mode
 
-Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card, works globally.
+| Mode | Setup | Fee |
+|---|---|---|
+| **Managed** ⭐ | Just your Lightning address — no node needed | 0.3% per sat |
+| **Sovereign** | Your own Lightning wallet/node | 0% |
 
-Copy your **API Key** and **BTC Wallet ID**.
+**Managed mode** is recommended to get started. Add your Lightning address (Blink, Phoenix, Alby, Strike, etc.) and start earning immediately.
+
+**Sovereign mode**: sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card — and copy your **API Key** and **BTC Wallet ID**.
 
 ### 2. Install
 
@@ -67,92 +72,159 @@ cargo add l402kit
 
 ### 3. Add to your API
 
-<CodeGroup>
-```typescript Express
-import express from "express";
-import { l402, BlinkProvider } from "l402-kit";
+<Tabs>
+  <Tab title="Managed (⭐ Recommended)">
+    No Lightning node needed — just your Lightning address.
 
-const app = express();
+    <CodeGroup>
+    ```typescript Express
+    import express from "express";
+    import { l402, ManagedProvider } from "l402-kit";
 
-const lightning = new BlinkProvider(
-  process.env.BLINK_API_KEY!,
-  process.env.BLINK_WALLET_ID!,
-);
+    const app = express();
+    const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
 
-app.get("/", (_req, res) => {
-  res.json({ message: "Welcome!" });
-});
+    app.get("/premium", l402({ priceSats: 100, lightning }), (_req, res) => {
+      res.json({ data: "You paid 100 sats. Here is your data." });
+    });
 
-// Costs 100 sats per call
-app.get("/premium", l402({ priceSats: 100, lightning }), (_req, res) => {
-  res.json({ data: "You paid 100 sats. Here is your data." });
-});
+    app.listen(3000);
+    // 0.3% fee · no node setup · works immediately
+    ```
 
-app.listen(3000);
-```
+    ```python FastAPI
+    from fastapi import FastAPI, Request
+    from l402kit import l402_required, ManagedProvider
 
-```python FastAPI
-import os
-from fastapi import FastAPI, Request
-from l402kit import l402_required, BlinkProvider
+    app = FastAPI()
+    lightning = ManagedProvider.from_address("you@yourdomain.com")
 
-app = FastAPI()
+    @app.get("/premium")
+    @l402_required(price_sats=100, lightning=lightning)
+    async def premium(request: Request):
+        return {"data": "You paid 100 sats. Here is your data."}
+    ```
 
-lightning = BlinkProvider(
-    api_key=os.environ["BLINK_API_KEY"],
-    wallet_id=os.environ["BLINK_WALLET_ID"],
-)
+    ```go Go
+    package main
 
-@app.get("/premium")
-@l402_required(price_sats=100, lightning=lightning)
-async def premium(request: Request):
-    return {"data": "You paid 100 sats. Here is your data."}
-```
+    import (
+        "fmt"
+        "net/http"
+        l402kit "github.com/shinydapps/l402-kit/go"
+    )
 
-```go Go
-package main
+    func main() {
+        provider := l402kit.NewManagedProvider("you@yourdomain.com")
+        http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+            PriceSats: 100,
+            Lightning: provider,
+        }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            fmt.Fprintln(w, `{"data":"You paid 100 sats. Here is your data."}`)
+        })))
+        http.ListenAndServe(":8080", nil)
+    }
+    ```
 
-import (
-    "fmt"
-    "net/http"
-    "os"
-    l402kit "github.com/shinydapps/l402-kit/go"
-)
+    ```rust Rust (axum)
+    use axum::{middleware, routing::get, Router};
+    use l402kit::{l402_middleware, Options};
+    use std::sync::Arc;
 
-func main() {
-    blink := l402kit.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
-    http.Handle("/premium", l402kit.Middleware(l402kit.Options{
-        PriceSats: 100,
-        Lightning: blink,
-    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintln(w, `{"data": "You paid 100 sats. Here is your data."}`)
-    })))
-    http.ListenAndServe(":8080", nil)
-}
-```
+    #[tokio::main]
+    async fn main() {
+        let opts = Arc::new(Options::new(100).with_address("you@yourdomain.com"));
+        let app = Router::new()
+            .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
+            .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+        axum::serve(listener, app).await.unwrap();
+    }
+    ```
+    </CodeGroup>
+  </Tab>
+  <Tab title="Sovereign (0% fee — Blink)">
+    Your own Lightning wallet. Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) and copy your API Key + BTC Wallet ID.
 
-```rust Rust (axum)
-use axum::{middleware, routing::get, Router};
-use l402kit::{l402_middleware, Options, BlinkProvider};
-use std::sync::Arc;
+    <CodeGroup>
+    ```typescript Express
+    import express from "express";
+    import { l402, BlinkProvider } from "l402-kit";
 
-#[tokio::main]
-async fn main() {
-    let provider = BlinkProvider::new(
-        std::env::var("BLINK_API_KEY").unwrap(),
-        std::env::var("BLINK_WALLET_ID").unwrap(),
+    const app = express();
+    const lightning = new BlinkProvider(
+      process.env.BLINK_API_KEY!,
+      process.env.BLINK_WALLET_ID!,
     );
-    let opts = Arc::new(Options::new(100, provider));
 
-    let app = Router::new()
-        .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
-        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+    app.get("/premium", l402({ priceSats: 100, lightning }), (_req, res) => {
+      res.json({ data: "You paid 100 sats. Here is your data." });
+    });
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
-}
-```
-</CodeGroup>
+    app.listen(3000);
+    ```
+
+    ```python FastAPI
+    import os
+    from fastapi import FastAPI, Request
+    from l402kit import l402_required, BlinkProvider
+
+    app = FastAPI()
+    lightning = BlinkProvider(
+        api_key=os.environ["BLINK_API_KEY"],
+        wallet_id=os.environ["BLINK_WALLET_ID"],
+    )
+
+    @app.get("/premium")
+    @l402_required(price_sats=100, lightning=lightning)
+    async def premium(request: Request):
+        return {"data": "You paid 100 sats. Here is your data."}
+    ```
+
+    ```go Go
+    package main
+
+    import (
+        "fmt"
+        "net/http"
+        "os"
+        l402kit "github.com/shinydapps/l402-kit/go"
+    )
+
+    func main() {
+        blink := l402kit.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+        http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+            PriceSats: 100,
+            Lightning: blink,
+        }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            fmt.Fprintln(w, `{"data": "You paid 100 sats. Here is your data."}`)
+        })))
+        http.ListenAndServe(":8080", nil)
+    }
+    ```
+
+    ```rust Rust (axum)
+    use axum::{middleware, routing::get, Router};
+    use l402kit::{l402_middleware, Options, BlinkProvider};
+    use std::sync::Arc;
+
+    #[tokio::main]
+    async fn main() {
+        let provider = BlinkProvider::new(
+            std::env::var("BLINK_API_KEY").unwrap(),
+            std::env::var("BLINK_WALLET_ID").unwrap(),
+        );
+        let opts = Arc::new(Options::new(100, provider));
+        let app = Router::new()
+            .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
+            .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+        axum::serve(listener, app).await.unwrap();
+    }
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
 
 ### 4. Test it
 

@@ -55,17 +55,18 @@ Or add to an existing project:
 ```bash
 npm install l402-kit      # TypeScript / Node.js / Express
 pip install l402kit       # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go@v1.4.2   # Go
+go get github.com/shinydapps/l402-kit/go@v1.6.0   # Go
 cargo add l402kit         # Rust / axum
 ```
 
-Pick a Lightning provider and add 3 lines:
+Add 3 lines — managed mode, no Lightning node needed:
 
 ```typescript
-import { l402, AlbyProvider } from "l402-kit";
+import { l402, ManagedProvider } from "l402-kit";
 
-const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
 app.get("/premium", l402({ priceSats: 100, lightning }), handler);
+// 0.3% fee · 99.7% lands in your Lightning wallet instantly
 ```
 
 **Step 2 — Install this extension and configure it**
