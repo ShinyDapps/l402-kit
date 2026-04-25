@@ -1,0 +1,173 @@
+---
+title: MCP Server
+description: Add l402-kit as an MCP tool so Claude Desktop, Cursor, and any MCP-compatible AI can pay Lightning APIs automatically.
+---
+
+## What is MCP?
+
+[Model Context Protocol](https://modelcontextprotocol.io) is Anthropic's open standard for giving LLMs access to external tools. l402-kit ships a ready-made MCP server that exposes three tools:
+
+| Tool | Description |
+|------|-------------|
+| `l402_fetch` | Fetch any URL — pays automatically if it returns 402 |
+| `l402_balance` | Check remaining Lightning budget |
+| `l402_spending_report` | Full breakdown of payments this session |
+
+---
+
+## Setup in Claude Desktop
+
+### 1. Install Node.js ≥ 18
+
+### 2. Configure your wallet
+
+<Tabs>
+  <Tab title="Blink">
+    Edit `claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "BLINK_API_KEY": "your-blink-api-key",
+            "BLINK_WALLET_ID": "your-wallet-id",
+            "BUDGET_SATS": "1000"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Alby">
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "ALBY_TOKEN": "your-alby-access-token",
+            "BUDGET_SATS": "1000"
+          }
+        }
+      }
+    }
+    ```
+
+    For a self-hosted Alby Hub, add:
+    ```json
+    "ALBY_HUB_URL": "https://your-hub.example.com"
+    ```
+  </Tab>
+</Tabs>
+
+**Config file location:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+### 3. Restart Claude Desktop
+
+The tools `l402_fetch`, `l402_balance`, and `l402_spending_report` will appear in Claude's tool list.
+
+---
+
+## Environment variables
+
+| Variable | Required | Description |
+|----------|:--------:|-------------|
+| `BLINK_API_KEY` | Blink only | Your Blink API key |
+| `BLINK_WALLET_ID` | Blink only | Your Blink wallet ID |
+| `ALBY_TOKEN` | Alby only | Alby access token |
+| `ALBY_HUB_URL` | optional | Custom Alby Hub base URL |
+| `BUDGET_SATS` | optional | Max spend per session (default: `1000`) |
+
+---
+
+## Using the tools
+
+Once the server is running, Claude can call paid APIs autonomously:
+
+```
+You: Fetch the BTC price from https://api.example.com/btc-price
+
+Claude: [calls l402_fetch with url="https://api.example.com/btc-price"]
+        [Paid 10 sats] HTTP 200
+        { "price": 97500, "currency": "USD" }
+
+        The current BTC price is $97,500 USD. (Cost: 10 sats)
+```
+
+```
+You: How much have I spent so far?
+
+Claude: [calls l402_spending_report]
+        === L402 Spending Report ===
+        Total spent:  42 sats
+        Remaining:    958 sats
+
+        By domain:
+          api.example.com: 42 sats
+```
+
+---
+
+## Setup with Cursor
+
+Add the same config block to Cursor's MCP settings under **Settings → MCP Servers**.
+
+---
+
+## Setup with any MCP client
+
+The server reads from `stdin` / writes to `stdout` (stdio transport):
+
+```bash
+BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
+```
+
+Any MCP-compatible client can connect using the stdio transport.
+
+---
+
+## Building a custom MCP server
+
+You can also embed `L402Client` directly in your own MCP server:
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { L402Client, BlinkWallet } from "l402-kit";
+import { z } from "zod";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+  budgetSats: 1000,
+});
+
+const server = new McpServer({ name: "my-agent", version: "1.0.0" });
+
+server.tool(
+  "fetch_weather",
+  "Get current weather for a city — pays automatically",
+  { city: z.string() },
+  async ({ city }) => {
+    const res = await client.fetch(`https://api.weather.com/current?city=${city}`);
+    const text = await res.text();
+    return { content: [{ type: "text", text }] };
+  },
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+---
+
+## Security notes
+
+- The budget cap (`BUDGET_SATS`) is your primary safeguard — set it conservatively
+- Each `npx l402-kit-mcp` process has its own in-memory budget; it resets on restart
+- For production agents, persist the spending log via `onSpend` callback to an external store

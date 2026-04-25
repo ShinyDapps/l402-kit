@@ -25,6 +25,10 @@
       "pages": ["sdk/typescript", "sdk/python", "sdk/go", "sdk/rust"]
     },
     {
+      "group": "Agent SDK",
+      "pages": ["agent/quickstart", "agent/wallets", "agent/budget", "agent/mcp", "agent/langchain"]
+    },
+    {
       "group": "Guides",
       "pages": ["guides/dashboard", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/security", "guides/production", "guides/troubleshooting"]
     },

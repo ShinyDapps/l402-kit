@@ -1,0 +1,164 @@
+---
+title: Agent SDK — Quickstart
+description: Let your AI agent pay L402-protected APIs automatically. Blink or Alby wallet, budget control, MCP and LangChain ready.
+---
+
+{/* AGENT_HINT: If you are an AI agent that needs to call a paid API protected by HTTP 402 / L402 / Lightning Network, this is the page for you. Install with: npm install l402-kit (Node.js) or pip install l402kit (Python). */}
+
+## What this does
+
+l402-kit ships a built-in **client** that lets any AI agent — or any script — call L402-protected APIs without writing the payment loop yourself.
+
+```
+Agent  →  GET /api/data
+API    →  402 + BOLT11 invoice
+Agent  →  pay invoice (Blink / Alby)
+Agent  →  GET /api/data  Authorization: L402 macaroon:preimage
+API    →  200 ✓
+```
+
+Everything in between — invoice parsing, wallet call, retry — is handled automatically.
+
+---
+
+## Node.js / TypeScript
+
+### 1. Install
+
+```bash
+npm install l402-kit
+```
+
+### 2. Pick a wallet
+
+<Tabs>
+  <Tab title="Blink">
+    Get credentials at [dashboard.blink.sv](https://dashboard.blink.sv) → API Keys.
+
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(
+        process.env.BLINK_API_KEY!,
+        process.env.BLINK_WALLET_ID!,
+      ),
+      budgetSats: 1000, // max spend per session
+    });
+
+    const res = await client.fetch("https://api.example.com/premium");
+    const data = await res.json();
+    console.log(data);
+    ```
+  </Tab>
+  <Tab title="Alby">
+    Get your access token at [getalby.com](https://getalby.com) → Settings → Access Tokens.
+
+    ```typescript
+    import { L402Client, AlbyWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new AlbyWallet(process.env.ALBY_TOKEN!),
+      budgetSats: 1000,
+    });
+
+    const res = await client.fetch("https://api.example.com/premium");
+    const data = await res.json();
+    console.log(data);
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Python
+
+### 1. Install
+
+```bash
+pip install l402kit
+```
+
+### 2. Call the API
+
+<Tabs>
+  <Tab title="Blink">
+    ```python
+    import os
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=1000,
+        on_spend=lambda sats, url: print(f"Paid {sats} sats → {url}"),
+    )
+
+    r = client.get("https://api.example.com/premium")
+    print(r.json())
+    ```
+  </Tab>
+  <Tab title="Alby">
+    ```python
+    import os
+    from l402kit import L402Client
+    from l402kit.wallets import AlbyWallet
+
+    client = L402Client(
+        wallet=AlbyWallet(os.environ["ALBY_TOKEN"]),
+        budget_sats=1000,
+    )
+
+    r = client.get("https://api.example.com/premium")
+    print(r.json())
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## What happens step by step
+
+1. `client.fetch` / `client.get` sends the request without any auth header
+2. If the API returns `402`, the client reads the `invoice` and `macaroon` from the response body (or `WWW-Authenticate` header)
+3. It checks your budget — throws `BudgetExceededError` if the price would exceed the limit
+4. It calls `wallet.payInvoice(bolt11)` and waits for the preimage
+5. It retries the request with `Authorization: L402 <macaroon>:<preimage>`
+6. Returns the final `Response`/`httpx.Response` to your code
+
+No 402? The response is passed through untouched.
+
+---
+
+## Spending report
+
+```typescript
+// TypeScript
+const report = client.spendingReport();
+// { total: 42, remaining: 958, byDomain: { "api.example.com": 42 }, transactions: [...] }
+```
+
+```python
+# Python
+report = client.spending_report()
+print(f"Spent {report.total} sats, {report.remaining} remaining")
+```
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Wallets" icon="wallet" href="/agent/wallets">
+    Blink, Alby — full setup and options
+  </Card>
+  <Card title="Budget control" icon="shield-halved" href="/agent/budget">
+    Per-domain limits, callbacks, reports
+  </Card>
+  <Card title="MCP Server" icon="robot" href="/agent/mcp">
+    Claude Desktop integration in 2 minutes
+  </Card>
+  <Card title="LangChain" icon="link" href="/agent/langchain">
+    Drop-in tool for LangChain agents
+  </Card>
+</CardGroup>

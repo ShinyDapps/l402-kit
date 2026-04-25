@@ -1,0 +1,158 @@
+---
+title: Wallets
+description: Connect Blink or Alby to let your agent pay Lightning invoices automatically.
+---
+
+## Supported wallets
+
+| Wallet | Install | Self-custody | Notes |
+|--------|---------|:------------:|-------|
+| [Blink](https://blink.sv) | built-in | ❌ custodial | Easiest setup, GraphQL API |
+| [Alby Hub](https://getalby.com) | built-in | ✅ self-hosted option | REST API, supports own Hub |
+| Custom | `L402Wallet` interface | ✅ | Bring your own wallet |
+
+---
+
+## BlinkWallet
+
+### Setup
+
+1. Sign up at [blink.sv](https://blink.sv)
+2. Go to **Dashboard → API Keys** → create a key
+3. Copy your **Wallet ID** from the dashboard
+
+```bash
+export BLINK_API_KEY="your-api-key"
+export BLINK_WALLET_ID="your-wallet-id"
+```
+
+### Node.js
+
+```typescript
+import { BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+```
+
+### How it works
+
+Calls the [Blink GraphQL API](https://api.blink.sv/graphql) with the `lnInvoicePaymentSend` mutation. Returns the `preImage` from the settled transaction.
+
+---
+
+## AlbyWallet
+
+### Setup
+
+1. Create an account at [getalby.com](https://getalby.com)
+2. Go to **Settings → Access Tokens** → create a token with `payments:send` scope
+3. (Optional) Run your own [Alby Hub](https://github.com/getAlby/hub) for self-custody
+
+```bash
+export ALBY_TOKEN="your-access-token"
+# Optional — only needed for self-hosted Hub:
+export ALBY_HUB_URL="https://your-hub.example.com"
+```
+
+### Node.js
+
+```typescript
+import { AlbyWallet } from "l402-kit";
+
+// Alby cloud
+const wallet = new AlbyWallet(process.env.ALBY_TOKEN!);
+
+// Self-hosted Hub
+const wallet = new AlbyWallet(
+  process.env.ALBY_TOKEN!,
+  process.env.ALBY_HUB_URL,  // optional base URL
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import AlbyWallet
+
+# Alby cloud
+wallet = AlbyWallet(os.environ["ALBY_TOKEN"])
+
+# Self-hosted Hub
+wallet = AlbyWallet(
+    access_token=os.environ["ALBY_TOKEN"],
+    base_url=os.environ.get("ALBY_HUB_URL", "https://api.getalby.com"),
+)
+```
+
+### How it works
+
+Calls `POST /payments/bolt11` on the Alby Hub REST API with a `Bearer` token. Returns the `payment_preimage` from the response.
+
+---
+
+## Custom wallet
+
+Implement the `L402Wallet` interface to use any Lightning wallet:
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import type { L402Wallet } from "l402-kit";
+
+    class PhoenixWallet implements L402Wallet {
+      async payInvoice(bolt11: string): Promise<{ preimage: string }> {
+        const res = await fetch("http://localhost:9740/payinvoice", {
+          method: "POST",
+          body: new URLSearchParams({ invoice: bolt11 }),
+        });
+        const data = await res.json();
+        return { preimage: data.paymentPreimage };
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Wallet
+    import httpx
+
+    class PhoenixWallet(L402Wallet):
+        def pay_invoice(self, bolt11: str) -> str:
+            r = httpx.post(
+                "http://localhost:9740/payinvoice",
+                data={"invoice": bolt11},
+            )
+            r.raise_for_status()
+            return r.json()["paymentPreimage"]
+    ```
+  </Tab>
+</Tabs>
+
+The interface requires a single method:
+
+| Method | TypeScript | Python |
+|--------|-----------|--------|
+| Pay a BOLT11 invoice | `payInvoice(bolt11): Promise<{ preimage: string }>` | `pay_invoice(bolt11: str) -> str` |
+
+---
+
+## Choosing a wallet
+
+- **Testing / prototyping** → Blink (custodial, instant setup, free tier)
+- **Production agent, max control** → Alby Hub self-hosted (non-custodial, REST API)
+- **High throughput / low fees** → Phoenix via custom `L402Wallet` (non-custodial, ACINQ)
+- **Enterprise** → LNbits self-hosted via custom wallet
