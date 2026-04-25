@@ -183,5 +183,119 @@ describe("L402Client", () => {
       await client.fetch("https://api.example.com/premium");
       expect(store.size).toBe(1);
     });
+
+    it("different URLs have independent token caches", async () => {
+      global.fetch = mockFetch([
+        { status: 402, body: make402Body() },
+        { status: 200, body: '{}' },
+        { status: 402, body: make402Body() },
+        { status: 200, body: '{}' },
+      ]) as typeof fetch;
+      const wallet = mockWallet();
+      const client = new L402Client({ wallet });
+      await client.fetch("https://api.example.com/route-a");
+      await client.fetch("https://api.example.com/route-b");
+      expect(wallet.payInvoice).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("request forwarding", () => {
+    it("preserves POST body on retry request", async () => {
+      global.fetch = mockFetch([
+        { status: 402, body: make402Body() },
+        { status: 200, body: '{}' },
+      ]) as typeof fetch;
+      const client = new L402Client({ wallet: mockWallet() });
+      await client.fetch("https://api.example.com/premium", {
+        method: "POST",
+        body: '{"q":42}',
+      });
+      const [, retryCall] = (global.fetch as jest.Mock).mock.calls;
+      expect(retryCall[1].body).toBe('{"q":42}');
+    });
+
+    it("preserves custom headers on retry request", async () => {
+      global.fetch = mockFetch([
+        { status: 402, body: make402Body() },
+        { status: 200, body: '{}' },
+      ]) as typeof fetch;
+      const client = new L402Client({ wallet: mockWallet() });
+      await client.fetch("https://api.example.com/premium", {
+        headers: { "X-Custom-Header": "my-value" },
+      });
+      const [, retryCall] = (global.fetch as jest.Mock).mock.calls;
+      const headers = retryCall[1].headers as Record<string, string>;
+      expect(headers["X-Custom-Header"]).toBe("my-value");
+    });
+
+    it("sets method to GET by default on retry", async () => {
+      global.fetch = mockFetch([
+        { status: 402, body: make402Body() },
+        { status: 200, body: '{}' },
+      ]) as typeof fetch;
+      const client = new L402Client({ wallet: mockWallet() });
+      await client.fetch("https://api.example.com/premium");
+      const [firstCall, retryCall] = (global.fetch as jest.Mock).mock.calls;
+      expect(firstCall[1]?.method ?? "GET").toBe(retryCall[1]?.method ?? "GET");
+    });
+  });
+
+  describe("error types", () => {
+    it("L402PaymentError message contains original error info", async () => {
+      global.fetch = mockFetch([{ status: 402, body: make402Body() }]) as typeof fetch;
+      const wallet = { payInvoice: jest.fn().mockRejectedValue(new Error("No route found")) };
+      const client = new L402Client({ wallet });
+      const err = await client.fetch("https://api.example.com/premium").catch((e) => e);
+      expect(err).toBeInstanceOf(L402PaymentError);
+      expect(err.message).toContain("No route found");
+    });
+
+    it("L402ParseError thrown when 402 body is not JSON", async () => {
+      global.fetch = mockFetch([{ status: 402, body: "not-json" }]) as typeof fetch;
+      const client = new L402Client({ wallet: mockWallet() });
+      await expect(client.fetch("https://api.example.com/premium"))
+        .rejects.toThrow(L402ParseError);
+    });
+
+    it("non-402 non-200 responses are returned as-is (no payment attempted)", async () => {
+      global.fetch = mockFetch([{ status: 404, body: '{"error":"not found"}' }]) as typeof fetch;
+      const wallet = mockWallet();
+      const client = new L402Client({ wallet });
+      const res = await client.fetch("https://api.example.com/missing");
+      expect(res.status).toBe(404);
+      expect(wallet.payInvoice).not.toHaveBeenCalled();
+    });
+
+    it("500 responses are returned as-is (no payment attempted)", async () => {
+      global.fetch = mockFetch([{ status: 500, body: '{"error":"internal"}' }]) as typeof fetch;
+      const wallet = mockWallet();
+      const client = new L402Client({ wallet });
+      const res = await client.fetch("https://api.example.com/broken");
+      expect(res.status).toBe(500);
+      expect(wallet.payInvoice).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("alternative field names", () => {
+    it("accepts payment_request field as invoice alias", async () => {
+      global.fetch = mockFetch([
+        { status: 402, body: make402Body({ invoice: undefined, payment_request: INVOICE }) },
+        { status: 200, body: '{}' },
+      ]) as typeof fetch;
+      const wallet = mockWallet();
+      const client = new L402Client({ wallet });
+      await client.fetch("https://api.example.com/premium");
+      expect(wallet.payInvoice).toHaveBeenCalledWith(INVOICE);
+    });
+
+    it("accepts payment_hash field alongside macaroon", async () => {
+      global.fetch = mockFetch([
+        { status: 402, body: make402Body({ payment_hash: "ph123" }) },
+        { status: 200, body: '{}' },
+      ]) as typeof fetch;
+      const client = new L402Client({ wallet: mockWallet() });
+      const res = await client.fetch("https://api.example.com/premium");
+      expect(res.status).toBe(200);
+    });
   });
 });

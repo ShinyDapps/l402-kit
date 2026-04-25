@@ -244,4 +244,57 @@ describe("verifyToken", () => {
     const results = await Promise.all(tokens.map((t) => verifyToken(t)));
     expect(results.every((r) => r === false)).toBe(true);
   });
+
+  it("verifyToken returns boolean (not a truthy object)", async () => {
+    const token = makeToken();
+    const result = await verifyToken(token);
+    expect(typeof result).toBe("boolean");
+  });
+
+  it("accepts token where exp is exactly now + 1ms (not yet expired)", async () => {
+    const preimage = makePreimage();
+    const mac = makeMacaroon(makeHash(preimage), 1);
+    const result = await verifyToken(`${mac}:${preimage}`);
+    expect(result).toBe(true);
+  });
+
+  it("rejects token where hash is empty string", async () => {
+    const preimage = makePreimage();
+    const mac = Buffer.from(JSON.stringify({ hash: "", exp: Date.now() + 3_600_000 })).toString("base64");
+    expect(await verifyToken(`${mac}:${preimage}`)).toBe(false);
+  });
+
+  it("accepts token with very large exp value (year 3000)", async () => {
+    const preimage = makePreimage();
+    const far = new Date("3000-01-01").getTime();
+    const mac = Buffer.from(JSON.stringify({ hash: makeHash(preimage), exp: far })).toString("base64");
+    expect(await verifyToken(`${mac}:${preimage}`)).toBe(true);
+  });
+
+  it("rejects token with null preimage field", async () => {
+    const mac = makeMacaroon(makePreimage());
+    expect(await verifyToken(`${mac}:${null}`)).toBe(false);
+  });
+
+  it("parseToken: returns exact string types for 64-char hex preimage", () => {
+    const pre = "a".repeat(64);
+    const { preimage, macaroon } = parseToken(`mymac:${pre}`);
+    expect(preimage).toBe(pre);
+    expect(macaroon).toBe("mymac");
+  });
+
+  it("verifyToken returns false for completely empty string", async () => {
+    expect(await verifyToken("")).toBe(false);
+  });
+
+  it("rejects 50 tokens with wrong preimages concurrently", async () => {
+    const tokens = Array.from({ length: 50 }, () => {
+      const preimage = makePreimage();
+      const wrongHash = makeHash(makePreimage()); // hash of a different preimage
+      const mac = makeMacaroon(wrongHash);
+      return `${mac}:${preimage}`;
+    });
+    const results = await Promise.all(tokens.map((t) => verifyToken(t)));
+    expect(results.every((r) => r === false)).toBe(true);
+  });
 });

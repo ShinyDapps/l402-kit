@@ -351,3 +351,130 @@ describe("l402 middleware — invalid preimage", () => {
     expect(res.status).toBe(402);
   });
 });
+
+// ─── 402 response body structure ─────────────────────────────────────────────
+
+describe("l402 middleware — 402 response body structure", () => {
+  it("402 body has invoice field containing BOLT11 string", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p);
+    const res = await request(app).get("/premium");
+    expect(res.status).toBe(402);
+    expect(typeof res.body.invoice).toBe("string");
+    expect(res.body.invoice).toMatch(/^lnbc/);
+  });
+
+  it("402 body has macaroon field as base64 string", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p);
+    const res = await request(app).get("/premium");
+    expect(typeof res.body.macaroon).toBe("string");
+    const decoded = JSON.parse(Buffer.from(res.body.macaroon, "base64").toString());
+    expect(decoded).toHaveProperty("hash");
+    expect(decoded).toHaveProperty("exp");
+  });
+
+  it("402 body has error field set to 'Payment Required'", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p);
+    const res = await request(app).get("/premium");
+    expect(res.body.error).toBe("Payment Required");
+  });
+
+  it("WWW-Authenticate header includes macaroon and invoice", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p);
+    const res = await request(app).get("/premium");
+    const wwwAuth = res.headers["www-authenticate"] as string;
+    expect(wwwAuth).toContain("macaroon=");
+    expect(wwwAuth).toContain("invoice=");
+  });
+
+  it("402 body priceSats matches configured price for large amounts", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p, 9999);
+    const res = await request(app).get("/premium");
+    expect(res.body.priceSats).toBe(9999);
+  });
+});
+
+// ─── provider error propagation ──────────────────────────────────────────────
+
+describe("l402 middleware — provider error propagation", () => {
+  it("returns 5xx when provider.createInvoice throws", async () => {
+    const brokenProvider: LightningProvider = {
+      createInvoice: async () => { throw new Error("Lightning node unavailable"); },
+      checkPayment: async () => false,
+    };
+    const app = express();
+    app.get("/premium", l402({ priceSats: 10, lightning: brokenProvider }), (_req, res) => {
+      res.json({ ok: true });
+    });
+    const res = await request(app).get("/premium");
+    expect(res.status).toBeGreaterThanOrEqual(500);
+  });
+
+  it("200 handler is not called when provider throws", async () => {
+    const brokenProvider: LightningProvider = {
+      createInvoice: async () => { throw new Error("down"); },
+      checkPayment: async () => false,
+    };
+    const handlerSpy = jest.fn((_req: any, res: any) => res.json({ ok: true }));
+    const app = express();
+    app.get("/premium", l402({ priceSats: 10, lightning: brokenProvider }), handlerSpy);
+    await request(app).get("/premium");
+    expect(handlerSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ─── concurrent requests ──────────────────────────────────────────────────────
+
+describe("l402 middleware — concurrent requests", () => {
+  it("handles concurrent 402 challenges independently", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p, 50);
+    const [r1, r2, r3] = await Promise.all([
+      request(app).get("/premium"),
+      request(app).get("/premium"),
+      request(app).get("/premium"),
+    ]);
+    expect(r1.status).toBe(402);
+    expect(r2.status).toBe(402);
+    expect(r3.status).toBe(402);
+  });
+
+  it("handles concurrent valid token requests independently", async () => {
+    const p1 = new MockProvider();
+    const p2 = new MockProvider();
+    const p3 = new MockProvider();
+    const app1 = makeApp(p1);
+    const app2 = makeApp(p2);
+    const app3 = makeApp(p3);
+    const [r1, r2, r3] = await Promise.all([
+      request(app1).get("/premium").set("Authorization", `L402 ${p1.getValidToken()}`),
+      request(app2).get("/premium").set("Authorization", `L402 ${p2.getValidToken()}`),
+      request(app3).get("/premium").set("Authorization", `L402 ${p3.getValidToken()}`),
+    ]);
+    expect(r1.status).toBe(200);
+    expect(r2.status).toBe(200);
+    expect(r3.status).toBe(200);
+  });
+
+  it("token used on one app does not affect independent app", async () => {
+    const p1 = new MockProvider();
+    const p2 = new MockProvider();
+    const app1 = makeApp(p1);
+    const app2 = makeApp(p2);
+
+    const t1 = p1.getValidToken();
+    await request(app1).get("/premium").set("Authorization", `L402 ${t1}`);
+
+    // Using token from p1 on app1 again should be 401 (replay)
+    const replay = await request(app1).get("/premium").set("Authorization", `L402 ${t1}`);
+    expect(replay.status).toBe(401);
+
+    // But a fresh token on app2 should still work
+    const fresh = await request(app2).get("/premium").set("Authorization", `L402 ${p2.getValidToken()}`);
+    expect(fresh.status).toBe(200);
+  });
+});
