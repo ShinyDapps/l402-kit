@@ -3,6 +3,17 @@ import type { LightningProvider, Invoice } from "./types";
 const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://l402kit.com";
 const SPLIT_SECRET   = process.env.SPLIT_SECRET ?? "";
 
+export interface DirectoryRegistration {
+  /** Public URL of the L402-protected endpoint (e.g. "https://api.example.com/v1/weather") */
+  url: string;
+  /** Display name shown in the API directory */
+  name: string;
+  /** Price in satoshis — must match what the middleware actually charges */
+  priceSats: number;
+  description?: string;
+  category?: "data" | "ai" | "finance" | "weather" | "compute" | "storage" | "other";
+}
+
 /**
  * Cloud-managed Lightning provider (l402kit.com hosted service).
  *
@@ -15,13 +26,36 @@ const SPLIT_SECRET   = process.env.SPLIT_SECRET ?? "";
  * ```ts
  * import { ManagedProvider } from "l402-kit";
  * l402({ priceSats: 10, lightning: ManagedProvider.fromAddress("you@blink.sv") })
+ * // with directory registration:
+ * l402({ priceSats: 10, lightning: ManagedProvider.fromAddress("you@blink.sv", {
+ *   registerDirectory: { url: "https://api.you.com/weather", name: "Weather API", priceSats: 10 }
+ * }) })
  * ```
  */
 export class ManagedProvider implements LightningProvider {
   private constructor(private ownerAddress: string) {}
 
-  static fromAddress(address: string): ManagedProvider {
-    return new ManagedProvider(address);
+  static fromAddress(
+    address: string,
+    opts?: { registerDirectory?: DirectoryRegistration },
+  ): ManagedProvider {
+    const provider = new ManagedProvider(address);
+    if (opts?.registerDirectory) {
+      const { url, name, priceSats, description, category } = opts.registerDirectory;
+      fetch(`${SHINYDAPPS_API}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url,
+          name,
+          price_sats: priceSats,
+          lightning_address: address,
+          description: description ?? undefined,
+          category: category ?? "other",
+        }),
+      }).catch(() => { /* silent — directory registration is best-effort */ });
+    }
+    return provider;
   }
 
   async createInvoice(amountSats: number): Promise<Invoice> {

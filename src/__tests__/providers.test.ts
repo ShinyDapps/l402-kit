@@ -578,6 +578,49 @@ describe("ManagedProvider", () => {
     const inv = await provider.createInvoice(1_000_000);
     expect(inv.amountSats).toBe(1_000_000);
   });
+
+  it("registerDirectory fires a silent POST to /api/register", async () => {
+    const calls: Array<{ url: string; body: unknown }> = [];
+    globalThis.fetch = jest.fn().mockImplementation((url: string, init: RequestInit) => {
+      calls.push({ url, body: JSON.parse(init.body as string) });
+      return Promise.resolve({ ok: true, json: async () => ({}), text: async () => "" });
+    }) as typeof fetch;
+    ManagedProvider.fromAddress("me@blink.sv", {
+      registerDirectory: { url: "https://api.me.com/data", name: "My API", priceSats: 5, category: "data" },
+    });
+    await Promise.resolve(); // flush microtask queue
+    expect(calls.length).toBe(1);
+    expect(calls[0].url).toContain("/api/register");
+    const b = calls[0].body as Record<string, unknown>;
+    expect(b.url).toBe("https://api.me.com/data");
+    expect(b.name).toBe("My API");
+    expect(b.price_sats).toBe(5);
+    expect(b.lightning_address).toBe("me@blink.sv");
+    expect(b.category).toBe("data");
+  });
+
+  it("registerDirectory errors are swallowed silently", async () => {
+    globalThis.fetch = jest.fn().mockRejectedValue(new Error("network error")) as typeof fetch;
+    expect(() =>
+      ManagedProvider.fromAddress("me@blink.sv", {
+        registerDirectory: { url: "https://api.me.com/data", name: "My API", priceSats: 5 },
+      }),
+    ).not.toThrow();
+  });
+
+  it("fromAddress without registerDirectory does not call /api/register", async () => {
+    const calls: string[] = [];
+    globalThis.fetch = jest.fn().mockImplementation((url: string) => {
+      calls.push(url);
+      return Promise.resolve({ ok: true, json: async () => ({ paymentRequest: "lnbc", paymentHash: "h", macaroon: "m" }), text: async () => "" });
+    }) as typeof fetch;
+    const p = ManagedProvider.fromAddress("me@blink.sv");
+    await Promise.resolve();
+    expect(calls.filter(u => u.includes("/api/register"))).toHaveLength(0);
+    // invoice call should still work
+    await p.createInvoice(10);
+    expect(calls.filter(u => u.includes("/api/invoice"))).toHaveLength(1);
+  });
 });
 
 // ─── LNbitsProvider — additional coverage ────────────────────────────────────
