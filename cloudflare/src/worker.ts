@@ -13,6 +13,7 @@ import { handleProCheck }   from "./api/pro-check";
 import { handleProPoll }    from "./api/pro-poll";
 import { handleGlobalStats } from "./api/global-stats";
 import { handleProSubscribe } from "./api/pro-subscribe";
+import { handleRegister, handleApis } from "./api/registry";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -74,6 +75,8 @@ export default {
       else if (path === "/api/pro-poll")       res = await handleProPoll(request, env);
       else if (path === "/api/global-stats")   res = await handleGlobalStats(request, env);
       else if (path === "/api/pro-subscribe")  res = await handleProSubscribe(request, env);
+      else if (path === "/api/register")       res = await handleRegister(request, env);
+      else if (path === "/api/apis.json")      res = await handleApis(request, env);
       else if (path.startsWith("/docs"))       return handleDocsRedirect(request);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     } catch (err) {
