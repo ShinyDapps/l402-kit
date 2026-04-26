@@ -178,7 +178,20 @@ l402kit.com hosts the Lightning node. You receive 99.7% of each payment. Explici
 import { ManagedProvider } from 'l402-kit';
 
 const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+// Optional: auto-register in the public API directory
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com', {
+  registerDirectory: {
+    url: 'https://api.you.com/v1/data',
+    name: 'My Data API',
+    priceSats: 10,
+    category: 'data',          // data | ai | finance | weather | compute | storage | other
+    description: 'Optional',
+  },
+});
 ```
+
+Registration fires once at startup (fire-and-forget, errors are silent). The API appears at `l402kit.com/apis.json` so agents can discover it automatically.
 
 ---
 

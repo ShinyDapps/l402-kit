@@ -250,6 +250,66 @@ Internal endpoint. Receives signed payment confirmations from Blink (Svix HMAC-S
 
 ---
 
+## API Directory
+
+### Register an API
+
+`POST /api/register`
+
+Register your L402-protected API in the public directory. Called automatically by `ManagedProvider.fromAddress()` when `registerDirectory` is provided. Idempotent — safe to call on every server start.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `url` | string | ✅ | Public URL of your L402 endpoint |
+| `name` | string | ✅ | Display name |
+| `price_sats` | number | ✅ | Price per call in satoshis (min 1) |
+| `lightning_address` | string | ✅ | Your Lightning Address |
+| `description` | string | — | Short description |
+| `category` | string | — | `data`, `ai`, `finance`, `weather`, `compute`, `storage`, or `other` |
+
+**Response 200**
+
+```json
+{ "ok": true, "id": "uuid" }
+```
+
+---
+
+### List APIs
+
+`GET /api/apis.json`
+
+Returns all registered APIs. Machine-readable — designed for agents to discover paid APIs.
+
+**Query parameters**
+
+| Param | Description |
+|---|---|
+| `category` | Filter by category (`data`, `ai`, `finance`, `weather`, `compute`, `storage`, `other`) |
+
+**Response 200**
+
+```json
+{
+  "version": "1",
+  "count": 3,
+  "apis": [
+    {
+      "url": "https://api.example.com/weather",
+      "name": "Weather API",
+      "description": "Live weather data, 1 sat per query",
+      "price_sats": 1,
+      "category": "weather",
+      "created_at": "2026-04-26T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
 ## Data Privacy
 
 ### Delete My Data

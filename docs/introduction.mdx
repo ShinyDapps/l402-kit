@@ -17,7 +17,7 @@ cargo add l402kit       # Rust / axum
 
 ```bash
 # Go — see SDK / Go for setup
-go get github.com/shinydapps/l402-kit/go@v1.6.0
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 ```
 
 <Card title="▶ Watch end-to-end demo" icon="play" href="https://l402kit.com/#live-demo">
@@ -90,13 +90,13 @@ The diagram below shows **managed mode** (`ManagedProvider`), where l402kit.com 
 
 ```typescript
 import express from "express";
-import { l402 } from "l402-kit";
+import { l402, ManagedProvider } from "l402-kit";
 
 const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!), // sovereign mode — 0% fee
+  lightning: ManagedProvider.fromAddress("you@blink.sv"), // managed mode — no node needed
 }), (_req, res) => {
   res.json({ data: "Payment confirmed." });
 });
@@ -192,7 +192,7 @@ SHA256(preimage) == paymentHash
 - Each preimage works exactly once (anti-replay)
 - Tokens expire after 1 hour
 - All logic is deterministic and verifiable — no hidden fees, no intermediaries
-- **409 automated tests** across 5 runtimes — production-grade reliability for autonomous agent workflows
+- **462+ automated tests** across 5 runtimes — production-grade reliability for autonomous agent workflows
 
 ---
 

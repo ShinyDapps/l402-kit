@@ -37,7 +37,7 @@ async def get_data(request: Request):
 ```
 
 <Note>
-**Managed mode** (l402kit.com hosts the node, 0.3% fee) is available in the [TypeScript SDK](/sdk/typescript). Python sovereign mode has no fee — payments go directly to your wallet.
+Python also supports **Managed mode** — use `ManagedProvider.from_address("you@blink.sv")` (0.3% fee, no node needed). See the [Providers](#providers) section below.
 </Note>
 
 ---
@@ -139,6 +139,24 @@ opennode = OpenNodeProvider(
     api_key=os.environ["OPENNODE_API_KEY"],
     test_mode=False,  # True for sandbox
 )
+```
+
+### `ManagedProvider` — cloud mode (0.3% fee)
+
+l402kit.com hosts the Lightning node. You receive 99.7% of each payment — no node setup required.
+
+```python
+from l402kit import ManagedProvider
+
+lightning = ManagedProvider.from_address("you@blink.sv")
+
+# Optional: register in the public API directory
+lightning = ManagedProvider.from_address("you@blink.sv", register_directory={
+    "url": "https://api.you.com/v1/weather",
+    "name": "Weather API",
+    "price_sats": 10,
+    "category": "weather",
+})
 ```
 
 ---
@@ -285,6 +303,37 @@ from l402kit.wallets import BlinkWallet, AlbyWallet
 blink = BlinkWallet(api_key="...", wallet_id="...")
 alby  = AlbyWallet(access_token=os.environ["ALBY_TOKEN"])
 ```
+
+---
+
+## AsyncL402Client — async/await
+
+`AsyncL402Client` uses `httpx.AsyncClient` internally — ideal for FastAPI, asyncio, and AI agent frameworks that run in an async event loop.
+
+```python
+import asyncio
+from l402kit import AsyncL402Client
+from l402kit.wallets import BlinkWallet
+
+async def main():
+    async with AsyncL402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=500,
+    ) as client:
+        r = await client.get("https://api.example.com/premium")
+        print(r.json())
+
+asyncio.run(main())
+```
+
+### Difference from `L402Client`
+
+| | `L402Client` | `AsyncL402Client` |
+|---|---|---|
+| HTTP client | `httpx` (sync) | `httpx.AsyncClient` |
+| `get` / `post` | sync | `async` |
+| Best for | Scripts, Flask | FastAPI, asyncio, LangChain `_arun` |
+| Budget / cache | ✅ same | ✅ same |
 
 ---
 
