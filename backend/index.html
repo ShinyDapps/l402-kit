@@ -748,12 +748,12 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="code-block" style="position:relative">
     <button id="copyCodeBtn" onclick="copyCode()" style="position:absolute;top:14px;right:14px;background:#1a1a1a;border:1px solid #333;color:#888;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;z-index:10;transition:all .2s" onmouseenter="this.style.borderColor='#f7931a';this.style.color='#f7931a'" onmouseleave="this.style.borderColor='#333';this.style.color='#888'">copy</button>
     <div class="code-pane active" id="tab-agent"><pre><span class="c-comment">// npm install l402-kit  — AI agent consuming an L402-protected API</span>
-<span class="c-keyword">import</span> { L402Client } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
-<span class="c-keyword">import</span> { AlbyProvider } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
+<span class="c-keyword">import</span> { L402Client, AlbyWallet } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
 
 <span class="c-comment">// Agent has its own Lightning wallet — pays autonomously</span>
 <span class="c-keyword">const</span> client = <span class="c-keyword">new</span> <span class="c-fn">L402Client</span>({
-  wallet: <span class="c-keyword">new</span> <span class="c-fn">AlbyProvider</span>(process.env.<span class="c-fn">ALBY_TOKEN</span>!, process.env.<span class="c-fn">ALBY_URL</span>!),
+  wallet: <span class="c-keyword">new</span> <span class="c-fn">AlbyWallet</span>(process.env.<span class="c-fn">ALBY_TOKEN</span>!),
+  budgetSats: <span class="c-num">1000</span>,
 });
 
 <span class="c-comment">// Automatic: 402 detected → pays invoice → retries → returns data</span>
@@ -762,12 +762,12 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 <span class="c-comment">// → 200 OK — paid in &lt;1s, no human involved, no API key, no subscription</span></pre></div>
     <div class="code-pane" id="tab-ts"><pre><span class="c-comment">// npm install l402-kit  — protect your API (sovereign, 0% fee)</span>
 <span class="c-keyword">import</span> express <span class="c-keyword">from</span> <span class="c-string">"express"</span>;
-<span class="c-keyword">import</span> { l402, AlbyProvider } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
+<span class="c-keyword">import</span> { l402, BlinkProvider } <span class="c-keyword">from</span> <span class="c-string">"l402-kit"</span>;
 
 <span class="c-keyword">const</span> app = <span class="c-fn">express</span>();
-<span class="c-keyword">const</span> lightning = <span class="c-keyword">new</span> <span class="c-fn">AlbyProvider</span>(
-  process.env.<span class="c-fn">ALBY_TOKEN</span>!,   <span class="c-comment">// hub.getalby.com — self-custodial</span>
-  process.env.<span class="c-fn">ALBY_URL</span>!
+<span class="c-keyword">const</span> lightning = <span class="c-keyword">new</span> <span class="c-fn">BlinkProvider</span>(
+  process.env.<span class="c-fn">BLINK_API_KEY</span>!,
+  process.env.<span class="c-fn">BLINK_WALLET_ID</span>!
 );
 
 app.<span class="c-fn">get</span>(<span class="c-string">"/premium"</span>, <span class="c-fn">l402</span>({ priceSats: <span class="c-num">100</span>, lightning }), (req, res) =&gt; {

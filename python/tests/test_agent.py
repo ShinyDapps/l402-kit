@@ -253,6 +253,145 @@ class TestL402ClientBudget:
                 client.get("https://api.example.com/data")
 
 
+# ─── Token cache ─────────────────────────────────────────────────────────────
+
+class TestTokenCache:
+    def _make_client(self):
+        from l402kit import L402Client
+        return L402Client(wallet=_fake_wallet(), budget_sats=1000)
+
+    def test_second_call_reuses_token(self):
+        client = self._make_client()
+        call_count = [0]
+
+        def fake_request(method, url, **kwargs):
+            call_count[0] += 1
+            auth = (kwargs.get("headers") or {}).get("Authorization", "")
+            if auth.startswith("L402 "):
+                return _make_200_response()
+            return _make_402_response(price_sats=10)
+
+        with patch.object(client._http, "request", side_effect=fake_request):
+            client.get("https://api.example.com/data")
+            client.get("https://api.example.com/data")
+            client.get("https://api.example.com/data")
+
+        assert client.wallet.pay_invoice.call_count == 1
+
+    def test_different_paths_pay_independently(self):
+        client = self._make_client()
+
+        def fake_request(method, url, **kwargs):
+            auth = (kwargs.get("headers") or {}).get("Authorization", "")
+            if auth.startswith("L402 "):
+                return _make_200_response()
+            return _make_402_response(price_sats=10)
+
+        with patch.object(client._http, "request", side_effect=fake_request):
+            client.get("https://api.example.com/a")
+            client.get("https://api.example.com/b")
+
+        assert client.wallet.pay_invoice.call_count == 2
+
+    def test_rejected_cached_token_repays(self):
+        client = self._make_client()
+        # Seed token store with a fake cached token
+        client._token_store["https://api.example.com/data"] = ("old_mac", "old_pre")
+
+        responses = [
+            _make_402_response(price_sats=10),  # cached token rejected
+            _make_402_response(price_sats=10),  # fresh 402
+            _make_200_response(),               # retry with new token
+        ]
+
+        with patch.object(client._http, "request", side_effect=responses):
+            r = client.get("https://api.example.com/data")
+
+        assert r.status_code == 200
+        assert client.wallet.pay_invoice.call_count == 1
+
+    def test_query_string_ignored_in_cache_key(self):
+        client = self._make_client()
+
+        def fake_request(method, url, **kwargs):
+            auth = (kwargs.get("headers") or {}).get("Authorization", "")
+            if auth.startswith("L402 "):
+                return _make_200_response()
+            return _make_402_response(price_sats=5)
+
+        with patch.object(client._http, "request", side_effect=fake_request):
+            client.get("https://api.example.com/data?city=london")
+            client.get("https://api.example.com/data?city=tokyo")
+
+        assert client.wallet.pay_invoice.call_count == 1
+
+
+# ─── AsyncL402Client ──────────────────────────────────────────────────────────
+
+class TestAsyncL402Client:
+    def _make_client(self, budget_sats=200):
+        from l402kit import AsyncL402Client
+        return AsyncL402Client(wallet=_fake_wallet(), budget_sats=budget_sats)
+
+    @pytest.mark.asyncio
+    async def test_free_endpoint_passes_through(self):
+        client = self._make_client()
+        with patch.object(client._http, "request", return_value=_make_200_response()):
+            r = await client.get("https://api.example.com/free")
+        assert r.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_402_pays_and_retries(self):
+        client = self._make_client()
+        responses = [_make_402_response(price_sats=10), _make_200_response()]
+        with patch.object(client._http, "request", side_effect=responses):
+            r = await client.get("https://api.example.com/paid")
+        assert r.status_code == 200
+        assert client.wallet.pay_invoice.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_token_cache_reuses_on_second_call(self):
+        client = self._make_client()
+
+        async def fake_request(method, url, **kwargs):
+            auth = (kwargs.get("headers") or {}).get("Authorization", "")
+            if auth.startswith("L402 "):
+                return _make_200_response()
+            return _make_402_response(price_sats=10)
+
+        with patch.object(client._http, "request", side_effect=fake_request):
+            await client.get("https://api.example.com/data")
+            await client.get("https://api.example.com/data")
+
+        assert client.wallet.pay_invoice.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_budget_enforced(self):
+        from l402kit import BudgetExceededError
+        client = self._make_client(budget_sats=5)
+        with patch.object(client._http, "request", side_effect=[_make_402_response(price_sats=10)]):
+            with pytest.raises(BudgetExceededError):
+                await client.get("https://api.example.com/data")
+
+    @pytest.mark.asyncio
+    async def test_spending_report(self):
+        client = self._make_client(budget_sats=100)
+        responses = [_make_402_response(price_sats=15), _make_200_response()]
+        with patch.object(client._http, "request", side_effect=responses):
+            await client.get("https://api.example.com/paid")
+        report = client.spending_report()
+        assert report.total == 15
+        assert report.remaining == 85
+
+    @pytest.mark.asyncio
+    async def test_context_manager(self):
+        from l402kit import AsyncL402Client
+        async with AsyncL402Client(wallet=_fake_wallet()) as client:
+            with patch.object(client._http, "request", return_value=_make_200_response()):
+                r = await client.get("https://api.example.com/free")
+        assert r.status_code == 200
+
+
 # ─── L402Tool (LangChain) ─────────────────────────────────────────────────────
 
 class TestL402Tool:

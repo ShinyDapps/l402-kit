@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 from typing import Any, Callable, Optional, Type
 
-from .client import L402Client, L402Wallet, BudgetExceededError
+from .client import L402Client, AsyncL402Client, L402Wallet, BudgetExceededError
 
 try:
     from langchain.tools import BaseTool
@@ -57,6 +57,7 @@ class L402Tool(BaseTool):  # type: ignore
     args_schema: Type[BaseModel] = _L402FetchInput  # type: ignore
 
     _client: Any = None
+    _async_client: Any = None
 
     def __init__(
         self,
@@ -72,12 +73,9 @@ class L402Tool(BaseTool):  # type: ignore
                 "Install it with: pip install langchain langchain-community"
             )
         super().__init__(**kwargs)
-        object.__setattr__(self, "_client", L402Client(
-            wallet=wallet,
-            budget_sats=budget_sats,
-            budget_per_domain=budget_per_domain,
-            on_spend=on_spend,
-        ))
+        client_kwargs = dict(wallet=wallet, budget_sats=budget_sats, budget_per_domain=budget_per_domain, on_spend=on_spend)
+        object.__setattr__(self, "_client", L402Client(**client_kwargs))
+        object.__setattr__(self, "_async_client", AsyncL402Client(**client_kwargs))
 
     def _run(
         self,
@@ -117,7 +115,29 @@ class L402Tool(BaseTool):  # type: ignore
         body: Optional[str] = None,
         run_manager: Optional[Any] = None,
     ) -> str:
-        return self._run(url, method, body, run_manager)
+        client: AsyncL402Client = object.__getattribute__(self, "_async_client")
+        try:
+            kwargs: dict[str, Any] = {}
+            if body:
+                kwargs["content"] = body
+                kwargs["headers"] = {"Content-Type": "application/json"}
+
+            r = await client._request(method.upper(), url, **kwargs)
+
+            report = client.spending_report()
+            spent = report.transactions[-1]["sats"] if report and report.transactions else 0
+            prefix = f"[Paid {spent} sats] " if spent > 0 else ""
+
+            try:
+                data = r.json()
+                return f"{prefix}HTTP {r.status_code}\n{json.dumps(data, indent=2)}"
+            except Exception:
+                return f"{prefix}HTTP {r.status_code}\n{r.text}"
+
+        except BudgetExceededError as e:
+            return f"[BLOCKED] Budget exceeded: {e}"
+        except Exception as e:
+            return f"[ERROR] {e}"
 
     def spending_report(self) -> Any:
         """Returns a spending report for this tool session."""
