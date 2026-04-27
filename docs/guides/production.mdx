@@ -3,6 +3,18 @@ title: Production Guide
 description: Deploy l402-kit APIs to production — performance, reliability, and scaling.
 ---
 
+## Critical: replay protection in production
+
+<Warning>
+The default replay adapter is **in-memory only** — it resets on every process restart and does not work across multiple server instances. In production with more than one process (Gunicorn workers, Kubernetes pods, PM2 cluster), the same preimage can be accepted twice.
+
+**Fix:** Set `SUPABASE_URL` + `SUPABASE_ANON_KEY` in your environment. The middleware will automatically use Supabase as the replay store, which is shared across all instances.
+
+For Redis: pass a `RedisReplayAdapter` explicitly (see [TypeScript SDK](/sdk/typescript#replay-protection) or [Python SDK](/sdk/python#replay-protection)).
+</Warning>
+
+---
+
 ## Environment variables
 
 Never hardcode keys. Always use environment variables:

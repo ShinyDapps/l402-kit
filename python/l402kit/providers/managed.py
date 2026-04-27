@@ -81,4 +81,7 @@ class ManagedProvider:
         )
 
     async def check_payment(self, payment_hash: str) -> bool:
+        # ManagedProvider uses Blink webhook for payment confirmation, not polling.
+        # This method is intentionally a no-op — the middleware verifies via
+        # SHA256(preimage) == paymentHash, which is cryptographically sufficient.
         return False

@@ -69,6 +69,8 @@ export class ManagedProvider implements LightningProvider {
     return { ...data, amountSats, expiresAt: Date.now() + 3_600_000 };
   }
 
+  // ManagedProvider uses Blink webhook for payment confirmation, not polling.
+  // Verification happens via SHA256(preimage) == paymentHash in the middleware.
   async checkPayment(): Promise<boolean> { return false; }
 
   async sendSplit(amountSats: number): Promise<void> {

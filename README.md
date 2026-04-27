@@ -35,7 +35,7 @@
 | 🐍 **Python** · [pypi.org/project/l402kit](https://pypi.org/project/l402kit) | [![pypi](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit?color=3776ab&label=total%20dls)](https://pypi.org/project/l402kit) |
 | 🦀 **Rust** · [crates.io/crates/l402kit](https://crates.io/crates/l402kit) | [![crates](https://img.shields.io/crates/v/l402kit?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit?color=ce422b&label=total%20dls)](https://crates.io/crates/l402kit) |
 | 🔌 **VS Code Extension** · [marketplace](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) | [![vscode ver](https://vsmarketplacebadges.dev/version-short/ShinyDapps.shinydapps-l402.svg)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) | [![marketplace](https://img.shields.io/badge/VS%20Code-install-007acc)](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) |
-| 🦫 **Go** · [pkg.go.dev](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go](https://img.shields.io/badge/go-v1.6.0-00acd7)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go report](https://img.shields.io/badge/go%20report-A+-00acd7)](https://goreportcard.com/report/github.com/shinydapps/l402-kit/go) |
+| 🦫 **Go** · [pkg.go.dev](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go](https://img.shields.io/badge/go-v1.8.0-00acd7)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go report](https://img.shields.io/badge/go%20report-A+-00acd7)](https://goreportcard.com/report/github.com/shinydapps/l402-kit/go) |
 
 ---
 
@@ -71,7 +71,7 @@
 ```bash
 npm install l402-kit        # TypeScript / Node.js / Express
 pip install l402kit         # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go@v1.6.0   # Go / net/http / Chi / Gin
+go get github.com/shinydapps/l402-kit/go@v1.8.0   # Go / net/http / Chi / Gin
 cargo add l402kit           # Rust / axum
 ```
 
@@ -199,7 +199,7 @@ curl http://localhost:3000/premium \
 
 |  | Stripe | l402-kit |
 |--|--------|----------|
-| Minimum fee | $0.30 | **< 1 sat (~$0.0003)** |
+| Minimum fee | $0.30 | **< 1 sat (~$0.001)** |
 | Settlement time | 2–7 days | **< 1 second** |
 | Chargebacks | Yes | **Impossible — cryptographic proof** |
 | Requires account | Yes | **No — any Lightning wallet** |

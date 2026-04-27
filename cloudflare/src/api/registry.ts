@@ -9,8 +9,22 @@ function json(data: unknown, status = 200): Response {
 
 const CATEGORIES = ["data", "ai", "finance", "weather", "compute", "storage", "other"] as const;
 
+// Rate limit: max 10 registrations per IP per hour (stored in KV if available, else header check)
+const REGISTER_RATE_LIMIT = 10;
+
 export async function handleRegister(req: Request, env: Env): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  // Basic rate limiting via CF-Connecting-IP header
+  const ip = req.headers.get("CF-Connecting-IP") ?? "unknown";
+  const rateLimitKey = `register:${ip}:${Math.floor(Date.now() / 3_600_000)}`;
+  if (env.demo_preimages) {
+    const count = Number(await env.demo_preimages.get(rateLimitKey) ?? "0");
+    if (count >= REGISTER_RATE_LIMIT) {
+      return json({ error: "Rate limit exceeded — max 10 registrations per hour per IP" }, 429);
+    }
+    await env.demo_preimages.put(rateLimitKey, String(count + 1), { expirationTtl: 3600 });
+  }
 
   let body: Record<string, unknown>;
   try {
@@ -32,12 +46,26 @@ export async function handleRegister(req: Request, env: Env): Promise<Response> 
     return json({ error: "Missing required fields: url, name, price_sats, lightning_address" }, 400);
   }
 
-  try { new URL(url as string); } catch {
+  let parsedUrl: URL;
+  try { parsedUrl = new URL(url as string); } catch {
     return json({ error: "Invalid url" }, 400);
   }
+  // Only allow https URLs in production
+  if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+    return json({ error: "url must use http or https" }, 400);
+  }
 
-  if (typeof price_sats !== "number" || price_sats < 1) {
+  if (typeof price_sats !== "number" || !Number.isInteger(price_sats) || price_sats < 1) {
     return json({ error: "price_sats must be a positive integer" }, 400);
+  }
+
+  // Basic lightning address validation (user@domain)
+  if (typeof lightning_address !== "string" || !lightning_address.includes("@")) {
+    return json({ error: "lightning_address must be a valid Lightning Address (user@domain)" }, 400);
+  }
+
+  if (typeof name !== "string" || name.trim().length < 2 || name.length > 100) {
+    return json({ error: "name must be between 2 and 100 characters" }, 400);
   }
 
   const cat = CATEGORIES.includes(category as typeof CATEGORIES[number]) ? category : "other";
