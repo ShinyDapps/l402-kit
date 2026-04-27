@@ -64,7 +64,7 @@ const client = new L402Client({
 
 const server = new McpServer({
   name: "l402-kit",
-  version: "1.7.0",
+  version: "1.8.0",
 });
 
 // Tool: l402_fetch
@@ -148,7 +148,7 @@ server.tool(
       .join("\n") || "  (none yet)";
 
     const txLines = report.transactions
-      .map(tx => `  ${tx.ts} — ${tx.sats} sats → ${tx.url}`)
+      .map(tx => `  ${new Date(tx.ts).toISOString()} — ${tx.sats} sats → ${tx.url}`)
       .join("\n") || "  (none yet)";
 
     return {
