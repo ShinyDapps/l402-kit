@@ -45,7 +45,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                          // 每次调用约 $0.06
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),   // soberano mode — 0% fee
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),   // 自主模式 — 0% 费用
 }), (_req, res) => {
   res.json({ data: "支付已确认。" });
 });

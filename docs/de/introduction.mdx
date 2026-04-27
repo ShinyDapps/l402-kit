@@ -45,7 +45,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // ~0,06 $ pro Aufruf
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // soberano mode — 0% fee
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // Souverän-Modus — 0% Gebühr
 }), (_req, res) => {
   res.json({ data: "Zahlung bestätigt." });
 });

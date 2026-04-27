@@ -40,7 +40,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // 1回約$0.06
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // soberano mode — 0% fee
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // ソブリンモード — 0% 手数料
 }), (_req, res) => {
   res.json({ data: "支払いが確認されました。" });
 });
