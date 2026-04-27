@@ -1,5 +1,7 @@
 import os
 import time
+import threading
+from typing import Optional
 import httpx
 from ..types import Invoice
 
@@ -22,18 +24,44 @@ class ManagedProvider:
 
         lightning = ManagedProvider.from_address("you@blink.sv")
 
-        @app.get("/premium")
-        @l402_required(price_sats=10, lightning=lightning)
-        async def premium():
-            return {"data": "paid content"}
+        # With optional public directory registration:
+        lightning = ManagedProvider.from_address("you@blink.sv", register_directory={
+            "url": "https://api.you.com/v1/data",
+            "name": "My Data API",
+            "price_sats": 10,
+            "category": "data",
+        })
     """
 
     def __init__(self, owner_address: str) -> None:
         self._owner_address = owner_address
 
     @classmethod
-    def from_address(cls, address: str) -> "ManagedProvider":
-        return cls(address)
+    def from_address(
+        cls,
+        address: str,
+        register_directory: Optional[dict] = None,
+    ) -> "ManagedProvider":
+        provider = cls(address)
+        if register_directory:
+            def _register() -> None:
+                try:
+                    with httpx.Client(timeout=10.0) as client:
+                        client.post(
+                            f"{SHINYDAPPS_API}/api/register",
+                            json={
+                                "url": register_directory.get("url"),
+                                "name": register_directory.get("name"),
+                                "price_sats": register_directory.get("price_sats"),
+                                "lightning_address": address,
+                                "description": register_directory.get("description"),
+                                "category": register_directory.get("category", "other"),
+                            },
+                        )
+                except Exception:
+                    pass  # best-effort — never break server startup
+            threading.Thread(target=_register, daemon=True).start()
+        return provider
 
     async def create_invoice(self, amount_sats: int) -> Invoice:
         async with httpx.AsyncClient(timeout=15.0) as client:
