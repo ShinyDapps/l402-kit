@@ -70,8 +70,21 @@ export async function handleRegister(req: Request, env: Env): Promise<Response> 
 
   const cat = CATEGORIES.includes(category as typeof CATEGORIES[number]) ? category : "other";
 
+  // Optional ownership verification: fetch /.well-known/l402.txt and check for lightning_address
+  let verified = false;
+  try {
+    const wellKnownUrl = `${parsedUrl.protocol}//${parsedUrl.host}/.well-known/l402.txt`;
+    const probe = await fetch(wellKnownUrl, { method: "GET", signal: AbortSignal.timeout(3000) });
+    if (probe.ok) {
+      const text = await probe.text();
+      verified = text.trim().includes(lightning_address as string);
+    }
+  } catch {
+    // ownership verification is best-effort — never block registration
+  }
+
   const { data, error } = await supabase(env).from("api_registry").upsert(
-    { url, name, description: description ?? null, price_sats, lightning_address, category: cat },
+    { url, name, description: description ?? null, price_sats, lightning_address, category: cat, verified },
     { onConflict: "url" }
   ).select("id").single() as { data: { id: string } | null; error: { message: string } | null };
 
@@ -79,7 +92,7 @@ export async function handleRegister(req: Request, env: Env): Promise<Response> 
     return json({ error: "Registration failed", detail: error.message }, 500);
   }
 
-  return json({ ok: true, id: (data as { id: string } | null)?.id });
+  return json({ ok: true, id: (data as { id: string } | null)?.id, verified });
 }
 
 export async function handleApis(req: Request, env: Env): Promise<Response> {

@@ -1151,6 +1151,220 @@ lightning = <span class="c-fn">BlinkProvider</span>(
   <style>@media(max-width:640px){#ae-grid{grid-template-columns:1fr!important}}</style>
 </section><hr class="section-sep">
 
+<!-- ── MCP ────────────────────────────────────────────────────────────── -->
+<section style="max-width:860px;margin:0 auto;padding:56px 24px 0" id="mcp">
+  <span class="eyebrow">MCP Server</span>
+  <h2 style="text-align:center;font-size:clamp(24px,3.8vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:12px">Add l402-kit to Claude<br><span style="background:linear-gradient(135deg,#b89dff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">in 2 minutes.</span></h2>
+  <p style="text-align:center;color:var(--muted);font-size:15px;max-width:520px;margin:0 auto 40px;line-height:1.6">Give Claude Desktop or Cursor a Lightning wallet. From that moment on, any AI agent running inside those tools can autonomously pay for L402 APIs — no code, no credit card.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px" id="mcp-grid">
+    <!-- Config card -->
+    <div style="background:#0c0c0c;border:1px solid #1e1e1e;border-radius:14px;padding:24px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:14px">claude_desktop_config.json</div>
+      <pre style="margin:0;font-size:12px;line-height:1.7;color:#d4d4d4;overflow-x:auto"><code>{
+  <span style="color:#b89dff">"mcpServers"</span>: {
+    <span style="color:#b89dff">"l402"</span>: {
+      <span style="color:#2ddc6e">"command"</span>: <span style="color:#ffa033">"npx"</span>,
+      <span style="color:#2ddc6e">"args"</span>: [<span style="color:#ffa033">"l402-kit-mcp"</span>],
+      <span style="color:#2ddc6e">"env"</span>: {
+        <span style="color:#2ddc6e">"BLINK_API_KEY"</span>: <span style="color:#ffa033">"blink_xxx"</span>,
+        <span style="color:#2ddc6e">"BLINK_WALLET_ID"</span>: <span style="color:#ffa033">"uuid"</span>,
+        <span style="color:#2ddc6e">"L402_BUDGET_SATS"</span>: <span style="color:#ffa033">"1000"</span>
+      }
+    }
+  }
+}</code></pre>
+    </div>
+    <!-- Tools card -->
+    <div style="background:#0c0c0c;border:1px solid #1e1e1e;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:2px">Tools exposed to Claude</div>
+      <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;color:#2ddc6e;margin-bottom:4px">l402_fetch</div>
+        <div style="font-size:12px;color:#666">Call any L402-protected URL — pays automatically with your wallet</div>
+      </div>
+      <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;color:#b89dff;margin-bottom:4px">l402_balance</div>
+        <div style="font-size:12px;color:#666">Check remaining budget and total spent this session</div>
+      </div>
+      <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;color:#ffa033;margin-bottom:4px">l402_spending_report</div>
+        <div style="font-size:12px;color:#666">Full breakdown by domain — see where sats went</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compatible clients -->
+  <div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:12px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Works with</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#111;border:1px solid #222;border-radius:24px;padding:7px 16px;font-size:13px;color:#ccc;font-weight:500">🤖 Claude Desktop</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#111;border:1px solid #222;border-radius:24px;padding:7px 16px;font-size:13px;color:#ccc;font-weight:500">▲ Cursor</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;background:#111;border:1px solid #222;border-radius:24px;padding:7px 16px;font-size:13px;color:#ccc;font-weight:500">⚙ Any MCP client</span>
+    <a href="https://l402kit.com/docs/agent/mcp" style="display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid #333;border-radius:24px;padding:7px 16px;font-size:13px;color:#b89dff;font-weight:500;text-decoration:none">Docs →</a>
+  </div>
+  <style>@media(max-width:640px){#mcp-grid{grid-template-columns:1fr!important}}</style>
+</section><hr class="section-sep">
+
+<!-- ── API Directory ──────────────────────────────────────────────────── -->
+<section style="max-width:900px;margin:0 auto;padding:56px 24px 0" id="api-directory">
+  <span class="eyebrow">API Directory</span>
+  <h2 style="text-align:center;font-size:clamp(22px,3.5vw,34px);font-weight:800;margin:12px 0;letter-spacing:-1px">APIs that agents can pay. Right now.</h2>
+  <p style="text-align:center;color:var(--muted);font-size:16px;max-width:520px;margin:0 auto 40px;line-height:1.6">Every API below accepts Lightning micropayments via L402 — no API key, no subscription, no human in the loop.</p>
+
+  <!-- Category filter -->
+  <div id="dir-filters" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:32px">
+    <button onclick="filterDir(null,this)" class="dir-filter dir-filter-active">All</button>
+    <button onclick="filterDir('ai',this)" class="dir-filter">AI</button>
+    <button onclick="filterDir('data',this)" class="dir-filter">Data</button>
+    <button onclick="filterDir('finance',this)" class="dir-filter">Finance</button>
+    <button onclick="filterDir('weather',this)" class="dir-filter">Weather</button>
+    <button onclick="filterDir('compute',this)" class="dir-filter">Compute</button>
+    <button onclick="filterDir('other',this)" class="dir-filter">Other</button>
+  </div>
+
+  <!-- Grid -->
+  <div id="dir-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;min-height:120px"></div>
+  <p id="dir-empty" style="display:none;text-align:center;color:var(--muted);padding:40px 0;font-size:15px">No APIs in this category yet.</p>
+  <p id="dir-loading" style="text-align:center;color:var(--muted);padding:40px 0;font-size:15px">Loading…</p>
+
+  <!-- CTA -->
+  <div style="text-align:center;margin-top:36px">
+    <a href="/docs/agent/quickstart" target="_blank" style="display:inline-block;background:rgba(45,220,110,.1);border:1px solid rgba(45,220,110,.3);color:#2ddc6e;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;text-decoration:none;margin-right:12px">Agent quickstart →</a>
+    <a href="#register-api" onclick="document.getElementById('register-form').style.display='block';this.style.display='none'" style="display:inline-block;background:rgba(247,147,26,.1);border:1px solid rgba(247,147,26,.3);color:var(--orange);border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer">+ Register my API</a>
+  </div>
+
+  <!-- Register form (hidden by default) -->
+  <div id="register-form" style="display:none;margin-top:32px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 24px;max-width:560px;margin-left:auto;margin-right:auto">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Register your L402 API</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input id="reg-url" type="url" placeholder="https://your-api.com/endpoint" style="background:#111;border:1px solid #333;color:#e5e5e5;border-radius:8px;padding:10px 14px;font-size:14px;width:100%;box-sizing:border-box">
+      <input id="reg-name" type="text" placeholder="API name" style="background:#111;border:1px solid #333;color:#e5e5e5;border-radius:8px;padding:10px 14px;font-size:14px;width:100%;box-sizing:border-box">
+      <input id="reg-desc" type="text" placeholder="Short description (optional)" style="background:#111;border:1px solid #333;color:#e5e5e5;border-radius:8px;padding:10px 14px;font-size:14px;width:100%;box-sizing:border-box">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <input id="reg-price" type="number" placeholder="Price (sats)" min="1" style="background:#111;border:1px solid #333;color:#e5e5e5;border-radius:8px;padding:10px 14px;font-size:14px;width:100%;box-sizing:border-box">
+        <select id="reg-cat" style="background:#111;border:1px solid #333;color:#e5e5e5;border-radius:8px;padding:10px 14px;font-size:14px;width:100%;box-sizing:border-box">
+          <option value="other">Other</option>
+          <option value="ai">AI</option>
+          <option value="data">Data</option>
+          <option value="finance">Finance</option>
+          <option value="weather">Weather</option>
+          <option value="compute">Compute</option>
+        </select>
+      </div>
+      <input id="reg-addr" type="text" placeholder="your@lightning.address (receives payments)" style="background:#111;border:1px solid #333;color:#e5e5e5;border-radius:8px;padding:10px 14px;font-size:14px;width:100%;box-sizing:border-box">
+      <button onclick="submitRegister()" style="background:var(--orange);color:#000;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">Register API ⚡</button>
+      <p id="reg-status" style="text-align:center;font-size:13px;color:var(--muted);min-height:20px"></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .dir-filter { background:#111;border:1px solid #2a2a2a;color:#888;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s }
+  .dir-filter:hover { border-color:#444;color:#ccc }
+  .dir-filter-active { border-color:rgba(45,220,110,.5)!important;color:#2ddc6e!important;background:rgba(45,220,110,.08)!important }
+  .dir-card { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;transition:border-color .2s }
+  .dir-card:hover { border-color:#444 }
+  .dir-card-name { font-size:15px;font-weight:700;margin-bottom:4px }
+  .dir-card-desc { font-size:13px;color:#666;margin-bottom:12px;line-height:1.5;min-height:36px }
+  .dir-card-footer { display:flex;align-items:center;justify-content:space-between }
+  .dir-card-price { font-size:13px;font-weight:700;color:#2ddc6e }
+  .dir-card-cat { font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.06em }
+  @media(max-width:600px){#dir-grid{grid-template-columns:1fr!important}}
+</style>
+
+<script>
+  let _dirData = [];
+
+  async function loadDirectory(category) {
+    const grid = document.getElementById('dir-grid');
+    const empty = document.getElementById('dir-empty');
+    const loading = document.getElementById('dir-loading');
+    loading.style.display = 'block';
+    grid.style.display = 'none';
+    empty.style.display = 'none';
+
+    try {
+      const url = category ? `/api/apis.json?category=${category}` : '/api/apis.json';
+      const res = await fetch(url);
+      const json = await res.json();
+      _dirData = json.apis || [];
+      renderDir(_dirData);
+    } catch {
+      loading.textContent = 'Could not load directory.';
+    }
+  }
+
+  function renderDir(apis) {
+    const grid = document.getElementById('dir-grid');
+    const empty = document.getElementById('dir-empty');
+    const loading = document.getElementById('dir-loading');
+    loading.style.display = 'none';
+
+    if (!apis.length) { empty.style.display = 'block'; grid.style.display = 'none'; return; }
+
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+    grid.innerHTML = apis.map(api => `
+      <div class="dir-card">
+        <div class="dir-card-name">${esc(api.name)}</div>
+        <div class="dir-card-desc">${esc(api.description || '')}</div>
+        <div class="dir-card-footer">
+          <span class="dir-card-price">⚡ ${api.price_sats} sats</span>
+          <span class="dir-card-cat">${esc(api.category)}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterDir(cat, btn) {
+    document.querySelectorAll('.dir-filter').forEach(b => b.classList.remove('dir-filter-active'));
+    btn.classList.add('dir-filter-active');
+    loadDirectory(cat);
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function submitRegister() {
+    const status = document.getElementById('reg-status');
+    const body = {
+      url: document.getElementById('reg-url').value.trim(),
+      name: document.getElementById('reg-name').value.trim(),
+      description: document.getElementById('reg-desc').value.trim(),
+      price_sats: parseInt(document.getElementById('reg-price').value),
+      lightning_address: document.getElementById('reg-addr').value.trim(),
+      category: document.getElementById('reg-cat').value,
+    };
+    if (!body.url || !body.name || !body.price_sats || !body.lightning_address) {
+      status.textContent = 'Please fill in all required fields.';
+      status.style.color = '#f87171';
+      return;
+    }
+    status.textContent = 'Registering…';
+    status.style.color = 'var(--muted)';
+    try {
+      const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      const json = await res.json();
+      if (json.ok) {
+        status.textContent = '✓ Registered! Your API will appear in the directory.';
+        status.style.color = '#2ddc6e';
+        loadDirectory(null);
+      } else {
+        status.textContent = json.error || 'Registration failed.';
+        status.style.color = '#f87171';
+      }
+    } catch {
+      status.textContent = 'Network error. Try again.';
+      status.style.color = '#f87171';
+    }
+  }
+
+  // Load on page scroll into view (lazy)
+  const _dirObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { loadDirectory(null); _dirObs.disconnect(); }
+  }, { threshold: 0.1 });
+  _dirObs.observe(document.getElementById('api-directory'));
+</script>
+<hr class="section-sep">
+
 <section class="pricing" id="pricing">
   <span class="eyebrow">Pricing</span>
   <h2>Precos simples</h2>
@@ -1304,7 +1518,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
         <li style="font-size:13px;color:#ccc">✓ Zero config — just set your Lightning address</li>
       </ul>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.dapp-agent-forge-vscode" target="_blank" rel="noopener" class="btn-primary" style="font-size:14px;padding:12px 22px">Install Free on Marketplace</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402" target="_blank" rel="noopener" class="btn-primary" style="font-size:14px;padding:12px 22px">Install Free on Marketplace</a>
         <a href="https://l402kit.com/docs/introduction" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:12px 22px;border:1px solid #333;border-radius:12px;font-size:14px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">Documentation →</a>
       </div>
     </div>
@@ -1325,7 +1539,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Pro plan today</div>
         <div style="font-size:16px;font-weight:700;color:#ccc" id="extProSats">~11,000 sats/mo</div>
       </div>
-      <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.dapp-agent-forge-vscode" target="_blank" rel="noopener" style="display:block;text-align:center;padding:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.3);border-radius:10px;font-size:13px;font-weight:600;color:var(--orange);text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(247,147,26,0.15)'" onmouseout="this.style.background='rgba(247,147,26,0.08)'">Install Dapp Agent Forge — Free ↗</a>
+      <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402" target="_blank" rel="noopener" style="display:block;text-align:center;padding:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.3);border-radius:10px;font-size:13px;font-weight:600;color:var(--orange);text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(247,147,26,0.15)'" onmouseout="this.style.background='rgba(247,147,26,0.08)'">Install ShinyDapps Lightning Payments — Free ↗</a>
     </div>
   </div>
 </section><hr class="section-sep">

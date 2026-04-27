@@ -1,0 +1,164 @@
+---
+title: LNURL Integration
+description: Use LNURL-auth for passwordless login and LNURL-pay for Lightning Address payments alongside l402-kit.
+---
+
+## What is LNURL?
+
+[LNURL](https://github.com/lnurl/luds) is a set of open standards built on top of the Lightning Network. l402-kit ships with two LNURL features out of the box:
+
+| Feature | Use case |
+|---|---|
+| **LNURL-auth** | Passwordless login — wallet signs a challenge, no email or password |
+| **LNURL-pay** | Lightning Address (`you@domain.com`) — anyone can pay you with a human-readable address |
+
+---
+
+## LNURL-auth — passwordless login
+
+l402-kit.com uses LNURL-auth for the payment dashboard. You can use the same flow in your own app.
+
+### How it works
+
+```
+1. Your server generates a challenge (k1) — a random 32-byte hex string
+2. You encode it as a LNURL and display as QR
+3. User scans with any LNURL-auth wallet (Phoenix, Blink, Zeus, Breez...)
+4. Wallet signs k1 with its Lightning node key → sends signature + pubkey to your callback
+5. You verify the signature — if valid, the user is authenticated
+```
+
+The user's identity is their Lightning node pubkey — stable, global, and self-sovereign.
+
+### Endpoint
+
+```
+GET /api/lnurl-auth
+```
+
+Returns a LNURL challenge. Encode as a QR and display in your login flow.
+
+```json
+{
+  "lnurl": "LNURL1DP68GURN8GHJ7...",
+  "k1": "a1b2c3..."
+}
+```
+
+After the wallet callback, verify via:
+
+```
+GET /api/lnurl-auth?k1=<challenge>&sig=<signature>&key=<pubkey>
+```
+
+### TypeScript — verify LNURL-auth signature
+
+```typescript
+import { createHash } from "crypto";
+import * as secp256k1 from "@noble/curves/secp256k1";
+
+function verifyLnurlAuth(k1: string, sig: string, key: string): boolean {
+  try {
+    const msgHash = createHash("sha256").update(Buffer.from(k1, "hex")).digest();
+    return secp256k1.secp256k1.verify(sig, msgHash, key);
+  } catch {
+    return false;
+  }
+}
+```
+
+<Note>
+LNURL-auth requires no email, no password, no OAuth. The user's identity is their Lightning pubkey — portable across wallets, uncensorable, globally unique.
+</Note>
+
+---
+
+## LNURL-pay — Lightning Address
+
+A Lightning Address (`you@domain.com`) is a human-readable alias that resolves to a LNURL-pay endpoint. l402-kit exposes one at:
+
+```
+GET /.well-known/lnurlp/{username}
+```
+
+This is used internally by the split mechanism — when you set `ownerAddress: "you@blink.sv"`, the Worker resolves `blink.sv/.well-known/lnurlp/you` to get a BOLT11 invoice.
+
+### How to set up your own Lightning Address
+
+1. Deploy a LNURL-pay endpoint at `https://yourdomain.com/.well-known/lnurlp/{username}`
+2. Return the standard LNURL-pay metadata response:
+
+```json
+{
+  "callback": "https://yourdomain.com/lnurlp/pay",
+  "maxSendable": 100000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Pay you@yourdomain.com\"]]",
+  "tag": "payRequest"
+}
+```
+
+3. The `callback` endpoint receives `?amount=<msats>` and returns:
+
+```json
+{
+  "pr": "lnbc10n1p...",
+  "routes": []
+}
+```
+
+### Self-hosted with BTCPay Server
+
+BTCPay Server ships with LNURL-pay built in — just enable it in your store settings. Your Lightning Address becomes `you@yourbtcpay.com`.
+
+```typescript
+import { BTCPayProvider } from "l402-kit";
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,
+  process.env.BTCPAY_API_KEY!,
+  process.env.BTCPAY_STORE_ID!,
+);
+// Lightning Address: you@yourbtcpay.com — zero intermediary, 0% fee
+```
+
+---
+
+## Ownership verification for the API directory
+
+When you register your API at `POST /api/register`, l402-kit automatically checks for a `/.well-known/l402.txt` file at your API's domain. If found and it contains your Lightning Address, your listing gets a **verified** badge.
+
+**Create the file:**
+
+```
+# https://api.yourdomain.com/.well-known/l402.txt
+you@blink.sv
+```
+
+**Then register:**
+
+```typescript
+ManagedProvider.fromAddress("you@blink.sv", {
+  registerDirectory: {
+    url: "https://api.yourdomain.com/v1/data",
+    name: "My Data API",
+    priceSats: 10,
+  },
+});
+// Response: { ok: true, id: "...", verified: true }
+```
+
+Verified APIs rank higher in the directory and display a ✓ badge.
+
+---
+
+## Compatible wallets
+
+| Wallet | LNURL-auth | LNURL-pay | Self-custody |
+|---|---|---|---|
+| [Phoenix](https://phoenix.acinq.co) | ✅ | ✅ | ✅ |
+| [Blink](https://blink.sv) | ✅ | ✅ | ❌ custodial |
+| [Zeus](https://zeusln.app) | ✅ | ✅ | ✅ |
+| [Breez](https://breez.technology) | ✅ | ✅ | ✅ |
+| [Alby](https://getalby.com) | ✅ | ✅ | ✅ Hub |
+| [Mutiny](https://mutinywallet.com) | ✅ | ✅ | ✅ |

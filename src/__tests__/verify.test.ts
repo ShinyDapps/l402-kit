@@ -297,4 +297,86 @@ describe("verifyToken", () => {
     const results = await Promise.all(tokens.map((t) => verifyToken(t)));
     expect(results.every((r) => r === false)).toBe(true);
   });
+
+  // ── attack vectors ─────────────────────────────────────────────────────────
+
+  it("ATTACK: forged macaroon with known hash but wrong preimage is rejected", async () => {
+    // Attacker intercepts a valid paymentHash from a 402 response
+    // and crafts a macaroon manually — still needs a valid preimage
+    const legitimatePreimage = makePreimage();
+    const knownHash = makeHash(legitimatePreimage);
+    const forgedMac = makeMacaroon(knownHash); // attacker builds macaroon with known hash
+    const attackerPreimage = makePreimage();   // attacker does NOT have the real preimage
+    expect(await verifyToken(`${forgedMac}:${attackerPreimage}`)).toBe(false);
+  });
+
+  it("ATTACK: forged macaroon with self-consistent hash/preimage is rejected when expired", async () => {
+    // Attacker generates their own valid preimage+hash pair but backdates the token
+    const preimage = makePreimage();
+    const hash = makeHash(preimage);
+    const expiredMac = makeMacaroon(hash, -1); // expired 1ms ago
+    expect(await verifyToken(`${expiredMac}:${preimage}`)).toBe(false);
+  });
+
+  it("ATTACK: macaroon with hash field set to empty string is rejected", async () => {
+    const mac = Buffer.from(JSON.stringify({ hash: "", exp: Date.now() + 3_600_000 })).toString("base64");
+    expect(await verifyToken(`${mac}:${"a".repeat(64)}`)).toBe(false);
+  });
+
+  it("ATTACK: macaroon with hash set to all-zeros is rejected", async () => {
+    const mac = makeMacaroon("0".repeat(64));
+    const preimage = "0".repeat(64); // SHA256("0"*64) != "0"*64
+    expect(await verifyToken(`${mac}:${preimage}`)).toBe(false);
+  });
+
+  it("ATTACK: exp field set to Infinity to bypass expiry check", async () => {
+    const preimage = makePreimage();
+    const hash = makeHash(preimage);
+    const mac = Buffer.from(JSON.stringify({ hash, exp: Infinity })).toString("base64");
+    // Infinity serializes as null in JSON — implementation must handle gracefully
+    const result = await verifyToken(`${mac}:${preimage}`);
+    expect(typeof result).toBe("boolean"); // must not throw
+  });
+
+  it("ATTACK: preimage with SQL injection characters is rejected", async () => {
+    const sqlPreimage = "'; DROP TABLE payments; --" + "a".repeat(38);
+    const mac = makeMacaroon(makeHash("a".repeat(64)));
+    expect(await verifyToken(`${mac}:${sqlPreimage}`)).toBe(false);
+  });
+
+  it("ATTACK: extremely long preimage (DoS attempt) does not hang", async () => {
+    const longPreimage = "a".repeat(100_000);
+    const mac = makeMacaroon(makeHash("a".repeat(64)));
+    const start = Date.now();
+    const result = await verifyToken(`${mac}:${longPreimage}`);
+    expect(Date.now() - start).toBeLessThan(200); // must resolve in <200ms
+    expect(result).toBe(false);
+  });
+
+  it("ATTACK: extremely long macaroon (DoS attempt) does not hang", async () => {
+    const longMac = "a".repeat(100_000);
+    const preimage = makePreimage();
+    const start = Date.now();
+    const result = await verifyToken(`${longMac}:${preimage}`);
+    expect(Date.now() - start).toBeLessThan(200);
+    expect(result).toBe(false);
+  });
+
+  it("TIMING: valid and invalid tokens resolve in similar time (no timing oracle)", async () => {
+    const validToken = makeToken();
+    const invalidToken = makeToken(makePreimage(), -1_000); // expired
+
+    const runs = 20;
+    const timings = { valid: 0, invalid: 0 };
+
+    for (let i = 0; i < runs; i++) {
+      let t = Date.now(); await verifyToken(validToken); timings.valid += Date.now() - t;
+      t = Date.now(); await verifyToken(invalidToken); timings.invalid += Date.now() - t;
+    }
+
+    const avgValid = timings.valid / runs;
+    const avgInvalid = timings.invalid / runs;
+    // Both paths should be fast — no path should be >50ms slower than the other
+    expect(Math.abs(avgValid - avgInvalid)).toBeLessThan(50);
+  });
 });
