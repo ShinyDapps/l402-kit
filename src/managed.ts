@@ -20,7 +20,7 @@ export interface DirectoryRegistration {
  * Invoices and splits are handled server-side. You receive 99.7% of each
  * payment directly to your Lightning Address. Explicit opt-in.
  *
- * For sovereign mode (0% fee), use AlbyProvider, BTCPayProvider, or BlinkProvider.
+ * For soberano mode (0% fee), use AlbyProvider, BTCPayProvider, or BlinkProvider.
  *
  * @example
  * ```ts

@@ -1,4 +1,4 @@
----
+﻿---
 title: Introduzione
 description: Il modo più semplice per monetizzare la tua API con Bitcoin Lightning. 3 righe di codice.
 ---
@@ -53,7 +53,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // ~€0,05 per chiamata
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),     // sovereign mode — 0% fee
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),     // soberano mode — 0% fee
 }), (_req, res) => {
   res.json({ data: "Pagamento confermato." });
 });

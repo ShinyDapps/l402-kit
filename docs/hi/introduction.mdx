@@ -1,4 +1,4 @@
----
+﻿---
 title: परिचय
 description: Bitcoin sats में अपनी API के लिए चार्ज करने का सबसे सरल तरीका।
 ---
@@ -40,7 +40,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // ~₹5 प्रति call
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // sovereign mode — 0% fee
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // soberano mode — 0% fee
 }), (_req, res) => {
   res.json({ data: "भुगतान सुनिश्चित." });
 });

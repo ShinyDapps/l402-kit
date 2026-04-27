@@ -1,11 +1,11 @@
----
+﻿---
 title: "Payment Layer"
 description: "How l402-kit processes Bitcoin Lightning payments — BOLT11, L402 protocol, and cryptographic verification."
 ---
 
 # Payment Layer
 
-l402-kit is a **sovereign middleware** that adds a Bitcoin Lightning paywall to any HTTP endpoint in 3 lines of code. You bring your own Lightning provider — funds go directly to your wallet, no intermediary required.
+l402-kit is a **soberano middleware** that adds a Bitcoin Lightning paywall to any HTTP endpoint in 3 lines of code. You bring your own Lightning provider — funds go directly to your wallet, no intermediary required.
 
 ---
 
@@ -83,13 +83,13 @@ Verification is **O(1)** — pure cryptography, no database lookup on the hot pa
 
 | Mode | Fee | Setup |
 |---|---|---|
-| **Sovereign** (any provider) | **0%** — you keep 100% | Bring your own provider credentials |
+| **Soberano** (any provider) | **0%** — you keep 100% | Bring your own provider credentials |
 | **Managed** (`ManagedProvider`) | 0.3% to l402kit.com | No Lightning node — works immediately |
 
-Sovereign mode is the default. Managed mode is an explicit opt-in:
+Soberano mode is the default. Managed mode is an explicit opt-in:
 
 ```typescript
-// Sovereign — 0% fee, you keep 100%
+// Soberano — 0% fee, you keep 100%
 import { AlbyProvider } from 'l402-kit';
 const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
 
@@ -126,7 +126,7 @@ l402-kit is provider-agnostic. Any backend that implements `LightningProvider` w
 |---|---|
 | [Alby Hub](https://hub.getalby.com) | Self-custodial, 0% fee |
 | [Blink](https://blink.sv) | Free custodial, no KYC for small amounts |
-| [BTCPay Server](https://btcpayserver.org) | Self-hosted, full sovereignty |
+| [BTCPay Server](https://btcpayserver.org) | Self-hosted, full soberanoty |
 | [OpenNode](https://opennode.com) | Custodial, no setup |
 | [LNbits](https://lnbits.com) | Self-hosted or cloud |
 

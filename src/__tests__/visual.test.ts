@@ -367,8 +367,8 @@ describe("[Visual] landing page — pricing (3 tiers)", () => {
     expect(html).not.toMatch(/pricingTitle.*Founder|Founder.*pricingTitle/);
   });
 
-  it("tem tier Sovereign (0% fee)", () => {
-    expect(html).toMatch(/Sovereign/);
+  it("tem tier Soberano (0% fee)", () => {
+    expect(html).toMatch(/Soberano/);
   });
 
   it("tem tier Managed (featured)", () => {

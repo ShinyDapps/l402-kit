@@ -1,4 +1,4 @@
----
+﻿---
 title: はじめに
 description: Bitcoin satsでAPIに課金する最もシンプルな方法。
 ---
@@ -40,7 +40,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                           // 1回約$0.06
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // sovereign mode — 0% fee
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),    // soberano mode — 0% fee
 }), (_req, res) => {
   res.json({ data: "支払いが確認されました。" });
 });

@@ -1,6 +1,6 @@
----
+﻿---
 title: Providers
-description: Two modes — Managed (0.3% flat, no node) or Sovereign (0%, your own Lightning node). ManagedProvider, Blink, LNbits, OpenNode, and custom.
+description: Two modes — Managed (0.3% flat, no node) or Soberano (0%, your own Lightning node). ManagedProvider, Blink, LNbits, OpenNode, and custom.
 ---
 
 ## Two modes
@@ -8,14 +8,14 @@ description: Two modes — Managed (0.3% flat, no node) or Sovereign (0%, your o
 | Mode | Provider | Fee | Setup |
 |---|---|---|---|
 | **Managed** ⭐ | `ManagedProvider` | 0.3% per sat | Lightning address only |
-| **Sovereign** | Blink | 0% | Free custodial account |
-| **Sovereign** | LNbits | 0% | Self-host or public instance |
-| **Sovereign** | OpenNode | 0% | Sandbox testing |
-| **Sovereign** | Custom | 0% | Any Lightning backend |
+| **Soberano** | Blink | 0% | Free custodial account |
+| **Soberano** | LNbits | 0% | Self-host or public instance |
+| **Soberano** | OpenNode | 0% | Sandbox testing |
+| **Soberano** | Custom | 0% | Any Lightning backend |
 
 **Managed mode** — l402kit.com hosts the Lightning node. You add your Lightning address. We forward 99.7% of every sat to you automatically.
 
-**Sovereign mode** — You connect your own Lightning wallet/node. 0% fee, full custody, works with any provider.
+**Soberano mode** — You connect your own Lightning wallet/node. 0% fee, full custody, works with any provider.
 
 ---
 
@@ -103,9 +103,9 @@ The 0.3% routing fee is the only cost. No monthly fee. No account registration. 
 
 ---
 
-## Blink (Sovereign — 0% fee)
+## Blink (Soberano — 0% fee)
 
-[Blink](https://blink.sv) is a free custodial Bitcoin Lightning wallet with a GraphQL API. No KYC, no monthly fee, instant setup. Use it to run in sovereign mode with 0% fee.
+[Blink](https://blink.sv) is a free custodial Bitcoin Lightning wallet with a GraphQL API. No KYC, no monthly fee, instant setup. Use it to run in soberano mode with 0% fee.
 
 **Get started:**
 1. Create account at [dashboard.blink.sv](https://dashboard.blink.sv)
@@ -149,7 +149,7 @@ BLINK_WALLET_ID=9da6b07e-7aaa-44e0-bc96-f1e22610b4d1
 
 ---
 
-## LNbits (Sovereign — 0% fee)
+## LNbits (Soberano — 0% fee)
 
 [LNbits](https://lnbits.com) is an open-source Lightning wallet server. Self-host it or use a public instance.
 
@@ -185,7 +185,7 @@ LNBITS_URL=https://your-lnbits-instance.com
 
 ---
 
-## OpenNode (Sovereign — 0% fee)
+## OpenNode (Soberano — 0% fee)
 
 [OpenNode](https://opennode.com) is a Lightning provider with a free sandbox for testing.
 
@@ -215,7 +215,7 @@ opennode = OpenNodeProvider(
 
 ---
 
-## Custom provider (Sovereign — 0% fee)
+## Custom provider (Soberano — 0% fee)
 
 Implement the `LightningProvider` interface to use any Lightning backend:
 

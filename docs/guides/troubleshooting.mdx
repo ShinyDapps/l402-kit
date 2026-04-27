@@ -1,4 +1,4 @@
----
+﻿---
 title: "Troubleshooting"
 description: "Common errors, their causes, and how to fix them."
 ---
@@ -46,7 +46,7 @@ description: "Common errors, their causes, and how to fix them."
 
 **Cause:** `l402kit.com` is temporarily unavailable or the Blink API is down.
 
-**Fix:** Retry with exponential backoff. Check status at [status.blink.sv](https://status.blink.sv). For production workloads requiring zero downtime, use a sovereign provider (BlinkProvider, AlbyProvider, etc.) with your own credentials.
+**Fix:** Retry with exponential backoff. Check status at [status.blink.sv](https://status.blink.sv). For production workloads requiring zero downtime, use a soberano provider (BlinkProvider, AlbyProvider, etc.) with your own credentials.
 
 ---
 
@@ -127,7 +127,7 @@ The Supabase `payment_hash` unique constraint acts as a durable second layer reg
 
 **Cause:** More than 20 invoice creation requests per minute from the same IP, hitting the ManagedProvider endpoint.
 
-**Fix:** Implement client-side caching — don't create a new invoice on every page load. `L402Client` caches tokens per endpoint URL automatically. For server-to-server flows generating many invoices, use a sovereign provider.
+**Fix:** Implement client-side caching — don't create a new invoice on every page load. `L402Client` caches tokens per endpoint URL automatically. For server-to-server flows generating many invoices, use a soberano provider.
 
 ---
 

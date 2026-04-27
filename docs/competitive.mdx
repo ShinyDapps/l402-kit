@@ -1,4 +1,4 @@
----
+﻿---
 title: vs. Competition
 description: How l402-kit compares to Stripe, Paddle, x402, BTCPay, and every other API monetization tool.
 ---
@@ -101,7 +101,7 @@ const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
 app.get("/premium", l402({ priceSats: 100, lightning }), handler);
 ```
 
-**Sovereign mode** (your own node — 0% fee):
+**Soberano mode** (your own node — 0% fee):
 ```typescript
 import { BlinkProvider } from "l402-kit";
 const lightning = new BlinkProvider(process.env.BLINK_KEY!, process.env.BLINK_WALLET_ID!);
