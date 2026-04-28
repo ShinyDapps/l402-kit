@@ -39,3 +39,7 @@ backend/
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# vscode extension build artifacts
+vscode-extension/out/
+vscode-extension/*.vsix
