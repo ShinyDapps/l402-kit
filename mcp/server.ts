@@ -10,7 +10,7 @@
  *   "mcpServers": {
  *     "l402": {
  *       "command": "npx",
- *       "args": ["l402-kit/mcp"],
+ *       "args": ["l402-kit-mcp"],
  *       "env": {
  *         "BLINK_API_KEY": "your-blink-key",
  *         "BLINK_WALLET_ID": "your-wallet-id",
