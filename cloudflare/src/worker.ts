@@ -100,6 +100,12 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // docs.l402kit.com → proxy to Mintlify
+    if (url.hostname === "docs.l402kit.com") {
+      const mintUrl = `https://shinydapps.mintlify.app${path}${url.search}`;
+      return fetch(mintUrl, { headers: request.headers });
+    }
+
     if (request.method === "OPTIONS") {
       return cors(new Response(null, { status: 204 }));
     }

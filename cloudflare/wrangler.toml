@@ -54,3 +54,7 @@ zone_name = "l402kit.com"
 pattern = "l402kit.com/badge/*"
 zone_name = "l402kit.com"
 
+[[routes]]
+pattern = "docs.l402kit.com/*"
+zone_name = "l402kit.com"
+
