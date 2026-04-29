@@ -40,7 +40,6 @@ One command scaffolds a complete pay-per-call API — Express server, `.env.exam
 
 ### How to use
 
-![ShinyDapps extension in action — live sats counter, payment sidebar, bar chart](https://l402kit.com/demo-extension.gif)
 
 **Step 1 — Add l402-kit to your API**
 
@@ -157,7 +156,6 @@ Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usa
 
 ### Como usar
 
-![Extensão ShinyDapps em ação — contador de sats ao vivo, painel lateral, gráfico de barras](https://l402kit.com/demo-extension.gif)
 
 **Passo 1 — Adicione l402-kit à sua API**
 
@@ -234,7 +232,6 @@ Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
 
 ### Cómo usar
 
-![Extensión ShinyDapps en acción — contador de sats en vivo, panel lateral, gráfico de barras](https://l402kit.com/demo-extension.gif)
 
 **Paso 1 — Agrega l402-kit a tu API**
 
@@ -297,7 +294,6 @@ Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
 
 ### 如何使用
 
-![ShinyDapps 扩展实操 — 实时 sats 计数器、支付侧边栏、柱状图](https://l402kit.com/demo-extension.gif)
 
 **第一步 — 将 l402-kit 添加到您的 API**
 
@@ -360,7 +356,6 @@ cargo add l402kit         # Rust
 
 ### 使い方
 
-![ShinyDapps 拡張機能の実際動作 — リアルタイム sats カウンター、支払いサイドバー、棒グラフ](https://l402kit.com/demo-extension.gif)
 
 **ステップ 1 — API に l402-kit を追加**
 
@@ -423,7 +418,6 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
 
 ### Comment utiliser
 
-![Extension ShinyDapps en action — compteur de sats en direct, panneau latéral, graphique](https://l402kit.com/demo-extension.gif)
 
 **Étape 1 — Ajoutez l402-kit à votre API**
 
@@ -486,7 +480,6 @@ Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
 
 ### Verwendung
 
-![ShinyDapps Erweiterung in Aktion — Live-Sats-Zähler, Zahlungs-Seitenleiste, Balkendiagramm](https://l402kit.com/demo-extension.gif)
 
 **Schritt 1 — l402-kit zu Ihrer API hinzufügen**
 
@@ -549,7 +542,6 @@ Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
 
 ### Использование
 
-![Расширение ShinyDapps в действии — живой счётчик сатошей, боковая панель, диаграмма](https://l402kit.com/demo-extension.gif)
 
 **Шаг 1 — Добавьте l402-kit в ваш API**
 
@@ -612,7 +604,6 @@ Command Palette (`Ctrl+Shift+P`) →
 
 ### कैसे उपयोग करें
 
-![ShinyDapps एक्सटेंशन in action — live sats counter, payment sidebar, bar chart](https://l402kit.com/demo-extension.gif)
 
 **चरण 1 — अपनी API में l402-kit जोड़ें**
 
@@ -675,7 +666,6 @@ Activity bar में ⚡ आइकन क्लिक करें।
 
 ### كيفية الاستخدام
 
-![إضافة ShinyDapps في العمل — عداد sats مباشر، لوحة جانبية، رسم بياني](https://l402kit.com/demo-extension.gif)
 
 **الخطوة 1 — أضف l402-kit إلى API الخاص بك**
 
@@ -738,7 +728,6 @@ API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightni
 
 ### Come usare
 
-![Estensione ShinyDapps in azione — contatore sats live, pannello laterale, grafico a barre](https://l402kit.com/demo-extension.gif)
 
 **Passo 1 — Aggiungi l402-kit alla tua API**
 
