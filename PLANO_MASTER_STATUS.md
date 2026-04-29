@@ -33,8 +33,8 @@ Atualizado: 2026-04-29
 | ID | Tarefa | Status | Notas |
 |----|--------|--------|-------|
 | T031 | `Accept-Payment` header | ✅ Done | Incluído em T005 |
-| T032 | 402index.io registro | ⏳ Manual | Formulário web — fazer manualmente |
-| T033 | Satring.com | ⏳ Manual | Custa 1.000 sats — fazer manualmente |
+| T032 | 402index.io registro | ✅ Done | Domínio verificado, token em credentials.md |
+| T033 | Satring.com | ✅ Done | ID 650, slug l402-kit-demo-api, edit token em credentials.md |
 | T035 | MCP Market (glama.ai via punkpeye/awesome-mcp-servers) | ✅ Done | PR #5585: https://github.com/punkpeye/awesome-mcp-servers/pull/5585 |
 | T035b | Fewsats/awesome-L402 | ✅ Done | PR #14 aberto |
 | T036 | README `## For AI Agents` section | ✅ Done | MCP config, LangChain, framework compat |
