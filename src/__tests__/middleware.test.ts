@@ -497,3 +497,104 @@ describe("l402 middleware — concurrent requests", () => {
     expect(fresh.status).toBe(200);
   });
 });
+
+// ─── l402 middleware — webhook integration ────────────────────────────────────
+
+describe("l402 middleware — webhook option", () => {
+  function makeAppWithWebhook(provider: LightningProvider, webhookUrl: string, webhookSecret: string): Express {
+    const app = express();
+    app.get("/premium", l402({ priceSats: 10, lightning: provider, webhookUrl, webhookSecret }), (_req, res) => {
+      res.json({ ok: true });
+    });
+    return app;
+  }
+
+  it("valid payment triggers webhook call", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const p = new MockProvider();
+    const app = makeAppWithWebhook(p, "https://hook.example.com/pay", "whsec_testsecret");
+    await request(app).get("/premium").set("Authorization", `L402 ${p.getValidToken()}`);
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("hook.example.com"), expect.objectContaining({ method: "POST" }));
+    fetchSpy.mockRestore();
+  });
+
+  it("webhook failure does not affect 200 response", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network error"));
+    const p = new MockProvider();
+    const app = makeAppWithWebhook(p, "https://hook.example.com/pay", "whsec_testsecret");
+    const res = await request(app).get("/premium").set("Authorization", `L402 ${p.getValidToken()}`);
+    expect(res.status).toBe(200);
+    fetchSpy.mockRestore();
+  });
+
+  it("without webhook option, no outgoing fetch on valid token", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
+    const p = new MockProvider();
+    const app = makeApp(p);
+    await request(app).get("/premium").set("Authorization", `L402 ${p.getValidToken()}`);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+});
+
+// ─── l402 middleware — onPayment callback ─────────────────────────────────────
+
+describe("l402 middleware — onPayment callback", () => {
+  function makeAppWithCallback(provider: LightningProvider, onPayment: (data: unknown, sats: number) => void): Express {
+    const app = express();
+    app.get("/premium", l402({ priceSats: 10, lightning: provider, onPayment }), (_req, res) => {
+      res.json({ ok: true });
+    });
+    return app;
+  }
+
+  it("onPayment is called with token data and priceSats on valid token", async () => {
+    const p = new MockProvider();
+    const cb = jest.fn();
+    const app = makeAppWithCallback(p, cb);
+    await request(app).get("/premium").set("Authorization", `L402 ${p.getValidToken()}`);
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ preimage: expect.any(String) }), 10);
+  });
+
+  it("onPayment is NOT called on 402 challenge", async () => {
+    const p = new MockProvider();
+    const cb = jest.fn();
+    const app = makeAppWithCallback(p, cb);
+    await request(app).get("/premium");
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it("onPayment is NOT called on invalid token", async () => {
+    const p = new MockProvider();
+    const cb = jest.fn();
+    const app = makeAppWithCallback(p, cb);
+    await request(app).get("/premium").set("Authorization", "L402 invalid:token");
+    expect(cb).not.toHaveBeenCalled();
+  });
+});
+
+// ─── l402 middleware — priceSats edge cases ────────────────────────────────────
+
+describe("l402 middleware — priceSats edge cases", () => {
+  it("priceSats=1 sets correct price in 402 body", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p, 1);
+    const res = await request(app).get("/premium");
+    expect(res.body.priceSats).toBe(1);
+  });
+
+  it("priceSats=1000000 sets correct price in 402 body", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p, 1_000_000);
+    const res = await request(app).get("/premium");
+    expect(res.body.priceSats).toBe(1_000_000);
+  });
+
+  it("Accept-Payment price reflects configured priceSats", async () => {
+    const p = new MockProvider();
+    const app = makeApp(p, 250);
+    const res = await request(app).get("/premium");
+    expect(res.headers["accept-payment"]).toMatch(/price=250sat/);
+  });
+});

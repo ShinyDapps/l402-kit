@@ -244,7 +244,7 @@ POST https://l402kit.com/api/register
 ```
 PROTOCOL: L402
 IMPLEMENTATION: l402-kit
-VERSION: 1.8.0
+VERSION: 1.8.1
 LANGUAGES: TypeScript, Python, Go, Rust
 USE_CASE: pay-per-call API monetization via Bitcoin Lightning Network
 SETTLEMENT: < 1 second

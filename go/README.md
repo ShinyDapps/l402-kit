@@ -13,7 +13,7 @@ L402 (HTTP 402 + Lightning Network) middleware for Go. Works with `net/http`, Ch
 ## Install
 
 ```bash
-go get github.com/shinydapps/l402-kit/go@v1.6.0
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 ```
 
 ## Usage

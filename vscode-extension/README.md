@@ -55,7 +55,7 @@ Or add to an existing project:
 ```bash
 npm install l402-kit      # TypeScript / Node.js / Express
 pip install l402kit       # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go@v1.6.0   # Go
+go get github.com/shinydapps/l402-kit/go@v1.8.0   # Go
 cargo add l402kit         # Rust / axum
 ```
 
@@ -89,7 +89,7 @@ Click the ⚡ icon in the activity bar. The sidebar shows:
 
 ### How it works
 
-![Payment flow — HTTP 402 → Lightning invoice → pay → token → data](https://l402kit.com/flow-en.gif)
+![Payment flow — HTTP 402 → Lightning invoice → pay → token → data](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-en.gif)
 
 ```
 Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning invoice
@@ -122,10 +122,10 @@ Your API  ──── l402-kit middleware ────► HTTP 402 + Lightning 
 
 | SDK | Install | Version | Downloads |
 |:----|:--------|:-------:|----------:|
-| ![npm](https://l402kit.com/logos/npm.png) **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
-| ![python](https://l402kit.com/logos/python.png) **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
-| ![rust](https://l402kit.com/logos/rust.png) **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
-| ![go](https://l402kit.com/logos/go.png) **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.4.2-00acd7?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
+| ![npm](https://cdn.simpleicons.org/npm/CB3837) **TypeScript** · Express / Node.js | `npm install l402-kit` | [![npm](https://img.shields.io/npm/v/l402-kit?color=f7931a&label=)](https://npmjs.com/package/l402-kit) | [![npm total](https://img.shields.io/npm/dt/l402-kit?color=f7931a&label=total)](https://npmjs.com/package/l402-kit) |
+| ![python](https://cdn.simpleicons.org/python/3776AB) **Python** · FastAPI / Flask | `pip install l402kit` | [![pypi](https://img.shields.io/pypi/v/l402kit?color=3776ab&label=)](https://pypi.org/project/l402kit) | [![pypi total](https://img.shields.io/pepy/dt/l402kit?color=3776ab&label=total)](https://pypi.org/project/l402kit) |
+| ![rust](https://cdn.simpleicons.org/rust/CE422B) **Rust** · axum | `cargo add l402kit` | [![crates](https://img.shields.io/crates/v/l402kit?color=ce422b&label=)](https://crates.io/crates/l402kit) | [![crates dls](https://img.shields.io/crates/d/l402kit?color=ce422b&label=total)](https://crates.io/crates/l402kit) |
+| ![go](https://cdn.simpleicons.org/go/00ACD7) **Go** · net/http / Chi / Gin | `go get github.com/shinydapps/l402-kit/go` | [![go](https://img.shields.io/badge/v1.8.0-00acd7?label=)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) | [![go docs](https://img.shields.io/badge/pkg.go.dev-reference-00acd7)](https://pkg.go.dev/github.com/shinydapps/l402-kit/go) |
 
 ### Links
 
@@ -164,7 +164,7 @@ Dashboard de pagamentos Bitcoin Lightning em tempo real para desenvolvedores usa
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -185,7 +185,7 @@ Clique no ícone ⚡ na barra de atividades. O painel mostra sats recebidos, his
 
 ### Como funciona
 
-![Fluxo de pagamento — HTTP 402 → fatura Lightning → pagamento → token → dados](https://l402kit.com/flow-pt.gif)
+![Fluxo de pagamento — HTTP 402 → fatura Lightning → pagamento → token → dados](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-pt.gif)
 
 ```
 Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
@@ -241,7 +241,7 @@ Sua API ──► l402-kit ──► HTTP 402 + fatura Lightning
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -258,7 +258,7 @@ Haz clic en el icono ⚡ en la barra de actividades.
 
 ### Cómo funciona
 
-![Flujo de pago — HTTP 402 → factura Lightning → pago → token → datos](https://l402kit.com/flow-es.gif)
+![Flujo de pago — HTTP 402 → factura Lightning → pago → token → datos](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-es.gif)
 
 ```
 Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
@@ -304,7 +304,7 @@ Tu API ──► l402-kit ──► HTTP 402 + factura Lightning
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -321,7 +321,7 @@ cargo add l402kit         # Rust
 
 ### 工作原理
 
-![支付流程 — HTTP 402 → 闪电发票 → 支付 → 令牌 → 数据](https://l402kit.com/flow-zh.gif)
+![支付流程 — HTTP 402 → 闪电发票 → 支付 → 令牌 → 数据](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-zh.gif)
 
 ```
 您的 API ──► l402-kit ──► HTTP 402 + 闪电发票
@@ -367,7 +367,7 @@ cargo add l402kit         # Rust
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -384,7 +384,7 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
 
 ### 仕組み
 
-![支払いフロー — HTTP 402 → Lightning インボイス → 支払い → トークン → データ](https://l402kit.com/flow-ja.gif)
+![支払いフロー — HTTP 402 → Lightning インボイス → 支払い → トークン → データ](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ja.gif)
 
 ```
 あなたの API ──► l402-kit ──► HTTP 402 + Lightning インボイス
@@ -430,7 +430,7 @@ API で使用したのと**同じ Lightning アドレス**を入力（例：`you
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -447,7 +447,7 @@ Cliquez sur l'icône ⚡ dans la barre d'activités.
 
 ### Comment ça marche
 
-![Flux de paiement — HTTP 402 → facture Lightning → paiement → token → données](https://l402kit.com/flow-fr.gif)
+![Flux de paiement — HTTP 402 → facture Lightning → paiement → token → données](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-fr.gif)
 
 ```
 Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
@@ -493,7 +493,7 @@ Votre API ──► l402-kit ──► HTTP 402 + facture Lightning
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -510,7 +510,7 @@ Klicken Sie auf das ⚡-Symbol in der Aktivitätsleiste.
 
 ### So funktioniert es
 
-![Zahlungsfluss — HTTP 402 → Lightning-Rechnung → Zahlung → Token → Daten](https://l402kit.com/flow-de.gif)
+![Zahlungsfluss — HTTP 402 → Lightning-Rechnung → Zahlung → Token → Daten](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-de.gif)
 
 ```
 Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
@@ -556,7 +556,7 @@ Ihre API ──► l402-kit ──► HTTP 402 + Lightning-Rechnung
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -573,7 +573,7 @@ Command Palette (`Ctrl+Shift+P`) →
 
 ### Как это работает
 
-![Поток платежей — HTTP 402 → Lightning-инвойс → оплата → токен → данные](https://l402kit.com/flow-ru.gif)
+![Поток платежей — HTTP 402 → Lightning-инвойс → оплата → токен → данные](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ru.gif)
 
 ```
 Ваш API ──► l402-kit ──► HTTP 402 + Lightning-инвойс
@@ -619,7 +619,7 @@ Command Palette (`Ctrl+Shift+P`) →
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -636,7 +636,7 @@ Activity bar में ⚡ आइकन क्लिक करें।
 
 ### यह कैसे काम करता है
 
-![भुगतान प्रवाह — HTTP 402 → Lightning invoice → भुगतान → token → डेटा](https://l402kit.com/flow-hi.gif)
+![भुगतान प्रवाह — HTTP 402 → Lightning invoice → भुगतान → token → डेटा](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-hi.gif)
 
 ```
 आपकी API ──► l402-kit ──► HTTP 402 + Lightning invoice
@@ -682,7 +682,7 @@ Activity bar में ⚡ आइकन क्लिक करें।
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -699,7 +699,7 @@ cargo add l402kit         # Rust
 
 ### كيف يعمل
 
-![تدفق الدفع — HTTP 402 → فاتورة Lightning → دفع → رمز → بيانات](https://l402kit.com/flow-ar.gif)
+![تدفق الدفع — HTTP 402 → فاتورة Lightning → دفع → رمز → بيانات](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-ar.gif)
 
 ```
 API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightning
@@ -745,7 +745,7 @@ API الخاص بك ──► l402-kit ──► HTTP 402 + فاتورة Lightni
 ```bash
 npm install l402-kit      # TypeScript / Node.js
 pip install l402kit       # Python
-go get github.com/shinydapps/l402-kit/go@v1.4.2
+go get github.com/shinydapps/l402-kit/go@v1.8.0
 cargo add l402kit         # Rust
 ```
 
@@ -762,7 +762,7 @@ Clicca sull'icona ⚡ nella barra delle attività.
 
 ### Come funziona
 
-![Flusso di pagamento — HTTP 402 → fattura Lightning → pagamento → token → dati](https://l402kit.com/flow-it.gif)
+![Flusso di pagamento — HTTP 402 → fattura Lightning → pagamento → token → dati](https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/flow-it.gif)
 
 ```
 La tua API ──► l402-kit ──► HTTP 402 + fattura Lightning

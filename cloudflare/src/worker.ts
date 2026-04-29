@@ -118,6 +118,7 @@ export default {
       else if (path === "/api/lnurl-auth") res = await handleLnurlAuth(request, env);
       else if (path === "/.well-known/agent.json")  res = handleAgentJson();
       else if (path === "/.well-known/l402.json")   res = handleL402Json();
+      else if (path === "/.well-known/402index-verify.txt") res = new Response("a2c9992b0c01d527d16443f0cc7406b39a8893cbca0a30caae34d637a8603c8c", { headers: { "Content-Type": "text/plain" } });
       else if (path.startsWith("/.well-known/lnurlp/")) res = await handleLnurlp(request, env);
       else if (path === "/api/blink-webhook") res = await handleBlinkHook(request, env);
       else if (path === "/api/delete-data")   res = await handleDeleteData(request, env);

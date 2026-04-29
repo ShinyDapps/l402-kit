@@ -757,3 +757,181 @@ describe(".well-known/l402.json", () => {
     expect(body.sdk).toContain("npmjs.com");
   });
 });
+
+// ─── /api/split ──────────────────────────────────────────────────────────────
+
+describe("handleSplit", () => {
+  test("GET returns 405", async () => {
+    const res = await handleSplit(makeRequest("GET", "https://l402kit.com/api/split"), makeEnv());
+    expect(res.status).toBe(405);
+  });
+
+  test("POST without secret returns 401", async () => {
+    const res = await handleSplit(
+      makeRequest("POST", "https://l402kit.com/api/split", { amountSats: 100, ownerAddress: "a@b.com" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  test("POST with wrong secret returns 401", async () => {
+    const res = await handleSplit(
+      makeRequest("POST", "https://l402kit.com/api/split", { amountSats: 100, ownerAddress: "a@b.com" }, { "x-split-secret": "wrong" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  test("POST missing amountSats returns 400", async () => {
+    const res = await handleSplit(
+      makeRequest("POST", "https://l402kit.com/api/split", { ownerAddress: "a@b.com" }, { "x-split-secret": "split_secret_xyz" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/missing/i);
+  });
+
+  test("POST missing ownerAddress returns 400", async () => {
+    const res = await handleSplit(
+      makeRequest("POST", "https://l402kit.com/api/split", { amountSats: 100 }, { "x-split-secret": "split_secret_xyz" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  test("POST amountSats below MIN_SATS skips and returns ok+skipped", async () => {
+    const res = await handleSplit(
+      makeRequest("POST", "https://l402kit.com/api/split", { amountSats: 5, ownerAddress: "a@b.com" }, { "x-split-secret": "split_secret_xyz" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json() as { ok: boolean; skipped: boolean };
+    expect(body.ok).toBe(true);
+    expect(body.skipped).toBe(true);
+  });
+
+  test("POST valid split calls lnurlp and supabase, returns ownerSats", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ callback: "https://blink.sv/lnurlp/cb" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ pr: "lnbc100n1..." }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    const res = await handleSplit(
+      makeRequest("POST", "https://l402kit.com/api/split", { amountSats: 100, ownerAddress: "user@blink.sv" }, { "x-split-secret": "split_secret_xyz" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json() as { ok: boolean; ownerSats: number };
+    expect(body.ok).toBe(true);
+    expect(body.ownerSats).toBe(99); // floor(100 * 0.997)
+  });
+
+  test("POST split returns 500 if supabase pay-invoice fails", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ callback: "https://blink.sv/lnurlp/cb" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ pr: "lnbc100n1..." }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("error", { status: 502 }));
+
+    const res = await handleSplit(
+      makeRequest("POST", "https://l402kit.com/api/split", { amountSats: 100, ownerAddress: "user@blink.sv" }, { "x-split-secret": "split_secret_xyz" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(500);
+  });
+});
+
+// ─── Badge routes ─────────────────────────────────────────────────────────────
+
+describe("badge routes", () => {
+  test("GET /badge/powered-by-l402kit.svg returns SVG with 200", async () => {
+    const req = new Request("https://l402kit.com/badge/powered-by-l402kit.svg");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toMatch(/image\/svg\+xml/);
+    const body = await res.text();
+    expect(body).toContain("<svg");
+  });
+
+  test("GET /badge/powered-by-l402kit-sm.svg returns small SVG", async () => {
+    const req = new Request("https://l402kit.com/badge/powered-by-l402kit-sm.svg");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("120");
+  });
+
+  test("GET /badge/powered-by-l402kit-light.svg returns light SVG", async () => {
+    const req = new Request("https://l402kit.com/badge/powered-by-l402kit-light.svg");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("#0B0C14");
+  });
+
+  test("badge has Cache-Control header", async () => {
+    const req = new Request("https://l402kit.com/badge/powered-by-l402kit.svg");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.headers.get("Cache-Control")).toMatch(/max-age/);
+  });
+});
+
+// ─── CORS & OPTIONS ───────────────────────────────────────────────────────────
+
+describe("CORS", () => {
+  test("OPTIONS returns 204 with CORS headers", async () => {
+    const req = new Request("https://l402kit.com/api/demo", { method: "OPTIONS" });
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(204);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+  });
+
+  test("all responses include Access-Control-Allow-Origin", async () => {
+    const req = new Request("https://l402kit.com/.well-known/agent.json");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+  });
+
+  test("404 unknown route still includes CORS headers", async () => {
+    const req = new Request("https://l402kit.com/unknown-path-xyz");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(404);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+  });
+});
+
+// ─── /docs redirect ───────────────────────────────────────────────────────────
+
+describe("docs redirect", () => {
+  test("GET /docs redirects to docs.l402kit.com", async () => {
+    const req = new Request("https://l402kit.com/docs");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toContain("docs.l402kit.com");
+  });
+
+  test("GET /docs/quickstart preserves path", async () => {
+    const req = new Request("https://l402kit.com/docs/quickstart");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toContain("quickstart");
+  });
+});
+
+// ─── 402index verify route ────────────────────────────────────────────────────
+
+describe("/.well-known/402index-verify.txt", () => {
+  test("GET returns 200 with text/plain", async () => {
+    const req = new Request("https://l402kit.com/.well-known/402index-verify.txt");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toMatch(/text\/plain/);
+  });
+
+  test("response is a 64-char hex hash", async () => {
+    const req = new Request("https://l402kit.com/.well-known/402index-verify.txt");
+    const res = await worker.fetch(req, makeEnv());
+    const body = await res.text();
+    expect(body).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
