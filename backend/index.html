@@ -615,6 +615,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
         <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;color:#ef4444;border-bottom:1px solid #1e1e1e">Stripe</th>
         <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;color:#f97316;border-bottom:1px solid #1e1e1e">PayPal</th>
         <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;color:#f7931a;border-bottom:1px solid rgba(247,147,26,.4);background:rgba(247,147,26,.04);border-radius:0">l402-kit ⚡</th>
+        <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;color:#6366f1;border-bottom:1px solid rgba(99,102,241,.4);background:rgba(99,102,241,.04)">x402 (USDC)</th>
       </tr>
     </thead>
     <tbody>
@@ -623,48 +624,70 @@ footer a:hover { color: var(--orange); text-decoration: none; }
         <td class="cmp-no">$0.30</td>
         <td class="cmp-no">$0.30</td>
         <td class="cmp-yes" id="cmp-min-val">1 sat ≈ <span id="cmp-sat-val">...</span></td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">~$0.001 USDC</td>
       </tr>
       <tr class="cmp-row cmp-highlight">
         <td class="cmp-label" data-i18n="cmp1k">Cost: 1,000 calls</td>
         <td class="cmp-no">$300</td>
         <td class="cmp-no">$300</td>
         <td class="cmp-yes">≈ <span id="cmp-1k-val">...</span> <span style="font-size:10px;color:#666">(live)</span></td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">~$1 USDC</td>
       </tr>
       <tr class="cmp-row cmp-highlight">
         <td class="cmp-label" data-i18n="cmp1m">Cost: 1M calls</td>
         <td class="cmp-no">$300,000</td>
         <td class="cmp-no">$300,000</td>
         <td class="cmp-yes">≈ <span id="cmp-1m-val">...</span> <span style="font-size:10px;color:#666">(live)</span></td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">~$1,000 USDC</td>
       </tr>
       <tr class="cmp-row">
         <td class="cmp-label" data-i18n="cmpSettle">Settlement</td>
         <td class="cmp-no" data-i18n="cmpDays27">2–7 days</td>
         <td class="cmp-no" data-i18n="cmpDays35">3–5 days</td>
         <td class="cmp-yes" data-i18n="cmpSec">&lt; 1 second</td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">~seconds (Base)</td>
       </tr>
       <tr class="cmp-row">
         <td class="cmp-label" data-i18n="cmpAccount">Requires account</td>
         <td class="cmp-no" data-i18n="cmpYes">Yes</td>
         <td class="cmp-no" data-i18n="cmpYes">Yes</td>
         <td class="cmp-yes" data-i18n="cmpNo">No</td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">No (wallet)</td>
       </tr>
       <tr class="cmp-row">
         <td class="cmp-label" data-i18n="cmpAI">AI agent native</td>
         <td class="cmp-no" data-i18n="cmpNo2">No</td>
         <td class="cmp-no" data-i18n="cmpNo2">No</td>
         <td class="cmp-yes" data-i18n="cmpYes2">Yes</td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">Yes</td>
       </tr>
       <tr class="cmp-row">
         <td class="cmp-label" data-i18n="cmpCountries">Countries blocked</td>
         <td class="cmp-no">~50</td>
         <td class="cmp-no">~60</td>
         <td class="cmp-yes" data-i18n="cmpZero">0 — global</td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">~few (OFAC)</td>
       </tr>
       <tr class="cmp-row">
         <td class="cmp-label" data-i18n="cmpChargeback">Chargeback risk</td>
         <td class="cmp-no" data-i18n="cmpYes">Yes</td>
         <td class="cmp-no" data-i18n="cmpYes">Yes</td>
         <td class="cmp-yes" data-i18n="cmpImpossible">Impossible</td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">Impossible</td>
+      </tr>
+      <tr class="cmp-row">
+        <td class="cmp-label">Currency</td>
+        <td class="cmp-no">Fiat (USD)</td>
+        <td class="cmp-no">Fiat (USD)</td>
+        <td class="cmp-yes">Bitcoin ⚡</td>
+        <td style="padding:10px 14px;text-align:center;color:#a5b4fc">USDC (stablecoin)</td>
+      </tr>
+      <tr class="cmp-row">
+        <td class="cmp-label">l402-kit compatible</td>
+        <td class="cmp-no">No</td>
+        <td class="cmp-no">No</td>
+        <td class="cmp-yes">Native</td>
+        <td style="padding:10px 14px;text-align:center;color:#4ade80">✓ Compatible</td>
       </tr>
     </tbody>
   </table>

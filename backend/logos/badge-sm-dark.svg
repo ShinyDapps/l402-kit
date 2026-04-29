@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="20" viewBox="0 0 120 20">
+  <rect width="120" height="20" rx="3" fill="#F7931A"/>
+  <polygon points="9,3 5,11 8,11 7,17 13,9 10,9" fill="#FFFFFF"/>
+  <text x="18" y="14"
+    font-family="'JetBrains Mono','Fira Code',ui-monospace,'SF Mono',Menlo,monospace"
+    font-weight="700" font-size="8" fill="#FFFFFF" letter-spacing="0">Powered by L402-Kit</text>
+</svg>
