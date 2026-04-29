@@ -43,3 +43,6 @@ backend/
 # vscode extension build artifacts
 vscode-extension/out/
 vscode-extension/*.vsix
+
+# test coverage reports
+coverage/
