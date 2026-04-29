@@ -97,6 +97,25 @@ describe("l402 middleware — 402 challenge", () => {
     expect(res.headers["www-authenticate"]).toMatch(/^L402 macaroon="/);
   });
 
+  it("sets Accept-Payment header on 402", async () => {
+    const res = await request(app).get("/premium");
+    expect(res.headers["accept-payment"]).toBeDefined();
+    expect(res.headers["accept-payment"]).toMatch(/^L402 /);
+  });
+
+  it("Accept-Payment header contains price and invoice", async () => {
+    const res = await request(app).get("/premium");
+    const header = res.headers["accept-payment"] as string;
+    expect(header).toMatch(/price=10sat/);
+    expect(header).toMatch(/invoice="lnbctest1234"/);
+  });
+
+  it("Accept-Payment header contains macaroon", async () => {
+    const res = await request(app).get("/premium");
+    const header = res.headers["accept-payment"] as string;
+    expect(header).toMatch(/macaroon="[A-Za-z0-9+/=]+"/);
+  });
+
   it("returns JSON content-type on 402", async () => {
     const res = await request(app).get("/premium");
     expect(res.headers["content-type"]).toMatch(/application\/json/);

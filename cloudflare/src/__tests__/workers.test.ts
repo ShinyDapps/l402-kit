@@ -11,6 +11,7 @@ import { handleStats } from "../api/stats";
 import { handleSplit } from "../api/split";
 import { handleBlinkHook } from "../api/blink-webhook";
 import { handleDemo, handleDemoBtcPrice, handleDemoPreimage } from "../api/demo";
+import worker from "../worker";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -697,5 +698,62 @@ describe("handleBlinkHook", () => {
     // Even with bad JSON, the handler should not throw — passes body through
     const res = await handleBlinkHook(req, makeEnv());
     expect([200, 400, 500]).toContain(res.status);
+  });
+});
+
+// ─── .well-known discovery routes ────────────────────────────────────────────
+
+describe(".well-known/agent.json", () => {
+  test("GET returns 200 with JSON content-type", async () => {
+    const req = new Request("https://api.l402kit.com/.well-known/agent.json");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toMatch(/application\/json/);
+  });
+
+  test("response contains required agent discovery fields", async () => {
+    const req = new Request("https://api.l402kit.com/.well-known/agent.json");
+    const res = await worker.fetch(req, makeEnv());
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.name).toBe("l402-kit");
+    expect(body.protocols).toContain("l402");
+    expect(body.install).toBeDefined();
+    expect(body.llms_txt).toBeDefined();
+  });
+
+  test("install field has all four package managers", async () => {
+    const req = new Request("https://api.l402kit.com/.well-known/agent.json");
+    const res = await worker.fetch(req, makeEnv());
+    const body = await res.json() as { install: Record<string, string> };
+    expect(body.install.npm).toMatch(/npm install/);
+    expect(body.install.pip).toMatch(/pip install/);
+    expect(body.install.cargo).toMatch(/cargo add/);
+    expect(body.install.go).toMatch(/go get/);
+  });
+});
+
+describe(".well-known/l402.json", () => {
+  test("GET returns 200 with JSON content-type", async () => {
+    const req = new Request("https://api.l402kit.com/.well-known/l402.json");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toMatch(/application\/json/);
+  });
+
+  test("response declares l402 protocol and demo endpoint", async () => {
+    const req = new Request("https://api.l402kit.com/.well-known/l402.json");
+    const res = await worker.fetch(req, makeEnv());
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.protocol).toBe("l402");
+    expect(body.demo_endpoint).toContain("api.l402kit.com");
+    expect(body.price_sats).toBe(1);
+  });
+
+  test("response includes docs and sdk links", async () => {
+    const req = new Request("https://api.l402kit.com/.well-known/l402.json");
+    const res = await worker.fetch(req, makeEnv());
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.docs).toContain("l402kit.com");
+    expect(body.sdk).toContain("npmjs.com");
   });
 });
