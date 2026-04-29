@@ -93,7 +93,7 @@ Atualizado: 2026-04-29
 | 402index.io | ✅ Verificado | https://402index.io |
 | Satring.com | ✅ Listado (ID 650) | https://satring.com |
 | UptimeRobot | ✅ 6 monitors | https://stats.uptimerobot.com/57uOzF17jK |
-| Glama.ai | ⏳ Submetido (2026-04-29) | https://glama.ai/mcp/servers/ShinyDapps/l402-kit |
+| Glama.ai | ⏳ Submetido + Discord #general postado + email Frank respondido (2026-04-29) | https://glama.ai/mcp/servers/ShinyDapps/l402-kit |
 
 ### Outreach — YouTubers (2026-04-29)
 
