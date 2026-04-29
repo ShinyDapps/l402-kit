@@ -38,3 +38,15 @@ zone_name = "l402kit.com"
 pattern = "l402kit.com/.well-known/lnurlp/*"
 zone_name = "l402kit.com"
 
+[[routes]]
+pattern = "l402kit.com/.well-known/agent.json"
+zone_name = "l402kit.com"
+
+[[routes]]
+pattern = "l402kit.com/.well-known/l402.json"
+zone_name = "l402kit.com"
+
+[[routes]]
+pattern = "l402kit.com/badge/*"
+zone_name = "l402kit.com"
+
