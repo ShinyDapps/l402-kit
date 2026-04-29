@@ -918,6 +918,27 @@ describe("docs redirect", () => {
   });
 });
 
+// ─── docs.l402kit.com hostname redirect ──────────────────────────────────────
+
+describe("docs.l402kit.com hostname", () => {
+  test("redirects to mintlify.app", async () => {
+    const req = new Request("https://docs.l402kit.com/introduction");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toContain("mintlify.app");
+    expect(res.headers.get("Location")).toContain("/introduction");
+  });
+
+  test("preserves path and query string", async () => {
+    const req = new Request("https://docs.l402kit.com/agent/quickstart?ref=test");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(302);
+    const loc = res.headers.get("Location") ?? "";
+    expect(loc).toContain("agent/quickstart");
+    expect(loc).toContain("ref=test");
+  });
+});
+
 // ─── 402index verify route ────────────────────────────────────────────────────
 
 describe("/.well-known/402index-verify.txt", () => {
