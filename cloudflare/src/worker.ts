@@ -102,7 +102,7 @@ export default {
 
     // docs.l402kit.com → proxy to Mintlify
     if (url.hostname === "docs.l402kit.com") {
-      const mintUrl = `https://shinydapps.mintlify.app${path}${url.search}`;
+      const mintUrl = `https://shinydapps-bd9fa40b.mintlify.app${path}${url.search}`;
       return fetch(mintUrl, { headers: request.headers });
     }
 
