@@ -77,6 +77,48 @@ Atualizado: 2026-04-29
 | awesome-MCP PR | https://github.com/punkpeye/awesome-mcp-servers/pull/5585 |
 | awesome-L402 PR | https://github.com/Fewsats/awesome-L402/pull/14 |
 
+## Tração & Outreach — Rastreamento
+
+### PRs Abertos
+
+| PR | Repositório | Status | Verificar em |
+|----|-------------|--------|--------------|
+| [#5585](https://github.com/punkpeye/awesome-mcp-servers/pull/5585) | punkpeye/awesome-mcp-servers | ⏳ Aguardando merge | github.com/punkpeye/awesome-mcp-servers/pulls |
+| [#14](https://github.com/Fewsats/awesome-L402/pull/14) | Fewsats/awesome-L402 | ⏳ Aguardando merge | github.com/Fewsats/awesome-L402/pulls |
+
+### Diretórios / Registros
+
+| Plataforma | Status | Link |
+|------------|--------|------|
+| 402index.io | ✅ Verificado | https://402index.io |
+| Satring.com | ✅ Listado (ID 650) | https://satring.com |
+| UptimeRobot | ✅ 6 monitors | https://stats.uptimerobot.com/57uOzF17jK |
+
+### Outreach — YouTubers (2026-04-29)
+
+| Canal | Inscritos | Idioma | Contato | Resposta |
+|-------|-----------|--------|---------|----------|
+| Evandro Pit | 73.4k | PT-BR | Chat/DM | ⏳ Aguardando |
+| Crypto Wall Street | 57.5k | DE | Chat/DM | ⏳ Aguardando |
+| Bitbull | 153k | DE | Chat + info@bitbull-trading.com | ⏳ Aguardando |
+| 88 SATS | 14.6k | EN | Chat/DM | ⏳ Aguardando |
+| Engenheiro Cripto | 88.5k | PT-BR | Chat + @guiengenheirocripto | ⏳ Aguardando |
+| Paradigma Education | 46.3k | PT-BR | Chat + @felipether | ⏳ Aguardando |
+| Count BTC | 1.72k | EN | Chat/DM | ⏳ Aguardando |
+
+> Atualizar coluna **Resposta** conforme retornos chegarem: ✅ Respondeu · ❌ Sem retorno · 🔥 Mencionou no canal
+
+### Phase 4 — Posts Pendentes
+
+| Plataforma | Status |
+|------------|--------|
+| Show HN (news.ycombinator.com) | ⏳ Draft pronto — `SHOW_HN_DRAFT.md` |
+| DEV.to | ⏳ Draft pronto — `DEVTO_ARTICLE_DRAFT.md` |
+| Discord Lightning Labs | ⏳ Draft pronto — `DISCORD_MESSAGES_DRAFT.md` |
+| Discord Alby | ⏳ Draft pronto — `DISCORD_MESSAGES_DRAFT.md` |
+
+---
+
 ## Credenciais (refs para `credentials.md`)
 
 - npm: `shinydapps` / token em credentials.md
