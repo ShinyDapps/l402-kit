@@ -100,21 +100,10 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // docs.l402kit.com → proxy to Mintlify (rewriting stale Vercel refs)
+    // docs.l402kit.com → redirect to Mintlify (customDomain removed from mint.json)
     if (url.hostname === "docs.l402kit.com") {
       const mintUrl = `https://shinydapps-bd9fa40b.mintlify.app${path}${url.search}`;
-      const upstream = await fetch(mintUrl, {
-        headers: { ...Object.fromEntries(request.headers), host: "shinydapps-bd9fa40b.mintlify.app" }
-      });
-      const ct = upstream.headers.get("content-type") ?? "";
-      if (ct.includes("text/html") || ct.includes("javascript")) {
-        let body = await upstream.text();
-        body = body.replaceAll("l402kit.vercel.app", "docs.l402kit.com");
-        const h = new Headers(upstream.headers);
-        h.delete("content-encoding");
-        return new Response(body, { status: upstream.status, headers: h });
-      }
-      return upstream;
+      return Response.redirect(mintUrl, 302);
     }
 
     if (request.method === "OPTIONS") {
