@@ -28,13 +28,52 @@ export interface Env {
   demo_preimages: KVNamespace;
 }
 
-const MINTLIFY = "https://shinydapps-bd9fa40b.mintlify.app";
+const DOCS = "https://docs.l402kit.com";
 
 function handleDocsRedirect(request: Request): Response {
   const url = new URL(request.url);
   const mintPath = url.pathname.replace(/^\/docs/, "") || "/introduction";
-  const target = `${MINTLIFY}${mintPath}${url.search}`;
+  const target = `${DOCS}${mintPath}${url.search}`;
   return Response.redirect(target, 302);
+}
+
+function handleAgentJson(): Response {
+  return new Response(JSON.stringify({
+    name: "l402-kit",
+    description: "Middleware to monetize any API with Bitcoin Lightning in 3 lines. TypeScript, Python, Go, Rust.",
+    version: "1.8.1",
+    protocols: ["l402", "x402"],
+    install: {
+      npm: "npm install l402-kit",
+      pip: "pip install l402kit",
+      cargo: "cargo add l402kit",
+      go: "go get github.com/shinydapps/l402-kit/go"
+    },
+    docs: "https://docs.l402kit.com/introduction",
+    llms_txt: "https://l402kit.com/llms.txt",
+    agent_sdk: "https://docs.l402kit.com/agent/quickstart",
+    mcp_server: "https://docs.l402kit.com/agent/mcp",
+    fee: "0.3% managed, 0% soberano",
+    contact: "shinydapps@blink.sv"
+  }, null, 2), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+function handleL402Json(): Response {
+  return new Response(JSON.stringify({
+    protocol: "l402",
+    version: "1.0",
+    provider: "l402-kit",
+    demo_endpoint: "https://api.l402kit.com/api/demo",
+    price_sats: 1,
+    docs: "https://docs.l402kit.com/introduction",
+    sdk: "https://npmjs.com/package/l402-kit"
+  }, null, 2), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
 }
 
 function cors(res: Response): Response {
@@ -66,6 +105,8 @@ export default {
       else if (path === "/api/demo/pay-address")  res = await handleDemoPayAddress(request, env);
       else if (path === "/api/verify")    res = await handleVerify(request, env);
       else if (path === "/api/lnurl-auth") res = await handleLnurlAuth(request, env);
+      else if (path === "/.well-known/agent.json")  res = handleAgentJson();
+      else if (path === "/.well-known/l402.json")   res = handleL402Json();
       else if (path.startsWith("/.well-known/lnurlp/")) res = await handleLnurlp(request, env);
       else if (path === "/api/blink-webhook") res = await handleBlinkHook(request, env);
       else if (path === "/api/delete-data")   res = await handleDeleteData(request, env);

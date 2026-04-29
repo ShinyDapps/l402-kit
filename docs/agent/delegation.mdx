@@ -1,0 +1,107 @@
+---
+title: "Agent-to-Agent Delegation"
+description: "Let an orchestrator delegate payment tokens to sub-agents with scoped permissions."
+---
+
+## Concept
+
+L402 macaroons support **caveats** — restrictions baked into the token. An orchestrator agent can:
+
+1. Pay once for a resource
+2. Mint a derived token with limited permissions
+3. Pass that token to sub-agents
+4. Sub-agents use the scoped token without touching the wallet
+
+This enables **multi-agent systems with shared payment budgets and zero wallet exposure**.
+
+## Flow
+
+```
+Orchestrator (has wallet)
+   │
+   ├── pays invoice → receives macaroon M
+   │
+   ├── adds caveat: "endpoint=/data/reports only"
+   ├── adds caveat: "expires in 5 minutes"
+   │
+   ├── delegates derived token M' to SubAgent A
+   └── delegates derived token M'' to SubAgent B
+
+SubAgent A — calls /data/reports with M'  ✓
+SubAgent B — calls /data/reports with M'' ✓
+SubAgent A — tries /admin with M'         ✗ (caveat blocked)
+```
+
+## TypeScript example
+
+```typescript
+import { l402Client, delegateToken } from "l402-kit/agent";
+
+const orchestrator = l402Client({ wallet, budgetSats: 5000 });
+
+// Orchestrator pays and gets token
+const token = await orchestrator.payInvoice("https://api.example.com/data");
+
+// Mint a derived token scoped to a specific endpoint
+const subToken = delegateToken(token, {
+  endpoint: "/data/reports",
+  expiresInSeconds: 300, // 5 min
+  maxUses: 1,
+});
+
+// Pass to sub-agent (string, safe to transmit)
+await sendToSubAgent(subToken);
+```
+
+## Python example
+
+```python
+from l402kit import L402Client, delegate_token
+from l402kit.wallets import BlinkWallet
+
+orchestrator = L402Client(wallet=BlinkWallet(api_key=...), budget_sats=5000)
+
+# Pay and receive base token
+token = await orchestrator.pay_invoice("https://api.example.com/data")
+
+# Mint scoped token
+sub_token = delegate_token(token, {
+    "endpoint": "/data/reports",
+    "expires_in": 300,
+    "max_uses": 1,
+})
+
+# Send to sub-agent
+await dispatch_task(agent_id="reporter", token=sub_token)
+```
+
+## Sub-agent using delegated token
+
+```typescript
+// Sub-agent receives token string, never touches wallet
+import { fetchWithToken } from "l402-kit/agent";
+
+const result = await fetchWithToken(
+  "https://api.example.com/data/reports",
+  delegatedToken
+);
+```
+
+## Security properties
+
+| Property | Guarantee |
+|----------|-----------|
+| Wallet isolation | Sub-agents never see private keys |
+| Endpoint scoping | Caveat restricts which paths are valid |
+| Time-bound | Token expires automatically |
+| Single-use | `maxUses: 1` prevents sharing |
+| Cryptographic | Caveats are verified server-side |
+
+## When to use delegation
+
+- **Research crews**: orchestrator pays, multiple sub-agents fetch in parallel
+- **Tool sandboxing**: limit which APIs each agent can access
+- **Audit trails**: each sub-agent token traces back to a single payment
+- **Cost control**: budget is held at orchestrator level, not distributed
+
+See [Budget Control](/agent/budget) for session-level spending limits.

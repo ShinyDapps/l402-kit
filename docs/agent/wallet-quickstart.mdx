@@ -1,0 +1,89 @@
+---
+title: "Wallet Quickstart"
+description: "Get a Lightning wallet in 60 seconds. No bank. No KYC. Works in 193 countries."
+---
+
+You need a Lightning wallet to pay L402 APIs. Two options — both free, both work globally.
+
+---
+
+## Option A — Blink (recommended)
+
+<Steps>
+  <Step title="Create account">
+    Go to [blink.sv](https://blink.sv) and sign up with a phone number or email.
+  </Step>
+  <Step title="Copy your Lightning Address">
+    In the app: **Settings → Lightning Address**. It looks like `yourname@blink.sv`.
+  </Step>
+  <Step title="Get your API key">
+    Go to [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → create a key.
+  </Step>
+  <Step title="Use in l402-kit">
+    ```typescript
+    import { ManagedProvider } from "l402-kit";
+
+    const provider = ManagedProvider.fromAddress("yourname@blink.sv");
+    ```
+
+    Or with the Agent SDK:
+
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ BLINK_API_KEY: "your-key" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Option B — Alby
+
+<Steps>
+  <Step title="Create account">
+    Go to [getalby.com](https://getalby.com) and sign up.
+  </Step>
+  <Step title="Get your OAuth token">
+    Go to [getalby.com/api-tokens](https://getalby.com/api-tokens) and create a token with `payments:send` scope.
+  </Step>
+  <Step title="Use in l402-kit">
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ ALBY_TOKEN: "your-token" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Zero-config via environment variables
+
+l402-kit auto-detects your wallet from env vars. No code changes needed:
+
+```bash
+# Blink
+export BLINK_API_KEY="your-key"
+
+# Alby
+export ALBY_TOKEN="your-token"
+```
+
+```typescript
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env); // auto-detects Blink or Alby
+```
+
+---
+
+## Fund your wallet
+
+Both wallets give you a Lightning address to receive sats. To test:
+
+1. Go to [coinfos.net](https://coinfos.net) or any faucet
+2. Send 1000 sats to your Lightning address
+3. Run `npm install l402-kit && node -e "require('l402-kit/agent').healthCheck()"`
+
+**Sem banco. Sem KYC pesado. Funciona em 193 países.**

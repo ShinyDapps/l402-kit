@@ -74,6 +74,9 @@ export function l402(options: L402Options): RequestHandler {
       res.status(402).set(
         "WWW-Authenticate",
         `L402 macaroon="${invoice.macaroon}", invoice="${invoice.paymentRequest}"`
+      ).set(
+        "Accept-Payment",
+        `L402 price=${priceSats}sat invoice="${invoice.paymentRequest}" macaroon="${invoice.macaroon}"`
       );
       res.json({
         error: "Payment Required",

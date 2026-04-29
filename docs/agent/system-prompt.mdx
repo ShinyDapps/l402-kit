@@ -1,0 +1,110 @@
+---
+title: "System Prompt Snippet"
+description: "Add l402-kit to your agent's system prompt so it pays for APIs autonomously."
+---
+
+## Copy-paste snippet
+
+Add this to any agent's system prompt to enable autonomous L402 payments:
+
+```
+You have access to paid APIs via the L402 protocol.
+When you call an API that returns HTTP 402, use the L402Client from l402-kit
+to pay automatically with Bitcoin Lightning.
+Budget limit: {BUDGET_SATS} sats per session. Never exceed this limit.
+Report spending at the end of each session.
+```
+
+Replace `{BUDGET_SATS}` with your session budget (e.g. `1000` for ~$0.50).
+
+---
+
+## LangChain
+
+```python
+from langchain.agents import AgentExecutor
+from l402kit import L402Client
+from l402kit.langchain import L402Tool
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+tools = [L402Tool(client=client, name="paid_api")]
+
+system = """You have access to paid APIs via the L402 protocol.
+Budget: 1000 sats per session. Use the paid_api tool when you need data."""
+
+agent = AgentExecutor(agent=..., tools=tools, system_message=system)
+```
+
+---
+
+## OpenAI Agents SDK
+
+```python
+from agents import Agent, Runner
+from l402kit import L402Client
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+agent = Agent(
+    name="DataFetcher",
+    instructions="""You have access to paid APIs via the L402 protocol.
+    When an API returns 402, call pay_and_fetch() with the URL.
+    Budget: 1000 sats per session.""",
+    tools=[client.as_openai_tool("pay_and_fetch")]
+)
+```
+
+---
+
+## CrewAI
+
+```python
+from crewai import Agent, Task, Crew
+from l402kit import L402Client
+
+client = L402Client(wallet=wallet, budget_sats=500)
+
+researcher = Agent(
+    role="API Researcher",
+    goal="Fetch data from paid APIs autonomously",
+    backstory="""You can access paid APIs using Bitcoin Lightning micropayments.
+    When you encounter a 402 response, pay with the l402_fetch tool.
+    Budget: 500 sats.""",
+    tools=[client.as_crewai_tool()]
+)
+```
+
+---
+
+## Vercel AI SDK
+
+```typescript
+import { l402Client } from "l402-kit/agent";
+import { tool } from "ai";
+
+const client = l402Client({ wallet: blinkWallet, budgetSats: 1000 });
+
+const systemPrompt = `You have access to paid APIs via the L402 protocol.
+When you need data from a paid source, use the fetchPaid tool.
+Budget: 1000 sats per session.`;
+
+const tools = {
+  fetchPaid: tool({
+    description: "Fetch data from an L402-protected API",
+    parameters: z.object({ url: z.string() }),
+    execute: async ({ url }) => client.fetch(url),
+  }),
+};
+```
+
+---
+
+## Tips
+
+- Set `budgetSats` conservatively — agents can accumulate calls fast
+- Use `spendingReport()` to log usage at session end
+- For production, use [BudgetManager](/agent/budget) with per-user limits

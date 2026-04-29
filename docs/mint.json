@@ -26,15 +26,19 @@
     },
     {
       "group": "Agent SDK",
-      "pages": ["agent/quickstart", "agent/wallets", "agent/budget", "agent/mcp", "agent/langchain"]
+      "pages": ["agent/quickstart", "agent/wallets", "agent/budget", "agent/mcp", "agent/langchain", "agent/system-prompt", "agent/wallet-quickstart", "agent/delegation"]
+    },
+    {
+      "group": "Agent Integrations",
+      "pages": ["agent/crewai", "agent/openai-agents", "agent/vercel-ai", "agent/autogpt"]
     },
     {
       "group": "Guides",
-      "pages": ["guides/dashboard", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/lnurl", "guides/security", "guides/production", "guides/troubleshooting"]
+      "pages": ["guides/dashboard", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/lnurl", "guides/security", "guides/production", "guides/troubleshooting", "guides/dns-discovery"]
     },
     {
       "group": "Reference",
-      "pages": ["providers", "api-reference", "competitive", "payment-layer", "whitepaper"]
+      "pages": ["providers", "api-reference", "reference/errors", "competitive", "payment-layer", "whitepaper"]
     },
     {
       "group": "🇧🇷 Português",

@@ -1,0 +1,66 @@
+---
+title: "DNS Discovery"
+description: "Let agents discover your L402 endpoint via DNS TXT record — no HTTP request needed."
+---
+
+## Why DNS discovery
+
+Agents with internet access can resolve DNS before making any HTTP request. If you publish your L402 endpoint as a DNS TXT record, agents discover it automatically — even before hitting your API.
+
+## TXT record format
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+Fields:
+- `v=l402` — protocol identifier
+- `endpoint=` — your L402-protected URL
+- `price=` — price in sats (optional, informational)
+- `docs=` — link to your docs (optional)
+
+## Setup on Cloudflare
+
+1. Go to **Cloudflare Dashboard → DNS**
+2. Add a new record:
+
+| Type | Name | Content | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## Verify with dig
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Expected output:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## How agents use it
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// Agent resolves DNS to find your endpoint
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Returns: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## l402-kit's own record
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.l402kit.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## Benefits
+
+- **Zero HTTP overhead** — discovery before any API call
+- **Agent-native** — DNS is how machines find services, not humans
+- **No API key needed** — completely open discovery
+- **Cacheable** — TTL controls how often agents re-resolve
+
+See [.well-known/agent.json](https://api.l402kit.com/.well-known/agent.json) for the complementary HTTP discovery standard.

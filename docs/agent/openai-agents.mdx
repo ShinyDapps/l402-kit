@@ -1,0 +1,143 @@
+---
+title: "OpenAI Agents SDK"
+description: "Use l402-kit with OpenAI Agents SDK to pay for APIs autonomously."
+---
+
+## Install
+
+<CodeGroup>
+```bash Python
+pip install l402kit openai-agents
+```
+```bash TypeScript
+npm install l402-kit openai
+```
+</CodeGroup>
+
+## Python — full example
+
+```python
+import os
+import asyncio
+from agents import Agent, Runner, function_tool
+from l402kit import L402Client
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+@function_tool
+async def pay_and_fetch(url: str) -> str:
+    """Fetch data from an L402-protected API, paying automatically with Lightning."""
+    response = await client.get(url)
+    return response.text
+
+agent = Agent(
+    name="DataAgent",
+    instructions="""You have access to paid APIs via the L402 protocol.
+    When you need data from a paid source, use the pay_and_fetch tool.
+    Budget: 1000 sats per session. Report spending at the end.""",
+    tools=[pay_and_fetch]
+)
+
+async def main():
+    result = await Runner.run(
+        agent,
+        "Fetch data from https://api.l402kit.com/api/demo and summarize it"
+    )
+    print(result.final_output)
+    print(f"Sats spent: {client.spent_sats}")
+
+asyncio.run(main())
+```
+
+## TypeScript — full example
+
+```typescript
+import OpenAI from "openai";
+import { l402Client } from "l402-kit/agent";
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env);
+const client = l402Client({ wallet, budgetSats: 1000 });
+
+const openai = new OpenAI();
+
+const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "pay_and_fetch",
+      description: "Fetch data from an L402-protected paid API using Bitcoin Lightning",
+      parameters: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "The API URL to fetch" }
+        },
+        required: ["url"]
+      }
+    }
+  }
+];
+
+async function runAgent(userMessage: string) {
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: `You have access to paid APIs via the L402 protocol.
+Use pay_and_fetch when you need data from a paid API.
+Budget: 1000 sats per session.`
+    },
+    { role: "user", content: userMessage }
+  ];
+
+  while (true) {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      tools
+    });
+
+    const choice = response.choices[0];
+    messages.push(choice.message);
+
+    if (choice.finish_reason === "stop") {
+      console.log(choice.message.content);
+      console.log(`Sats spent: ${client.spentSats}`);
+      break;
+    }
+
+    if (choice.finish_reason === "tool_calls") {
+      for (const call of choice.message.tool_calls ?? []) {
+        if (call.function.name === "pay_and_fetch") {
+          const { url } = JSON.parse(call.function.arguments);
+          const result = await client.fetch(url).then(r => r.text());
+          messages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: result
+          });
+        }
+      }
+    }
+  }
+}
+
+runAgent("Fetch and summarize https://api.l402kit.com/api/demo");
+```
+
+## Budget safety
+
+```python
+from l402kit import BudgetExceededError
+
+@function_tool
+async def pay_and_fetch(url: str) -> str:
+    try:
+        response = await client.get(url)
+        return response.text
+    except BudgetExceededError:
+        return '{"error": "BUDGET_EXCEEDED", "retry": false}'
+```
+
+See [Wallet Quickstart](/agent/wallet-quickstart) to get a wallet in 60 seconds.

@@ -1,0 +1,105 @@
+---
+title: "Vercel AI SDK"
+description: "Add Bitcoin Lightning payments to your Next.js AI app with l402-kit."
+---
+
+## Install
+
+```bash
+npm install l402-kit ai
+```
+
+## Basic tool
+
+```typescript
+import { tool } from "ai";
+import { z } from "zod";
+import { l402Client, buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env);
+const client = l402Client({ wallet, budgetSats: 1000 });
+
+export const paidFetch = tool({
+  description: "Fetch data from an L402-protected paid API using Bitcoin Lightning",
+  parameters: z.object({
+    url: z.string().describe("The API endpoint to call"),
+  }),
+  execute: async ({ url }) => {
+    const res = await client.fetch(url);
+    return res.json();
+  },
+});
+```
+
+## Next.js App Router — full example
+
+```typescript
+// app/api/chat/route.ts
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
+import { paidFetch } from "@/lib/tools";
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: openai("gpt-4o"),
+    system: `You have access to paid APIs via the L402 protocol.
+Use the paidFetch tool when you need data from an external paid source.
+Budget: 1000 sats per session.`,
+    messages,
+    tools: { paidFetch },
+    maxSteps: 5,
+  });
+
+  return result.toDataStreamResponse();
+}
+```
+
+```tsx
+// app/page.tsx
+"use client";
+import { useChat } from "ai/react";
+
+export default function Chat() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat();
+
+  return (
+    <div>
+      {messages.map(m => (
+        <div key={m.id}>
+          <strong>{m.role}:</strong> {m.content}
+        </div>
+      ))}
+      <form onSubmit={handleSubmit}>
+        <input value={input} onChange={handleInputChange} />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+```
+
+## Works with Claude, GPT-4, Gemini
+
+```typescript
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
+
+// Claude
+streamText({ model: anthropic("claude-sonnet-4-6"), tools: { paidFetch }, ... });
+
+// Gemini
+streamText({ model: google("gemini-1.5-pro"), tools: { paidFetch }, ... });
+```
+
+## Environment setup
+
+```bash
+# .env.local
+BLINK_API_KEY=your-blink-api-key
+# or
+ALBY_TOKEN=your-alby-token
+```
+
+See [Wallet Quickstart](/agent/wallet-quickstart) to get a Lightning wallet in 60 seconds.

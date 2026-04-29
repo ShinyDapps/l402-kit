@@ -76,6 +76,55 @@ cargo add l402kit           # Rust / axum
 ```
 
 > **AI Agents / LLMs:** See [`llms.txt`](./llms.txt) for machine-readable instructions.
+> **Agent discovery:** [`/.well-known/agent.json`](https://api.l402kit.com/.well-known/agent.json) · [`/.well-known/l402.json`](https://api.l402kit.com/.well-known/l402.json)
+
+---
+
+## For AI Agents
+
+l402-kit is the payment layer for autonomous agents. Agents can pay for APIs without human intervention.
+
+**System prompt snippet** — add this to any agent to enable L402 payments:
+
+```
+You have access to paid APIs via the L402 protocol.
+When you call an API that returns HTTP 402, use the L402Client from l402-kit
+to pay automatically with Bitcoin Lightning.
+Budget limit: {BUDGET_SATS} sats per session. Never exceed this limit.
+```
+
+**Agent SDK quickstart:**
+
+```typescript
+import { l402Client, buildWallet } from "l402-kit/agent";
+
+const client = l402Client({
+  wallet: buildWallet(process.env), // auto-detects BLINK_API_KEY or ALBY_TOKEN
+  budgetSats: 1000,
+});
+
+const data = await client.fetch("https://api.example.com/paid-endpoint");
+```
+
+**MCP Server** (for Claude Desktop, Cursor, and any MCP-compatible agent):
+
+```json
+{
+  "mcpServers": {
+    "l402-kit": {
+      "command": "npx",
+      "args": ["l402-kit-mcp"],
+      "env": { "BLINK_API_KEY": "your-key" }
+    }
+  }
+}
+```
+
+**Compatible with:** LangChain · OpenAI Agents · CrewAI · Vercel AI SDK · AutoGPT · Any MCP client
+
+**Protocol support:** L402 (Bitcoin Lightning) · x402 (USDC/Coinbase) compatible
+
+[![Powered by L402-Kit](https://img.shields.io/badge/%E2%9A%A1_Powered_by-L402--Kit-f7931a)](https://l402kit.com)
 
 ---
 
