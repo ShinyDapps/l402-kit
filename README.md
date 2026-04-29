@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://l402kit.com/logo-dark.svg" height="72">
-  <img src="https://l402kit.com/logo-light.svg" height="72" alt="l402-kit">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/logo-dark.svg" height="72">
+  <img src="https://raw.githubusercontent.com/ShinyDapps/l402-kit/main/docs/logo-light.svg" height="72" alt="l402-kit">
 </picture>
 
 # l402-kit
@@ -15,8 +15,9 @@
 
 <br/>
 
-<a href="https://l402kit.com/demo" title="Watch end-to-end demo">
-  <img src="https://l402kit.com/extension-preview.png" width="600" alt="ShinyDapps VS Code extension — real-time Lightning payment dashboard" />
+<a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402" title="VS Code Extension — real-time Lightning payment dashboard">
+  <img src="https://vsmarketplacebadges.dev/version/ShinyDapps.shinydapps-l402.svg" alt="VS Code Marketplace" />
+  <img src="https://vsmarketplacebadges.dev/installs-short/ShinyDapps.shinydapps-l402.svg" alt="Installs" />
 </a>
 
 <br/>
