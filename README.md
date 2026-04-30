@@ -10,7 +10,7 @@
 **Add Bitcoin Lightning pay-per-call to any API. 3 lines of code.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://l402kit.com/demo)
+[![Live Demo](https://img.shields.io/badge/▶_live_demo-end--to--end-f7931a)](https://docs.l402kit.com/introduction)
 [![Tests](https://img.shields.io/endpoint?url=https://l402kit.com/api/badges/tests)](https://github.com/ShinyDapps/l402-kit)
 [![l402-kit MCP server](https://glama.ai/mcp/servers/ShinyDapps/l402-kit/badges/score.svg)](https://glama.ai/mcp/servers/ShinyDapps/l402-kit)
 
@@ -23,7 +23,7 @@
 
 <br/>
 
-**[▶ Watch end-to-end demo — install → 402 → pay → 200 OK](https://l402kit.com/demo)**
+**[▶ Watch end-to-end demo — install → 402 → pay → 200 OK](https://docs.l402kit.com/introduction)**
 
 <br/>
 
@@ -242,7 +242,7 @@ curl http://localhost:3000/premium \
 # ← { "data": "Payment confirmed." }
 ```
 
-[▶ Try the interactive demo](https://l402kit.com/demo)
+[▶ Try the interactive demo](https://docs.l402kit.com/introduction)
 
 ---
 
@@ -357,6 +357,6 @@ Built with ⚡ by [ShinyDapps](https://github.com/ShinyDapps)
 
 <br/>
 
-<a href="https://l402kit.com/docs">Docs</a> · <a href="https://l402kit.com/demo">Demo</a> · <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">VS Code</a> · <a href="https://npmjs.com/package/l402-kit">npm</a>
+<a href="https://l402kit.com/docs">Docs</a> · <a href="https://docs.l402kit.com/introduction">Demo</a> · <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">VS Code</a> · <a href="https://npmjs.com/package/l402-kit">npm</a>
 
 </div>
