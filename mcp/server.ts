@@ -52,13 +52,25 @@ const budgetSats = process.env.BUDGET_SATS ? parseInt(process.env.BUDGET_SATS, 1
 
 const spendLog: Array<{ sats: number; url: string; ts: string }> = [];
 
-const client = new L402Client({
-  wallet: buildWallet(),
-  budgetSats,
-  onSpend: (sats, url) => {
-    spendLog.push({ sats, url, ts: new Date().toISOString() });
-  },
-});
+let client: L402Client | null = null;
+let walletError: string | null = null;
+
+try {
+  client = new L402Client({
+    wallet: buildWallet(),
+    budgetSats,
+    onSpend: (sats, url) => {
+      spendLog.push({ sats, url, ts: new Date().toISOString() });
+    },
+  });
+} catch (err) {
+  walletError = String(err);
+}
+
+function requireClient(): L402Client {
+  if (!client) throw new Error(walletError ?? "No wallet configured.");
+  return client;
+}
 
 // ─── MCP server ───────────────────────────────────────────────────────────────
 
@@ -80,14 +92,14 @@ server.tool(
   async ({ url, method, body, headers }) => {
     const httpMethod = (method ?? "GET").toUpperCase();
     try {
-      const res = await client.fetch(url, {
+      const res = await requireClient().fetch(url, {
         method: httpMethod,
         body,
         headers: (headers ?? {}) as Record<string, string>,
       });
 
       const text = await res.text();
-      const report = client.spendingReport();
+      const report = requireClient().spendingReport();
       const spent = report?.transactions.at(-1)?.sats ?? 0;
 
       return {
@@ -115,7 +127,7 @@ server.tool(
   "Returns the remaining Lightning budget available for this session.",
   {},
   async () => {
-    const report = client.spendingReport();
+    const report = requireClient().spendingReport();
     if (!report) {
       return {
         content: [{ type: "text" as const, text: "No budget configured." }],
@@ -136,7 +148,7 @@ server.tool(
   "Returns a detailed breakdown of Lightning payments made this session — total spent, remaining budget, and per-domain breakdown.",
   {},
   async () => {
-    const report = client.spendingReport();
+    const report = requireClient().spendingReport();
     if (!report) {
       return {
         content: [{ type: "text" as const, text: "No budget configured." }],
@@ -176,7 +188,7 @@ server.tool(
   "Check current budget status. (Budget is set at startup via BUDGET_SATS env var.)",
   {},
   async () => {
-    const report = client.spendingReport();
+    const report = requireClient().spendingReport();
     return {
       content: [{
         type: "text" as const,
