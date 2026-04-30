@@ -1,7 +1,8 @@
 {
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "maintainers": [
-    "ThiagoDataEngineer"
+    "ThiagoDataEngineer",
+    "ShinyDapps"
   ],
   "name": "l402-kit-mcp",
   "description": "MCP server that enables AI agents to autonomously pay for and call L402-protected APIs using Bitcoin Lightning. Provides tools for invoice lookup, payment, and credential caching.",
