@@ -1,0 +1,34 @@
+{
+  "$schema": "https://glama.ai/mcp/glama.schema.json",
+  "name": "l402-kit-mcp",
+  "description": "MCP server that enables AI agents to autonomously pay for and call L402-protected APIs using Bitcoin Lightning. Provides tools for invoice lookup, payment, and credential caching.",
+  "icon": "https://l402kit.com/logo/dark.svg",
+  "categories": ["cryptocurrency", "autonomous-agents", "payments", "api"],
+  "homepage": "https://l402kit.com",
+  "repository": "https://github.com/ShinyDapps/l402-kit",
+  "documentation": "https://docs.l402kit.com/agent/mcp",
+  "license": "MIT",
+  "keywords": ["l402", "lightning", "bitcoin", "payments", "mcp", "ai-agents", "api-monetization"],
+  "installation": {
+    "npm": {
+      "package": "l402-kit-mcp",
+      "command": "npx l402-kit-mcp"
+    }
+  },
+  "env": {
+    "L402_PROVIDER": {
+      "description": "Lightning provider to use: 'blink' (managed, zero-config) or 'lnd'/'cln' (sovereign)",
+      "required": false,
+      "default": "blink"
+    },
+    "L402_BLINK_API_KEY": {
+      "description": "Blink API key for managed Lightning payments (get free at blink.sv)",
+      "required": false
+    },
+    "L402_BUDGET_SATS": {
+      "description": "Maximum sats the agent can spend per session (default: 1000)",
+      "required": false,
+      "default": "1000"
+    }
+  }
+}

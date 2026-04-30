@@ -10,4 +10,4 @@ RUN npm run build 2>/dev/null || true
 
 ENV NODE_ENV=production
 
-ENTRYPOINT ["node", "dist/mcp/server.js"]
+ENTRYPOINT ["npx", "l402-kit-mcp"]
