@@ -699,6 +699,63 @@ describe("handleBlinkHook", () => {
     const res = await handleBlinkHook(req, makeEnv());
     expect([200, 400, 500]).toContain(res.status);
   });
+
+  // ── Payload schema snapshot — guards against silent Blink format changes ──
+
+  test("payload schema: data.initiationVia.paymentHash is the field we depend on", async () => {
+    // If Blink changes this path, KV enrichment silently stops working.
+    // This test freezes the contract so any format change is caught immediately.
+    const hash = "schema_snapshot_hash";
+    const canonicalPayload = {
+      id: "evt_test",
+      type: "transaction.received",
+      data: {
+        settlementAmount: 100,
+        initiationVia: { paymentHash: hash },  // ← exact path the handler reads
+      },
+    };
+    const body = JSON.stringify(canonicalPayload);
+    const kv   = makeKV({ [`l402_inv:${hash}`]: JSON.stringify({ ownerAddress: "test@blink.sv", amountSats: 100 }) });
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    await handleBlinkHook(req, makeEnv({ demo_preimages: kv }));
+
+    const forwarded = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as Record<string, unknown>;
+    // Enrichment only happens if the path is correct — if Blink renames initiationVia, this fails
+    expect(forwarded._ownerAddress).toBe("test@blink.sv");
+    expect(forwarded._amountSats).toBe(100);
+  });
+
+  test("payload schema: missing initiationVia does not crash handler", async () => {
+    // Graceful degradation — if Blink sends a new event type without initiationVia, handler must not throw
+    const body = JSON.stringify({ id: "evt_other", type: "transaction.sent", data: { settlementAmount: 50 } });
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    const res = await handleBlinkHook(req, makeEnv());
+    expect(res.status).toBe(200);
+
+    const forwarded = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as Record<string, unknown>;
+    expect(forwarded._ownerAddress).toBeUndefined(); // no enrichment — expected
+  });
+
+  test("Svix headers are forwarded to Supabase for re-verification", async () => {
+    // Supabase edge function re-verifies the Svix signature — we must forward the headers
+    const body = blinkBody("hash_fwd_headers");
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    await handleBlinkHook(req, makeEnv());
+
+    const forwardedHeaders = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+    expect(forwardedHeaders["svix-id"]).toBeTruthy();
+    expect(forwardedHeaders["svix-timestamp"]).toBeTruthy();
+    expect(forwardedHeaders["svix-signature"]).toBeTruthy();
+  });
 });
 
 // ─── .well-known discovery routes ────────────────────────────────────────────

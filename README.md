@@ -302,7 +302,7 @@ Token expiry:      macaroons expire after 1 hour
 - **Unforgeable** — SHA256 is a one-way function; you cannot fake a preimage
 - **No chargebacks** — cryptographic settlement, not reversible card auth
 - **Replay-safe** — MemoryReplayAdapter (dev) or RedisReplayAdapter (production, multi-instance)
-- **413 automated tests** across 5 runtimes (TS, Python, Go, Rust, Cloudflare Workers) — production-grade reliability for autonomous agent workflows
+- **416 automated tests** across 5 runtimes (TS, Python, Go, Rust, Cloudflare Workers) — production-grade reliability for autonomous agent workflows
 - **Fully auditable** — MIT, every line open source
 
 ---
