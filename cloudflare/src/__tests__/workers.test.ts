@@ -678,6 +678,35 @@ describe("handleBlinkHook", () => {
     expect((forwarded.data as Record<string, unknown>)?.initiationVia).toBeDefined();
   });
 
+  test("POST duplicate paymentHash returns skipped without calling Supabase", async () => {
+    const hash = "hash_already_processed";
+    const body = blinkBody(hash);
+    const kv   = makeKV({ [`processed:${hash}`]: "1" });
+    const req  = await makeSvixRequest(body, SECRET);
+
+    const res = await handleBlinkHook(req, makeEnv({ demo_preimages: kv }));
+    expect(res.status).toBe(200);
+    const resBody = await res.json() as { ok: boolean; skipped: boolean; reason: string };
+    expect(resBody.ok).toBe(true);
+    expect(resBody.skipped).toBe(true);
+    expect(resBody.reason).toBe("duplicate");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test("POST first delivery stores processed key in KV", async () => {
+    const hash = "hash_first_delivery";
+    const body = blinkBody(hash);
+    const kv   = makeKV();
+    const req  = await makeSvixRequest(body, SECRET);
+
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    await handleBlinkHook(req, makeEnv({ demo_preimages: kv }));
+
+    const stored = await kv.get(`processed:${hash}`);
+    expect(stored).toBe("1");
+  });
+
   test("POST with valid signature proxies Supabase error status", async () => {
     const body = blinkBody("hash_supabase_err");
     const req  = await makeSvixRequest(body, SECRET);

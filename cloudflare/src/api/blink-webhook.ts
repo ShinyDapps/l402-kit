@@ -28,22 +28,32 @@ export async function handleBlinkHook(req: Request, env: Env): Promise<Response>
     return json({ error: "Invalid signature" }, 401);
   }
 
-  // Extrai paymentHash do payload Blink para buscar ownerAddress no KV
-  let enrichedBody = body;
-  try {
-    const parsed = JSON.parse(body) as Record<string, unknown>;
-    const initiationVia = (parsed?.data as Record<string, unknown>)?.initiationVia as Record<string, unknown> | undefined;
-    const paymentHash   = initiationVia?.paymentHash as string | undefined;
+  // Parse único para dedup + enrichment
+  let parsed: Record<string, unknown> | null = null;
+  try { parsed = JSON.parse(body) as Record<string, unknown>; } catch { /* ignore */ }
 
-    if (paymentHash) {
+  const initiationVia = (parsed?.data as Record<string, unknown> | undefined)?.initiationVia as Record<string, unknown> | undefined;
+  const paymentHash   = initiationVia?.paymentHash as string | undefined;
+
+  // Dedup: Svix pode retentar o mesmo evento — processa cada paymentHash apenas uma vez
+  if (paymentHash) {
+    const dedupKey = `processed:${paymentHash}`;
+    if (await env.demo_preimages.get(dedupKey)) {
+      return json({ ok: true, skipped: true, reason: "duplicate" });
+    }
+    await env.demo_preimages.put(dedupKey, "1", { expirationTtl: 604800 }); // 7 dias
+  }
+
+  // Enrichment: busca ownerAddress no KV para acionar o split no modo managed
+  let enrichedBody = body;
+  if (paymentHash && parsed) {
+    try {
       const raw = await env.demo_preimages.get(`l402_inv:${paymentHash}`);
       if (raw) {
         const { ownerAddress, amountSats } = JSON.parse(raw) as { ownerAddress: string; amountSats: number };
         enrichedBody = JSON.stringify({ ...parsed, _ownerAddress: ownerAddress, _amountSats: amountSats });
       }
-    }
-  } catch {
-    // Se o parse falhar, repassa o body original — nunca bloqueia o webhook
+    } catch { /* repassa body original se o parse falhar */ }
   }
 
   const r = await fetch(`${env.SUPABASE_URL}/functions/v1/blink-webhook`, {
