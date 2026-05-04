@@ -101,7 +101,7 @@ function requireClient(): L402Client {
 
 const server = new McpServer({
   name: "l402-kit",
-  version: "1.8.1",
+  version: "1.8.2",
 });
 
 // Tool: l402_fetch
@@ -111,9 +111,11 @@ server.registerTool(
     title: "Fetch L402-protected URL",
     description:
       "Fetch a URL that may require a Bitcoin Lightning payment (L402 protocol). " +
-      "Automatically handles the full payment flow: detects HTTP 402, pays the Lightning invoice, " +
-      "and retries the request with the payment proof. Returns the response body as text. " +
-      "Use this to call any L402-protected API endpoint autonomously.",
+      "Side effect: deducts sats from the session budget when a payment is required — check l402_balance first if budget is limited. " +
+      "Flow: sends request → if 402 received, pays the Lightning invoice (1 attempt) → retries once with payment proof → returns response body as text. " +
+      "Fails with error if: budget is exhausted, URL is unreachable, or the Lightning payment fails. " +
+      "Do NOT use for regular (non-L402) URLs — use a standard fetch tool instead. " +
+      "Do NOT use if l402_balance shows 0 sats remaining.",
     inputSchema: {
       url:     z.string().describe("The URL to fetch (http or https)"),
       method:  z.string().optional().describe("HTTP method — GET, POST, PUT, DELETE, PATCH. Default: GET"),
@@ -164,9 +166,11 @@ server.registerTool(
   {
     title: "Check Lightning budget",
     description:
-      "Returns the remaining Bitcoin Lightning budget available for this session. " +
-      "Check this before making expensive API calls to ensure you have enough sats. " +
-      "Budget is configured via the BUDGET_SATS environment variable (default: 1000 sats ≈ $0.60).",
+      "Returns the remaining Bitcoin Lightning budget for this MCP session. " +
+      "Use this before calling l402_fetch to confirm you have enough sats — avoids wasted attempts when budget is exhausted. " +
+      "Returns: '<remaining> sats remaining of <total> total (spent: <spent> sats)'. " +
+      "Read-only — does not trigger any payment or side effect. " +
+      "Budget is set at server startup via BUDGET_SATS (default: 1000 sats ≈ $0.60); to increase it, restart the MCP server.",
     inputSchema: {},
     annotations: {
       readOnlyHint: true,
@@ -195,9 +199,11 @@ server.registerTool(
   {
     title: "Lightning spending report",
     description:
-      "Returns a detailed breakdown of all Bitcoin Lightning payments made this session. " +
-      "Includes total sats spent, remaining budget, per-domain spending, and full transaction history with timestamps. " +
-      "Use this to audit how much has been spent and which APIs were called.",
+      "Returns a full audit of all Bitcoin Lightning payments made in this MCP session. " +
+      "Includes: total sats spent, remaining budget, sats spent per domain, and chronological transaction list (timestamp + sats + URL). " +
+      "Use this instead of l402_balance when you need to know *which* APIs were called and *how much* each cost, not just the remaining balance. " +
+      "Read-only — does not trigger any payment or side effect. " +
+      "Returns '(none yet)' for domains and transactions if no payments have been made this session.",
     inputSchema: {},
     annotations: {
       readOnlyHint: true,
@@ -245,9 +251,11 @@ server.registerTool(
   {
     title: "Check budget status",
     description:
-      "Returns the current session budget configuration. " +
-      "Budget is set at startup via the BUDGET_SATS environment variable and cannot be changed at runtime. " +
-      "To change the budget, restart the MCP server with a different BUDGET_SATS value.",
+      "Returns the session budget cap configured at startup (via BUDGET_SATS env var). " +
+      "Use this to confirm what hard spending limit is in effect — useful at the start of a session before making any API calls. " +
+      "Read-only: this tool CANNOT set or change the budget at runtime. " +
+      "To raise or lower the cap, stop and restart the MCP server with a different BUDGET_SATS value. " +
+      "For remaining balance during a session, use l402_balance instead.",
     inputSchema: {},
     annotations: {
       readOnlyHint: true,
