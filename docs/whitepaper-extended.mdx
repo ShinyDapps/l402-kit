@@ -35,6 +35,7 @@ The document is served by l402-kit itself. Paying 100 sats is an end-to-end test
 | **§11 Versioning** | Patch/minor/major commitments, wire format stability |
 | **Appendix A** | Glossary — 7 terms |
 | **Appendix B** | References — 6 sources |
+| **Appendix C** | Document changelog — v1.0 → v1.1 |
 | **Appendix D** | Design notes: Macaroons vs JWT, Blink, 0.3%, stateless |
 
 ---
@@ -43,7 +44,7 @@ The document is served by l402-kit itself. Paying 100 sats is an end-to-end test
 
 ```bash
 # Step 1 — Request the document (get invoice)
-curl -i https://api.l402kit.com/whitepaper-extended
+curl -i https://l402kit.com/whitepaper-extended
 
 # HTTP/1.1 402 Payment Required
 # WWW-Authenticate: L402 macaroon="<macaroon>", invoice="lnbc..."
@@ -55,7 +56,7 @@ curl -i https://api.l402kit.com/whitepaper-extended
 # Step 3 — Access the document
 curl -H "Authorization: L402 <macaroon>:<preimage>" \
      -H "Accept: text/html" \
-     https://api.l402kit.com/whitepaper-extended \
+     https://l402kit.com/whitepaper-extended \
      -o whitepaper-extended.html
 
 # Open whitepaper-extended.html in your browser → File → Print → Save as PDF
@@ -74,7 +75,7 @@ const client = new L402Client({
   budget: { maxSats: 200 },
 });
 
-const html = await client.fetch("https://api.l402kit.com/whitepaper-extended", {
+const html = await client.fetch("https://l402kit.com/whitepaper-extended", {
   headers: { Accept: "text/html" },
 });
 // Paid automatically. html is the complete document.
@@ -84,7 +85,7 @@ const html = await client.fetch("https://api.l402kit.com/whitepaper-extended", {
 
 ## Price
 
-**100 sats** (~$0.10 at current Bitcoin price).
+**100 sats** (approximately the cost of an SMS, in any country).
 
 The public version — abstract, architecture, quickstart, and seven principles in brief — is free at [docs.l402kit.com/whitepaper](/whitepaper).
 

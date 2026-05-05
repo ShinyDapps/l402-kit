@@ -58,3 +58,7 @@ zone_name = "l402kit.com"
 pattern = "docs.l402kit.com/*"
 zone_name = "l402kit.com"
 
+[[routes]]
+pattern = "l402kit.com/whitepaper-extended"
+zone_name = "l402kit.com"
+

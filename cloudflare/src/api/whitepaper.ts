@@ -203,7 +203,7 @@ body{background:#0A0A0A;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFo
     </div>
     <div class="code">curl -H "Authorization: L402 ${payload.macaroon}:&lt;preimage&gt;" \\
   -H "Accept: text/html" \\
-  https://api.l402kit.com/whitepaper-extended
+  https://l402kit.com/whitepaper-extended
 
 # invoice: ${payload.invoice.slice(0, 60)}...
 # hash:    ${payload.blinkPaymentHash}</div>
