@@ -1,7 +1,6 @@
 import type { LightningProvider, Invoice } from "./types";
 
 const SHINYDAPPS_API = process.env.SHINYDAPPS_API_URL ?? "https://l402kit.com";
-const SPLIT_SECRET   = process.env.SPLIT_SECRET ?? "";
 
 export interface DirectoryRegistration {
   /** Public URL of the L402-protected endpoint (e.g. "https://api.example.com/v1/weather") */
@@ -70,18 +69,6 @@ export class ManagedProvider implements LightningProvider {
   }
 
   // ManagedProvider uses Blink webhook for payment confirmation, not polling.
-  // Verification happens via SHA256(preimage) == paymentHash in the middleware.
+  // Split with retry is handled server-side in the blink-webhook edge function.
   async checkPayment(): Promise<boolean> { return false; }
-
-  async sendSplit(amountSats: number): Promise<void> {
-    const res = await fetch(`${SHINYDAPPS_API}/api/split`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-split-secret": SPLIT_SECRET },
-      body: JSON.stringify({ amountSats, ownerAddress: this.ownerAddress }),
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`ManagedProvider split ${res.status}: ${body.slice(0, 120)}`);
-    }
-  }
 }

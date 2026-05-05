@@ -510,27 +510,7 @@ describe("ManagedProvider", () => {
     expect(await provider.checkPayment()).toBe(false);
   });
 
-  it("sendSplit POSTs to /api/split with correct body", async () => {
-    let capturedBody = "";
-    globalThis.fetch = jest.fn().mockImplementation((_url: string, init: RequestInit) => {
-      capturedBody = init.body as string;
-      return Promise.resolve({ ok: true, json: async () => ({}), text: async () => "" });
-    }) as typeof fetch;
-    await (provider as any).sendSplit(99);
-    const parsed = JSON.parse(capturedBody);
-    expect(parsed.amountSats).toBe(99);
-    expect(parsed.ownerAddress).toBe("you@blink.sv");
-  });
-
-  it("sendSplit throws on HTTP 400 with truncated error body", async () => {
-    globalThis.fetch = mockFetch({ error: "bad request detail" }, 400) as typeof fetch;
-    await expect((provider as any).sendSplit(10)).rejects.toThrow("400");
-  });
-
-  it("sendSplit throws on HTTP 500", async () => {
-    globalThis.fetch = mockFetch({ error: "server error" }, 500) as typeof fetch;
-    await expect((provider as any).sendSplit(10)).rejects.toThrow("500");
-  });
+  // sendSplit removed — split with retry is now handled server-side in blink-webhook edge function
 
   it("different fromAddress instances are independent", async () => {
     const p1 = ManagedProvider.fromAddress("alice@blink.sv");

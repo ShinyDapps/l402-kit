@@ -8,6 +8,9 @@ dist/
 .env.local
 .env.*.local
 CREDENTIALS.md
+
+# marketing & distribution — local only
+MARKETING.md
 OPERATIONS.md
 
 # claude code local settings (may contain api keys)

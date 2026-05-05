@@ -149,8 +149,8 @@ Agents need to find L402-protected APIs without human help. L402-Kit implements 
 ## Current Status
 
 - v1.8.1 on [npm](https://npmjs.com/package/l402-kit), [pip](https://pypi.org/project/l402kit), [crates.io](https://crates.io/crates/l402kit), [pkg.go.dev](https://pkg.go.dev/github.com/shinydapps/l402-kit/go)
-- 448 tests passing
-- MCP server listed in punkpeye/awesome-mcp-servers
+- 476 tests passing
+- MCP server listed in [punkpeye/awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) and [Glama MCP directory](https://glama.ai/mcp/servers/ShinyDapps/l402-kit)
 - Demo at https://l402kit.com/api/demo (1 sat per call)
 
 ## Try It
