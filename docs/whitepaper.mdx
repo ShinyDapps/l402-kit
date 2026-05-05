@@ -1,156 +1,159 @@
 ---
 title: "White Paper"
-description: "l402-kit technical white paper — API monetization with Bitcoin Lightning and the L402 protocol."
+description: "l402-kit â€” HTTP 402 payment middleware for APIs and AI agents. Bitcoin Lightning, TypeScript Â· Python Â· Go Â· Rust."
 ---
 
 # l402-kit White Paper
 
-**Version 1.0 — April 2026**
+**Version 1.1 â€” May 2026**
 
 ---
 
 ## Abstract
 
-l402-kit is an open-source middleware library that enables any HTTP API to accept Bitcoin Lightning micropayments using the L402 protocol. Developers add a paywall to any endpoint in 3 lines of code, across TypeScript, Python, Go, and Rust. Payments settle in under one second, fees are 0.3% with no monthly subscription, and no bank account or account creation is required from the end user.
+HTTP 402 was reserved in 1996 for a payment mechanism that was never built. For twenty-five years, developers built workarounds â€” account registration flows, credit card processors, API key provisioning â€” each designed for human actors who can open a browser and fill out a form. None of them work for machines.
+
+l402-kit implements the L402 protocol: HTTP 402 Payment Required over the Bitcoin Lightning Network. An API caller, human or machine, pays a Lightning invoice and receives cryptographic proof of payment. The server verifies proof with a single hash comparison. No account. No API key. No human approval required.
+
+**l402-kit is a family of L402 protocol implementations in TypeScript, Python, Go, and Rust. Open-source, custody-free, account-free. Each implementation does exactly what the protocol asks of it, and nothing more.**
 
 ---
 
-## 1. Problem
+## The Problem
 
-The current API monetization stack is broken for small-value, high-frequency access patterns:
+HTTP was designed for human interactions: browsers, forms, sessions, accounts. API monetization inherited these assumptions and built workarounds around them. Stripe's minimum transaction is $0.50 after fees. PayPal requires accounts on both sides. Monthly subscriptions bundle demand that is not bundled in reality. API keys require human provisioning, rotation, and billing cycles that cannot be automated.
 
-- **Credit cards**: Minimum viable transaction is ~$0.30. Charging $0.001 per API call is economically impossible.
-- **Account walls**: Creating an account reduces conversion by 60–80%. AI agents cannot create accounts.
-- **Monthly subscriptions**: Wrong pricing model for pay-per-use APIs. Developers pay for capacity they don't use.
-- **Geographic exclusion**: 1.4 billion adults are unbanked. Bitcoin has no geography.
+The gap became critical with the emergence of autonomous AI agents. An agent that discovers a new API at runtime cannot create an account, enter a card number, or navigate an OAuth flow. It can only make HTTP requests. If the API requires a pre-existing credential, the agent stops. The loop that was supposed to be autonomous is not.
 
-The result: developers give away high-value API access for free because charging is too expensive or too complex.
+What was missing for twenty-five years is now implementable: a payment mechanism native to HTTP, requiring no prior relationship between client and server, settling in under a second, and producing a self-contained cryptographic proof the server verifies without a network call.
 
 ---
 
-## 2. Solution: L402 + Bitcoin Lightning
+## How l402-kit Works
 
-The **L402 protocol** (HTTP 402 Payment Required) enables a native payment handshake at the HTTP layer:
+The protocol is a standard HTTP exchange with one additional round trip:
 
-1. Client calls an endpoint without payment proof
-2. Server returns `402 Payment Required` with a BOLT11 Lightning invoice
-3. Client pays the invoice (~300ms, any wallet)
-4. Client re-calls with `Authorization: L402 <token>:<preimage>`
-5. Server verifies `SHA256(preimage) == paymentHash` cryptographically
-6. Server returns `200 OK`
-
-The preimage — the cryptographic secret released when Lightning payment settles — **is** the proof of payment. No session, no JWT, no database lookup on the hot path.
-
----
-
-## 3. Architecture
-
-```
-+---------------------------------------------------------+
-¦                    Developer's API                       ¦
-¦                                                          ¦
-¦   app.use('/endpoint', l402Middleware({                  ¦
-¦     priceSats: 100,                                      ¦
-¦     lightningAddress: 'you@yourdomain.com'                     ¦
-¦   }))                                                    ¦
-+---------------------------------------------------------+
-                   ¦ 402 on first call
-                   ?
-+---------------------------------------------------------+
-¦              ShinyDapps Backend (managed)                ¦
-¦                                                          ¦
-¦   POST /api/invoice  ?  Blink API (BOLT11 creation)      ¦
-¦   POST /api/webhook  ?  Blink callback (settlement)      ¦
-¦   GET  /api/stats    ?  Supabase (payment history)       ¦
-¦   GET  /api/pro-check ?  Supabase (tier verification)    ¦
-+---------------------------------------------------------+
-                   ¦
-          +-----------------+
-          ?                 ?
-   +-------------+   +----------------+
-   ¦    Blink    ¦   ¦   Supabase     ¦
-   ¦  Lightning  ¦   ¦  PostgreSQL    ¦
-   ¦   Network   ¦   ¦  (payments +   ¦
-   ¦             ¦   ¦   pro_access)  ¦
-   +-------------+   +----------------+
+```mermaid
+sequenceDiagram
+    participant C as Client / Agent
+    participant M as l402-kit Middleware
+    participant L as Lightning Network
+    C->>M: GET /api/endpoint
+    M-->>C: 402 + BOLT11 invoice + macaroon
+    C->>L: Pay invoice (satoshis)
+    L-->>C: Preimage (proof of payment)
+    C->>M: GET /api/endpoint<br/>Authorization: L402 macaroon:preimage
+    M->>M: SHA256(preimage) == paymentHash âœ“
+    M-->>C: 200 OK + data
 ```
 
-The middleware is stateless on the verification path. Invoice creation and webhook processing happen asynchronously through the managed backend. Developers who prefer full custody can self-host by pointing the middleware at their own Lightning node (LNbits, OpenNode, or direct LND/CLN).
+1. **Request.** Client sends a normal HTTP request.
+2. **Challenge.** Server responds with 402, a Lightning invoice, and a macaroon encoding the payment hash.
+3. **Payment.** Client pays the invoice. The Lightning Network delivers the preimage as settlement proof in under one second.
+4. **Access.** Client resends with `Authorization: L402 <macaroon>:<preimage>`. Server verifies `SHA256(preimage) == paymentHash`. No database lookup â€” pure cryptography.
+
+The credential is stateless: it carries the payment hash and expiry inline and is verifiable by any instance of the middleware without coordination.
 
 ---
 
-## 4. Economic Model
+## Architecture
 
-| Tier | Cost | What you get |
+l402-kit operates across three tiers. The operator's application is unchanged; the middleware wraps routes. The Lightning provider is pluggable.
+
+```mermaid
+graph TD
+    A["Operator's Application<br/>Express Â· FastAPI Â· net/http Â· axum"] -->|middleware wraps route| B
+    B["l402-kit Middleware<br/>TypeScript Â· Python Â· Go Â· Rust"]
+    B -->|invoice creation| C["Lightning Service Provider<br/>Blink Â· OpenNode Â· LNbits Â· Alby Â· LND Â· CLN"]
+    B -->|replay check| D["Replay Adapter<br/>Memory Â· Redis Â· Database"]
+```
+
+**Managed mode** â€” operator provides a Lightning Address. ShinyDapps backend handles invoice creation and settlement. Fee: 0.3%.
+
+**Sovereign mode** â€” operator uses their own Lightning provider. Fee: 0%.
+
+---
+
+## Quickstart
+
+<CodeGroup>
+
+```typescript TypeScript
+import { l402, ManagedProvider } from "l402-kit";
+
+const lightning = ManagedProvider.fromAddress("you@blink.sv");
+app.use("/api/data", l402({ priceSats: 10, lightning }));
+```
+
+```python Python
+from l402kit import l402_required, ManagedProvider
+
+lightning = ManagedProvider.from_address("you@blink.sv")
+
+@app.get("/api/data")
+@l402_required(price_sats=10, lightning=lightning)
+async def data(): ...
+```
+
+```go Go
+provider := l402kit.NewManagedProvider("you@blink.sv")
+http.Handle("/api/data", l402kit.Middleware(l402kit.Options{
+    PriceSats: 10, Lightning: provider,
+}, handler))
+```
+
+```rust Rust
+let provider = ManagedProvider::from_address("you@blink.sv");
+let app = Router::new()
+    .route("/api/data", get(data_handler))
+    .layer(L402Layer::new(provider, 10));
+```
+
+</CodeGroup>
+
+---
+
+## The Seven Principles
+
+These principles are constraints. A feature that violates them does not ship.
+
+| # | Principle | In one line |
 |---|---|---|
-| **Free** | 0.3% of payments received | Unlimited calls, 7-day history, 1D/7D charts, all SDKs |
-| **Pro** | ~9,000 sats/month (~$9) | Full history, 30D/1Y/ALL charts, CSV export, priority support |
-| **Founder** | ~1,000,000 sats one-time (~$999) | Lifetime Pro, founder badge, direct access |
-
-The 0.3% fee is structurally aligned with developer success: ShinyDapps earns only when developers earn. No payments, no fee. There is no base cost, no credit card required, and no minimum revenue threshold.
-
-At scale:
-- **$1,000/month** in API revenue ? $3/month fee
-- **$10,000/month** ? $30/month fee
-- **$100,000/month** ? $300/month fee
+| 1 | **Minimal essence** | The middleware does the protocol, and nothing else. |
+| 2 | **Auditability as a precondition for trust** | Closed-source financial middleware is a contradiction in terms. |
+| 3 | **Operator sovereignty** | The operator holds the keys, chooses the provider, keeps the ledger. |
+| 4 | **Truth as correspondence** | What the docs state and what the code does are the same. |
+| 5 | **Stability at the foundation** | HTTP and Lightning are long-lived. The middleware connecting them is treated accordingly. |
+| 6 | **Composition, not construction** | l402-kit composes existing primitives; it does not reinvent them. |
+| 7 | **Adequacy to the nature of the problem** | Machine-to-machine payments require a solution built for machines. |
 
 ---
 
-## 5. SDKs
+## Economic Model
 
-l402-kit ships native libraries for all major backend runtimes:
+The 0.3% fee is structurally aligned with developer success: when a developer earns nothing, the fee is zero.
 
-| Language | Package | Install |
+| Tier | Cost | What You Get |
 |---|---|---|
-| TypeScript / Node.js | `l402-kit` on npm | `npm install l402-kit` |
-| Python | `l402kit` on PyPI | `pip install l402kit` |
-| Go | `github.com/shinydapps/l402-kit/go` | `go get ...@v1.8.2` |
-| Rust | `l402kit` on crates.io | `cargo add l402kit` |
-
-All SDKs implement the same interface: a single middleware function that takes `priceSats` and `lightningAddress`, returns a standard middleware compatible with Express, FastAPI, `net/http`, and axum.
+| **Free** | 0.3% of payments received | Unlimited calls, all SDKs, 7-day history |
+| **Pro** | ~9,000 sats/month (~$9) | Full history, CSV export, priority support |
+| **Founder** | ~1,000,000 sats one-time (~$999) | Lifetime Pro, direct maintainer access |
 
 ---
 
-## 6. AI Agents & LLMs
+## Adoption
 
-l402-kit is natively compatible with the emerging AI agent economy. LLMs and autonomous agents can:
+```bash
+npm install l402-kit    # TypeScript
+pip install l402kit     # Python
+go get github.com/shinydapps/l402-kit/go@v1.8.2
+cargo add l402kit       # Rust
+```
 
-- Call L402-gated APIs without human intervention
-- Pay for exactly the data or compute they need
-- Use any Lightning wallet or custodial account
-- Operate across borders with zero friction
-
-The `llms.txt` file at the repository root provides machine-readable integration instructions for AI systems.
-
----
-
-## 7. Security
-
-- **Replay prevention**: `preimage` has a `UNIQUE` constraint in Supabase — each proof can only be used once.
-- **Cryptographic verification**: `SHA256(preimage) == paymentHash` is verified in the middleware without any external call.
-- **Webhook integrity**: Blink callbacks are verified via `HMAC-SHA256` before any database write.
-- **RLS hardening**: The Supabase anon key has zero access to `pro_access` (Lightning addresses are PII). Payments are filtered by `owner_address`.
-- **No private keys in code**: All secrets are environment variables; the BOLT11 preimage never leaves the verification layer.
+<Note>
+For the complete technical specification â€” founding principles in full, design decisions with tradeoffs, expanded threat model, architectural properties, L402 vs x402 comparison, and versioning commitments â€” the **Extended Edition** is available at [l402kit.com/whitepaper-extended](/whitepaper-extended) (100 sats, served by l402-kit itself).
+</Note>
 
 ---
 
-## 8. Decentralization Roadmap
-
-The current managed backend (ShinyDapps-hosted) is a pragmatic starting point. The roadmap toward full decentralization:
-
-1. **v1.0** — Managed mode: developer provides only a Lightning address, ShinyDapps handles invoice creation and settlement *(current)*
-2. **v1.5** — Self-hosted mode: developers point the SDK at their own LNbits or OpenNode instance
-3. **v2.0** — Direct Lightning: SDK creates invoices and verifies payments directly against LND/CLN via gRPC, no intermediary
-4. **v3.0** — Multi-provider routing: payment routing optimized for fees and reliability across multiple Lightning nodes
-
----
-
-## 9. Open Source
-
-l402-kit is MIT-licensed. Packages on [npm](https://npmjs.com/package/l402-kit), [PyPI](https://pypi.org/project/l402kit), [pkg.go.dev](https://pkg.go.dev/github.com/shinydapps/l402-kit/go), and [crates.io](https://crates.io/crates/l402kit).
-
-Contributions welcome. Issues and pull requests are reviewed within 48 hours.
-
----
-
-*ShinyDapps · l402kit.com · thiagoyoshiaki@gmail.com*
+*l402-kit is released under the MIT License Â· ShinyDapps Â· thiagoyoshiaki@gmail.com*
