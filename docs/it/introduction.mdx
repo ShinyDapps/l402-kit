@@ -1,47 +1,47 @@
-ï»¿---
+---
 title: Introduzione
-description: Il modo piÃ¹ semplice per monetizzare la tua API con Bitcoin Lightning. 3 righe di codice.
+description: Il modo più semplice per monetizzare la tua API con Bitcoin Lightning. 3 righe di codice.
 ---
 
-## Cos'Ã¨ l402-kit?
+## Cos'è l402-kit?
 
-**l402-kit** Ã¨ un middleware open-source che permette a qualsiasi sviluppatore di aggiungere micropagamenti Bitcoin Lightning alla propria API in 3 righe di codice.
+**l402-kit** è un middleware open-source che permette a qualsiasi sviluppatore di aggiungere micropagamenti Bitcoin Lightning alla propria API in 3 righe di codice.
 
 Nessuna carta di credito. Nessuna registrazione. Nessun chargeback. Nessuna commissione minima. Solo sats.
 
 ```bash
 npm install l402-kit   # TypeScript / Express
 pip install l402kit    # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go@v1.8.0  # Go / net/http
+go get github.com/shinydapps/l402-kit/go@v1.8.2  # Go / net/http
 cargo add l402kit       # Rust / axum
 ```
 
 ## Il problema che risolve
 
-Addebitare per ogni chiamata API oggi Ã¨ impossibile con i metodi tradizionali:
+Addebitare per ogni chiamata API oggi è impossibile con i metodi tradizionali:
 
-- **Stripe**: minimo â‚¬0,25 per transazione â€” impraticabile per i micropagamenti
+- **Stripe**: minimo €0,25 per transazione — impraticabile per i micropagamenti
 - **Abbonamenti**: chi usa poco sovvenziona chi usa molto
-- **Agenti IA**: non hanno una carta di credito â€” non possono pagare le API da soli
+- **Agenti IA**: non hanno una carta di credito — non possono pagare le API da soli
 
-**l402-kit** Ã¨ la terza opzione: pay-per-call tramite Lightning Network, con liquidazione in meno di 1 secondo, a livello globale, senza intermediari.
+**l402-kit** è la terza opzione: pay-per-call tramite Lightning Network, con liquidazione in meno di 1 secondo, a livello globale, senza intermediari.
 
 ## Come funziona
 
 ```
-Client â†’ GET /premium
-API    â†’ 402 + invoice Lightning (100 sats)
-Client â†’ paga l'invoice (< 1 secondo)
-Client â†’ GET /premium + prova di pagamento
-API    â†’ 200 + dati âœ“
+Client ? GET /premium
+API    ? 402 + invoice Lightning (100 sats)
+Client ? paga l'invoice (< 1 secondo)
+Client ? GET /premium + prova di pagamento
+API    ? 200 + dati ?
 ```
 
-## Per chi Ã¨?
+## Per chi è?
 
-- **Dev di API** â€” addebita per chiamata invece di un abbonamento mensile
-- **Builder di agenti IA** â€” gli agenti pagano le API automaticamente
-- **Dev senza Stripe** â€” Italia, Brasile, Nigeria â€” Bitcoin non ha frontiere
-- **Fornitori di dati** â€” addebita 1 sat per query, impossibile con Stripe
+- **Dev di API** — addebita per chiamata invece di un abbonamento mensile
+- **Builder di agenti IA** — gli agenti pagano le API automaticamente
+- **Dev senza Stripe** — Italia, Brasile, Nigeria — Bitcoin non ha frontiere
+- **Fornitori di dati** — addebita 1 sat per query, impossibile con Stripe
 
 ## Avvio rapido TypeScript
 
@@ -52,8 +52,8 @@ import { l402 } from "l402-kit";
 const app = express();
 
 app.get("/premium", l402({
-  priceSats: 100,                           // ~â‚¬0,05 per chiamata
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),     // modalitÃ  sovrana â€” 0% commissione
+  priceSats: 100,                           // ~€0,05 per chiamata
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),     // modalità sovrana — 0% commissione
 }), (_req, res) => {
   res.json({ data: "Pagamento confermato." });
 });
@@ -78,23 +78,23 @@ async def premium(request: Request):
     return {"data": "Pagamento confermato."}
 ```
 
-## PerchÃ© non Stripe?
+## Perché non Stripe?
 
 | | Stripe | l402-kit |
 |---|---|---|
-| Commissione minima | â‚¬0,25 | **< 1 sat (~â‚¬0,00003)** |
-| Liquidazione | 2â€“7 giorni | **< 1 secondo** |
-| Chargeback | SÃ¬ | **Impossibile** |
-| Richiede account | SÃ¬ | **No** |
-| Supporto agenti IA | No | **SÃ¬ â€” nativo** |
-| Paesi bloccati | ~50 | **0 â€” globale** |
-| Auditabile | No | **SÃ¬ â€” open source** |
+| Commissione minima | €0,25 | **< 1 sat (~€0,00003)** |
+| Liquidazione | 2–7 giorni | **< 1 secondo** |
+| Chargeback | Sì | **Impossibile** |
+| Richiede account | Sì | **No** |
+| Supporto agenti IA | No | **Sì — nativo** |
+| Paesi bloccati | ~50 | **0 — globale** |
+| Auditabile | No | **Sì — open source** |
 
 ## Ottieni un Lightning Address gratuito
 
-Registrati su [dashboard.blink.sv](https://dashboard.blink.sv) â€” gratuito, nessuna carta di credito.
-Il tuo indirizzo sarÃ : `tuonome@tuodominio.com`
+Registrati su [dashboard.blink.sv](https://dashboard.blink.sv) — gratuito, nessuna carta di credito.
+Il tuo indirizzo sarà: `tuonome@tuodominio.com`
 
 ---
 
-ðŸ“– [Documentazione completa](https://l402kit.com/docs) Â· [npm](https://npmjs.com/package/l402-kit) Â· [PyPI](https://pypi.org/project/l402kit) Â· [crates.io](https://crates.io/crates/l402kit)
+?? [Documentazione completa](https://l402kit.com/docs) · [npm](https://npmjs.com/package/l402-kit) · [PyPI](https://pypi.org/project/l402kit) · [crates.io](https://crates.io/crates/l402kit)

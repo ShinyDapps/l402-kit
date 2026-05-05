@@ -1,53 +1,53 @@
-ï»¿---
-title: IntroduÃ§Ã£o
+---
+title: Introdução
 description: A forma mais simples de cobrar pela sua API em Bitcoin sats.
 ---
 
-<Card title="â–¶ Demo interativo â€” veja ao vivo" icon="play" href="https://l402kit.com/#live-demo">
-  AnimaÃ§Ã£o terminal end-to-end: do `npm install` atÃ© a primeira chamada paga. 45 segundos.
+<Card title="? Demo interativo — veja ao vivo" icon="play" href="https://l402kit.com/#live-demo">
+  Animação terminal end-to-end: do `npm install` até a primeira chamada paga. 45 segundos.
 </Card>
 
-## O que Ã© o l402-kit?
+## O que é o l402-kit?
 
-**l402-kit** Ã© um middleware open-source que permite qualquer desenvolvedor adicionar micropagamentos Bitcoin Lightning Ã  sua API em 3 linhas de cÃ³digo.
+**l402-kit** é um middleware open-source que permite qualquer desenvolvedor adicionar micropagamentos Bitcoin Lightning à sua API em 3 linhas de código.
 
-Sem cartÃ£o de crÃ©dito. Sem cadastro. Sem chargeback. Sem taxa mÃ­nima. SÃ³ sats.
+Sem cartão de crédito. Sem cadastro. Sem chargeback. Sem taxa mínima. Só sats.
 
 ```bash
 npm install l402-kit   # TypeScript / Express
 pip install l402kit    # Python / FastAPI / Flask
-go get github.com/shinydapps/l402-kit/go@v1.8.0  # Go / net/http
+go get github.com/shinydapps/l402-kit/go@v1.8.2  # Go / net/http
 cargo add l402kit       # Rust / axum
 ```
 
 ## O problema que resolve
 
-Cobrar por chamada de API hoje Ã© impossÃ­vel com os meios tradicionais:
+Cobrar por chamada de API hoje é impossível com os meios tradicionais:
 
-- **Stripe**: mÃ­nimo $0,30 por transaÃ§Ã£o â€” inviÃ¡vel para micropagamentos
+- **Stripe**: mínimo $0,30 por transação — inviável para micropagamentos
 - **Assinaturas**: quem usa pouco subsidia quem usa muito
-- **Agentes de IA**: nÃ£o tÃªm cartÃ£o de crÃ©dito â€” nÃ£o conseguem pagar APIs sozinhos
+- **Agentes de IA**: não têm cartão de crédito — não conseguem pagar APIs sozinhos
 
-**l402-kit** Ã© a terceira opÃ§Ã£o: pay-per-call via Lightning Network, liquidando em menos de 1 segundo, globalmente, sem intermediÃ¡rio.
+**l402-kit** é a terceira opção: pay-per-call via Lightning Network, liquidando em menos de 1 segundo, globalmente, sem intermediário.
 
 ## Como funciona
 
 ```
-Cliente â†’ GET /premium
-API     â†’ 402 + invoice Lightning (100 sats)
-Cliente â†’ paga invoice (< 1 segundo)
-Cliente â†’ GET /premium + prova de pagamento
-API     â†’ 200 + dados âœ“
+Cliente ? GET /premium
+API     ? 402 + invoice Lightning (100 sats)
+Cliente ? paga invoice (< 1 segundo)
+Cliente ? GET /premium + prova de pagamento
+API     ? 200 + dados ?
 ```
 
-## Para quem Ã©?
+## Para quem é?
 
-- **Devs de API** â€” cobra por chamada em vez de assinatura mensal
-- **Builders de agentes de IA** â€” agentes pagam APIs automaticamente
-- **Devs sem Stripe** â€” Brasil, Argentina, NigÃ©ria â€” Bitcoin nÃ£o tem fronteiras
-- **Provedores de dados** â€” cobra 1 sat por consulta, impossÃ­vel com Stripe
+- **Devs de API** — cobra por chamada em vez de assinatura mensal
+- **Builders de agentes de IA** — agentes pagam APIs automaticamente
+- **Devs sem Stripe** — Brasil, Argentina, Nigéria — Bitcoin não tem fronteiras
+- **Provedores de dados** — cobra 1 sat por consulta, impossível com Stripe
 
-## InÃ­cio rÃ¡pido â€” TypeScript
+## Início rápido — TypeScript
 
 ```typescript
 import express from "express";
@@ -57,7 +57,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,                             // ~R$0,01 por chamada
-  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),     // soberano mode â€” 0% fee
+  lightning: new AlbyProvider(process.env.ALBY_TOKEN!, process.env.ALBY_HUB_URL!),     // soberano mode — 0% fee
 }), (_req, res) => {
   res.json({ data: "Pagamento confirmado." });
 });
@@ -65,7 +65,7 @@ app.get("/premium", l402({
 app.listen(3000);
 ```
 
-## InÃ­cio rÃ¡pido â€” Python
+## Início rápido — Python
 
 ```python
 from fastapi import FastAPI, Request
@@ -86,9 +86,9 @@ async def premium(request: Request):
 
 ```bash
 curl http://localhost:3000/premium
-# â†’ {"error":"Payment Required","priceSats":100,"invoice":"lnbc..."}
+# ? {"error":"Payment Required","priceSats":100,"invoice":"lnbc..."}
 ```
 
 <Card title="Quickstart completo" icon="bolt" href="https://l402kit.com/docs/quickstart">
-  Do zero Ã  API paga em 5 minutos
+  Do zero à API paga em 5 minutos
 </Card>
