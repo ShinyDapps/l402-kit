@@ -1,10 +1,20 @@
 import type { Env } from "../worker";
 
-const FEE_PERCENT = 0.003;
-const MIN_SATS = 10;
+const FEE_PERCENT   = 0.003;
+const MIN_SATS      = 10;
+const SSRF_BLOCKLIST = /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.0\.0\.0|::1|169\.254\.)/i;
+
+function assertSafeDomain(domain: string): void {
+  if (SSRF_BLOCKLIST.test(domain)) throw new Error(`Blocked domain: ${domain}`);
+  if (!domain.includes(".") || domain.includes(":") || domain.includes("/")) {
+    throw new Error(`Invalid domain format: ${domain}`);
+  }
+}
 
 async function fetchInvoiceFromAddress(address: string, amountSats: number): Promise<string> {
   const [user, domain] = address.split("@");
+  if (!user || !domain) throw new Error(`Invalid Lightning Address: ${address}`);
+  assertSafeDomain(domain);
   const meta = await fetch(`https://${domain}/.well-known/lnurlp/${user}`).then(r => r.json()) as { callback: string };
   const pay = await fetch(`${meta.callback}?amount=${amountSats * 1000}`).then(r => r.json()) as { pr: string };
   return pay.pr;
