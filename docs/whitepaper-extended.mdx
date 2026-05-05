@@ -1,0 +1,93 @@
+---
+title: "White Paper — Extended Edition"
+description: "The complete technical specification of l402-kit. 100 sats. Served by l402-kit itself."
+---
+
+# White Paper — Extended Edition
+
+**Version 1.1 — May 2026 · ~25 pages**
+
+*Payment is the credential.*
+
+---
+
+This is the complete technical specification of l402-kit — the founding principles in full, design decisions with tradeoffs, expanded threat model, architectural properties, L402 vs x402 comparison, and versioning commitments.
+
+The document is served by l402-kit itself. Paying 100 sats is an end-to-end test of the protocol in production.
+
+---
+
+## What's inside
+
+| Section | Contents |
+|---|---|
+| **Preface** | Author's note — why this was built |
+| **§1 Founding Principles** | All 7 principles in full (80–120 words each) |
+| **§2 The Problem** | HTTP was built for humans — 25 years of dormancy |
+| **§3 Protocol in 5 Minutes** | Four-step sequence, token format, three properties |
+| **§4 Architecture** | Two modes, replay protection layers, agent discovery |
+| **§5 Design Decisions** | Why 4 languages, why Blink, why MIT, what's excluded |
+| **§6 Threat Model** | Full table: 11 threats, mitigations, responsibilities |
+| **§7 Architectural Properties** | Invariants: constant-time, horizontal scale, memory |
+| **§8 Use Cases** | Pay-per-call, AI agents, content gating |
+| **§9 L402 vs x402** | Honest comparison table — including where x402 is better |
+| **§10 Economic Model** | 0.3% fee, Pro, Founder — with reasoning |
+| **§11 Versioning** | Patch/minor/major commitments, wire format stability |
+| **Appendix A** | Glossary — 7 terms |
+| **Appendix B** | References — 6 sources |
+| **Appendix D** | Design notes: Macaroons vs JWT, Blink, 0.3%, stateless |
+
+---
+
+## Pay and read
+
+```bash
+# Step 1 — Request the document (get invoice)
+curl -i https://api.l402kit.com/whitepaper-extended
+
+# HTTP/1.1 402 Payment Required
+# WWW-Authenticate: L402 macaroon="<macaroon>", invoice="lnbc..."
+# {"priceSats":100,"invoice":"lnbc...","macaroon":"<macaroon>"}
+
+# Step 2 — Pay the invoice with any Lightning wallet
+# Get the preimage from your wallet after payment
+
+# Step 3 — Access the document
+curl -H "Authorization: L402 <macaroon>:<preimage>" \
+     -H "Accept: text/html" \
+     https://api.l402kit.com/whitepaper-extended \
+     -o whitepaper-extended.html
+
+# Open whitepaper-extended.html in your browser → File → Print → Save as PDF
+```
+
+---
+
+## One-liner with l402-kit client
+
+```typescript
+import { L402Client } from "l402-kit/agent";
+import { BlinkWallet } from "l402-kit/wallets";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
+  budget: { maxSats: 200 },
+});
+
+const html = await client.fetch("https://api.l402kit.com/whitepaper-extended", {
+  headers: { Accept: "text/html" },
+});
+// Paid automatically. html is the complete document.
+```
+
+---
+
+## Price
+
+**100 sats** (~$0.10 at current Bitcoin price).
+
+The public version — abstract, architecture, quickstart, and seven principles in brief — is free at [docs.l402kit.com/whitepaper](/whitepaper).
+
+<Note>
+This endpoint is served by l402-kit itself using the ManagedProvider. When you pay, the split runs automatically: 99.7 sats to ShinyDapps, 0.3 sats as protocol fee. The entire flow — invoice creation, payment, verification, document delivery — runs without human intervention.
+</Note>

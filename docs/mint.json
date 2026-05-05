@@ -38,7 +38,7 @@
     },
     {
       "group": "Reference",
-      "pages": ["providers", "api-reference", "reference/errors", "competitive", "payment-layer", "whitepaper"]
+      "pages": ["providers", "api-reference", "reference/errors", "competitive", "payment-layer", "whitepaper", "whitepaper-extended"]
     },
     {
       "group": "🇧🇷 Português",
