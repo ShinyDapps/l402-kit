@@ -33,6 +33,11 @@ export async function verifyToken(token: string): Promise<boolean> {
     // Check expiry (payload.exp is stored in milliseconds)
     if (Date.now() > payload.exp) return false;
 
+    // Cap: reject tokens with expiry more than 2 hours in the future from now.
+    // Prevents forged tokens with far-future exp from being valid indefinitely.
+    const MAX_EXP_MS = 2 * 60 * 60 * 1000; // 2 hours
+    if (payload.exp > Date.now() + MAX_EXP_MS) return false;
+
     // Core Lightning security: SHA256(preimage) must equal paymentHash
     const digest = createHash("sha256")
       .update(Buffer.from(preimage, "hex"))

@@ -84,8 +84,8 @@ describe("verifyToken", () => {
     expect(await verifyToken(makeToken())).toBe(true);
   });
 
-  it("accepts token expiring far in the future (1 year)", async () => {
-    expect(await verifyToken(makeToken(makePreimage(), 365 * 24 * 3_600_000))).toBe(true);
+  it("rejects token expiring far in the future (1 year) — max exp cap", async () => {
+    expect(await verifyToken(makeToken(makePreimage(), 365 * 24 * 3_600_000))).toBe(false);
   });
 
   it("accepts token expiring in 1 ms", async () => {
@@ -251,7 +251,7 @@ describe("verifyToken", () => {
     expect(typeof result).toBe("boolean");
   });
 
-  it("accepts token where exp is exactly now + 1ms (not yet expired)", async () => {
+  it("accepts token where exp is exactly now + 1ms (not yet expired, within cap)", async () => {
     const preimage = makePreimage();
     const mac = makeMacaroon(makeHash(preimage), 1);
     const result = await verifyToken(`${mac}:${preimage}`);
@@ -264,11 +264,11 @@ describe("verifyToken", () => {
     expect(await verifyToken(`${mac}:${preimage}`)).toBe(false);
   });
 
-  it("accepts token with very large exp value (year 3000)", async () => {
+  it("rejects token with very large exp value (year 3000) — max exp cap", async () => {
     const preimage = makePreimage();
     const far = new Date("3000-01-01").getTime();
     const mac = Buffer.from(JSON.stringify({ hash: makeHash(preimage), exp: far })).toString("base64");
-    expect(await verifyToken(`${mac}:${preimage}`)).toBe(true);
+    expect(await verifyToken(`${mac}:${preimage}`)).toBe(false);
   });
 
   it("rejects token with null preimage field", async () => {

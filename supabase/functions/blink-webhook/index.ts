@@ -16,6 +16,8 @@
 
 const SUPABASE_URL              = Deno.env.get("SUPABASE_URL")              ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const RESEND_API_KEY            = Deno.env.get("RESEND_API_KEY")            ?? "";
+const ALERT_EMAIL               = "thiagoyoshiaki@gmail.com";
 const FEE_PERCENT               = 0.003;
 const MIN_SPLIT_SATS            = 10;
 const MAX_ATTEMPTS              = 3;
@@ -90,6 +92,20 @@ async function callPayInvoice(ownerAddress: string, ownerSats: number): Promise<
   }
 }
 
+async function sendFailureAlert(paymentHash: string, ownerAddress: string, ownerSats: number, error: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "l402-kit alerts <alerts@l402kit.com>",
+      to: ALERT_EMAIL,
+      subject: `⚠️ Split permanently failed — ${ownerSats} sats stuck`,
+      text: `Split failed after ${MAX_ATTEMPTS} attempts.\n\npaymentHash: ${paymentHash}\nownerAddress: ${ownerAddress}\nownerSats: ${ownerSats}\n\nError: ${error}\n\nCheck pending_splits table to reconcile manually.`,
+    }),
+  }).catch(() => {});
+}
+
 async function trySplitWithRetry(
   paymentHash: string,
   ownerAddress: string,
@@ -110,6 +126,7 @@ async function trySplitWithRetry(
   }
 
   await markSplit(paymentHash, "failed", MAX_ATTEMPTS, lastError);
+  await sendFailureAlert(paymentHash, ownerAddress, ownerSats, lastError);
   throw new Error(`Split failed after ${MAX_ATTEMPTS} attempts: ${lastError}`);
 }
 

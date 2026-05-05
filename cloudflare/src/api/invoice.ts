@@ -1,15 +1,15 @@
 import type { Env } from "../worker";
 
-const RATE_LIMIT = 20;
-const RATE_WINDOW = 60; // seconds
+const RATE_LIMIT_IP     = 20;   // per IP per minute
+const RATE_LIMIT_GLOBAL = 200;  // across all IPs per minute — protects Blink API quota
+const RATE_WINDOW       = 60;   // seconds
 
-async function isRateLimited(ip: string, env: Env): Promise<boolean> {
-  const key = `inv_rl:${ip}`;
+async function checkRateLimit(key: string, limit: number, env: Env): Promise<boolean> {
   const now = Math.floor(Date.now() / 1000);
   const raw = await env.demo_preimages.get(key);
   if (raw) {
     const { count, reset } = JSON.parse(raw) as { count: number; reset: number };
-    if (now < reset && count >= RATE_LIMIT) return true;
+    if (now < reset && count >= limit) return true;
     const newCount = now < reset ? count + 1 : 1;
     const newReset = now < reset ? reset : now + RATE_WINDOW;
     await env.demo_preimages.put(key, JSON.stringify({ count: newCount, reset: newReset }), { expirationTtl: RATE_WINDOW });
@@ -17,6 +17,12 @@ async function isRateLimited(ip: string, env: Env): Promise<boolean> {
     await env.demo_preimages.put(key, JSON.stringify({ count: 1, reset: now + RATE_WINDOW }), { expirationTtl: RATE_WINDOW });
   }
   return false;
+}
+
+async function isRateLimited(ip: string, env: Env): Promise<boolean> {
+  const globalLimited = await checkRateLimit("inv_rl:global", RATE_LIMIT_GLOBAL, env);
+  if (globalLimited) return true;
+  return checkRateLimit(`inv_rl:${ip}`, RATE_LIMIT_IP, env);
 }
 
 export async function handleInvoice(req: Request, env: Env): Promise<Response> {

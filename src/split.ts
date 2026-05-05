@@ -7,8 +7,18 @@ const MIN_SPLIT_SATS = 10; // only split if payment >= 10 sats
 /**
  * Resolves a Lightning Address to a BOLT11 invoice via LNURL-pay.
  */
+const SSRF_BLOCKLIST = /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.0\.0\.0|::1|169\.254\.)/i;
+
+function assertSafeDomain(domain: string): void {
+  if (SSRF_BLOCKLIST.test(domain)) throw new Error(`Blocked domain: ${domain}`);
+  if (!domain.includes(".") || domain.includes(":") || domain.includes("/")) {
+    throw new Error(`Invalid domain format: ${domain}`);
+  }
+}
+
 async function fetchInvoiceFromAddress(address: string, amountSats: number): Promise<string> {
   const [user, domain] = address.split("@");
+  assertSafeDomain(domain);
   const lnurlUrl = `https://${domain}/.well-known/lnurlp/${user}`;
 
   const metaRes = await fetch(lnurlUrl);
