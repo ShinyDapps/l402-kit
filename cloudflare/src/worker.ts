@@ -16,6 +16,7 @@ import { handleProSubscribe } from "./api/pro-subscribe";
 import { handleRegister, handleApis } from "./api/registry";
 import { handleDashboard } from "./api/dashboard";
 import { handleWhitepaperExtended } from "./api/whitepaper";
+import { sweepTransitWallet } from "./api/sweep";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -27,6 +28,7 @@ export interface Env {
   BLINK_API_KEY: string;
   BLINK_WALLET_ID: string;
   BLINK_WEBHOOK_SECRET: string;
+  OWNER_LIGHTNING_ADDRESS: string;
   demo_preimages: KVNamespace;
 }
 
@@ -98,6 +100,10 @@ function cors(res: Response): Response {
 }
 
 export default {
+  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
+    await sweepTransitWallet(env);
+  },
+
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;

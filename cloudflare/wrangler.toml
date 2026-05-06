@@ -17,6 +17,10 @@ ENVIRONMENT = "production"
 # BLINK_API_KEY
 # BLINK_WALLET_ID
 # BLINK_WEBHOOK_SECRET
+# OWNER_LIGHTNING_ADDRESS  ← destino do sweep (ex: shinydapps@blink.sv)
+
+[triggers]
+crons = ["0 * * * *"]
 
 [[kv_namespaces]]
 binding = "demo_preimages"

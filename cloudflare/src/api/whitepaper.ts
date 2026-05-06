@@ -31,7 +31,7 @@ export async function handleWhitepaperExtended(req: Request, env: Env): Promise<
     });
   }
 
-  const inv = await createInvoice(PRICE_SATS, env);
+  const inv = await createInvoiceViaLnurl(PRICE_SATS);
   if (!inv) {
     return new Response(JSON.stringify({ error: "Lightning provider temporarily unavailable. Retry in a moment." }), {
       status: 503,
@@ -45,7 +45,7 @@ export async function handleWhitepaperExtended(req: Request, env: Env): Promise<
     priceSats: PRICE_SATS,
     invoice: inv.paymentRequest,
     macaroon: inv.macaroon,
-    blinkPaymentHash: inv.paymentHash,
+    paymentHash: inv.paymentHash,
   };
 
   const accept = req.headers.get("Accept") ?? "";
@@ -95,36 +95,82 @@ async function verifyToken(token: string): Promise<{ ok: boolean; reason?: strin
   }
 }
 
-async function createInvoice(amountSats: number, env: Env) {
+async function createInvoiceViaLnurl(amountSats: number) {
   try {
-    const preimageBytes = crypto.getRandomValues(new Uint8Array(32));
-    const serverPreimage = bytesToHex(preimageBytes);
-    const serverHashBuf = await crypto.subtle.digest("SHA-256", preimageBytes.buffer as ArrayBuffer);
-    const serverHash = bytesToHex(new Uint8Array(serverHashBuf));
-
-    const r = await fetch("https://api.blink.sv/graphql", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
-      body: JSON.stringify({
-        query: `mutation { lnInvoiceCreate(input: { walletId: "${env.BLINK_WALLET_ID}", amount: ${amountSats} }) { invoice { paymentRequest paymentHash } errors { message } } }`,
-      }),
-      signal: AbortSignal.timeout(10_000),
+    const lnurlRes = await fetch("https://blink.sv/.well-known/lnurlp/shinydapps", {
+      signal: AbortSignal.timeout(8_000),
     });
-    if (!r.ok) return null;
-    const data = await r.json() as { data?: { lnInvoiceCreate?: { invoice?: { paymentRequest: string; paymentHash: string }; errors?: { message: string }[] } } };
-    const inv = data?.data?.lnInvoiceCreate;
-    if (!inv?.invoice || inv.errors?.length) return null;
+    if (!lnurlRes.ok) return null;
+    const lnurlData = await lnurlRes.json() as { callback: string; minSendable?: number; maxSendable?: number };
+    if (!lnurlData.callback) return null;
 
-    const blinkHash = inv.invoice.paymentHash;
-    await env.demo_preimages.put(blinkHash, JSON.stringify({ serverPreimage, paid: false }), { expirationTtl: 3600 });
+    const milliSats = amountSats * 1000;
+    const cbRes = await fetch(`${lnurlData.callback}?amount=${milliSats}`, {
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!cbRes.ok) return null;
+    const cbData = await cbRes.json() as { pr?: string };
+    if (!cbData.pr) return null;
+
+    const paymentHash = bolt11PaymentHash(cbData.pr);
+    if (!paymentHash) return null;
 
     const exp = Date.now() + 3_600_000;
-    const macaroon = btoa(JSON.stringify({ hash: serverHash, exp }));
+    const macaroon = btoa(JSON.stringify({ hash: paymentHash, exp }));
 
-    return { paymentRequest: inv.invoice.paymentRequest, paymentHash: blinkHash, macaroon };
+    return { paymentRequest: cbData.pr, paymentHash, macaroon };
   } catch {
     return null;
   }
+}
+
+function bolt11PaymentHash(invoice: string): string | null {
+  try {
+    const lower = invoice.toLowerCase();
+    const sep = lower.lastIndexOf("1");
+    if (sep === -1) return null;
+
+    const CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+    const dataStr = lower.slice(sep + 1, -6); // strip checksum
+    const vals: number[] = [];
+    for (const c of dataStr) {
+      const v = CHARSET.indexOf(c);
+      if (v === -1) return null;
+      vals.push(v);
+    }
+
+    // Skip 7-group timestamp
+    let pos = 7;
+    while (pos + 2 < vals.length) {
+      const type = vals[pos];
+      const len = vals[pos + 1] * 32 + vals[pos + 2];
+      pos += 3;
+      if (type === 1 && len === 52) {
+        // p tag = payment hash, 52 five-bit groups = 256 bits
+        const field = vals.slice(pos, pos + len);
+        const bytes = convertBits(field, 5, 8, false);
+        if (bytes.length < 32) return null;
+        return bytesToHex(new Uint8Array(bytes.slice(0, 32)));
+      }
+      pos += len;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function convertBits(data: number[], from: number, to: number, pad: boolean): number[] {
+  let acc = 0, bits = 0;
+  const result: number[] = [];
+  const maxv = (1 << to) - 1;
+  for (const v of data) {
+    acc = (acc << from) | v;
+    bits += from;
+    while (bits >= to) { bits -= to; result.push((acc >> bits) & maxv); }
+  }
+  if (pad && bits > 0) result.push((acc << (to - bits)) & maxv);
+  return result;
 }
 
 function hexToBytes(hex: string): Uint8Array {
@@ -137,7 +183,7 @@ function bytesToHex(arr: Uint8Array): string {
   return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function render402Page(payload: { priceSats: number; invoice: string; macaroon: string; blinkPaymentHash: string }): string {
+function render402Page(payload: { priceSats: number; invoice: string; macaroon: string; paymentHash: string }): string {
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -206,7 +252,7 @@ body{background:#0A0A0A;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFo
   https://l402kit.com/whitepaper-extended
 
 # invoice: ${payload.invoice.slice(0, 60)}...
-# hash:    ${payload.blinkPaymentHash}</div>
+# hash:    ${payload.paymentHash}</div>
     <p class="note">Invoice expires in 1 hour · SHA256(preimage) == paymentHash · verified locally, no database</p>
   </div>
 </div>

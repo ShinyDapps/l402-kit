@@ -1,4 +1,5 @@
 import type { Env } from "../worker";
+import { sweepTransitWallet } from "./sweep";
 
 async function verifySvix(req: Request, body: string, secret: string): Promise<boolean> {
   const msgId        = req.headers.get("svix-id");
@@ -69,6 +70,10 @@ export async function handleBlinkHook(req: Request, env: Env): Promise<Response>
   });
 
   const data = await r.json();
+
+  // Sweep whatever remains in the transit wallet → OWNER_LIGHTNING_ADDRESS
+  if (r.ok) sweepTransitWallet(env).catch(() => {});
+
   return json(data, r.ok ? 200 : r.status);
 }
 

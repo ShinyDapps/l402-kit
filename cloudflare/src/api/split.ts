@@ -1,7 +1,7 @@
 import type { Env } from "../worker";
 
-const FEE_PERCENT   = 0.003;
-const MIN_SATS      = 10;
+const FEE_PERCENT = 0.003;
+const MIN_SATS    = 10;
 const SSRF_BLOCKLIST = /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.0\.0\.0|::1|169\.254\.)/i;
 
 function assertSafeDomain(domain: string): void {
@@ -35,7 +35,6 @@ export async function handleSplit(req: Request, env: Env): Promise<Response> {
 
   try {
     const paymentRequest = await fetchInvoiceFromAddress(ownerAddress, ownerSats);
-    // Split is done via Supabase Edge Function to keep BLINK_API_KEY out of Workers env
     const r = await fetch(`${env.SUPABASE_URL}/functions/v1/pay-invoice`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}` },
