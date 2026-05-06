@@ -51,9 +51,11 @@ const result = await client.fetch(endpoint);
 
 ## l402-kit's own record
 
+The example below uses a fictional domain (`api.example.com`) to illustrate the format — replace it with your real endpoint.
+
 ```bash
 dig TXT l402._payment.l402kit.com
-# v=l402 endpoint=https://api.l402kit.com/api/demo price=1sat docs=https://docs.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
 ```
 
 ## Benefits
@@ -63,4 +65,4 @@ dig TXT l402._payment.l402kit.com
 - **No API key needed** — completely open discovery
 - **Cacheable** — TTL controls how often agents re-resolve
 
-See [.well-known/agent.json](https://api.l402kit.com/.well-known/agent.json) for the complementary HTTP discovery standard.
+See [.well-known/agent.json](https://api.example.com/.well-known/agent.json) for the complementary HTTP discovery standard.

@@ -12,3 +12,9 @@ declare interface KVNamespace {
   }>;
   getWithMetadata<T = unknown>(key: string): Promise<{ value: string | null; metadata: T | null }>;
 }
+
+declare interface ScheduledEvent {
+  scheduledTime: number;
+  cron: string;
+  noRetry(): void;
+}

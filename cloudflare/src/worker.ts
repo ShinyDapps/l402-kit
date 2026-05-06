@@ -70,7 +70,7 @@ function handleL402Json(): Response {
     protocol: "l402",
     version: "1.0",
     provider: "l402-kit",
-    demo_endpoint: "https://api.l402kit.com/api/demo",
+    demo_endpoint: "https://l402kit.com/api/demo",
     price_sats: 1,
     docs: "https://docs.l402kit.com/introduction",
     sdk: "https://npmjs.com/package/l402-kit"

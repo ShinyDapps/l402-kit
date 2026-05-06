@@ -791,14 +791,14 @@ describe("handleBlinkHook", () => {
 
 describe(".well-known/agent.json", () => {
   test("GET returns 200 with JSON content-type", async () => {
-    const req = new Request("https://api.l402kit.com/.well-known/agent.json");
+    const req = new Request("https://l402kit.com/.well-known/agent.json");
     const res = await worker.fetch(req, makeEnv());
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toMatch(/application\/json/);
   });
 
   test("response contains required agent discovery fields", async () => {
-    const req = new Request("https://api.l402kit.com/.well-known/agent.json");
+    const req = new Request("https://l402kit.com/.well-known/agent.json");
     const res = await worker.fetch(req, makeEnv());
     const body = await res.json() as Record<string, unknown>;
     expect(body.name).toBe("l402-kit");
@@ -808,7 +808,7 @@ describe(".well-known/agent.json", () => {
   });
 
   test("install field has all four package managers", async () => {
-    const req = new Request("https://api.l402kit.com/.well-known/agent.json");
+    const req = new Request("https://l402kit.com/.well-known/agent.json");
     const res = await worker.fetch(req, makeEnv());
     const body = await res.json() as { install: Record<string, string> };
     expect(body.install.npm).toMatch(/npm install/);
@@ -820,23 +820,23 @@ describe(".well-known/agent.json", () => {
 
 describe(".well-known/l402.json", () => {
   test("GET returns 200 with JSON content-type", async () => {
-    const req = new Request("https://api.l402kit.com/.well-known/l402.json");
+    const req = new Request("https://l402kit.com/.well-known/l402.json");
     const res = await worker.fetch(req, makeEnv());
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toMatch(/application\/json/);
   });
 
   test("response declares l402 protocol and demo endpoint", async () => {
-    const req = new Request("https://api.l402kit.com/.well-known/l402.json");
+    const req = new Request("https://l402kit.com/.well-known/l402.json");
     const res = await worker.fetch(req, makeEnv());
     const body = await res.json() as Record<string, unknown>;
     expect(body.protocol).toBe("l402");
-    expect(body.demo_endpoint).toContain("api.l402kit.com");
+    expect(body.demo_endpoint).toContain("l402kit.com");
     expect(body.price_sats).toBe(1);
   });
 
   test("response includes docs and sdk links", async () => {
-    const req = new Request("https://api.l402kit.com/.well-known/l402.json");
+    const req = new Request("https://l402kit.com/.well-known/l402.json");
     const res = await worker.fetch(req, makeEnv());
     const body = await res.json() as Record<string, unknown>;
     expect(body.docs).toContain("l402kit.com");

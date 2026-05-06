@@ -78,7 +78,7 @@ cargo add l402kit           # Rust / axum
 ```
 
 > **AI Agents / LLMs:** See [`llms.txt`](./llms.txt) for machine-readable instructions.
-> **Agent discovery:** [`/.well-known/agent.json`](https://api.l402kit.com/.well-known/agent.json) · [`/.well-known/l402.json`](https://api.l402kit.com/.well-known/l402.json)
+> **Agent discovery:** [`/.well-known/agent.json`](https://l402kit.com/.well-known/agent.json) · [`/.well-known/l402.json`](https://l402kit.com/.well-known/l402.json)
 
 ---
 

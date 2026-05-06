@@ -43,7 +43,7 @@ agent = Agent(
 async def main():
     result = await Runner.run(
         agent,
-        "Fetch data from https://api.l402kit.com/api/demo and summarize it"
+        "Fetch data from https://l402kit.com/api/demo and summarize it"
     )
     print(result.final_output)
     print(f"Sats spent: {client.spent_sats}")
@@ -123,7 +123,7 @@ Budget: 1000 sats per session.`
   }
 }
 
-runAgent("Fetch and summarize https://api.l402kit.com/api/demo");
+runAgent("Fetch and summarize https://l402kit.com/api/demo");
 ```
 
 ## Budget safety
