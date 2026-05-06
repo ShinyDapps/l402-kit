@@ -1,11 +1,11 @@
----
+ï»¿---
 title: Introduction
 description: Charge for your API in Bitcoin Lightning. 3 lines of code. TypeScript, Python, Go, Rust. No account. No bank. No permission.
 ---
 
 ## What is l402-kit?
 
-**l402-kit** is an open-source middleware that implements the [L402 protocol](https://docs.lightning.engineering/the-lightning-network/l402) — the open standard for pay-per-call API monetization using the Bitcoin Lightning Network.
+**l402-kit** is an open-source middleware that implements the [L402 protocol](https://docs.lightning.engineering/the-lightning-network/l402) ï¿½ the open standard for pay-per-call API monetization using the Bitcoin Lightning Network.
 
 Add 3 lines of code. Callers pay in sats. You receive in seconds. Works with TypeScript, Python, Go, and Rust.
 
@@ -16,12 +16,12 @@ cargo add l402kit       # Rust / axum
 ```
 
 ```bash
-# Go — see SDK / Go for setup
+# Go ï¿½ see SDK / Go for setup
 go get github.com/shinydapps/l402-kit/go@v1.8.2
 ```
 
 <Card title="? Watch end-to-end demo" icon="play" href="https://l402kit.com/#live-demo">
-  See the full L402 flow in action — from `npm install` to first paid API call. Interactive terminal animation, 45 seconds.
+  See the full L402 flow in action ï¿½ from `npm install` to first paid API call. Interactive terminal animation, 45 seconds.
 </Card>
 
 <CardGroup cols={3}>
@@ -47,39 +47,39 @@ go get github.com/shinydapps/l402-kit/go@v1.8.2
 
 ---
 
-## How it works — full flow
+## How it works ï¿½ full flow
 
-The diagram below shows **managed mode** (`ManagedProvider`), where l402kit.com hosts the Lightning node for you. In **soberano mode** (Blink, Alby, BTCPay, etc.) payments go directly to your wallet — **0% fee**.
+The diagram below shows **managed mode** (`ManagedProvider`), where l402kit.com hosts the Lightning node for you. In **soberano mode** (Blink, Alby, BTCPay, etc.) payments go directly to your wallet ï¿½ **0% fee**.
 
 ```
 +-----------------------------------------------------------------+
-¦                                                                 ¦
-¦  Client / AI Agent                                              ¦
-¦         ¦                                                       ¦
-¦         ¦ 1. GET /your-api                                      ¦
-¦         ?                                                       ¦
-¦  Your API (l402-kit)  --- 2. Creates invoice --? ShinyDapps API ¦
-¦         ¦                                        (Blink wallet) ¦
-¦         ¦ 3. Returns: 402 + BOLT11 invoice                      ¦
-¦         ?                                                       ¦
-¦  Client pays -------------------------------? Lightning Network ¦
-¦         ¦                       (< 1 second)                    ¦
-¦         ¦ 4. Sends preimage as cryptographic proof              ¦
-¦         ?                                                       ¦
-¦  Your API verifies: SHA256(preimage) == hash ?                  ¦
-¦         ¦                                                       ¦
-¦         ¦ 5. Automatic split:                                   ¦
-¦         ¦    ? 99.7% -----------------------? Your Lightning Addr¦
-¦         ¦    ? 0.3%  -----------------------? ShinyDapps (fee)  ¦
-¦         ¦                                                       ¦
-¦         ¦ 6. Your API responds: 200 OK + data                   ¦
-¦         ?                                                       ¦
-¦  Client receives content                                        ¦
+ï¿½                                                                 ï¿½
+ï¿½  Client / AI Agent                                              ï¿½
+ï¿½         ï¿½                                                       ï¿½
+ï¿½         ï¿½ 1. GET /your-api                                      ï¿½
+ï¿½         ?                                                       ï¿½
+ï¿½  Your API (l402-kit)  --- 2. Creates invoice --? ShinyDapps API ï¿½
+ï¿½         ï¿½                                        (Blink wallet) ï¿½
+ï¿½         ï¿½ 3. Returns: 402 + BOLT11 invoice                      ï¿½
+ï¿½         ?                                                       ï¿½
+ï¿½  Client pays -------------------------------? Lightning Network ï¿½
+ï¿½         ï¿½                       (< 1 second)                    ï¿½
+ï¿½         ï¿½ 4. Sends preimage as cryptographic proof              ï¿½
+ï¿½         ?                                                       ï¿½
+ï¿½  Your API verifies: SHA256(preimage) == hash ?                  ï¿½
+ï¿½         ï¿½                                                       ï¿½
+ï¿½         ï¿½ 5. Automatic split:                                   ï¿½
+ï¿½         ï¿½    ? 99.7% -----------------------? Your Lightning Addrï¿½
+ï¿½         ï¿½    ? 0.3%  -----------------------? ShinyDapps (fee)  ï¿½
+ï¿½         ï¿½                                                       ï¿½
+ï¿½         ï¿½ 6. Your API responds: 200 OK + data                   ï¿½
+ï¿½         ?                                                       ï¿½
+ï¿½  Client receives content                                        ï¿½
 +-----------------------------------------------------------------+
 ```
 
 <Note>
-**Full transparency:** ShinyDapps receives the payment and forwards **99.7%** to your Lightning Address automatically. The **0.3%** fee keeps the project alive. The split is deterministic and verifiable — no secrets. For zero-intermediary operation, use soberano mode (Blink, BTCPay, Alby).
+**Full transparency:** ShinyDapps receives the payment and forwards **99.7%** to your Lightning Address automatically. The **0.3%** fee keeps the project alive. The split is deterministic and verifiable ï¿½ no secrets. For zero-intermediary operation, use soberano mode (Blink, BTCPay, Alby).
 </Note>
 
 ---
@@ -96,7 +96,7 @@ const app = express();
 
 app.get("/premium", l402({
   priceSats: 100,
-  lightning: ManagedProvider.fromAddress("you@blink.sv"), // managed mode — no node needed
+  lightning: ManagedProvider.fromAddress("you@blink.sv"), // managed mode ï¿½ no node needed
 }), (_req, res) => {
   res.json({ data: "Payment confirmed." });
 });
@@ -170,12 +170,12 @@ async fn main() {
 | | Stripe | **l402-kit** |
 |---|---|---|
 | Minimum fee | **$0.30** | **< 1 sat (~$0.001)** |
-| Settlement | 2–7 days | **< 1 second** |
+| Settlement | 2â€“7 days | **< 1 second** |
 | Chargebacks | Yes | **Impossible** |
 | Requires account | Yes | **No** |
-| AI agent support | No | **Yes — native** |
-| Countries blocked | ~50 | **0 — global** |
-| Open source | No | **Yes — MIT** |
+| AI agent support | No | **Yes â€” native** |
+| Countries blocked | ~50 | **0 â€” global** |
+| Open source | No | **Yes â€” MIT** |
 | Censurable | Yes | **No** |
 
 ---
@@ -191,8 +191,8 @@ SHA256(preimage) == paymentHash
 - Impossible to fake without actually paying
 - Each preimage works exactly once (anti-replay)
 - Tokens expire after 1 hour
-- All logic is deterministic and verifiable — no hidden fees, no intermediaries
-- **462+ automated tests** across 5 runtimes — production-grade reliability for autonomous agent workflows
+- All logic is deterministic and verifiable ï¿½ no hidden fees, no intermediaries
+- **462+ automated tests** across 5 runtimes ï¿½ production-grade reliability for autonomous agent workflows
 
 ---
 
@@ -203,10 +203,10 @@ SHA256(preimage) == paymentHash
     Charge per call instead of monthly subscriptions. Start in 1 line.
   </Card>
   <Card title="AI agent builders" icon="robot">
-    Agents pay APIs autonomously — no credit card, no human in the loop.
+    Agents pay APIs autonomously ï¿½ no credit card, no human in the loop.
   </Card>
   <Card title="Devs outside the financial system" icon="globe">
-    Argentina, Nigeria, Iran — Bitcoin has no borders or gatekeepers.
+    Argentina, Nigeria, Iran ï¿½ Bitcoin has no borders or gatekeepers.
   </Card>
   <Card title="Data providers" icon="database">
     Charge 1 sat per query. Impossible with Stripe.
@@ -217,6 +217,6 @@ SHA256(preimage) == paymentHash
 
 ## Created by
 
-**ShinyDapps** · [github.com/ShinyDapps](https://github.com/ShinyDapps)
+**ShinyDapps** ï¿½ [github.com/ShinyDapps](https://github.com/ShinyDapps)
 
 Lightning: `shinydapps@blink.sv`
