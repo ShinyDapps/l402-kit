@@ -14,6 +14,7 @@ import { handleProPoll }    from "./api/pro-poll";
 import { handleGlobalStats } from "./api/global-stats";
 import { handleProSubscribe } from "./api/pro-subscribe";
 import { handleRegister, handleApis } from "./api/registry";
+import { handleCheckout } from "./api/checkout";
 import { handleDashboard } from "./api/dashboard";
 import { handleWhitepaperExtended } from "./api/whitepaper";
 import { sweepTransitWallet } from "./api/sweep";
@@ -147,6 +148,7 @@ export default {
       else if (path === "/api/pro-poll")       res = await handleProPoll(request, env);
       else if (path === "/api/global-stats")   res = await handleGlobalStats(request, env);
       else if (path === "/api/pro-subscribe")  res = await handleProSubscribe(request, env);
+      else if (path === "/api/checkout")         res = await handleCheckout(request, env);
       else if (path === "/api/register")       res = await handleRegister(request, env);
       else if (path === "/api/apis.json")      res = await handleApis(request, env);
       else if (path.startsWith("/api/dashboard")) res = await handleDashboard(request, env);

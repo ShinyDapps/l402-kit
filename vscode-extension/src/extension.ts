@@ -11,6 +11,8 @@ let pollInterval: ReturnType<typeof setInterval> | undefined;
 let sidebarProvider: PaymentsDashboardProvider | undefined;
 let activePanel: vscode.WebviewPanel | undefined;
 let csvDownloadPending = false;
+let proStatus: boolean | null = null;
+let lastKnownCount = -1;
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N: Record<string, Record<string, string>> = {
@@ -255,6 +257,16 @@ export function activate(context: vscode.ExtensionContext) {
   startPolling();
 }
 
+async function checkProStatus(addr: string): Promise<void> {
+  try {
+    const res = await fetch(`https://l402kit.com/api/pro-check?address=${encodeURIComponent(addr)}`);
+    if (res.ok) {
+      const d = await res.json() as { pro: boolean };
+      proStatus = d.pro === true;
+    }
+  } catch { /* ignore */ }
+}
+
 function startPolling() {
   if (pollInterval) clearInterval(pollInterval);
   const addr = vscode.workspace.getConfiguration("shinydapps").get<string>("lightningAddress");
@@ -263,6 +275,7 @@ function startPolling() {
     statusBar.tooltip = "ShinyDapps — Click to configure your Lightning Address";
     return;
   }
+  checkProStatus(addr);
   const poll = async () => {
     try {
       const res = await fetch(
@@ -272,10 +285,20 @@ function startPolling() {
       const rows = (await res.json()) as { amount_sats: number }[];
       const total = rows.reduce((s, r) => s + (r.amount_sats || 0), 0);
       statusBar.text = `⚡ ${total.toLocaleString()} sats (${rows.length})`;
-      statusBar.tooltip = `ShinyDapps — ${rows.length} payments · ${total.toLocaleString()} sats`;
+      const proHint = proStatus === false ? " · Pro: unlock full history" : "";
+      statusBar.tooltip = `ShinyDapps — ${rows.length} payments · ${total.toLocaleString()} sats${proHint}`;
       statusBar.backgroundColor = rows.length > 0
         ? new vscode.ThemeColor("statusBarItem.warningBackground")
         : undefined;
+      if (lastKnownCount === 0 && rows.length > 0) {
+        vscode.window.showInformationMessage(
+          "⚡ First payment received! Open your dashboard to see it.",
+          "Open Dashboard"
+        ).then(sel => {
+          if (sel === "Open Dashboard") vscode.commands.executeCommand("shinydapps.showDashboard");
+        });
+      }
+      lastKnownCount = rows.length;
     } catch {
       statusBar.text = "⚡ — (offline)";
     }
@@ -533,6 +556,7 @@ let chartRange = '7D';
 let lastRows = null;
 let isPro = false;
 let btcPrice = 0;
+let hiddenCount = 0;
 
 // ── vscode api ─────────────────────────────────────────────────────────
 const vsc = (() => { try { return acquireVsCodeApi(); } catch(_) { return { postMessage: () => {} }; } })();
@@ -709,8 +733,11 @@ function renderContent(rows) {
     html += '<div class="pro-banner">';
     const proSats = btcPrice > 0 ? Math.ceil(${MONTHLY_FEE_USD} / btcPrice * 1e8).toLocaleString() + ' sats' : '~9k sats';
     html += '<div class="pro-banner-top"><span class="pro-title">⚡ ShinyDapps Pro</span><span class="pro-price">' + proSats + ' / mo</span></div>';
+    if (hiddenCount > 0) {
+      html += '<div style="font-size:11px;color:#f7931a;font-weight:600;margin-bottom:6px">⚠ ' + hiddenCount + ' payment' + (hiddenCount !== 1 ? 's' : '') + ' hidden — older than 30 days</div>';
+    }
     html += '<div class="pro-features">' + t('proFeatures') + '</div>';
-    html += '<a href="https://l402kit.com/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">' + t('upgradeBtn') + '</a>';
+    html += '<a href="https://l402kit.com/api/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro" class="pro-cta" target="_blank">' + t('upgradeBtn') + '</a>';
     html += '</div>';
   }
 
@@ -777,7 +804,7 @@ function renderContent(rows) {
       btn.addEventListener('click', function() {
         const r = btn.getAttribute('data-r');
         if ((r === '1Y' || r === 'ALL') && !isPro) {
-          window.open('https://l402kit.com/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
+          window.open('https://l402kit.com/api/checkout?address=' + encodeURIComponent(ADDR) + '&tier=pro', '_blank');
           return;
         }
         chartRange = r;
@@ -921,7 +948,8 @@ async function load() {
   setContent('<div class="loading">⚡ ' + t('loading') + '</div>');
   await checkPro();
   try {
-    const cutoff = isPro ? '' : '&paid_at=gte.' + new Date(Date.now() - 30 * 86400_000).toISOString();
+    const cutoffDate = new Date(Date.now() - 30 * 86400_000).toISOString();
+    const cutoff = isPro ? '' : '&paid_at=gte.' + cutoffDate;
     const res = await fetch(
       SB_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(ADDR) + '&order=paid_at.desc&limit=500' + cutoff,
       { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
@@ -931,6 +959,19 @@ async function load() {
       throw new Error('HTTP ' + res.status + (body ? ': ' + body.slice(0, 120) : ''));
     }
     const rows = await res.json();
+    hiddenCount = 0;
+    if (!isPro) {
+      try {
+        const oldRes = await fetch(
+          SB_URL + '/rest/v1/payments?owner_address=eq.' + encodeURIComponent(ADDR) + '&paid_at=lt.' + cutoffDate + '&select=id&limit=500',
+          { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
+        );
+        if (oldRes.ok) {
+          const old = await oldRes.json();
+          hiddenCount = Array.isArray(old) ? old.length : 0;
+        }
+      } catch(_) {}
+    }
     renderContent(Array.isArray(rows) ? rows : []);
   } catch(e) {
     renderError(e && e.message ? e.message : 'Network error');
