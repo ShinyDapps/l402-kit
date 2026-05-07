@@ -10,9 +10,12 @@ import { handleVerify } from "../api/verify";
 import { handleStats } from "../api/stats";
 import { handleSplit } from "../api/split";
 import { handleBlinkHook } from "../api/blink-webhook";
-import { handleDemo, handleDemoBtcPrice, handleDemoPreimage } from "../api/demo";
+import { handleDemo, handleDemoBtcPrice, handleDemoPreimage, handleDemoPayAddress } from "../api/demo";
 import { handleCheckout } from "../api/checkout";
 import { handleProSubscribe } from "../api/pro-subscribe";
+import { handleProPoll } from "../api/pro-poll";
+import { handleLnurlp } from "../api/lnurlp";
+import { sweepTransitWallet } from "../api/sweep";
 import worker from "../worker";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -35,9 +38,11 @@ function makeEnv(overrides: Record<string, unknown> = {}): any {
     SUPABASE_SERVICE_KEY: "service_key",
     SPLIT_SECRET: "split_secret_xyz",
     DASHBOARD_SECRET: "dash_secret_xyz",
-    RESEND_API_KEY: "resend_key",
     BLINK_API_KEY: "blink_key",
     BLINK_WALLET_ID: "wallet_id",
+    BLINK_API_KEY_DEMO: "blink_demo_key",
+    BLINK_WALLET_ID_DEMO: "demo_wallet_id",
+    OWNER_LIGHTNING_ADDRESS: "owner@blink.sv",
     BLINK_WEBHOOK_SECRET: "whsec_dGVzdHNlY3JldGZvcnVuaXR0ZXN0czEyMzQ1Njc4",
     demo_preimages: makeKV(),
     ...overrides,
@@ -1220,6 +1225,348 @@ describe("handleProSubscribe", () => {
       makeEnv(),
     );
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+  });
+});
+
+// ─── /api/demo/pay-address ───────────────────────────────────────────────────
+
+describe("handleDemoPayAddress", () => {
+  test("GET returns 405", async () => {
+    const res = await handleDemoPayAddress(makeRequest("GET", "https://l402kit.com/api/demo/pay-address"), makeEnv());
+    expect(res.status).toBe(405);
+  });
+
+  test("POST with missing address returns 400", async () => {
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", {}), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("POST with address missing @ returns 400", async () => {
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "nodomain" }), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("POST with address missing dot returns 400", async () => {
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@nodot" }), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("POST rate-limited by IP returns 429", async () => {
+    const kv = makeKV({ "demo-pay-rl:1.2.3.4": JSON.stringify({ count: 2, reset: Math.floor(Date.now() / 1000) + 3600 }) });
+    const env = makeEnv({ demo_preimages: kv });
+    const req = makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }, { "CF-Connecting-IP": "1.2.3.4" });
+    const res = await handleDemoPayAddress(req, env);
+    expect(res.status).toBe(429);
+  });
+
+  test("POST rate-limited by address returns 429", async () => {
+    const kv = makeKV({ "demo-pay-addr:user@blink.sv": "1" });
+    const env = makeEnv({ demo_preimages: kv });
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), env);
+    expect(res.status).toBe(429);
+  });
+
+  test("POST where LNURL resolve fails returns 400", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("not found", { status: 404 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("POST where LNURL tag is not payRequest returns 400", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ tag: "channelRequest", callback: "https://x.com/cb" }), { status: 200 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("POST where amount below minSendable returns 400", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ tag: "payRequest", callback: "https://x.com/cb", minSendable: 5000 }), { status: 200 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/minimum/i);
+  });
+
+  test("POST where invoice request fails returns 503", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ tag: "payRequest", callback: "https://x.com/cb", minSendable: 1000 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("err", { status: 503 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(503);
+  });
+
+  test("POST where invoice missing pr returns 503", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ tag: "payRequest", callback: "https://x.com/cb", minSendable: 1000 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ reason: "no funds" }), { status: 200 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(503);
+  });
+
+  test("POST where Blink payment returns non-ok returns 503", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ tag: "payRequest", callback: "https://x.com/cb", minSendable: 1000 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ pr: "lnbc1..." }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("err", { status: 500 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(503);
+  });
+
+  test("POST where Blink payment has errors returns 503", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ tag: "payRequest", callback: "https://x.com/cb", minSendable: 1000 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ pr: "lnbc1..." }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { lnInvoicePaymentSend: { status: "FAILURE", errors: [{ message: "insufficient balance" }] } } }), { status: 200 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(503);
+  });
+
+  test("POST successful payment returns {paid: true, amountSats: 1}", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ tag: "payRequest", callback: "https://x.com/cb", minSendable: 1000, maxSendable: 1_000_000 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ pr: "lnbc1..." }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { lnInvoicePaymentSend: { status: "SUCCESS", errors: [] } } }), { status: 200 }));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { paid: boolean; amountSats: number };
+    expect(body.paid).toBe(true);
+    expect(body.amountSats).toBe(1);
+  });
+
+  test("POST fetch throws returns 503", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("timeout"));
+    const res = await handleDemoPayAddress(makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }), makeEnv());
+    expect(res.status).toBe(503);
+  });
+});
+
+// ─── /.well-known/lnurlp/:name ───────────────────────────────────────────────
+
+describe("handleLnurlp", () => {
+  test("GET unknown user returns 404", async () => {
+    const req = new Request("https://l402kit.com/.well-known/lnurlp/unknown");
+    const res = await handleLnurlp(req, makeEnv());
+    expect(res.status).toBe(404);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe("ERROR");
+  });
+
+  test("GET Phase 1 (no amount) returns payRequest metadata", async () => {
+    const req = new Request("https://l402kit.com/.well-known/lnurlp/shinydapps");
+    const res = await handleLnurlp(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { tag: string; callback: string; minSendable: number; maxSendable: number };
+    expect(body.tag).toBe("payRequest");
+    expect(body.callback).toContain("lnurlp/shinydapps");
+    expect(body.minSendable).toBe(1000);
+    expect(body.maxSendable).toBeGreaterThan(1000);
+  });
+
+  test("GET Phase 2 with invalid amount returns 400", async () => {
+    const req = new Request("https://l402kit.com/.well-known/lnurlp/shinydapps?amount=0");
+    const res = await handleLnurlp(req, makeEnv());
+    expect(res.status).toBe(400);
+    const body = await res.json() as { status: string; reason: string };
+    expect(body.status).toBe("ERROR");
+    expect(body.reason).toMatch(/invalid amount/i);
+  });
+
+  test("GET Phase 2 with amount below minSendable returns 400", async () => {
+    const req = new Request("https://l402kit.com/.well-known/lnurlp/shinydapps?amount=500");
+    const res = await handleLnurlp(req, makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("GET Phase 2 valid amount returns invoice", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ paymentRequest: "lnbc1000n1..." }), { status: 200 }));
+    const req = new Request("https://l402kit.com/.well-known/lnurlp/shinydapps?amount=1000");
+    const res = await handleLnurlp(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { pr: string; routes: unknown[] };
+    expect(body.pr).toBe("lnbc1000n1...");
+    expect(body.routes).toEqual([]);
+  });
+
+  test("GET Phase 2 Supabase failure returns 503", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("error", { status: 503 }));
+    const req = new Request("https://l402kit.com/.well-known/lnurlp/shinydapps?amount=1000");
+    const res = await handleLnurlp(req, makeEnv());
+    expect(res.status).toBe(503);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe("ERROR");
+  });
+});
+
+// ─── /api/pro-poll ───────────────────────────────────────────────────────────
+
+describe("handleProPoll", () => {
+  test("GET missing paymentHash returns 400", async () => {
+    const req = new Request("https://l402kit.com/api/pro-poll?address=user@blink.sv");
+    const res = await handleProPoll(req, makeEnv());
+    expect(res.status).toBe(400);
+    const body = await res.json() as { paid: boolean; error: string };
+    expect(body.paid).toBe(false);
+    expect(body.error).toMatch(/missing params/i);
+  });
+
+  test("GET missing address returns 400", async () => {
+    const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc123");
+    const res = await handleProPoll(req, makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("GET returns paid:true when pro_access row exists", async () => {
+    const expiresAt = new Date(Date.now() + 86400_000).toISOString();
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ expires_at: expiresAt }]), { status: 200 })) // pro_access hit
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })); // payments (unused)
+    const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv");
+    const res = await handleProPoll(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { paid: boolean; expiresAt: string };
+    expect(body.paid).toBe(true);
+    expect(body.expiresAt).toBe(expiresAt);
+  });
+
+  test("GET returns paid:false when payment not found", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // no pro_access
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ paid: false }]), { status: 200 })); // not paid
+    const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv");
+    const res = await handleProPoll(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { paid: boolean };
+    expect(body.paid).toBe(false);
+  });
+
+  test("GET creates pro_access and returns paid:true when payment confirmed", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // no pro_access yet
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ paid: true }]), { status: 200 })) // payment confirmed
+      .mockResolvedValueOnce(new Response(null, { status: 201 })); // pro_access insert
+    const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv&tier=pro");
+    const res = await handleProPoll(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { paid: boolean; expiresAt: string };
+    expect(body.paid).toBe(true);
+    expect(body.expiresAt).toBeDefined();
+  });
+
+  test("GET lifetime tier sets far-future expiresAt", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ paid: true }]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }));
+    const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv&tier=lifetime");
+    const res = await handleProPoll(req, makeEnv());
+    const body = await res.json() as { paid: boolean; expiresAt: string };
+    const yearsAhead = (new Date(body.expiresAt).getTime() - Date.now()) / (1000 * 86400 * 365);
+    expect(yearsAhead).toBeGreaterThan(50);
+  });
+});
+
+// ─── sweepTransitWallet ───────────────────────────────────────────────────────
+
+describe("sweepTransitWallet", () => {
+  test("returns early when OWNER_LIGHTNING_ADDRESS is missing", async () => {
+    const env = makeEnv({ OWNER_LIGHTNING_ADDRESS: "" });
+    await sweepTransitWallet(env);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test("returns early when BLINK_API_KEY_DEMO is missing", async () => {
+    const env = makeEnv({ BLINK_API_KEY_DEMO: "" });
+    await sweepTransitWallet(env);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test("returns early when Blink balance call fails", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("error", { status: 500 }));
+    await sweepTransitWallet(makeEnv());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("returns early when balance is zero", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      data: { me: { defaultAccount: { wallets: [{ id: "demo_wallet_id", walletCurrency: "BTC", balance: 0 }] } } },
+    }), { status: 200 }));
+    await sweepTransitWallet(makeEnv());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("full happy path calls Supabase pay-invoice", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        data: { me: { defaultAccount: { wallets: [{ id: "demo_wallet_id", walletCurrency: "BTC", balance: 100 }] } } },
+      }), { status: 200 })) // balance check
+      .mockResolvedValueOnce(new Response(JSON.stringify({ callback: "https://blink.sv/cb", minSendable: 1000 }), { status: 200 })) // lnurlp metadata
+      .mockResolvedValueOnce(new Response(JSON.stringify({ pr: "lnbc100n1..." }), { status: 200 })) // lnurlp invoice
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 })); // supabase pay-invoice
+    await sweepTransitWallet(makeEnv());
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    const lastCall = fetchMock.mock.calls[3][0] as string;
+    expect(lastCall).toContain("pay-invoice");
+  });
+
+  test("does not throw when fetch rejects", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network error"));
+    await expect(sweepTransitWallet(makeEnv())).resolves.toBeUndefined();
+  });
+});
+
+// ─── fetchBtcPrice fallback paths (via handleDemoBtcPrice) ───────────────────
+
+describe("fetchBtcPrice fallback", () => {
+  function makeValidToken(): string {
+    return makeToken(3_600_000);
+  }
+
+  test("uses Coinbase when CoinGecko fails", async () => {
+    const token = makeValidToken();
+    fetchMock
+      .mockRejectedValueOnce(new Error("coingecko down")) // CoinGecko
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { amount: "95000" } }), { status: 200 })) // Coinbase USD
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { amount: "88000" } }), { status: 200 })) // Coinbase EUR
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { amount: "75000" } }), { status: 200 })); // Coinbase GBP
+    const res = await handleDemoBtcPrice(
+      makeRequest("GET", "https://l402kit.com/api/demo/btc-price", undefined, { Authorization: `L402 ${token}` }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json() as { bitcoin: { source: string; usd: number } };
+    expect(body.bitcoin.source).toBe("Coinbase");
+    expect(body.bitcoin.usd).toBe(95000);
+  });
+
+  test("returns source:unavailable when both CoinGecko and Coinbase fail", async () => {
+    const token = makeValidToken();
+    fetchMock
+      .mockRejectedValueOnce(new Error("coingecko down"))   // CoinGecko
+      .mockRejectedValueOnce(new Error("coinbase usd down")) // Coinbase USD
+      .mockRejectedValueOnce(new Error("coinbase eur down")) // Coinbase EUR
+      .mockRejectedValueOnce(new Error("coinbase gbp down")); // Coinbase GBP
+    const res = await handleDemoBtcPrice(
+      makeRequest("GET", "https://l402kit.com/api/demo/btc-price", undefined, { Authorization: `L402 ${token}` }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json() as { bitcoin: { source: string; usd: number } };
+    expect(body.bitcoin.source).toBe("unavailable");
+    expect(body.bitcoin.usd).toBe(0);
+  });
+});
+
+// ─── handleStats error path ───────────────────────────────────────────────────
+
+describe("handleStats error path", () => {
+  test("returns 500 when Supabase fetch fails", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("supabase down"));
+    const res = await handleStats(
+      makeRequest("GET", "https://l402kit.com/api/stats", undefined, { "x-dashboard-secret": "dash_secret_xyz" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(500);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/failed to fetch stats/i);
   });
 });
 
