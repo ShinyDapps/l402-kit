@@ -18,9 +18,9 @@ export async function sweepTransitWallet(env: Env): Promise<void> {
     const data = await r.json() as { data?: { me?: { defaultAccount?: { wallets?: { id: string; walletCurrency: string; balance: number }[] } } } };
     const wallets = data?.data?.me?.defaultAccount?.wallets ?? [];
     const btcWallet = wallets.find(w => w.id === env.BLINK_WALLET_ID_DEMO || w.walletCurrency === "BTC");
-    if (!btcWallet || btcWallet.balance <= 0) return;
+    if (!btcWallet || btcWallet.balance <= 1) return; // keep 1 sat in +55
 
-    const balanceSats = btcWallet.balance;
+    const balanceSats = btcWallet.balance - 1; // always leave 1 sat behind
 
     // 2. Get invoice from OWNER_LIGHTNING_ADDRESS via LNURL
     const [user, domain] = env.OWNER_LIGHTNING_ADDRESS.split("@");

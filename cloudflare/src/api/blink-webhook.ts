@@ -45,6 +45,29 @@ export async function handleBlinkHook(req: Request, env: Env): Promise<Response>
     await env.demo_preimages.put(dedupKey, "1", { expirationTtl: 604800 }); // 7 dias
   }
 
+  // Pro subscription: se paymentHash mapeado em KV → cria pro_access e retorna
+  if (paymentHash) {
+    try {
+      const proRaw = await env.demo_preimages.get(`pro_inv:${paymentHash}`);
+      if (proRaw) {
+        const { address, tier } = JSON.parse(proRaw) as { address: string; tier: string };
+        const days = tier === "lifetime" ? 36500 : 30;
+        const expiresAt = new Date(Date.now() + days * 86400_000).toISOString();
+        await fetch(`${env.SUPABASE_URL}/rest/v1/pro_access`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: env.SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            Prefer: "return=minimal,resolution=ignore-duplicates",
+          },
+          body: JSON.stringify({ address, expires_at: expiresAt, payment_hash: paymentHash, tier }),
+        });
+        return json({ ok: true, pro: true, address, tier });
+      }
+    } catch { /* fall through to managed split path */ }
+  }
+
   // Enrichment: busca ownerAddress no KV para acionar o split no modo managed
   let enrichedBody = body;
   if (paymentHash && parsed) {

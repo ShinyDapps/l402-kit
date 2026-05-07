@@ -14,6 +14,7 @@ import { handleDemo, handleDemoBtcPrice, handleDemoPreimage, handleDemoPayAddres
 import { handleCheckout } from "../api/checkout";
 import { handleProSubscribe } from "../api/pro-subscribe";
 import { handleProPoll } from "../api/pro-poll";
+import { handleProCheck } from "../api/pro-check";
 import { handleLnurlp } from "../api/lnurlp";
 import { sweepTransitWallet } from "../api/sweep";
 import worker from "../worker";
@@ -1416,9 +1417,7 @@ describe("handleProPoll", () => {
 
   test("GET returns paid:true when pro_access row exists", async () => {
     const expiresAt = new Date(Date.now() + 86400_000).toISOString();
-    fetchMock
-      .mockResolvedValueOnce(new Response(JSON.stringify([{ expires_at: expiresAt }]), { status: 200 })) // pro_access hit
-      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })); // payments (unused)
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([{ expires_at: expiresAt }]), { status: 200 }));
     const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv");
     const res = await handleProPoll(req, makeEnv());
     expect(res.status).toBe(200);
@@ -1427,10 +1426,8 @@ describe("handleProPoll", () => {
     expect(body.expiresAt).toBe(expiresAt);
   });
 
-  test("GET returns paid:false when payment not found", async () => {
-    fetchMock
-      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // no pro_access
-      .mockResolvedValueOnce(new Response(JSON.stringify([{ paid: false }]), { status: 200 })); // not paid
+  test("GET returns paid:false when no pro_access row", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
     const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv");
     const res = await handleProPoll(req, makeEnv());
     expect(res.status).toBe(200);
@@ -1438,27 +1435,22 @@ describe("handleProPoll", () => {
     expect(body.paid).toBe(false);
   });
 
-  test("GET creates pro_access and returns paid:true when payment confirmed", async () => {
-    fetchMock
-      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 })) // no pro_access yet
-      .mockResolvedValueOnce(new Response(JSON.stringify([{ paid: true }]), { status: 200 })) // payment confirmed
-      .mockResolvedValueOnce(new Response(null, { status: 201 })); // pro_access insert
+  test("GET returns paid:false until webhook populates pro_access", async () => {
+    // After payment, webhook creates pro_access. Until then, poll returns false.
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
     const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv&tier=pro");
     const res = await handleProPoll(req, makeEnv());
-    expect(res.status).toBe(200);
-    const body = await res.json() as { paid: boolean; expiresAt: string };
-    expect(body.paid).toBe(true);
-    expect(body.expiresAt).toBeDefined();
+    const body = await res.json() as { paid: boolean };
+    expect(body.paid).toBe(false);
   });
 
-  test("GET lifetime tier sets far-future expiresAt", async () => {
-    fetchMock
-      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify([{ paid: true }]), { status: 200 }))
-      .mockResolvedValueOnce(new Response(null, { status: 201 }));
+  test("GET returns paid:true once pro_access is populated (lifetime)", async () => {
+    const expiresAt = new Date(Date.now() + 36500 * 86400_000).toISOString();
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([{ expires_at: expiresAt }]), { status: 200 }));
     const req = new Request("https://l402kit.com/api/pro-poll?paymentHash=abc&address=user@blink.sv&tier=lifetime");
     const res = await handleProPoll(req, makeEnv());
     const body = await res.json() as { paid: boolean; expiresAt: string };
+    expect(body.paid).toBe(true);
     const yearsAhead = (new Date(body.expiresAt).getTime() - Date.now()) / (1000 * 86400 * 365);
     expect(yearsAhead).toBeGreaterThan(50);
   });
@@ -1585,5 +1577,56 @@ describe("/.well-known/402index-verify.txt", () => {
     const res = await worker.fetch(req, makeEnv());
     const body = await res.text();
     expect(body).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+// ─── handleProCheck ───────────────────────────────────────────────────────────
+
+describe("handleProCheck", () => {
+  function makeProCheckReq(address: string) {
+    return new Request(`https://l402kit.com/api/pro-check?address=${encodeURIComponent(address)}`);
+  }
+
+  test("returns 400 when address missing", async () => {
+    const req = new Request("https://l402kit.com/api/pro-check");
+    const res = await handleProCheck(req, makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("returns pro:false when no active row in Supabase", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+    const res = await handleProCheck(makeProCheckReq("user@blink.sv"), makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { pro: boolean; active: boolean };
+    expect(body.pro).toBe(false);
+    expect(body.active).toBe(false);
+  });
+
+  test("returns pro:true and active:true when valid row exists", async () => {
+    const expiresAt = new Date(Date.now() + 86400_000).toISOString();
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify([{ expires_at: expiresAt }]), { status: 200 })
+    );
+    const res = await handleProCheck(makeProCheckReq("user@blink.sv"), makeEnv());
+    const body = await res.json() as { pro: boolean; active: boolean; expiresAt: string };
+    expect(body.pro).toBe(true);
+    expect(body.active).toBe(true);
+    expect(body.expiresAt).toBe(expiresAt);
+  });
+
+  test("expiresAt is null when not active", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+    const res = await handleProCheck(makeProCheckReq("user@blink.sv"), makeEnv());
+    const body = await res.json() as { expiresAt: null };
+    expect(body.expiresAt).toBeNull();
+  });
+
+  test("worker routes /api/pro-check correctly", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+    const req = new Request("https://l402kit.com/api/pro-check?address=x%40y.com");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { pro: boolean };
+    expect(typeof body.pro).toBe("boolean");
   });
 });

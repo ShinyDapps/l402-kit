@@ -27,6 +27,14 @@ export async function handleProSubscribe(req: Request, env: Env): Promise<Respon
   if (!r.ok) return json({ error: "Failed to create invoice" }, 503);
 
   const { paymentRequest, paymentHash } = await r.json() as { paymentRequest: string; paymentHash: string };
+
+  // Save mapping paymentHash → {address, tier} in KV so the webhook can identify Pro payments
+  await env.demo_preimages.put(
+    `pro_inv:${paymentHash}`,
+    JSON.stringify({ address: lightningAddress, tier }),
+    { expirationTtl: 86400 },
+  );
+
   return json({ paymentRequest, paymentHash, amountSats });
 }
 
