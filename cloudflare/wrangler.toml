@@ -22,7 +22,7 @@ ENVIRONMENT = "production"
 # OWNER_LIGHTNING_ADDRESS   ← destino do sweep (ex: shinydapps@blink.sv)
 
 [triggers]
-crons = ["0 * * * *"]
+crons = ["*/30 * * * *"]
 
 [[kv_namespaces]]
 binding = "demo_preimages"
