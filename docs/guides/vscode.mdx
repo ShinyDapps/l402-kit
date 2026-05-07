@@ -1,0 +1,136 @@
+---
+title: VS Code Extension
+description: Monitor your Lightning payments in real time, directly inside VS Code — status bar, charts, CSV export, and Pro subscription paid in Bitcoin.
+---
+
+The **ShinyDapps Payments** extension surfaces your l402-kit payment data without leaving your editor. Install once, set your Lightning address, and watch sats arrive in the status bar.
+
+<Card title="Install from Marketplace" icon="download" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">
+  ShinyDapps.shinydapps-l402 — works with VS Code 1.85+
+</Card>
+
+---
+
+## Quick setup
+
+1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402).
+2. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+3. Run **ShinyDapps: Configure Lightning Address**.
+4. Enter your Lightning address (e.g. `you@blink.sv`).
+
+The status bar item `⚡ 0 sats (0)` lights up immediately. It polls every 30 seconds and updates automatically.
+
+Alternatively, set it manually in your VS Code settings:
+
+```json
+{
+  "shinydapps.lightningAddress": "you@blink.sv"
+}
+```
+
+---
+
+## What you see
+
+### Status bar
+
+`⚡ 1,234 sats (42)` — total sats earned and payment count, always visible.
+Hover the item to see a tooltip with a breakdown. If you're on the free plan, the tooltip also reminds you that Pro unlocks full history.
+
+### Dashboard panel
+
+Click the status bar item or run **ShinyDapps: Open Dashboard** to open the full panel. It contains:
+
+| Section | Description |
+|---------|-------------|
+| Stat cards | Total payments, total sats, USD estimate, live BTC price |
+| Bar chart | Sats earned over time (see ranges below) |
+| Payments table | Last 50 transactions: timestamp, endpoint, sats |
+| BTC ticker | Live price from mempool.space, shown in sat-per-dollar |
+
+The panel also appears in the sidebar (Activity Bar → ⚡ icon).
+
+### Language support
+
+11 languages built in: English, Português, Español, 中文, 日本語, Français, Deutsch, Русский, हिन्दी, العربية, Italiano. Switch via the dropdown at the top of the dashboard.
+
+---
+
+## Free vs Pro
+
+| Feature | Free | Pro |
+|---------|------|-----|
+| Payment history | Last 30 days | All time |
+| Chart ranges | 1D · 7D | 1D · 7D · 30D · 1Y · ALL |
+| CSV export | — | ✓ |
+| Status bar + live polling | ✓ | ✓ |
+| BTC price ticker | ✓ | ✓ |
+| Languages | 11 | 11 |
+
+### Upgrade to Pro
+
+Pro costs **$9 / month**, paid in Bitcoin over Lightning — no credit card, no account.
+
+Click **Upgrade with Bitcoin →** inside the dashboard, or go directly to:
+
+```
+https://l402kit.com/api/checkout?address=YOU@DOMAIN.COM&tier=pro
+```
+
+The checkout page generates a BOLT11 invoice, shows a QR code, and polls for payment. Once confirmed, Pro activates immediately — no restart needed.
+
+<Note>
+The extension checks Pro status on startup. If you've just paid, click the **↺** refresh button in the dashboard to activate immediately.
+</Note>
+
+---
+
+## Notifications
+
+The extension fires a VS Code notification when your **first payment arrives** while the editor is open:
+
+> ⚡ First payment received! Open your dashboard to see it.
+
+Click **Open Dashboard** in the notification to jump straight to the panel.
+
+---
+
+## Privacy and data
+
+- The extension reads payment data from Supabase using a **publishable (read-only)** key scoped to your Lightning address.
+- No authentication tokens are stored locally — only your Lightning address in VS Code settings.
+- You can delete all your data at any time via **Danger Zone → Delete all my data** inside the dashboard. This removes payment history and Pro subscription from Supabase.
+
+---
+
+## Danger zone
+
+The dashboard includes a self-service data deletion flow:
+
+1. Expand **Danger Zone** at the bottom of the dashboard.
+2. Type your Lightning address to confirm.
+3. Click **Delete my data**.
+
+All payment history and Pro access for that address are permanently removed.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Status bar shows ⚡ — (offline)">
+    The extension couldn't reach Supabase. Check your internet connection and try clicking **↺** to refresh.
+  </Accordion>
+
+  <Accordion title="Payments not showing after a successful transaction">
+    The extension polls every 30 seconds. Click **↺** to force an immediate refresh. If payments still don't appear, verify that your Lightning address in VS Code settings exactly matches the one registered with l402-kit (case-sensitive).
+  </Accordion>
+
+  <Accordion title="Pro activated but chart still shows 🔒">
+    Click **↺** to refresh. Pro status is checked on load — a manual refresh re-validates it immediately.
+  </Accordion>
+
+  <Accordion title="I see payments but the count seems low">
+    On the free plan, only the **last 30 days** of history are loaded. Upgrade to Pro to see all-time data. The Pro banner shows how many payments are hidden if you have older records.
+  </Accordion>
+</AccordionGroup>
