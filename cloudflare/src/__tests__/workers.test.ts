@@ -11,6 +11,8 @@ import { handleStats } from "../api/stats";
 import { handleSplit } from "../api/split";
 import { handleBlinkHook } from "../api/blink-webhook";
 import { handleDemo, handleDemoBtcPrice, handleDemoPreimage } from "../api/demo";
+import { handleCheckout } from "../api/checkout";
+import { handleProSubscribe } from "../api/pro-subscribe";
 import worker from "../worker";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -1022,6 +1024,202 @@ describe("docs.l402kit.com hostname", () => {
     const loc = res.headers.get("Location") ?? "";
     expect(loc).toContain("agent/quickstart");
     expect(loc).toContain("ref=test");
+  });
+});
+
+// ─── /api/checkout ───────────────────────────────────────────────────────────
+
+describe("handleCheckout", () => {
+  test("GET returns 200 with HTML content-type", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?address=user%40blink.sv&tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toMatch(/text\/html/);
+  });
+
+  test("page contains Lightning address injected from query param", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?address=user%40blink.sv&tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    const body = await res.text();
+    expect(body).toContain("user@blink.sv");
+  });
+
+  test("page title reflects tier label", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?address=user%40blink.sv&tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    const body = await res.text();
+    expect(body).toMatch(/Upgrade to Pro/i);
+  });
+
+  test("missing address renders no-address state gracefully", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("No address");
+  });
+
+  test("unknown tier falls back to pro label", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?address=user%40blink.sv&tier=enterprise");
+    const res = await handleCheckout(req, makeEnv());
+    const body = await res.text();
+    expect(body).toMatch(/\$9/); // falls back to pro USD price
+  });
+
+  test("page contains /api/pro-subscribe POST target", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?address=user%40blink.sv&tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    const body = await res.text();
+    expect(body).toContain("/api/pro-subscribe");
+  });
+
+  test("page contains /api/pro-poll polling target", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?address=user%40blink.sv&tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    const body = await res.text();
+    expect(body).toContain("/api/pro-poll");
+  });
+
+  test("XSS: address is HTML-escaped in output", async () => {
+    const req = makeRequest("GET", "https://l402kit.com/api/checkout?address=%3Cscript%3Ealert(1)%3C%2Fscript%3E&tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    const body = await res.text();
+    expect(body).not.toContain("<script>alert(1)</script>");
+    expect(body).toContain("&lt;script&gt;");
+  });
+
+  test("POST method returns 200 (checkout is GET-only but must not crash)", async () => {
+    // The handler doesn't check method — it just renders HTML regardless.
+    // This documents the current behavior; if method gating is added, update this test.
+    const req = makeRequest("POST", "https://l402kit.com/api/checkout?address=user%40blink.sv&tier=pro");
+    const res = await handleCheckout(req, makeEnv());
+    expect(res.status).toBe(200);
+  });
+
+  test("worker routes /api/checkout to handleCheckout", async () => {
+    const req = new Request("https://l402kit.com/api/checkout?address=user%40blink.sv&tier=pro");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toMatch(/text\/html/);
+  });
+});
+
+// ─── /api/pro-subscribe ──────────────────────────────────────────────────────
+
+describe("handleProSubscribe", () => {
+  test("GET returns 405", async () => {
+    const res = await handleProSubscribe(makeRequest("GET", "https://l402kit.com/api/pro-subscribe"), makeEnv());
+    expect(res.status).toBe(405);
+  });
+
+  test("POST without lightningAddress returns 400", async () => {
+    const res = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { tier: "pro" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/lightning address/i);
+  });
+
+  test("POST with address missing @ returns 400", async () => {
+    const res = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "notanemail", tier: "pro" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  test("POST with invalid tier returns 400", async () => {
+    const res = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "user@blink.sv", tier: "diamond" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/invalid tier/i);
+  });
+
+  test("POST valid request calls BTC price API then Supabase create-invoice", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ bitcoin: { usd: 100_000 } }), { status: 200 })) // coingecko
+      .mockResolvedValueOnce(new Response(JSON.stringify({ paymentRequest: "lnbc90n1...", paymentHash: "hash_abc" }), { status: 200 })); // supabase
+
+    const res = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "user@blink.sv", tier: "pro" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json() as { paymentRequest: string; paymentHash: string; amountSats: number };
+    expect(body.paymentRequest).toBe("lnbc90n1...");
+    expect(body.paymentHash).toBe("hash_abc");
+    expect(body.amountSats).toBeGreaterThan(0);
+  });
+
+  test("POST returns 503 when Supabase create-invoice fails", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ bitcoin: { usd: 100_000 } }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("error", { status: 503 }));
+
+    const res = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "user@blink.sv", tier: "pro" }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(503);
+  });
+
+  test("POST falls back to hardcoded BTC price when CoinGecko fails", async () => {
+    fetchMock
+      .mockRejectedValueOnce(new Error("network")) // coingecko fails
+      .mockResolvedValueOnce(new Response(JSON.stringify({ paymentRequest: "lnbc...", paymentHash: "hash" }), { status: 200 }));
+
+    const res = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "user@blink.sv", tier: "pro" }),
+      makeEnv(),
+    );
+    // Should still succeed using fallback price
+    expect(res.status).toBe(200);
+    const body = await res.json() as { amountSats: number };
+    // $9 at fallback $95,000/BTC ≈ 9473 sats
+    expect(body.amountSats).toBeGreaterThan(5000);
+    expect(body.amountSats).toBeLessThan(20_000);
+  });
+
+  test("POST business tier returns higher amountSats than pro", async () => {
+    const makeInvoiceRes = () =>
+      new Response(JSON.stringify({ paymentRequest: "lnbc...", paymentHash: "hash" }), { status: 200 });
+
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ bitcoin: { usd: 100_000 } }), { status: 200 }))
+      .mockResolvedValueOnce(makeInvoiceRes());
+    const resPro = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "user@blink.sv", tier: "pro" }),
+      makeEnv(),
+    );
+    const { amountSats: proSats } = await resPro.json() as { amountSats: number };
+
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ bitcoin: { usd: 100_000 } }), { status: 200 }))
+      .mockResolvedValueOnce(makeInvoiceRes());
+    const resBiz = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "user@blink.sv", tier: "business" }),
+      makeEnv(),
+    );
+    const { amountSats: bizSats } = await resBiz.json() as { amountSats: number };
+
+    expect(bizSats).toBeGreaterThan(proSats);
+  });
+
+  test("response includes CORS header", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ bitcoin: { usd: 100_000 } }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ paymentRequest: "lnbc...", paymentHash: "h" }), { status: 200 }));
+
+    const res = await handleProSubscribe(
+      makeRequest("POST", "https://l402kit.com/api/pro-subscribe", { lightningAddress: "user@blink.sv" }),
+      makeEnv(),
+    );
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
   });
 });
 

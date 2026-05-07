@@ -11,7 +11,9 @@ export async function handleCheckout(req: Request, env: Env): Promise<Response> 
 }
 
 function checkoutHtml(address: string, tier: string, supabaseUrl: string, supabaseKey: string): string {
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  // Safe for inline <script> injection: escape HTML-significant chars as unicode escapes
+  const safeJson = (val: string) => JSON.stringify(val).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
   const tierLabel: Record<string, string> = { pro: "Pro", business: "Business", lifetime: "Lifetime" };
   const tierUsd: Record<string, number> = { pro: 9, business: 99, lifetime: 999 };
   const usd = tierUsd[tier] ?? 9;
@@ -96,10 +98,10 @@ h1{font-size:18px;font-weight:700;color:#f7931a;margin-bottom:4px}
 
 <script>
 (function(){
-const ADDR = ${JSON.stringify(address)};
-const TIER = ${JSON.stringify(tier)};
-const SB_URL = ${JSON.stringify(supabaseUrl)};
-const SB_KEY = ${JSON.stringify(supabaseKey)};
+const ADDR = ${safeJson(address)};
+const TIER = ${safeJson(tier)};
+const SB_URL = ${safeJson(supabaseUrl)};
+const SB_KEY = ${safeJson(supabaseKey)};
 
 let paymentHash = '';
 let pollTimer = null;
