@@ -104,6 +104,8 @@ function cors(res: Response): Response {
 export default {
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
     await sweepTransitWallet(env);
+    // Keep Render free instance warm — ping every hour (cron runs hourly)
+    try { await fetch("https://diagram-forge.onrender.com/health"); } catch { /* ignore */ }
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
