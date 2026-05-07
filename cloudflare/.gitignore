@@ -1,0 +1,4 @@
+dist/
+*.js.map
+diagram-forge-worker.js
+worker-meta.json
