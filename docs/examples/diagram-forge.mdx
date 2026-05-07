@@ -1,0 +1,103 @@
+---
+title: "Diagram Forge"
+description: "AI-generated living architecture diagrams from any GitHub repo — paid via Lightning L402"
+icon: "circle-nodes"
+---
+
+## What is Diagram Forge?
+
+[Diagram Forge](https://forge.l402kit.com) is an AI-powered architecture diagram service built by [ShinyDapps](https://github.com/shinydapps) using `l402-kit`. It analyzes any public GitHub repository and generates an interactive, living architecture diagram — complete with official tech logos, pan/zoom, node inspector, and rich Markdown export.
+
+Payment is handled entirely via the Lightning Network using the L402 protocol — no accounts, no credit cards, no KYC.
+
+<Frame>
+  <img src="/images/diagram-forge-demo.gif" alt="Diagram Forge demo" />
+</Frame>
+
+## How it uses l402-kit
+
+Diagram Forge uses `l402-kit`'s **Managed Mode** — the simplest way to accept Lightning payments without running a node:
+
+```typescript
+import { l402, ManagedProvider } from "l402-kit";
+
+const provider = ManagedProvider.fromAddress("pinkfalcon21@primal.net", {
+  registerDirectory: {
+    url: "https://forge.l402kit.com/analyze",
+    name: "Diagram Forge — Architecture Analysis",
+    priceSats: 500,
+    description: "AI-powered living architecture diagrams from any repo",
+    category: "ai",
+  },
+});
+
+// Gate the /analyze endpoint — returns 402 until paid
+app.post("/analyze", l402({ priceSats: 500, lightning: provider }), handler);
+```
+
+That's it. When a client calls `POST /analyze` without a valid preimage, the server responds:
+
+```
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+The client (VS Code extension, browser, or any L402-aware agent) pays the invoice and retries with `Authorization: L402 <macaroon>:<preimage>`.
+
+## Tiers
+
+| Tier | Price | Description |
+|------|-------|-------------|
+| `basic` | 100 sats | Up to 10 key files, main services |
+| `full` | 500 sats | Full repo — all services, monorepos, notebooks |
+| `live` | 1,000 sats | Full analysis + animated SVG with official logos |
+
+## VS Code Extension
+
+Diagram Forge ships a VS Code extension that handles the full L402 flow in the sidebar — no browser required:
+
+1. Click the circuit-board icon in the Activity Bar
+2. Extension detects your GitHub remote automatically
+3. Confirm the tier — pays the Lightning invoice
+4. Viewer opens in browser with your live diagram
+
+Install: search **"Diagram Forge"** in the VS Code Marketplace, or:
+
+```bash
+code --install-extension ShinyDapps.diagram-forge
+```
+
+## MCP Server
+
+Diagram Forge also ships an MCP (Model Context Protocol) server so AI agents can analyze architectures autonomously:
+
+```json
+{
+  "mcpServers": {
+    "diagram-forge": {
+      "command": "npm",
+      "args": ["run", "mcp"],
+      "cwd": "/path/to/diagram-forge"
+    }
+  }
+}
+```
+
+Available tools: `analyze_architecture`, `get_diagram_url`, `diff_architectures`.
+
+## Try it
+
+<CardGroup cols={2}>
+  <Card title="Live Service" icon="globe" href="https://forge.l402kit.com">
+    Analyze any public GitHub repo directly in your browser
+  </Card>
+  <Card title="VS Code Extension" icon="code" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.diagram-forge">
+    Install the extension for the full sidebar experience
+  </Card>
+  <Card title="Source Code" icon="github" href="https://github.com/shinydapps/diagram-forge">
+    MIT-licensed — fork it, extend it, build on it
+  </Card>
+  <Card title="l402-kit Quickstart" icon="bolt" href="/quickstart">
+    Build your own L402-gated service in minutes
+  </Card>
+</CardGroup>

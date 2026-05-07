@@ -41,6 +41,10 @@
       "pages": ["providers", "api-reference", "reference/errors", "competitive", "payment-layer", "whitepaper", "whitepaper-extended"]
     },
     {
+      "group": "Built with l402-kit",
+      "pages": ["examples/diagram-forge"]
+    },
+    {
       "group": "🇧🇷 Português",
       "pages": ["pt/introduction"]
     },
