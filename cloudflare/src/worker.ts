@@ -25,7 +25,6 @@ export interface Env {
   SUPABASE_SERVICE_KEY: string;
   SPLIT_SECRET: string;
   DASHBOARD_SECRET: string;
-  RESEND_API_KEY: string;
   BLINK_API_KEY: string;
   BLINK_WALLET_ID: string;
   BLINK_API_KEY_DEMO: string;
