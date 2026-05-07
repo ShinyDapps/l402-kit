@@ -1,13 +1,13 @@
 import type { Env } from "../worker";
 
 export async function sweepTransitWallet(env: Env): Promise<void> {
-  if (!env.OWNER_LIGHTNING_ADDRESS || !env.BLINK_API_KEY) return;
+  if (!env.OWNER_LIGHTNING_ADDRESS || !env.BLINK_API_KEY_DEMO) return;
 
   try {
     // 1. Query +55 balance
     const r = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY_DEMO },
       body: JSON.stringify({
         query: `{ me { defaultAccount { wallets { id walletCurrency balance } } } }`,
       }),
@@ -17,7 +17,7 @@ export async function sweepTransitWallet(env: Env): Promise<void> {
 
     const data = await r.json() as { data?: { me?: { defaultAccount?: { wallets?: { id: string; walletCurrency: string; balance: number }[] } } } };
     const wallets = data?.data?.me?.defaultAccount?.wallets ?? [];
-    const btcWallet = wallets.find(w => w.id === env.BLINK_WALLET_ID || w.walletCurrency === "BTC");
+    const btcWallet = wallets.find(w => w.id === env.BLINK_WALLET_ID_DEMO || w.walletCurrency === "BTC");
     if (!btcWallet || btcWallet.balance <= 0) return;
 
     const balanceSats = btcWallet.balance;

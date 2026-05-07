@@ -1,4 +1,4 @@
-import type { Env } from "../worker";
+﻿import type { Env } from "../worker";
 
 const PRICE_SATS = 1;
 const RATE_LIMIT   = 8;      // max invoice creations per IP per hour
@@ -22,7 +22,7 @@ async function checkRateLimit(ip: string, env: Env): Promise<boolean> {
 
 export async function handleDemo(_req: Request, _env: Env): Promise<Response> {
   return json({
-    message: "l402-kit demo — use /api/demo/btc-price (costs 1 sat)",
+    message: "l402-kit demo â€” use /api/demo/btc-price (costs 1 sat)",
     endpoints: { btcPrice: "/api/demo/btc-price" },
   });
 }
@@ -39,7 +39,7 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
     return json({
       bitcoin: price,
       priceSats: PRICE_SATS,
-      paidWith: "⚡ Lightning — L402 protocol",
+      paidWith: "âš¡ Lightning â€” L402 protocol",
       protocol: "L402",
       timestamp: new Date().toISOString(),
     });
@@ -47,7 +47,7 @@ export async function handleDemoBtcPrice(req: Request, env: Env): Promise<Respon
 
   const ip = req.headers.get("CF-Connecting-IP") ?? req.headers.get("X-Forwarded-For") ?? "unknown";
   const allowed = await checkRateLimit(ip, env);
-  if (!allowed) return json({ error: "Too many requests — try again in 1 hour", retryAfter: 3600 }, 429);
+  if (!allowed) return json({ error: "Too many requests â€” try again in 1 hour", retryAfter: 3600 }, 429);
 
   const inv = await createInvoice(PRICE_SATS, env);
   if (!inv) return json({ error: "Lightning provider unavailable" }, 503);
@@ -103,7 +103,7 @@ export async function handleDemoPreimage(req: Request, env: Env): Promise<Respon
   return json({ preimage: serverPreimage });
 }
 
-// ── helpers ────────────────────────────────────────────────────────────────────
+// â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function render402Page(payload: Record<string, unknown>): string {
   const pretty = JSON.stringify(payload, null, 2)
@@ -115,7 +115,7 @@ function render402Page(payload: Record<string, unknown>): string {
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>402 Payment Required — l402-kit demo</title>
+<title>402 Payment Required â€” l402-kit demo</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0d1117;color:#e6edf3;font-family:'Cascadia Code','Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px}
@@ -148,20 +148,20 @@ body{background:#0d1117;color:#e6edf3;font-family:'Cascadia Code','Courier New',
 </head><body>
 <div class="wrap">
   <div class="left">
-    <div class="badge">⚡ HTTP 402</div>
+    <div class="badge">âš¡ HTTP 402</div>
     <div class="status"><span>Payment Required</span><br>to access this API</div>
-    <p class="desc">This endpoint is protected by the <strong style="color:#e6edf3">L402 protocol</strong> — the open standard for pay-per-call APIs using Bitcoin Lightning. Pay <strong style="color:#f7931a">1 sat</strong> (~$0.001) and get instant access.</p>
+    <p class="desc">This endpoint is protected by the <strong style="color:#e6edf3">L402 protocol</strong> â€” the open standard for pay-per-call APIs using Bitcoin Lightning. Pay <strong style="color:#f7931a">1 sat</strong> (~$0.001) and get instant access.</p>
     <div class="steps">
       <div class="step"><div class="step-num">1</div><div class="step-text">Server returns <strong>invoice BOLT11</strong> + macaroon (this page)</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-text">Client pays invoice with any <strong>Lightning wallet</strong> — settles in &lt;1s</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">Client pays invoice with any <strong>Lightning wallet</strong> â€” settles in &lt;1s</div></div>
       <div class="step"><div class="step-num">3</div><div class="step-text">Client sends <strong>Authorization: L402 macaroon:preimage</strong></div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-text">Server verifies <strong>SHA256(preimage) == hash</strong> → 200 OK + data</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text">Server verifies <strong>SHA256(preimage) == hash</strong> â†’ 200 OK + data</div></div>
     </div>
     <pre class="cmd">curl -H "Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;" \\
   https://l402kit.com/api/demo/btc-price</pre>
     <div class="links">
-      <a href="https://l402kit.com" class="btn btn-primary">← Back to l402kit.com</a>
-      <a href="https://l402kit.com/docs" class="btn btn-secondary">Docs →</a>
+      <a href="https://l402kit.com" class="btn btn-primary">â† Back to l402kit.com</a>
+      <a href="https://l402kit.com/docs" class="btn btn-secondary">Docs â†’</a>
     </div>
   </div>
   <div class="right">
@@ -174,7 +174,7 @@ body{background:#0d1117;color:#e6edf3;font-family:'Cascadia Code','Courier New',
       </div>
       <div class="json-body"><pre>${pretty}</pre></div>
     </div>
-    <p class="note">invoice expires in 1h · each preimage works exactly once · SHA256 verified locally</p>
+    <p class="note">invoice expires in 1h Â· each preimage works exactly once Â· SHA256 verified locally</p>
   </div>
 </div>
 </body></html>`;
@@ -213,12 +213,12 @@ async function createInvoice(amountSats: number, env: Env) {
     const serverHashBuf = await crypto.subtle.digest("SHA-256", preimageBytes.buffer as ArrayBuffer);
     const serverHash = bytesToHex(new Uint8Array(serverHashBuf));
 
-    // Create real Blink invoice (Blink generates its own payment hash — different from serverHash)
+    // Create real Blink invoice (Blink generates its own payment hash â€” different from serverHash)
     const r = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY_DEMO },
       body: JSON.stringify({
-        query: `mutation { lnInvoiceCreate(input: { walletId: "${env.BLINK_WALLET_ID}", amount: ${amountSats} }) { invoice { paymentRequest paymentHash } errors { message } } }`,
+        query: `mutation { lnInvoiceCreate(input: { walletId: "${env.BLINK_WALLET_ID_DEMO}", amount: ${amountSats} }) { invoice { paymentRequest paymentHash } errors { message } } }`,
       }),
       signal: AbortSignal.timeout(10_000),
     });
@@ -232,7 +232,7 @@ async function createInvoice(amountSats: number, env: Env) {
     // Store serverPreimage keyed by blinkHash so the preimage endpoint can return it after payment
     await env.demo_preimages.put(blinkHash, JSON.stringify({ serverPreimage, paid: false }), { expirationTtl: 3600 });
 
-    // Macaroon encodes serverHash (= SHA256(serverPreimage)) — verifyToken checks this
+    // Macaroon encodes serverHash (= SHA256(serverPreimage)) â€” verifyToken checks this
     const exp = Date.now() + 3_600_000;
     const macaroon = btoa(JSON.stringify({ hash: serverHash, exp }));
 
@@ -246,7 +246,7 @@ async function checkBlinkPayment(blinkPaymentHash: string, env: Env): Promise<bo
   try {
     const r = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY_DEMO },
       body: JSON.stringify({
         query: `{ me { defaultAccount { wallets { ... on BTCWallet { transactions(first: 10) { edges { node { initiationVia { ... on InitiationViaLn { paymentHash } } } } } } } } } }`,
       }),
@@ -295,7 +295,7 @@ async function fetchBtcPrice(): Promise<{ usd: number; eur: number; gbp: number;
   return { usd: 0, eur: 0, gbp: 0, source: "unavailable" };
 }
 
-// ── Pay-to-address demo: l402kit.com acts as L402Client, pays visitor 1 sat ──
+// â”€â”€ Pay-to-address demo: l402kit.com acts as L402Client, pays visitor 1 sat â”€â”€
 
 export async function handleDemoPayAddress(req: Request, env: Env): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -314,7 +314,7 @@ export async function handleDemoPayAddress(req: Request, env: Env): Promise<Resp
   const now = Math.floor(Date.now() / 1000);
   if (rlRaw) {
     const { count, reset } = JSON.parse(rlRaw) as { count: number; reset: number };
-    if (now < reset && count >= 2) return json({ error: "Rate limited — try again in 1 hour" }, 429);
+    if (now < reset && count >= 2) return json({ error: "Rate limited â€” try again in 1 hour" }, 429);
     const newCount = now < reset ? count + 1 : 1;
     const newReset = now < reset ? reset : now + 3600;
     await env.demo_preimages.put(rlKey, JSON.stringify({ count: newCount, reset: newReset }), { expirationTtl: 3600 });
@@ -335,7 +335,7 @@ export async function handleDemoPayAddress(req: Request, env: Env): Promise<Resp
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(6000),
     });
-    if (!lnurlRes.ok) return json({ error: "Could not resolve Lightning address — is it correct?" }, 400);
+    if (!lnurlRes.ok) return json({ error: "Could not resolve Lightning address â€” is it correct?" }, 400);
 
     const lnurlData = await lnurlRes.json() as {
       tag?: string; callback?: string; minSendable?: number; maxSendable?: number;
@@ -365,24 +365,24 @@ export async function handleDemoPayAddress(req: Request, env: Env): Promise<Resp
     // Pay via Blink (l402kit.com acts as the L402Client)
     const payRes = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY_DEMO },
       body: JSON.stringify({
         query: `mutation Pay($input: LnInvoicePaymentInput!) {
           lnInvoicePaymentSend(input: $input) { status errors { message } }
         }`,
-        variables: { input: { walletId: env.BLINK_WALLET_ID, paymentRequest: invData.pr } },
+        variables: { input: { walletId: env.BLINK_WALLET_ID_DEMO, paymentRequest: invData.pr } },
       }),
       signal: AbortSignal.timeout(20_000),
     });
 
-    if (!payRes.ok) return json({ error: "Payment service unavailable — try again" }, 503);
+    if (!payRes.ok) return json({ error: "Payment service unavailable â€” try again" }, 503);
     const payData = await payRes.json() as {
       data?: { lnInvoicePaymentSend?: { status: string; errors?: { message: string }[] } };
     };
     const result = payData?.data?.lnInvoicePaymentSend;
     if (result?.errors?.length) return json({ error: result.errors[0].message }, 503);
     if (result?.status !== "SUCCESS" && result?.status !== "PENDING") {
-      return json({ error: "Payment did not go through — check your address" }, 503);
+      return json({ error: "Payment did not go through â€” check your address" }, 503);
     }
 
     // Mark address as used (24h)

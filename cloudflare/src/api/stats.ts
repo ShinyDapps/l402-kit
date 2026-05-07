@@ -16,7 +16,7 @@ async function fetchBlinkBalance(env: Env): Promise<{ btcSats: number | null; us
   try {
     const res = await fetch("https://api.blink.sv/graphql", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
+      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY_DEMO },
       body: JSON.stringify({ query: `{ me { defaultAccount { wallets { id walletCurrency balance } } } }` }),
     });
     const { data } = await res.json() as { data?: { me?: { defaultAccount?: { wallets?: { id: string; walletCurrency: string; balance: number }[] } } } };

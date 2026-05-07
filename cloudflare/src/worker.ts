@@ -27,6 +27,8 @@ export interface Env {
   RESEND_API_KEY: string;
   BLINK_API_KEY: string;
   BLINK_WALLET_ID: string;
+  BLINK_API_KEY_DEMO: string;
+  BLINK_WALLET_ID_DEMO: string;
   BLINK_WEBHOOK_SECRET: string;
   OWNER_LIGHTNING_ADDRESS: string;
   demo_preimages: KVNamespace;
