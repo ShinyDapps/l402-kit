@@ -7,14 +7,14 @@
 <meta property="og:description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. No account. No bank. Settles in &lt;1 second.">
 <meta property="og:url" content="https://l402kit.com">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://l402kit.com/logos/og-1200x630.svg">
+<meta property="og:image" content="https://l402kit.com/logos/og-1200x630.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:type" content="image/svg+xml">
+<meta property="og:image:type" content="image/png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="l402-kit — Bitcoin Lightning payments for any API">
 <meta name="twitter:description" content="Add pay-per-call Bitcoin Lightning to any API in 3 lines. No account. No bank. No chargebacks.">
-<meta name="twitter:image" content="https://l402kit.com/logos/og-1200x630.svg">
+<meta name="twitter:image" content="https://l402kit.com/logos/og-1200x630.png">
 <link rel="icon" type="image/svg+xml" href="/logos/favicon.svg">
 <link rel="shortcut icon" href="/logos/favicon.svg">
 <link rel="canonical" href="https://l402kit.com">
@@ -1539,12 +1539,12 @@ lightning = <span class="c-fn">BlinkProvider</span>(
         <li style="font-size:13px;color:#ccc">✓ Live payment feed with amount &amp; endpoint</li>
         <li style="font-size:13px;color:#ccc">✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)</li>
         <li style="font-size:13px;color:#ccc">✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)</li>
-        <li style="font-size:13px;color:#ccc">✓ Light / dark / auto theme</li>
+        <li style="font-size:13px;color:#ccc">✓ First payment notification — instant VS Code alert</li>
         <li style="font-size:13px;color:#ccc">✓ Zero config — just set your Lightning address</li>
       </ul>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402" target="_blank" rel="noopener" class="btn-primary" style="font-size:14px;padding:12px 22px">Install Free on Marketplace</a>
-        <a href="https://l402kit.com/docs/introduction" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:12px 22px;border:1px solid #333;border-radius:12px;font-size:14px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">Documentation →</a>
+        <a href="https://l402kit.com/docs/guides/vscode" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:12px 22px;border:1px solid #333;border-radius:12px;font-size:14px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">Documentation →</a>
       </div>
     </div>
     <!-- Right: live stats widget -->
@@ -1948,7 +1948,7 @@ const T = {
     features: [['Zero setup','Just set your Lightning Address. No node, no wallet setup, no config files.'],['4 languages','TypeScript, Python, Go, Rust. Express, FastAPI, Flask, Axum. Same protocol, any stack.'],['AI agent native','Machines can pay machines. No human in the loop. Perfect for autonomous AI agents.'],['Cryptographic proof','SHA256(preimage) == paymentHash. Mathematically unforgeable. No chargebacks ever.'],['Provider agnostic','Blink, OpenNode, LNbits — or bring your own. Implement LightningProvider in 5 lines.'],['The wallet is the identity','No email, no password, no account. Pay and access. The Lightning wallet IS the user identity.']],
     usecasesTitle: 'What will you build?',
     usecases: [['AI / Agents','Monetize your AI tool','Charge per inference call. LLM wrappers, image gen, OCR APIs. Works natively with LangChain and AutoGPT agents.'],['Data APIs','Pay-per-query data','Weather, finance, sports, maps. No subscription needed — users pay exactly for what they use.'],['Content','Paywalled endpoints','Articles, research papers, PDFs, audio. No account creation required from your users.'],['Compute','Serverless billing','Charge for CPU-heavy tasks: rendering, transcription, compression. Pure usage-based, no monthly fee.']],
-    ext: {badge:'VS CODE EXTENSION',h2:'Watch your sats roll in — without leaving your editor',p:'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart.',lis:['✓ Live payment feed with amount & endpoint','✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ Light / dark / auto theme','✓ Zero config — just set your Lightning address'],links:['Install Free on Marketplace','Documentation →']},
+    ext: {badge:'VS CODE EXTENSION',h2:'Watch your sats roll in — without leaving your editor',p:'Real-time Lightning payment dashboard inside VS Code. See every payment the instant it lands — endpoint hit, amount in sats, USD value, and a live chart.',lis:['✓ Live payment feed with amount & endpoint','✓ Bar chart — 1D / 7D (free) · 30D / 1Y / ALL (Pro)','✓ 11 languages (EN, PT, ES, ZH, JA, FR, DE, RU, HI, AR, IT)','✓ First payment notification — instant VS Code alert','✓ Zero config — just set your Lightning address'],links:['Install Free on Marketplace','Documentation →']},
     pricingTitle: 'Simple pricing', pricingSub: 'Pay with Bitcoin Lightning. No credit card. No account. Instant.',
     pricingFeatures: [['TypeScript, Python, Go, Rust','Self-host = 0% fee, forever','Unlimited API calls','Payment history (7 days)','Charts 1D / 7D','Open source — MIT'],['No Lightning node needed','Add your Lightning address to start','99.7% of every sat goes to you','All 4 SDKs (TS / Python / Go / Rust)','Instant activation','Upgrade to Pro for full analytics'],['Everything in Soberano','Full history — no 7-day limit','All chart ranges (30D / 1Y / ALL)','CSV export','Lightning receipt — verifiable proof','Delete all your data anytime']],
     pricing: [['Soberano','Self-host: 0% fee forever · your own node','Set up your node →'],['Managed','No Lightning node — just add your Lightning address','Start in 2 minutes →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning']],
