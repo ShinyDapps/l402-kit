@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 import type { L402Token } from "./types";
 
 export function parseToken(token: string): L402Token {
@@ -43,7 +43,8 @@ export async function verifyToken(token: string): Promise<boolean> {
       .update(Buffer.from(preimage, "hex"))
       .digest("hex");
 
-    return digest === payload.hash;
+    if (digest.length !== payload.hash.length) return false;
+    return timingSafeEqual(Buffer.from(digest, "hex"), Buffer.from(payload.hash, "hex"));
   } catch {
     return false;
   }
