@@ -70,4 +70,8 @@ zone_name = "l402kit.com"
 pattern = "l402kit.com/whitepaper-extended"
 zone_name = "l402kit.com"
 
+[[routes]]
+pattern = "l402kit.com/llms.txt"
+zone_name = "l402kit.com"
+
 

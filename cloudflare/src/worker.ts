@@ -44,20 +44,78 @@ function handleDocsRedirect(request: Request): Response {
   return Response.redirect(target, 302);
 }
 
+function handleLlmsTxt(): Response {
+  const body = `# l402-kit
+
+> Middleware to monetize any API with Bitcoin Lightning in 3 lines. TypeScript, Python, Go, Rust.
+
+## What it does
+
+l402-kit implements the L402 protocol (HTTP 402 + BOLT11 invoice + macaroon). When a client calls a protected endpoint, the server returns HTTP 402 with a Lightning invoice. The client pays the invoice (sub-second via Lightning Network) and retries with cryptographic proof of payment. No API keys, no OAuth, no chargebacks.
+
+## Core flow
+
+1. Client calls \`GET /api/data\`
+2. Server returns \`HTTP 402\` + BOLT11 invoice + macaroon
+3. Client pays invoice via Lightning (~500ms)
+4. Client retries with \`Authorization: L402 <macaroon>:<preimage>\`
+5. Middleware validates: \`SHA256(preimage) == paymentHash\` — pure crypto, no DB
+
+## Install
+
+- TypeScript/JS: \`npm install l402-kit\`
+- Python: \`pip install l402kit\`
+- Rust: \`cargo add l402kit\`
+- Go: \`go get github.com/shinydapps/l402-kit/go@v1.8.2\`
+
+## Minimal usage (TypeScript)
+
+\`\`\`typescript
+import { l402, ManagedProvider } from "l402-kit";
+const lightning = ManagedProvider.fromAddress("you@blink.sv");
+app.use("/api/data", l402({ priceSats: 10, lightning }));
+\`\`\`
+
+## Agent features
+
+- MCP server: \`npx l402-kit-mcp\` — lets Claude/Cursor call L402-protected APIs from the IDE
+- LangChain tool: auto-pay middleware inside agent chains
+- Budget controls: cap agent spend at N sats/session or N sats/day
+- Token delegation: orchestrator mints caveated tokens for sub-agents with lower spending limits
+
+## Pricing
+
+- Managed mode: 0.3% fee, zero infrastructure (uses your Lightning address)
+- Sovereign mode: 0% fee, bring your own Lightning node
+
+## Live demo
+
+\`GET https://l402kit.com/api/demo/btc-price\` — returns HTTP 402 with a 1-sat invoice
+
+## Links
+
+- Docs: https://docs.l402kit.com
+- GitHub: https://github.com/ShinyDapps/l402-kit
+- npm: https://npmjs.com/package/l402-kit
+- PyPI: https://pypi.org/project/l402kit
+- MCP: https://glama.ai/mcp/servers/@ShinyDapps/l402-kit
+`;
+  return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+}
+
 function handleAgentJson(): Response {
   return new Response(JSON.stringify({
     name: "l402-kit",
     description: "Middleware to monetize any API with Bitcoin Lightning in 3 lines. TypeScript, Python, Go, Rust.",
-    version: "1.8.1",
+    version: "1.8.4",
     protocols: ["l402", "x402"],
     install: {
       npm: "npm install l402-kit",
       pip: "pip install l402kit",
       cargo: "cargo add l402kit",
-      go: "go get github.com/shinydapps/l402-kit/go"
+      go: "go get github.com/shinydapps/l402-kit/go@v1.8.2"
     },
     docs: "https://docs.l402kit.com/introduction",
-    llms_txt: "https://l402kit.com/llms.txt",
     agent_sdk: "https://docs.l402kit.com/agent/quickstart",
     mcp_server: "https://docs.l402kit.com/agent/mcp",
     fee: "0.3% managed, 0% soberano",
@@ -73,7 +131,7 @@ function handleL402Json(): Response {
     protocol: "l402",
     version: "1.0",
     provider: "l402-kit",
-    demo_endpoint: "https://l402kit.com/api/demo",
+    demo_endpoint: "https://l402kit.com/api/demo/btc-price",
     price_sats: 1,
     docs: "https://docs.l402kit.com/introduction",
     sdk: "https://npmjs.com/package/l402-kit"
@@ -135,6 +193,7 @@ export default {
       else if (path === "/api/demo/pay-address")  res = await handleDemoPayAddress(request, env);
       else if (path === "/api/verify")    res = await handleVerify(request, env);
       else if (path === "/api/lnurl-auth") res = await handleLnurlAuth(request, env);
+      else if (path === "/llms.txt")                res = handleLlmsTxt();
       else if (path === "/.well-known/agent.json")  res = handleAgentJson();
       else if (path === "/.well-known/l402.json")   res = handleL402Json();
       else if (path === "/.well-known/402index-verify.txt") res = new Response("a2c9992b0c01d527d16443f0cc7406b39a8893cbca0a30caae34d637a8603c8c", { headers: { "Content-Type": "text/plain" } });
