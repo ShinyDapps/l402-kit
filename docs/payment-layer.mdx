@@ -75,7 +75,21 @@ Middleware verifies locally — no network call:
 Request passes through to your API handler → 200 OK
 ```
 
-Verification is **O(1)** — pure cryptography, no database lookup on the hot path.
+Verification is **O(1)** — pure cryptography, no database lookup on the hot path. Replay protection (Supabase `payment_hash` logging) runs asynchronously and does not block the request.
+
+### Macaroon format
+
+l402-kit uses a lightweight custom macaroon — not libmacaroon. The token is a `base64url`-encoded JSON object:
+
+```json
+{ "hash": "<paymentHash hex>", "exp": <unix timestamp> }
+```
+
+This is simpler and auditable without any external library. The `Authorization` header format is:
+
+```
+Authorization: L402 <base64url-macaroon>:<preimage-hex>
+```
 
 ---
 
