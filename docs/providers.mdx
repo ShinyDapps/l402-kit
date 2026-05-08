@@ -101,6 +101,26 @@ async fn main() {
 The 0.3% routing fee is the only cost. No monthly fee. No account registration. Any Lightning address works (Blink, Phoenix, Alby, Strike, Wallet of Satoshi, etc.).
 </Note>
 
+### Trust & availability
+
+**Who runs l402kit.com?** ShinyDapps (open source, MIT). The managed infrastructure runs on Cloudflare Workers — globally distributed, no single server to go down.
+
+**Uptime**: Monitored 24/7 at [stats.uptimerobot.com/57uOzF17jK](https://stats.uptimerobot.com/57uOzF17jK). SLA target: 99.9%.
+
+**What if l402kit.com disappears?** Your verification logic is local — `SHA256(preimage) == paymentHash` runs in your process, zero network calls. Only invoice *creation* touches l402kit.com. If the managed service goes down, switch to any soberano provider in one line:
+
+```typescript
+// Before (managed)
+const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
+
+// After (soberano — 0% fee, full custody)
+const lightning = new BlinkProvider(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+```
+
+No other code changes. Already-paid tokens keep working — verification is purely cryptographic.
+
+**Can I self-host the managed layer?** Yes. The full source is on [GitHub](https://github.com/ShinyDapps/l402-kit) under MIT. `cloudflare/` contains the managed API worker — deploy it to your own Cloudflare account in 5 minutes.
+
 ---
 
 ## Blink (Soberano — 0% fee)

@@ -1,27 +1,27 @@
 ---
 title: vs. Competition
-description: How l402-kit compares to Stripe, Paddle, x402, BTCPay, and every other API monetization tool.
+description: How l402-kit compares to Stripe, MPP (Tempo), x402, ln.bot, BTCPay, and every other API monetization tool.
 ---
 
-<Note>Last updated: May 2026. The competitive landscape moves fast — especially x402/Coinbase. Check back before citing.</Note>
+<Note>Last updated: May 2026. The competitive landscape moves fast — especially x402/Coinbase and MPP/Tempo. Check back before citing.</Note>
 
 ## TL;DR
 
-| | Stripe | Paddle | x402 (Coinbase) | BTCPay Server | **l402-kit** |
+| | Stripe / MPP | x402 (Coinbase) | ln.bot | BTCPay Server | **l402-kit** |
 |---|---|---|---|---|---|
-| Min fee per call | $0.30 | $0.50 | ~0 sats | ~0 sats | **~0 sats** |
-| Settlement time | 2–7 days | 3–5 days | < 1s | < 1s | **< 1 second** |
-| Chargebacks | Yes | Yes | Impossible | Impossible | **Impossible** |
-| AI agent support | ❌ | ❌ | ✅ | ❌ | **✅** |
-| 3-line integration | ❌ | ❌ | ❌ (manual) | ❌ | **✅** |
-| TypeScript SDK | ❌ | ❌ | partial | ❌ | **✅** |
+| Min fee per call | $0.30 | ~0 sats | ~0 sats | ~0 sats | **~0 sats** |
+| Settlement time | 2–7 days | < 1s | < 1s | < 1s | **< 1 second** |
+| Chargebacks | Yes | Impossible | Impossible | Impossible | **Impossible** |
+| AI agent support | ❌ | ✅ | ❌ | ❌ | **✅** |
+| 3-line integration | ❌ | ❌ (manual) | ❌ | ❌ | **✅** |
+| L402 middleware SDK | ❌ | ❌ (no SDK yet) | ❌ | ❌ | **✅** |
 | Python SDK | ❌ | ❌ | ❌ | ❌ | **✅** |
 | Go SDK | ❌ | ❌ | ❌ | ❌ | **✅** |
 | Rust SDK | ❌ | ❌ | ❌ | ❌ | **✅** |
-| No-node managed mode | ❌ | ❌ | ❌ | ❌ | **✅ (0.3% flat)** |
-| Countries blocked | ~50 | ~40 | 0 | 0 | **0** |
-| Open source | ❌ | ❌ | partial | ✅ | **✅ MIT** |
-| Monthly cost | $0–hundreds | $0–hundreds | 0 | self-host cost | **$0** |
+| No-node managed mode | ❌ | ❌ | ✅ (hosted) | ❌ | **✅ (0.3% flat)** |
+| Countries blocked | ~50 | 0 | varies | 0 | **0** |
+| Open source | ❌ | partial | ❌ | ✅ | **✅ MIT** |
+| Monthly cost | $0–hundreds | 0 | % fee | self-host cost | **$0** |
 
 ---
 
@@ -34,6 +34,29 @@ description: How l402-kit compares to Stripe, Paddle, x402, BTCPay, and every ot
 Stripe's minimum fee is $0.30 + 2.9%. A 1-sat payment ($0.0006) on Stripe would cost 50,000% in fees. l402-kit charges 0.3% flat — nothing else.
 
 **Verdict**: Not competitors. Stripe is for subscriptions. l402-kit is for pay-per-call micropayments. Many projects will use both.
+
+---
+
+## vs. MPP (Stripe + Tempo) — new, March 2026
+
+Multi-Party Payments (MPP) is a new protocol announced by Stripe and Tempo in March 2026. It allows two parties to split a Stripe payment at checkout time — for example, a marketplace taking 10% and a vendor taking 90%, settled in a single transaction.
+
+**MPP strengths**:
+- Institutional backing (Stripe's entire merchant network)
+- Familiar credit card UX
+- Built-in KYC and compliance
+- Revenue split handled automatically
+
+**Where MPP falls short for API monetization**:
+- **Minimum fee is still $0.30** — MPP doesn't change Stripe's per-transaction economics. A 1-sat micropayment is still economically impossible.
+- **No AI agent support** — requires a human with a credit card and a browser. An autonomous agent cannot make an MPP payment.
+- **Requires both parties to be Stripe customers** — no permissionless access.
+- **Settlement still takes 2–7 days** — no real-time settlement.
+- **No cryptographic proof** — the payer can still dispute/chargeback.
+
+MPP solves the **revenue-split** problem for marketplace payments. L402 solves the **micropayment + machine-readable authorization** problem for API access. These are different problems.
+
+**Verdict**: MPP is not a direct competitor for API monetization. If your use case is splitting Stripe revenue between a platform and its creators, use MPP. If your use case is charging per API call, especially from AI agents, use l402-kit.
 
 ---
 
@@ -76,6 +99,27 @@ BTCPay is a self-hosted Bitcoin payment processor — invoices, checkout pages, 
 **l402-kit**: code-first, 3 lines, no server to manage, built for APIs not checkouts.
 
 **Verdict**: Different products. BTCPay users who want API monetization are a natural l402-kit audience.
+
+---
+
+## vs. ln.bot
+
+[ln.bot](https://ln.bot) is a hosted service that lets developers monetize API endpoints with Lightning payments. It's the closest product to l402-kit in the market.
+
+**ln.bot strengths**:
+- Hosted — no Lightning node required
+- Simple dashboard to register endpoints
+- Handles invoice creation and payment verification
+
+**l402-kit strengths**:
+- **Code-first, not dashboard-first** — 3 lines of middleware vs. registering endpoints in a UI. Fits naturally into CI/CD.
+- **Multi-language** — ln.bot targets Node.js. l402-kit ships TypeScript, Python, Go, and Rust.
+- **Standard L402 protocol** — interoperable with any L402-aware client (Claude, custom agents, future wallets). ln.bot uses a proprietary flow.
+- **Sovereign mode** — connect your own Lightning node at 0% fee. ln.bot is always hosted.
+- **AI agent SDK** — budget controls, MCP server, LangChain tool. ln.bot has no agent primitives.
+- **Open source (MIT)** — ln.bot is closed source.
+
+**Verdict**: If you want a quick dashboard to monetize one or two endpoints, ln.bot works. If you're building a product, shipping across languages, or need AI agent support, l402-kit is the right choice.
 
 ---
 
