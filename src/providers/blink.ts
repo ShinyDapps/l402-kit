@@ -35,6 +35,7 @@ export class BlinkProvider implements LightningProvider {
           },
         },
       }),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) {
@@ -56,7 +57,7 @@ export class BlinkProvider implements LightningProvider {
 
     const macaroon = Buffer.from(JSON.stringify({
       hash: invoice.paymentHash,
-      exp: Math.floor(Date.now() / 1000) + 3600,
+      exp: Date.now() + 3_600_000,
     })).toString("base64");
 
     return {
@@ -81,6 +82,7 @@ export class BlinkProvider implements LightningProvider {
         }`,
         variables: { paymentHash },
       }),
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return false;
     const json = (await res.json()) as { data: { lnInvoice: { status: string } } };

@@ -17,6 +17,9 @@ export function parseToken(token: string): L402Token {
  */
 export async function verifyToken(token: string): Promise<boolean> {
   try {
+    // Reject oversized tokens before any parsing — prevents memory/CPU DoS
+    if (token.length > 4096) return false;
+
     const { macaroon, preimage } = parseToken(token);
 
     // Preimage must be 32 bytes = 64 hex chars

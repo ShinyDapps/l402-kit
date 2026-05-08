@@ -40,6 +40,7 @@ export class AlbyProvider implements LightningProvider {
         amount:      amountSats * 1000, // Alby uses millisatoshis
         description: "L402 API access",
       }),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) {
@@ -71,6 +72,7 @@ export class AlbyProvider implements LightningProvider {
   async checkPayment(paymentHash: string): Promise<boolean> {
     const res = await fetch(`${this.hubUrl}/api/invoices/${paymentHash}`, {
       headers: { "Authorization": `Bearer ${this.accessToken}` },
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return false;
     const data = await res.json() as { settled_at?: string | null; state?: string };
@@ -79,7 +81,7 @@ export class AlbyProvider implements LightningProvider {
 
   private _buildMacaroon(paymentHash: string): string {
     return Buffer.from(
-      JSON.stringify({ hash: paymentHash, exp: Math.floor(Date.now() / 1000) + 3600 })
+      JSON.stringify({ hash: paymentHash, exp: Date.now() + 3_600_000 })
     ).toString("base64");
   }
 }

@@ -661,15 +661,15 @@ describe("LNbitsProvider — additional coverage", () => {
     expect(capturedUrl).not.toContain("//api");
   });
 
-  it("macaroon exp is ~1h in the future (in seconds)", async () => {
+  it("macaroon exp is ~1h in the future (in milliseconds)", async () => {
     const p = new LNbitsProvider("k");
     const hash = "a".repeat(64);
     globalThis.fetch = mockFetch({ payment_request: "ln...", payment_hash: hash });
     const inv = await p.createInvoice(10);
     const decoded = JSON.parse(Buffer.from(inv.macaroon, "base64").toString());
-    const nowSec = Math.floor(Date.now() / 1000);
-    expect(decoded.exp).toBeGreaterThanOrEqual(nowSec + 3598);
-    expect(decoded.exp).toBeLessThanOrEqual(nowSec + 3602);
+    const nowMs = Date.now();
+    expect(decoded.exp).toBeGreaterThanOrEqual(nowMs + 3_598_000);
+    expect(decoded.exp).toBeLessThanOrEqual(nowMs + 3_602_000);
   });
 
   it("checkPayment returns true when paid field is 1 (truthy)", async () => {
@@ -729,14 +729,14 @@ describe("OpenNodeProvider — additional coverage", () => {
     expect(capturedUrl).toContain("/v1/charge/charge-xyz");
   });
 
-  it("macaroon exp is ~1h in the future (in seconds)", async () => {
+  it("macaroon exp is ~1h in the future (in milliseconds)", async () => {
     const p = new OpenNodeProvider("k");
     globalThis.fetch = mockFetch({ data: { id: "chg1", lightning_invoice: { payreq: "ln..." } } });
     const inv = await p.createInvoice(10);
     const decoded = JSON.parse(Buffer.from(inv.macaroon, "base64").toString());
-    const nowSec = Math.floor(Date.now() / 1000);
-    expect(decoded.exp).toBeGreaterThanOrEqual(nowSec + 3598);
-    expect(decoded.exp).toBeLessThanOrEqual(nowSec + 3602);
+    const nowMs = Date.now();
+    expect(decoded.exp).toBeGreaterThanOrEqual(nowMs + 3_598_000);
+    expect(decoded.exp).toBeLessThanOrEqual(nowMs + 3_602_000);
   });
 
   it("checkPayment returns false on HTTP 404", async () => {

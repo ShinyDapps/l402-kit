@@ -47,6 +47,7 @@ export class BTCPayProvider implements LightningProvider {
           description: "L402 API access",
           expiry:      3600,
         }),
+        signal: AbortSignal.timeout(15_000),
       }
     );
 
@@ -78,7 +79,7 @@ export class BTCPayProvider implements LightningProvider {
   async checkPayment(paymentHash: string): Promise<boolean> {
     const res = await fetch(
       `${this.url}/api/v1/stores/${this.storeId}/lightning/BTC/invoices/${paymentHash}`,
-      { headers: { "Authorization": `token ${this.apiKey}` } }
+      { headers: { "Authorization": `token ${this.apiKey}` }, signal: AbortSignal.timeout(10_000) }
     );
     if (!res.ok) return false;
     const data = await res.json() as { status?: string };
@@ -87,7 +88,7 @@ export class BTCPayProvider implements LightningProvider {
 
   private _buildMacaroon(paymentHash: string): string {
     return Buffer.from(
-      JSON.stringify({ hash: paymentHash, exp: Math.floor(Date.now() / 1000) + 3600 })
+      JSON.stringify({ hash: paymentHash, exp: Date.now() + 3_600_000 })
     ).toString("base64");
   }
 }

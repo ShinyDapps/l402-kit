@@ -62,6 +62,7 @@ export class ManagedProvider implements LightningProvider {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ amountSats, ownerAddress: this.ownerAddress }),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) throw new Error("ManagedProvider: invoice creation failed");
     const data = await res.json() as { paymentRequest: string; paymentHash: string; macaroon: string };

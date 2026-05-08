@@ -18,18 +18,19 @@ export class LNbitsProvider implements LightningProvider {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Api-Key": this.apiKey },
       body: JSON.stringify({ out: false, amount: amountSats, memo: "L402 API access" }),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
       const err = await res.text().catch(() => res.statusText);
       throw new Error(`LNbits failed (${res.status}): ${err}`);
     }
     const data = (await res.json()) as { payment_request: string; payment_hash: string };
-    const macaroon = Buffer.from(JSON.stringify({ hash: data.payment_hash, exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64");
+    const macaroon = Buffer.from(JSON.stringify({ hash: data.payment_hash, exp: Date.now() + 3_600_000 })).toString("base64");
     return { paymentRequest: data.payment_request, paymentHash: data.payment_hash, macaroon, amountSats, expiresAt: Math.floor(Date.now() / 1000) + 3600 };
   }
 
   async checkPayment(paymentHash: string): Promise<boolean> {
-    const res = await fetch(`${this.baseUrl}/api/v1/payments/${paymentHash}`, { headers: { "X-Api-Key": this.apiKey } });
+    const res = await fetch(`${this.baseUrl}/api/v1/payments/${paymentHash}`, { headers: { "X-Api-Key": this.apiKey }, signal: AbortSignal.timeout(10_000) });
     if (!res.ok) return false;
     const data = (await res.json()) as { paid?: boolean };
     return !!data.paid;
