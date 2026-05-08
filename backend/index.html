@@ -265,7 +265,7 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.7)} }
 
 /* STATS BANNER */
-.stats-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; margin-bottom: 80px; }
+.stats-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 24px 40px; display: none; justify-content: center; gap: 60px; flex-wrap: wrap; margin-bottom: 80px; }
 .stat-item { text-align: center; }
 .stat-num { font-size: 28px; font-weight: 800; color: var(--orange); }
 .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
@@ -596,30 +596,150 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <a href="https://l402kit.com/docs/introduction" class="btn-secondary" id="heroDocsLink" data-docs-link="1" data-i18n="heroReadDocs">Read the docs →</a>
   </div>
 
-  <div class="hero-modes">
-    <a href="https://l402kit.com/docs/quickstart" target="_blank" class="hero-mode-card hero-mode-managed" data-i18n-card="dev">
-      <div class="hmc-icon">🏗️</div>
-      <div class="hmc-label" data-i18n="heroCardDevLabel">API Developer</div>
-      <div class="hmc-title" data-i18n="heroCardDevTitle">Monetize your API</div>
-      <div class="hmc-sub" style="color:#f7931a" data-i18n="heroCardDevSub">0.3% flat · no node · no Stripe</div>
-    </a>
-    <a href="https://l402kit.com/docs/guides/ai-agents" target="_blank" class="hero-mode-card hero-mode-ai" data-i18n-card="ai">
-      <div class="hmc-icon">🤖</div>
-      <div class="hmc-label" data-i18n="heroCardAiLabel">AI Builder</div>
-      <div class="hmc-title" data-i18n="heroCardAiTitle">Your agent pays APIs</div>
-      <div class="hmc-sub" style="color:#2ddc6e" data-i18n="heroCardAiSub">0.3% flat · autonomous · no card</div>
-    </a>
-  </div>
+</section><hr class="section-sep">
 
-  <div style="margin-top:14px;text-align:center">
-    <a href="https://l402kit.com/docs/providers" target="_blank" class="hero-scaffold-link" data-i18n="heroSelfHost">or self-host for free (0% fee) →</a>
-  </div>
+<section class="flow" id="how">
+  <span class="eyebrow">How it works</span>
+  <h2 data-reveal="">Two sides. One protocol.</h2>
+  <p style="text-align:center;color:var(--muted);font-size:15px;margin-bottom:24px;margin-top:-16px">L402 connects API sellers and AI buyers — same 3-line SDK, no middleman.</p>
 
-  <div class="hero-scaffold">
-    <span class="hero-scaffold-label" data-i18n="heroScaffoldLabel">Start in one command</span>
-    <button onclick="copyScaffold()" id="scaffoldBtn" class="scaffold-btn">npx create-l402-app my-api<span class="scaffold-hint"> — click to copy</span></button>
-    <a href="https://l402kit.com/docs/quickstart" target="_blank" class="hero-scaffold-link" data-i18n="heroQuickstart">View quickstart →</a>
+  <!-- GIF 3 — CANCELA DE PEDÁGIO — universal: car → orange gate → ⚡ pay → green open → API unlocks -->
+  <div class="pg-wrap" id="pgWrap">
+    <svg class="pg-svg" viewBox="0 0 780 180" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="pgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ffa033"/>
+          <stop offset="100%" stop-color="#ffcc44"/>
+        </linearGradient>
+      </defs>
+      <!-- Background -->
+      <rect width="780" height="180" fill="#0a0d16"/>
+      <!-- Road -->
+      <rect x="0" y="140" width="780" height="40" fill="#0d1020"/>
+      <line x1="0" y1="140" x2="780" y2="140" stroke="#1a2133" stroke-width="1"/>
+      <line x1="0" y1="158" x2="780" y2="158" stroke="#1a2438" stroke-width="1.5" stroke-dasharray="20 15"/>
+      <!-- Zone dividers -->
+      <line x1="260" y1="0" x2="260" y2="140" stroke="#111c2e" stroke-width="1"/>
+      <line x1="520" y1="0" x2="520" y2="140" stroke="#111c2e" stroke-width="1"/>
+      <!-- Zone labels -->
+      <text x="130" y="22" text-anchor="middle" font-size="9" fill="#1e2940" font-family="monospace" letter-spacing="2">CLIENT</text>
+      <text x="390" y="22" text-anchor="middle" font-size="9" fill="#1e2940" font-family="monospace" letter-spacing="2">L402 GATE</text>
+      <text x="650" y="22" text-anchor="middle" font-size="9" fill="#1e2940" font-family="monospace" letter-spacing="2">API SERVER</text>
+      <!-- Car -->
+      <g class="pg-car">
+        <rect x="13" y="116" width="5" height="8" rx="1" fill="#cc3333" opacity=".75"/>
+        <rect x="16" y="110" width="94" height="28" rx="6" fill="#e5e5e5"/>
+        <rect x="34" y="96" width="56" height="18" rx="5" fill="#d0d0d0"/>
+        <rect x="38" y="99" width="22" height="12" rx="2" fill="#0c1018" opacity=".6"/>
+        <rect x="64" y="99" width="20" height="12" rx="2" fill="#0c1018" opacity=".6"/>
+        <rect x="108" y="116" width="5" height="8" rx="1" fill="#ffa033" opacity=".9"/>
+        <circle cx="40" cy="140" r="9" fill="#111"/>
+        <circle cx="40" cy="140" r="5" fill="#1e1e1e"/>
+        <circle cx="88" cy="140" r="9" fill="#111"/>
+        <circle cx="88" cy="140" r="5" fill="#1e1e1e"/>
+      </g>
+      <!-- Gate post -->
+      <rect x="383" y="88" width="10" height="54" rx="3" fill="#253347"/>
+      <!-- Gate arm group (rotates as one unit: arm + stripe) -->
+      <g class="pg-arm-group">
+        <rect class="pg-arm-rect" x="391" y="90" width="82" height="10" rx="4"/>
+        <rect x="391" y="93" width="82" height="2" rx="1" fill="rgba(255,255,255,.22)"/>
+      </g>
+      <!-- HTTP 402 label -->
+      <text class="pg-lbl402" x="437" y="82" text-anchor="middle" font-size="11" fill="#ffa033" font-family="monospace" font-weight="bold">HTTP 402</text>
+      <!-- Lightning bolt -->
+      <text class="pg-bolt" x="437" y="122" text-anchor="middle" font-size="30">⚡</text>
+      <!-- Payment progress bar -->
+      <rect class="pg-bar-bg" x="330" y="130" width="114" height="6" rx="3" fill="#1a2133"/>
+      <rect class="pg-bar-fill" x="330" y="130" width="114" height="6" rx="3" fill="url(#pgGrad)"/>
+      <!-- API server box -->
+      <rect class="pg-api-box" x="605" y="76" width="100" height="66" rx="8" fill="#0c1018" stroke="#1a2133" stroke-width="1.5"/>
+      <rect x="617" y="86" width="76" height="6" rx="2" fill="#1a2438"/>
+      <rect x="617" y="97" width="58" height="6" rx="2" fill="#1a2438"/>
+      <rect x="617" y="108" width="66" height="6" rx="2" fill="#1a2438"/>
+      <rect x="617" y="119" width="48" height="6" rx="2" fill="#1a2438"/>
+      <circle class="pg-api-dot" cx="672" cy="122" r="5" fill="#1a2438"/>
+      <!-- 200 OK -->
+      <text class="pg-lbl200" x="655" y="68" text-anchor="middle" font-size="13" fill="#2ddc6e" font-family="monospace" font-weight="bold">200 OK</text>
+    </svg>
+    <div class="pg-steps">
+      <span class="pg-step-c">① request blocked</span>
+      <span class="pg-step-p">② ⚡ lightning pay</span>
+      <span class="pg-step-o">③ instant access</span>
+    </div>
+    <div class="pg-tagline">Any API · Any amount · Anywhere · &lt;1 second</div>
   </div>
+  <script>
+  (function(){
+    var V=6500,F=480;
+    setTimeout(function r(){
+      var b=document.getElementById('pgWrap');
+      if(!b)return;
+      b.style.transition='opacity '+(F/1000)+'s ease';
+      b.style.opacity='0';
+      setTimeout(function(){
+        var p=b.parentNode;if(!p)return;
+        var c=b.cloneNode(true);
+        c.style.cssText='';
+        p.replaceChild(c,b);
+        setTimeout(r,V);
+      },F);
+    },V);
+  })();
+  </script>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:860px;margin:0 auto 8px" id="flow-dual-grid">
+    <!-- SELL SIDE -->
+    <div style="background:#0c0c0c;border:1px solid #1e1e1e;border-radius:16px;padding:24px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#f7931a;margin-bottom:16px">🏗️ API Developer — sell</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">1</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Add 3 lines of middleware</div><code style="font-size:11px;color:#f7931a">l402({ priceSats: 10, lightning })</code></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">2</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Client hits your endpoint → gets 402</div><div style="font-size:12px;color:#666">Invoice + macaroon returned automatically</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">3</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Payment verified · 200 OK returned</div><div style="font-size:12px;color:#666">SHA256(preimage) == hash — &lt;1ms, no DB</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">⚡</span>
+          <div><div style="font-size:13px;font-weight:600;color:#f7931a">99.7% lands in your Lightning wallet</div><div style="font-size:12px;color:#666">Instantly — managed mode, no node needed</div></div>
+        </div>
+      </div>
+      <a href="https://l402kit.com/docs/quickstart" target="_blank" style="display:inline-block;margin-top:20px;font-size:12px;color:#f7931a;font-weight:600;text-decoration:none">Start selling in 2 min →</a>
+    </div>
+
+    <!-- BUY SIDE -->
+    <div style="background:#0a0d0a;border:1px solid #1a2a1a;border-radius:16px;padding:24px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#2ddc6e;margin-bottom:16px">🤖 AI Builder — buy</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:#0f1a0f;border:1px solid #1e3a1e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">1</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Configure wallet + budget</div><code style="font-size:11px;color:#2ddc6e">new L402Client({ wallet, budgetSats: 1000 })</code></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:#0f1a0f;border:1px solid #1e3a1e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">2</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">client.fetch() hits the API → gets 402</div><div style="font-size:12px;color:#666">SDK extracts invoice + macaroon</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:#0f1a0f;border:1px solid #1e3a1e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">3</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Pays invoice → retries with proof</div><div style="font-size:12px;color:#666">Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="background:rgba(45,220,110,.12);border:1px solid rgba(45,220,110,.25);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">✅</span>
+          <div><div style="font-size:13px;font-weight:600;color:#2ddc6e">200 OK + data — no human in the loop</div><div style="font-size:12px;color:#666">Works with any LLM framework</div></div>
+        </div>
+      </div>
+      <a href="https://l402kit.com/docs/guides/ai-agents" target="_blank" style="display:inline-block;margin-top:20px;font-size:12px;color:#2ddc6e;font-weight:600;text-decoration:none">Agent quickstart →</a>
+    </div>
+  </div>
+  <style>
+    @media(max-width:640px){#flow-dual-grid{grid-template-columns:1fr!important}}
+  </style>
 </section><hr class="section-sep">
 
 <!-- STATS BAR -->
@@ -779,28 +899,6 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <p style="font-size:11px;color:#444;text-align:right;margin-top:8px;padding-right:4px">⚡ <span data-i18n="cmpFooter">Assuming 100 sats/call at current BTC price — updates live</span></p>
 </section><hr class="section-sep">
 
-<!-- FEATURES GRID -->
-<section class="features">
-  <span class="eyebrow">Why l402-kit</span>
-  <h2>Everything you need</h2>
-  <div class="features-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">⚡</div>
-      <div class="feature-title">Zero setup</div>
-      <div class="feature-desc">Pass your Lightning Address — managed mode handles the rest. No node, no wallet config, no infrastructure.</div>
-    </div>
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">🤖</div>
-      <div class="feature-title">AI agent native</div>
-      <div class="feature-desc">Machines can pay machines. No human in the loop. The only payment protocol built for autonomous agents.</div>
-    </div>
-    <div class="feature-card" data-reveal="">
-      <div class="feature-icon">🔐</div>
-      <div class="feature-title">No chargebacks. Ever.</div>
-      <div class="feature-desc">SHA256(preimage) == paymentHash. Mathematically unforgeable. You already delivered the data — it stays paid.</div>
-    </div>
-  </div>
-</section><hr class="section-sep">
 
 <!-- USE CASES -->
 <section class="usecases">
@@ -846,13 +944,14 @@ footer a:hover { color: var(--orange); text-decoration: none; }
       <span style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px">🏪 SELLER — API provider</span>
       <span style="color:#555;font-size:11px">Add 3 lines, start earning</span>
     </div>
-  <div class="demo-tabs">
+  <div class="demo-tabs" style="align-items:center">
     <div class="tab" onclick="showTab('managed',this)" data-accent-color="#f7931a" data-accent-border="rgba(247,147,26,.2)" style="color:#f7931a;border-color:rgba(247,147,26,.2)">Managed ☁</div>
     <div class="tab active" onclick="showTab('agent',this)" data-accent-color="#22c55e" data-accent-border="rgba(34,197,94,.3)" style="color:#22c55e;border-color:rgba(34,197,94,.3)">⚡ AI Agent</div>
-    <div class="tab" onclick="showTab('ts',this)">TypeScript</div>
-    <div class="tab" onclick="showTab('py',this)">Python</div>
-    <div class="tab" onclick="showTab('go',this)">Go</div>
-    <div class="tab" onclick="showTab('rs',this)">Rust</div>
+    <div style="width:1px;background:#2a2a2a;height:20px;margin:0 4px;flex-shrink:0"></div>
+    <div class="tab" onclick="showTab('ts',this)" style="font-size:11px;opacity:.6">TypeScript</div>
+    <div class="tab" onclick="showTab('py',this)" style="font-size:11px;opacity:.6">Python</div>
+    <div class="tab" onclick="showTab('go',this)" style="font-size:11px;opacity:.6">Go</div>
+    <div class="tab" onclick="showTab('rs',this)" style="font-size:11px;opacity:.6">Rust</div>
   </div>
   <div class="code-block" style="position:relative">
     <button id="copyCodeBtn" onclick="copyCode()" style="position:absolute;top:14px;right:14px;background:#1a1a1a;border:1px solid #333;color:#888;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;z-index:10;transition:all .2s" onmouseenter="this.style.borderColor='#f7931a';this.style.color='#f7931a'" onmouseleave="this.style.borderColor='#333';this.style.color='#888'">copy</button>
@@ -1162,149 +1261,7 @@ lightning = <span class="c-fn">BlinkProvider</span>(
   </div>
 </section><hr class="section-sep">
 
-<section class="flow" id="how">
-  <span class="eyebrow">How it works</span>
-  <h2 data-reveal="">Two sides. One protocol.</h2>
-  <p style="text-align:center;color:var(--muted);font-size:15px;margin-bottom:24px;margin-top:-16px">L402 connects API sellers and AI buyers — same 3-line SDK, no middleman.</p>
 
-  <!-- GIF 3 — CANCELA DE PEDÁGIO — universal: car → orange gate → ⚡ pay → green open → API unlocks -->
-  <div class="pg-wrap" id="pgWrap">
-    <svg class="pg-svg" viewBox="0 0 780 180" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="pgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#ffa033"/>
-          <stop offset="100%" stop-color="#ffcc44"/>
-        </linearGradient>
-      </defs>
-      <!-- Background -->
-      <rect width="780" height="180" fill="#0a0d16"/>
-      <!-- Road -->
-      <rect x="0" y="140" width="780" height="40" fill="#0d1020"/>
-      <line x1="0" y1="140" x2="780" y2="140" stroke="#1a2133" stroke-width="1"/>
-      <line x1="0" y1="158" x2="780" y2="158" stroke="#1a2438" stroke-width="1.5" stroke-dasharray="20 15"/>
-      <!-- Zone dividers -->
-      <line x1="260" y1="0" x2="260" y2="140" stroke="#111c2e" stroke-width="1"/>
-      <line x1="520" y1="0" x2="520" y2="140" stroke="#111c2e" stroke-width="1"/>
-      <!-- Zone labels -->
-      <text x="130" y="22" text-anchor="middle" font-size="9" fill="#1e2940" font-family="monospace" letter-spacing="2">CLIENT</text>
-      <text x="390" y="22" text-anchor="middle" font-size="9" fill="#1e2940" font-family="monospace" letter-spacing="2">L402 GATE</text>
-      <text x="650" y="22" text-anchor="middle" font-size="9" fill="#1e2940" font-family="monospace" letter-spacing="2">API SERVER</text>
-      <!-- Car -->
-      <g class="pg-car">
-        <rect x="13" y="116" width="5" height="8" rx="1" fill="#cc3333" opacity=".75"/>
-        <rect x="16" y="110" width="94" height="28" rx="6" fill="#e5e5e5"/>
-        <rect x="34" y="96" width="56" height="18" rx="5" fill="#d0d0d0"/>
-        <rect x="38" y="99" width="22" height="12" rx="2" fill="#0c1018" opacity=".6"/>
-        <rect x="64" y="99" width="20" height="12" rx="2" fill="#0c1018" opacity=".6"/>
-        <rect x="108" y="116" width="5" height="8" rx="1" fill="#ffa033" opacity=".9"/>
-        <circle cx="40" cy="140" r="9" fill="#111"/>
-        <circle cx="40" cy="140" r="5" fill="#1e1e1e"/>
-        <circle cx="88" cy="140" r="9" fill="#111"/>
-        <circle cx="88" cy="140" r="5" fill="#1e1e1e"/>
-      </g>
-      <!-- Gate post -->
-      <rect x="383" y="88" width="10" height="54" rx="3" fill="#253347"/>
-      <!-- Gate arm group (rotates as one unit: arm + stripe) -->
-      <g class="pg-arm-group">
-        <rect class="pg-arm-rect" x="391" y="90" width="82" height="10" rx="4"/>
-        <rect x="391" y="93" width="82" height="2" rx="1" fill="rgba(255,255,255,.22)"/>
-      </g>
-      <!-- HTTP 402 label -->
-      <text class="pg-lbl402" x="437" y="82" text-anchor="middle" font-size="11" fill="#ffa033" font-family="monospace" font-weight="bold">HTTP 402</text>
-      <!-- Lightning bolt -->
-      <text class="pg-bolt" x="437" y="122" text-anchor="middle" font-size="30">⚡</text>
-      <!-- Payment progress bar -->
-      <rect class="pg-bar-bg" x="330" y="130" width="114" height="6" rx="3" fill="#1a2133"/>
-      <rect class="pg-bar-fill" x="330" y="130" width="114" height="6" rx="3" fill="url(#pgGrad)"/>
-      <!-- API server box -->
-      <rect class="pg-api-box" x="605" y="76" width="100" height="66" rx="8" fill="#0c1018" stroke="#1a2133" stroke-width="1.5"/>
-      <rect x="617" y="86" width="76" height="6" rx="2" fill="#1a2438"/>
-      <rect x="617" y="97" width="58" height="6" rx="2" fill="#1a2438"/>
-      <rect x="617" y="108" width="66" height="6" rx="2" fill="#1a2438"/>
-      <rect x="617" y="119" width="48" height="6" rx="2" fill="#1a2438"/>
-      <circle class="pg-api-dot" cx="672" cy="122" r="5" fill="#1a2438"/>
-      <!-- 200 OK -->
-      <text class="pg-lbl200" x="655" y="68" text-anchor="middle" font-size="13" fill="#2ddc6e" font-family="monospace" font-weight="bold">200 OK</text>
-    </svg>
-    <div class="pg-steps">
-      <span class="pg-step-c">① request blocked</span>
-      <span class="pg-step-p">② ⚡ lightning pay</span>
-      <span class="pg-step-o">③ instant access</span>
-    </div>
-    <div class="pg-tagline">Any API · Any amount · Anywhere · &lt;1 second</div>
-  </div>
-  <script>
-  (function(){
-    var V=6500,F=480;
-    setTimeout(function r(){
-      var b=document.getElementById('pgWrap');
-      if(!b)return;
-      b.style.transition='opacity '+(F/1000)+'s ease';
-      b.style.opacity='0';
-      setTimeout(function(){
-        var p=b.parentNode;if(!p)return;
-        var c=b.cloneNode(true);
-        c.style.cssText='';
-        p.replaceChild(c,b);
-        setTimeout(r,V);
-      },F);
-    },V);
-  })();
-  </script>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:860px;margin:0 auto 8px" id="flow-dual-grid">
-    <!-- SELL SIDE -->
-    <div style="background:#0c0c0c;border:1px solid #1e1e1e;border-radius:16px;padding:24px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#f7931a;margin-bottom:16px">🏗️ API Developer — sell</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">1</span>
-          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Add 3 lines of middleware</div><code style="font-size:11px;color:#f7931a">l402({ priceSats: 10, lightning })</code></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">2</span>
-          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Client hits your endpoint → gets 402</div><div style="font-size:12px;color:#666">Invoice + macaroon returned automatically</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">3</span>
-          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Payment verified · 200 OK returned</div><div style="font-size:12px;color:#666">SHA256(preimage) == hash — &lt;1ms, no DB</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">⚡</span>
-          <div><div style="font-size:13px;font-weight:600;color:#f7931a">99.7% lands in your Lightning wallet</div><div style="font-size:12px;color:#666">Instantly — managed mode, no node needed</div></div>
-        </div>
-      </div>
-      <a href="https://l402kit.com/docs/quickstart" target="_blank" style="display:inline-block;margin-top:20px;font-size:12px;color:#f7931a;font-weight:600;text-decoration:none">Start selling in 2 min →</a>
-    </div>
-
-    <!-- BUY SIDE -->
-    <div style="background:#0a0d0a;border:1px solid #1a2a1a;border-radius:16px;padding:24px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#2ddc6e;margin-bottom:16px">🤖 AI Builder — buy</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:#0f1a0f;border:1px solid #1e3a1e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">1</span>
-          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Configure wallet + budget</div><code style="font-size:11px;color:#2ddc6e">new L402Client({ wallet, budgetSats: 1000 })</code></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:#0f1a0f;border:1px solid #1e3a1e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">2</span>
-          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">client.fetch() hits the API → gets 402</div><div style="font-size:12px;color:#666">SDK extracts invoice + macaroon</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:#0f1a0f;border:1px solid #1e3a1e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#888">3</span>
-          <div><div style="font-size:13px;font-weight:600;color:#e5e5e5">Pays invoice → retries with proof</div><div style="font-size:12px;color:#666">Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <span style="background:rgba(45,220,110,.12);border:1px solid rgba(45,220,110,.25);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">✅</span>
-          <div><div style="font-size:13px;font-weight:600;color:#2ddc6e">200 OK + data — no human in the loop</div><div style="font-size:12px;color:#666">Works with any LLM framework</div></div>
-        </div>
-      </div>
-      <a href="https://l402kit.com/docs/guides/ai-agents" target="_blank" style="display:inline-block;margin-top:20px;font-size:12px;color:#2ddc6e;font-weight:600;text-decoration:none">Agent quickstart →</a>
-    </div>
-  </div>
-  <style>
-    @media(max-width:640px){#flow-dual-grid{grid-template-columns:1fr!important}}
-  </style>
-</section><hr class="section-sep">
 <!-- ── AGENT ECONOMY ──────────────────────────────────────── -->
 <section style="max-width:860px;margin:0 auto;padding:56px 24px 0" id="agent-economy">
   <span class="eyebrow">Agent Economy</span>
