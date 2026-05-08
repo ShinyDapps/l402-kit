@@ -30,6 +30,7 @@
   ],
   "scripts": {
     "build": "tsc && npx tsc --project mcp/tsconfig.json",
+    "prepack": "node -e \"['lightning.js','lightning.js.map','lightning.d.ts','lightning.d.ts.map'].forEach(f=>{try{require('fs').unlinkSync('dist/'+f)}catch(_){}})\"",
     "dev": "tsc --watch",
     "test": "jest --passWithNoTests",
     "lint": "tsc --noEmit",

@@ -1,7 +1,9 @@
 import { BlinkWallet } from "../agent/wallets/BlinkWallet";
 import { AlbyWallet } from "../agent/wallets/AlbyWallet";
+import { buildWallet } from "../agent/wallets";
 import { BudgetTracker, BudgetExceededError } from "../agent/budget";
 import { L402Client } from "../client";
+import { l402Client } from "../agent";
 
 function mockFetch(body: unknown, status = 200) {
   return jest.fn().mockResolvedValue({
@@ -347,5 +349,54 @@ describe("L402Client — budget integration", () => {
     const client = new L402Client({ wallet: mockWallet(), budgetSats: 1000 });
     await client.fetch("https://api.example.com/data");
     expect(client.spendingReport()!.total).toBe(0);
+  });
+});
+
+// ─── buildWallet ──────────────────────────────────────────────────────────────
+
+describe("buildWallet", () => {
+  it("returns BlinkWallet when BLINK_API_KEY + BLINK_WALLET_ID are set", () => {
+    const wallet = buildWallet({ BLINK_API_KEY: "key", BLINK_WALLET_ID: "wid" });
+    expect(wallet).toBeInstanceOf(BlinkWallet);
+  });
+
+  it("returns AlbyWallet when only ALBY_TOKEN is set", () => {
+    const wallet = buildWallet({ ALBY_TOKEN: "token" });
+    expect(wallet).toBeInstanceOf(AlbyWallet);
+  });
+
+  it("prefers Blink over Alby when both are set", () => {
+    const wallet = buildWallet({ BLINK_API_KEY: "key", BLINK_WALLET_ID: "wid", ALBY_TOKEN: "t" });
+    expect(wallet).toBeInstanceOf(BlinkWallet);
+  });
+
+  it("throws when no credentials are provided", () => {
+    expect(() => buildWallet({})).toThrow("no wallet configured");
+  });
+
+  it("throws when BLINK_API_KEY is set but BLINK_WALLET_ID is missing", () => {
+    expect(() => buildWallet({ BLINK_API_KEY: "key" })).toThrow("no wallet configured");
+  });
+});
+
+// ─── l402Client factory ───────────────────────────────────────────────────────
+
+describe("l402Client factory", () => {
+  it("returns an L402Client instance", () => {
+    const wallet = { payInvoice: jest.fn() };
+    const client = l402Client({ wallet });
+    expect(client).toBeInstanceOf(L402Client);
+  });
+
+  it("l402Client instance has fetch and spendingReport methods", () => {
+    const wallet = { payInvoice: jest.fn() };
+    const client = l402Client({ wallet });
+    expect(typeof client.fetch).toBe("function");
+    expect(typeof client.spendingReport).toBe("function");
+  });
+
+  it("spendingReport is null when no budget configured", () => {
+    const client = l402Client({ wallet: { payInvoice: jest.fn() } });
+    expect(client.spendingReport()).toBeNull();
   });
 });
