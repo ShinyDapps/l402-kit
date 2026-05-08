@@ -5,8 +5,10 @@
   "observability": {
     "enabled": true
   },
+  "main": "landing-worker.ts",
   "assets": {
-    "directory": "backend"
+    "directory": "backend",
+    "binding": "ASSETS"
   },
   "compatibility_flags": [
     "nodejs_compat"
