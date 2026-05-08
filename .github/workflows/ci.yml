@@ -17,6 +17,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: cd vscode-extension && npm ci
       - run: npm test -- --passWithNoTests
 
   python:
