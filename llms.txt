@@ -31,7 +31,7 @@ the cryptographic preimage as proof. No human in the loop. No chargebacks.
 |---|---|
 | TypeScript / Node.js | `npm install l402-kit` |
 | Python | `pip install l402kit` |
-| Go | `go get github.com/shinydapps/l402-kit/go@v1.8.0` |
+| Go | `go get github.com/shinydapps/l402-kit/go@v1.8.2` |
 | Rust | `cargo add l402kit` |
 | MCP server (Claude Desktop / Cursor) | `npx l402-kit-mcp` |
 
