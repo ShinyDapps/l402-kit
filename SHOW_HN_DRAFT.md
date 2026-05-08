@@ -57,7 +57,7 @@ The flow:
 
 **vs. rolling your own:** L402 is an IETF draft spec. Using the standard means your API is compatible with any future L402 client, not just yours.
 
-**Status:** v1.8.2, live on npm/pip/crates.io/pkg.go.dev. Demo endpoint at l402kit.com/api/demo (costs 1 sat).
+**Status:** v1.8.5, live on npm/pip/crates.io/pkg.go.dev. Demo endpoint at l402kit.com/api/demo (costs 1 sat).
 
 Would love to hear from anyone building agents that call paid APIs — what does your auth/billing look like today?
 
