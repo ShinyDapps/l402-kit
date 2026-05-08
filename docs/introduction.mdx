@@ -1,4 +1,4 @@
----
+﻿---
 title: Introduction
 description: Charge for your API in Bitcoin Lightning. 3 lines of code. TypeScript, Python, Go, Rust. No account. No bank. No permission.
 ---
@@ -46,6 +46,17 @@ go get github.com/shinydapps/l402-kit/go@v1.8.2
 </CardGroup>
 
 ---
+
+## Lightning Network — 30-second primer
+
+<Info>
+**New to Bitcoin Lightning?** Here's what you need to know:
+
+- **Lightning Network** is a fast payment layer on top of Bitcoin. Payments settle in under a second, anywhere in the world, for fractions of a cent.
+- **A Lightning Address** (like `you@blink.sv`) is your receive address — it looks like an email. You don't need to run a node. Wallets like [Blink](https://dashboard.blink.sv), [Alby](https://getalby.com), and [Phoenix](https://phoenix.acinq.co) give you one for free in 2 minutes.
+- **A sat** (satoshi) is the smallest unit of Bitcoin — roughly $0.0006 at $60k/BTC. A typical API call costs 1–100 sats.
+- **Managed vs Soberano** — "Managed" means l402kit.com hosts the Lightning node for you (0.3% fee, zero setup). "Soberano" (Spanish for *sovereign*) means you connect your own wallet (0% fee, ~5 min setup with Blink or Alby).
+</Info>
 
 ## How it works � full flow
 
@@ -147,12 +158,13 @@ func main() {
 
 ```rust
 use axum::{middleware, routing::get, Router};
-use l402kit::{l402_middleware, Options};
+use l402kit::{l402_middleware, Options, ManagedProvider};
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let opts = Arc::new(Options::new(100).with_address("you@yourdomain.com"));
+    let provider = Arc::new(ManagedProvider::new("you@yourdomain.com".into()));
+    let opts = Arc::new(Options::new(100, provider));
 
     let app = Router::new()
         .route("/premium", get(|| async { r#"{"data":"Payment confirmed."}"# }))
@@ -220,3 +232,5 @@ SHA256(preimage) == paymentHash
 **ShinyDapps** � [github.com/ShinyDapps](https://github.com/ShinyDapps)
 
 Lightning: `shinydapps@blink.sv`
+
+

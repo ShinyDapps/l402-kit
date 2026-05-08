@@ -41,14 +41,20 @@ npm run dev
 
 ### 1. Choose your mode
 
-| Mode | Setup | Fee |
+| | **Managed** ⭐ | **Soberano** |
 |---|---|---|
-| **Managed** ⭐ | Just your Lightning address — no node needed | 0.3% per sat |
-| **Soberano** | Your own Lightning wallet/node | 0% |
+| Setup time | ~2 min | ~5 min |
+| Monthly cost | $0 | $0 |
+| Per-transaction fee | 0.3% | 0% |
+| What you need | A Lightning address | A Blink / Alby / BTCPay account |
+| Processing 10,000 sats | 30 sat fee | $0 fee |
+| Best for | Getting started fast | Volume / production |
 
-**Managed mode** is recommended to get started. Add your Lightning address (Blink, Phoenix, Alby, Strike, etc.) and start earning immediately.
+**Not sure?** Start with **Managed** — no node, no account, just a Lightning address. Switch to Soberano in one line of code whenever you want 0% fees. Already-paid tokens keep working after the switch.
 
-**Soberano mode**: sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — free, no credit card — and copy your **API Key** and **BTC Wallet ID**.
+**Get a Lightning address (free, 2 min):** Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) — you'll receive `yourname@blink.sv`. Or use [Alby](https://getalby.com), [Phoenix](https://phoenix.acinq.co), or [Wallet of Satoshi](https://walletofsatoshi.com).
+
+**Soberano setup:** Sign up at [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → create key → copy your **BTC Wallet ID** from the wallet page. Set `BLINK_API_KEY` and `BLINK_WALLET_ID` in your `.env`.
 
 ### 2. Install
 
@@ -128,12 +134,13 @@ cargo add l402kit
 
     ```rust Rust (axum)
     use axum::{middleware, routing::get, Router};
-    use l402kit::{l402_middleware, Options};
+    use l402kit::{l402_middleware, Options, ManagedProvider};
     use std::sync::Arc;
 
     #[tokio::main]
     async fn main() {
-        let opts = Arc::new(Options::new(100).with_address("you@yourdomain.com"));
+        let provider = Arc::new(ManagedProvider::new("you@yourdomain.com".into()));
+        let opts = Arc::new(Options::new(100, provider));
         let app = Router::new()
             .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
             .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
