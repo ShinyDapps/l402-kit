@@ -1,107 +1,95 @@
 ---
 title: "Agent-to-Agent Delegation"
-description: "Let an orchestrator delegate payment tokens to sub-agents with scoped permissions."
+description: "Let an orchestrator pay once and share the credential with sub-agents."
 ---
 
 ## Concept
 
-L402 macaroons support **caveats** — restrictions baked into the token. An orchestrator agent can:
-
-1. Pay once for a resource
-2. Mint a derived token with limited permissions
-3. Pass that token to sub-agents
-4. Sub-agents use the scoped token without touching the wallet
-
-This enables **multi-agent systems with shared payment budgets and zero wallet exposure**.
-
-## Flow
+An L402 token (`macaroon:preimage`) is a portable string — once paid, it can be passed to any sub-agent that needs access to the same resource. The orchestrator holds the wallet; sub-agents only receive a token.
 
 ```
 Orchestrator (has wallet)
    │
-   ├── pays invoice → receives macaroon M
+   ├── pays invoice → receives token (macaroon:preimage)
    │
-   ├── adds caveat: "endpoint=/data/reports only"
-   ├── adds caveat: "expires in 5 minutes"
-   │
-   ├── delegates derived token M' to SubAgent A
-   └── delegates derived token M'' to SubAgent B
+   ├── passes token string to SubAgent A
+   └── passes token string to SubAgent B
 
-SubAgent A — calls /data/reports with M'  ✓
-SubAgent B — calls /data/reports with M'' ✓
-SubAgent A — tries /admin with M'         ✗ (caveat blocked)
+SubAgent A — calls /api/data with token  ✓  (no wallet needed)
+SubAgent B — calls /api/data with token  ✓  (no wallet needed)
 ```
 
-## TypeScript example
+<Note>
+Tokens expire after 1 hour. Each preimage can only be used once per server (replay protection). For parallel sub-agents hitting the same endpoint, each needs its own payment.
+</Note>
+
+## TypeScript — orchestrator pays, sub-agent uses token
 
 ```typescript
-import { l402Client, delegateToken } from "l402-kit/agent";
+import { L402Client, BlinkWallet } from "l402-kit";
 
-const orchestrator = l402Client({ wallet, budgetSats: 5000 });
+// Orchestrator: has wallet, pays invoice
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+const orchestrator = new L402Client({ wallet, budgetSats: 5000 });
 
-// Orchestrator pays and gets token
-const token = await orchestrator.payInvoice("https://api.example.com/data");
+// Fetch triggers payment; subsequent calls reuse cached token
+const res = await orchestrator.fetch("https://api.example.com/data");
 
-// Mint a derived token scoped to a specific endpoint
-const subToken = delegateToken(token, {
-  endpoint: "/data/reports",
-  expiresInSeconds: 300, // 5 min
-  maxUses: 1,
+// Extract the cached token to hand off to a sub-agent
+// (use the Authorization header value directly)
+const tokenHeader = `L402 ${macaroon}:${preimage}`;
+
+// Sub-agent: no wallet, uses the provided header
+const subRes = await fetch("https://api.example.com/data", {
+  headers: { Authorization: tokenHeader },
 });
-
-// Pass to sub-agent (string, safe to transmit)
-await sendToSubAgent(subToken);
 ```
 
-## Python example
+## Python — orchestrator pays, sub-agent uses token
 
 ```python
-from l402kit import L402Client, delegate_token
-from l402kit.wallets import BlinkWallet
+from l402kit import L402Client
+from l402kit.wallets.blink import BlinkWallet
 
-orchestrator = L402Client(wallet=BlinkWallet(api_key=...), budget_sats=5000)
+# Orchestrator pays
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+orchestrator = L402Client(wallet=wallet, budget_sats=5000)
 
-# Pay and receive base token
-token = await orchestrator.pay_invoice("https://api.example.com/data")
+async with orchestrator:
+    response = await orchestrator.fetch("https://api.example.com/data")
 
-# Mint scoped token
-sub_token = delegate_token(token, {
-    "endpoint": "/data/reports",
-    "expires_in": 300,
-    "max_uses": 1,
-})
-
-# Send to sub-agent
-await dispatch_task(agent_id="reporter", token=sub_token)
+# Sub-agents: pass the Authorization header directly
+# Authorization: L402 <macaroon>:<preimage>
 ```
 
-## Sub-agent using delegated token
+## Multi-agent pattern: one payment, parallel reads
+
+If multiple sub-agents need the **same resource concurrently**, the cleanest pattern is for each sub-agent to pay independently using its own `L402Client` with a shared wallet:
 
 ```typescript
-// Sub-agent receives token string, never touches wallet
-import { fetchWithToken } from "l402-kit/agent";
+import { L402Client, BlinkWallet } from "l402-kit";
 
-const result = await fetchWithToken(
-  "https://api.example.com/data/reports",
-  delegatedToken
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+
+// Each sub-agent gets its own L402Client — independent payment + token cache
+const agents = Array.from({ length: 3 }, () => new L402Client({ wallet }));
+
+const results = await Promise.all(
+  agents.map((agent) => agent.fetch("https://api.example.com/data"))
 );
 ```
 
 ## Security properties
 
-| Property | Guarantee |
-|----------|-----------|
-| Wallet isolation | Sub-agents never see private keys |
-| Endpoint scoping | Caveat restricts which paths are valid |
-| Time-bound | Token expires automatically |
-| Single-use | `maxUses: 1` prevents sharing |
-| Cryptographic | Caveats are verified server-side |
+| Property | How it works today |
+|----------|--------------------|
+| Wallet isolation | Sub-agents receive a token string, never private keys |
+| Time-bound | Macaroons expire after 1 hour |
+| Replay-safe | Each preimage can only be accepted once by the server |
+| Budget control | Set `budgetSats` on the orchestrator `L402Client` |
 
-## When to use delegation
+## Coming in a future version
 
-- **Research crews**: orchestrator pays, multiple sub-agents fetch in parallel
-- **Tool sandboxing**: limit which APIs each agent can access
-- **Audit trails**: each sub-agent token traces back to a single payment
-- **Cost control**: budget is held at orchestrator level, not distributed
+Full macaroon caveat delegation (endpoint scoping, single-use tokens, max-use limits) is planned. Track progress on [GitHub](https://github.com/ShinyDapps/l402-kit).
 
 See [Budget Control](/agent/budget) for session-level spending limits.

@@ -9,11 +9,24 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./agent": {
+      "require": "./dist/agent/index.js",
+      "import": "./dist/agent/index.js",
+      "types": "./dist/agent/index.d.ts"
+    }
+  },
   "bin": {
     "l402-kit-mcp": "dist/mcp/mcp/server.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/__tests__"
   ],
   "scripts": {
     "build": "tsc && npx tsc --project mcp/tsconfig.json",

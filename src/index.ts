@@ -11,6 +11,6 @@ export type { Invoice, L402Token, L402Options, LightningProvider, PaymentRecord 
 export type { WebhookEvent } from "./webhook";
 export type { ReplayAdapter, RedisLike } from "./replay";
 
-// Agent SDK — wallets and budget control
-export { BlinkWallet, AlbyWallet, BudgetExceededError } from "./agent";
+// Agent SDK — wallets, budget control, and convenience helpers
+export { BlinkWallet, AlbyWallet, BudgetExceededError, buildWallet, l402Client } from "./agent";
 export type { SpendingReport } from "./agent";

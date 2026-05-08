@@ -235,6 +235,75 @@ opennode = OpenNodeProvider(
 
 ---
 
+## Alby Hub (Soberano — 0% fee)
+
+[Alby Hub](https://hub.getalby.com) is a self-custodial Lightning node in the cloud. Your keys, your sats — no custodian.
+
+**Get started:**
+1. Create a Hub at [hub.getalby.com](https://hub.getalby.com) (or self-host)
+2. Go to **Settings → Access Tokens** → create token with `invoices:create` + `invoices:read` scopes
+3. Copy your Hub URL and access token
+
+<CodeGroup>
+```typescript TypeScript
+import { AlbyProvider } from 'l402-kit';
+
+const alby = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!,  // Hub → Settings → Access Tokens
+  process.env.ALBY_HUB_URL!,       // e.g. "https://your-name.getalby.com"
+);
+```
+
+```python Python
+from l402kit.providers.alby import AlbyProvider
+
+alby = AlbyProvider(
+    access_token=os.environ["ALBY_ACCESS_TOKEN"],
+    hub_url=os.environ["ALBY_HUB_URL"],
+)
+```
+</CodeGroup>
+
+**Environment variables:**
+```bash
+ALBY_ACCESS_TOKEN=your-alby-access-token
+ALBY_HUB_URL=https://your-name.getalby.com
+```
+
+---
+
+## BTCPay Server (Soberano — 0% fee)
+
+[BTCPay Server](https://btcpayserver.org) is fully self-sovereign Bitcoin + Lightning. Your node, your keys, zero custody.
+
+**Compatible with:** self-hosted (Umbrel, Start9, VPS) or managed (Voltage, LunaNode).
+
+**Get started:**
+1. BTCPay store → **Lightning → Settings**
+2. **Account → API Keys** → generate key with scope `btcpay.store.cancreatelightninginvoice`
+3. Copy your Store ID from the store URL
+
+<CodeGroup>
+```typescript TypeScript
+import { BTCPayProvider } from 'l402-kit';
+
+const btcpay = new BTCPayProvider(
+  process.env.BTCPAY_URL!,       // e.g. "https://btcpay.yourdomain.com"
+  process.env.BTCPAY_API_KEY!,   // Account → API Keys
+  process.env.BTCPAY_STORE_ID!,  // from store URL
+);
+```
+</CodeGroup>
+
+**Environment variables:**
+```bash
+BTCPAY_URL=https://btcpay.yourdomain.com
+BTCPAY_API_KEY=your-api-key
+BTCPAY_STORE_ID=your-store-id
+```
+
+---
+
 ## Custom provider (Soberano — 0% fee)
 
 Implement the `LightningProvider` interface to use any Lightning backend:

@@ -1,0 +1,8 @@
+# Exclude compiled test files from the npm package
+dist/__tests__/
+
+# Exclude orphaned legacy files
+dist/lightning.js
+dist/lightning.js.map
+dist/lightning.d.ts
+dist/lightning.d.ts.map

@@ -22,18 +22,17 @@ l402kit = "1.8"
 
 ## Quickstart
 
+The fastest path uses `ManagedProvider` — no Lightning node needed, 0.3% fee:
+
 ```rust
-use axum::{Router, routing::get, Json};
-use l402kit::{l402_middleware, Options, BlinkProvider};
+use axum::{middleware, routing::get, Router, Json};
+use l402kit::{l402_middleware, Options, ManagedProvider};
 use serde_json::{json, Value};
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let provider = BlinkProvider::new(
-        std::env::var("BLINK_API_KEY").unwrap(),
-        std::env::var("BLINK_WALLET_ID").unwrap(),
-    );
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
     let opts = Arc::new(Options::new(10, provider));
 
     let app = Router::new()
@@ -48,6 +47,8 @@ async fn handler() -> Json<Value> {
     Json(json!({ "data": "premium content" }))
 }
 ```
+
+For sovereign mode (0% fee), implement the `LightningProvider` trait — see [Custom provider](#custom-provider) below.
 
 ---
 
