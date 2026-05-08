@@ -277,6 +277,10 @@ function startPolling() {
   }
   checkProStatus(addr);
   const poll = async () => {
+    // Re-check Pro status on every cycle until activated — lets the dashboard
+    // auto-update within 30 s of the user completing checkout in the browser.
+    if (!proStatus) await checkProStatus(addr);
+
     try {
       const res = await fetch(
         `${SD_SUPABASE_URL}/rest/v1/payments?owner_address=eq.${encodeURIComponent(addr)}&select=amount_sats`,
