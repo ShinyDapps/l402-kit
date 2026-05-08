@@ -1,6 +1,6 @@
 # L402-Kit — Plano Master Status
 
-Atualizado: 2026-04-29
+Atualizado: 2026-05-08
 
 ## Phase 0 — Discovery & Machine-Readable Metadata
 
@@ -46,15 +46,19 @@ Atualizado: 2026-04-29
 
 | ID | Tarefa | Status | Notas |
 |----|--------|--------|-------|
-| T043 | 448 testes passando | ✅ Done | `npm test` — 0 falhas |
+| T043 | 665+ testes passando | ✅ Done | TS 478 + Python 127 + Go 20+ + Rust 36 — 0 falhas (08 Mai 2026) |
 | T044 | Workers tests `.well-known` | ✅ Done | 6 novos testes em `workers.test.ts` |
 | T045 | Middleware `Accept-Payment` tests | ✅ Done | 3 testes em `middleware.test.ts` |
+| T046 | buildWallet + l402Client coverage | ✅ Done | 8 novos testes em `agent.test.ts` (v1.8.5) |
+| T047 | dist/lightning.* removido do npm | ✅ Done | prepack script + arquivos deletados (v1.8.5) |
+| T048 | Docs Rust API corrigidos | ✅ Done | double Arc + with_address() deprecated + Python AlbyProvider inexistente |
+| T049 | Guias pricing + testing | ✅ Done | `docs/guides/pricing.mdx` + `docs/guides/testing.mdx` |
 
 ## Phase 4 — Divulgação
 
 | ID | Tarefa | Status | Notas |
 |----|--------|--------|-------|
-| T050 | Show HN post | ✅ Draft | `SHOW_HN_DRAFT.md` — postar em news.ycombinator.com |
+| T050 | Show HN post | ⏳ Pronto p/ postar | `SHOW_HN_DRAFT.md` v1.8.5 — janela ideal 10h–14h Brasília |
 | T051 | DEV.to artigo | ✅ Draft | `DEVTO_ARTICLE_DRAFT.md` — publicar em dev.to |
 | T052 | Discord Lightning Labs | ✅ Draft | `DISCORD_MESSAGES_DRAFT.md` — #dev channel |
 | T053 | Discord Alby | ✅ Draft | `DISCORD_MESSAGES_DRAFT.md` — #builders channel |
