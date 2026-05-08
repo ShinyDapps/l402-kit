@@ -26,6 +26,9 @@ Run through this before going live. Each item links to the relevant section belo
   <Step title="Uptime monitoring on the invoice endpoint">
     Monitor the 402 response (it's a normal response, not an error). Tools like UptimeRobot support custom status code expectations.
   </Step>
+  <Step title="Rate limiting on invoice creation">
+    Every unauthenticated request creates a Lightning invoice. Without rate limiting, an attacker can exhaust your provider's invoice quota for free. Add `express-rate-limit` before deploying publicly. [Details →](#rate-limiting)
+  </Step>
 </Steps>
 
 ---
@@ -215,6 +218,56 @@ async def generic_exception_handler(request: Request, exc: Exception):
 - Rate limit errors (429) — surface the `retryAfter` field to the caller.
 
 See [Error Reference](/reference/errors) for the full list of structured error codes.
+
+---
+
+## Rate limiting
+
+Every unauthenticated request triggers `createInvoice()` on your Lightning provider. Without rate limiting, anyone can flood your endpoint and exhaust your provider's API quota for free — even without paying a single sat.
+
+Add [`express-rate-limit`](https://www.npmjs.com/package/express-rate-limit) before your L402 routes:
+
+```bash
+npm install express-rate-limit
+```
+
+```typescript
+import rateLimit from "express-rate-limit";
+import { l402 } from "l402-kit";
+
+// Limit invoice creation: 30 unauthenticated requests/minute per IP
+const invoiceLimit = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  // Only apply to requests that don't already carry a valid L402 header
+  skip: (req) => req.headers.authorization?.startsWith("L402 ") ?? false,
+  message: { error: "Too many requests — slow down" },
+});
+
+app.get("/api/premium", invoiceLimit, l402({ priceSats: 10, lightning }), handler);
+```
+
+<Note>
+Already-paying clients are skipped by the `skip` function — the limit only applies to unauthenticated calls that trigger a new invoice. Legitimate payers are never throttled.
+</Note>
+
+For FastAPI:
+
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/api/premium")
+@limiter.limit("30/minute")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium(request: Request):
+    return {"data": "paid content"}
+```
 
 ---
 

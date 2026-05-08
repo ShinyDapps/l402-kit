@@ -189,6 +189,31 @@ Per-domain limits are checked independently from the global limit — both must 
 
 ---
 
+## Concurrency notes
+
+<Warning>
+**Do not share one `L402Client` instance across concurrent `Promise.all` calls when budget limits matter.**
+
+`BudgetTracker.check()` and `record()` are separated by an `await` (the Lightning payment). Two concurrent `client.fetch()` calls to different endpoints can both pass the budget check before either records the spend — meaning the combined cost can temporarily exceed your budget cap by one payment.
+
+**Safe pattern — sequential calls:**
+```typescript
+for (const url of urls) {
+  const res = await client.fetch(url); // awaited one at a time
+}
+```
+
+**Risky pattern — parallel calls:**
+```typescript
+// Both may pass budget.check() before either calls budget.record()
+const results = await Promise.all(urls.map(url => client.fetch(url)));
+```
+
+**Mitigation for parallel workloads:** set your `budgetSats` conservatively (e.g. 80% of your true limit) to absorb the over-spend from one concurrent payment. For strict enforcement, process calls sequentially.
+</Warning>
+
+---
+
 ## Full options reference
 
 | Option | TypeScript | Python | Default | Description |

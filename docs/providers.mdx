@@ -5,13 +5,15 @@ description: Two modes — Managed (0.3% flat, no node) or Soberano (0%, your ow
 
 ## Two modes
 
-| Mode | Provider | Fee | Setup |
-|---|---|---|---|
-| **Managed** ⭐ | `ManagedProvider` | 0.3% per sat | Lightning address only |
-| **Soberano** | Blink | 0% | Free custodial account |
-| **Soberano** | LNbits | 0% | Self-host or public instance |
-| **Soberano** | OpenNode | 0% | Sandbox testing |
-| **Soberano** | Custom | 0% | Any Lightning backend |
+| Mode | Provider | Fee | Testnet / Sandbox | Setup |
+|---|---|---|---|---|
+| **Managed** ⭐ | `ManagedProvider` | 0.3% per sat | ❌ (use mock in tests) | Lightning address only |
+| **Soberano** | Blink | 0% | ❌ mainnet only | Free custodial account |
+| **Soberano** | LNbits | 0% | ✅ RegTest / signet | Self-host or public instance |
+| **Soberano** | OpenNode | 0% | ✅ `testMode: true` | Free sandbox account |
+| **Soberano** | Alby Hub | 0% | ✅ via Hub testnet wallet | Self-custodial cloud node |
+| **Soberano** | BTCPay | 0% | ✅ RegTest support | Self-hosted node |
+| **Soberano** | Custom | 0% | ✅ whatever you wire up | Any Lightning backend |
 
 **Managed mode** — l402kit.com hosts the Lightning node. You add your Lightning address. We forward 99.7% of every sat to you automatically.
 
@@ -127,6 +129,10 @@ No other code changes. Already-paid tokens keep working — verification is pure
 ## Blink (Soberano — 0% fee)
 
 [Blink](https://blink.sv) is a free custodial Bitcoin Lightning wallet with a GraphQL API. No KYC, no monthly fee, instant setup. Use it to run in soberano mode with 0% fee.
+
+<Note>
+**Contingency plan:** Blink is a free service — their pricing can change. If Blink adds fees or limits the API, switch to another soberano provider in one line of code (no other changes required, already-paid tokens keep working). Zero lock-in. Good alternatives: LNbits (self-hosted, 0% forever), OpenNode (commercial SLA), Alby Hub (self-custodial), or BTCPay (fully sovereign).
+</Note>
 
 **Get started:**
 1. Create account at [dashboard.blink.sv](https://dashboard.blink.sv)

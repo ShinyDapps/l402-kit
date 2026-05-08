@@ -262,3 +262,53 @@ Response:
 ```
 
 <Check>Your API now accepts Bitcoin payments.</Check>
+
+---
+
+### Test without real sats
+
+You don't need a Lightning wallet to test your integration. Use a **mock provider** — it generates valid cryptographic token pairs locally, zero network calls:
+
+```typescript
+import { createHash, randomBytes } from "crypto";
+import { l402 } from "l402-kit";
+import type { LightningProvider, Invoice } from "l402-kit";
+
+// Drop-in mock — generates real SHA256 hash/preimage pairs
+function makeMockProvider(): LightningProvider & { preimage: string } {
+  const preimage = randomBytes(32).toString("hex");
+  const paymentHash = createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
+  return {
+    preimage, // use this in your test Authorization header
+    async createInvoice(amountSats: number): Promise<Invoice> {
+      const macaroon = Buffer.from(
+        JSON.stringify({ hash: paymentHash, exp: Date.now() + 3_600_000 })
+      ).toString("base64");
+      return { paymentRequest: "lnbc_mock", paymentHash, macaroon, amountSats };
+    },
+    async checkPayment(): Promise<boolean> { return true; },
+  };
+}
+
+// Usage in tests:
+const mock = makeMockProvider();
+app.get("/premium", l402({ priceSats: 10, lightning: mock }), handler);
+
+// Step 1 — unauthenticated → 402
+const res402 = await request(app).get("/premium");
+// res402.body.macaroon  ← use this
+
+// Step 2 — pay with mock preimage → 200
+const res200 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${res402.body.macaroon}:${mock.preimage}`);
+// res200.status === 200 ✓
+```
+
+For real-money testing with the sandbox, use [OpenNode's testMode](/providers#opennode-soberano-0-fee):
+
+```typescript
+const lightning = new OpenNodeProvider(process.env.OPENNODE_KEY!, true); // testMode: no real sats
+```
+
+Full testing guide → [Testing](/guides/testing)
