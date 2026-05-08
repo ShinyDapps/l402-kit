@@ -3,6 +3,33 @@ title: Production Guide
 description: Deploy l402-kit APIs to production — performance, reliability, and scaling.
 ---
 
+## Pre-launch checklist
+
+Run through this before going live. Each item links to the relevant section below.
+
+<Steps>
+  <Step title="Replay protection configured for multi-instance">
+    Default adapter is in-memory only. If you run more than one process (Gunicorn workers, PM2 cluster, Kubernetes), set `SUPABASE_URL` + `SUPABASE_ANON_KEY` or use `RedisReplayAdapter`. [Details →](#critical-replay-protection-in-production)
+  </Step>
+  <Step title="Environment variables in secrets manager">
+    Never hardcode API keys. Use `.env` locally, secrets manager in prod. [Details →](#environment-variables)
+  </Step>
+  <Step title="Health check endpoint exists">
+    Monitoring pings must not trigger invoice creation. Add a `/health` route before your paid routes. [Details →](#health-check-endpoint)
+  </Step>
+  <Step title="Error responses don't leak internals">
+    Catch provider errors and return a clean 503 — not a stack trace. [Details →](#error-handling)
+  </Step>
+  <Step title="Price is intentional">
+    `priceSats` should reflect real value. At 1 sat ≈ $0.0006, 100 sats ≈ $0.06 for a premium endpoint is reasonable. Don't set it to 0 by accident.
+  </Step>
+  <Step title="Uptime monitoring on the invoice endpoint">
+    Monitor the 402 response (it's a normal response, not an error). Tools like UptimeRobot support custom status code expectations.
+  </Step>
+</Steps>
+
+---
+
 ## Critical: replay protection in production
 
 <Warning>
@@ -141,6 +168,53 @@ Content-Type: application/json
 ```
 
 The VS Code extension surfaces this as a **Danger Zone** panel at the bottom of the dashboard — users must type their Lightning address to confirm, then all payment history and Pro access are wiped. The operation uses the Supabase service key server-side; the anon key has no DELETE permission.
+
+---
+
+## Error handling
+
+Catch provider errors before they surface as unformatted 500s:
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, L402Error } from 'l402-kit';
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), async (req, res) => {
+  try {
+    res.json({ data: await fetchData() });
+  } catch (err) {
+    if (err instanceof L402Error) {
+      // Token invalid, expired, or already used — let the middleware handle it
+      return res.status(err.status).json({ error: err.code });
+    }
+    console.error('[api/data]', err);
+    res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+});
+```
+
+```python Python
+from l402kit import l402_required, L402Error
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(L402Error)
+async def l402_exception_handler(request: Request, exc: L402Error):
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.code})
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=503, content={"error": "Service temporarily unavailable"})
+```
+</CodeGroup>
+
+**Rules of thumb:**
+- Never return stack traces to clients — log them server-side.
+- Provider timeouts (503) are transient — safe to retry with backoff.
+- Token errors (401) are never transient — don't auto-retry, require a new invoice.
+- Rate limit errors (429) — surface the `retryAfter` field to the caller.
+
+See [Error Reference](/reference/errors) for the full list of structured error codes.
 
 ---
 
