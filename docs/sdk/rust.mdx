@@ -94,7 +94,7 @@ let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
 use l402kit::{Options, ManagedProvider};
 use std::sync::Arc;
 
-let provider = Arc::new(ManagedProvider::new("you@yourdomain.com"));
+let provider = ManagedProvider::new("you@yourdomain.com".into());
 let opts = Arc::new(Options::new(10, provider));
 ```
 

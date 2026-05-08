@@ -139,7 +139,7 @@ cargo add l402kit
 
     #[tokio::main]
     async fn main() {
-        let provider = Arc::new(ManagedProvider::new("you@yourdomain.com".into()));
+        let provider = ManagedProvider::new("you@yourdomain.com".into());
         let opts = Arc::new(Options::new(100, provider));
         let app = Router::new()
             .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))

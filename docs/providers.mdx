@@ -76,12 +76,13 @@ func main() {
 
 ```rust Rust
 use axum::{middleware, routing::get, Router};
-use l402kit::{l402_middleware, Options};
+use l402kit::{l402_middleware, Options, ManagedProvider};
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let opts = Arc::new(Options::new(10).with_address("you@yourdomain.com"));
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
     let app = Router::new()
         .route("/premium", get(|| async { r#"{"data":"Payment confirmed ⚡"}"# }))
         .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
@@ -252,15 +253,6 @@ const alby = new AlbyProvider(
   process.env.ALBY_ACCESS_TOKEN!,  // Hub → Settings → Access Tokens
   process.env.ALBY_HUB_URL!,       // e.g. "https://your-name.getalby.com"
 );
-```
-
-```python Python
-from l402kit.providers.alby import AlbyProvider
-
-alby = AlbyProvider(
-    access_token=os.environ["ALBY_ACCESS_TOKEN"],
-    hub_url=os.environ["ALBY_HUB_URL"],
-)
 ```
 </CodeGroup>
 

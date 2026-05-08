@@ -81,7 +81,8 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let opts = Arc::new(Options::new(21).with_address("you@yourdomain.com"));
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(21, provider));
     let app = Router::new()
         .route("/ai/weather", get(|| async { r#"{"temp":22,"unit":"C","city":"São Paulo"}"# }))
         .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
@@ -147,10 +148,11 @@ mux.Handle("/ai/weather", l402kit.Middleware(l402kit.Options{
 
 ```rust
 // Rust — axum
-use l402kit::{l402_middleware, Options};
+use l402kit::{l402_middleware, Options, ManagedProvider};
 use std::sync::Arc;
 
-let opts = Arc::new(Options::new(21).with_address("you@yourdomain.com"));
+let provider = ManagedProvider::new("you@yourdomain.com".into());
+let opts = Arc::new(Options::new(21, provider));
 let app = Router::new()
     .route("/ai/weather", get(weather_handler))
     .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
