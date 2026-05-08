@@ -34,7 +34,7 @@
     },
     {
       "group": "Guides",
-      "pages": ["guides/dashboard", "guides/vscode", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/lnurl", "guides/security", "guides/production", "guides/migration", "guides/troubleshooting", "guides/dns-discovery"]
+      "pages": ["guides/pricing", "guides/testing", "guides/dashboard", "guides/vscode", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/lnurl", "guides/security", "guides/production", "guides/migration", "guides/troubleshooting", "guides/dns-discovery"]
     },
     {
       "group": "Reference",

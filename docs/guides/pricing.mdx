@@ -1,0 +1,107 @@
+---
+title: Pricing Your API
+description: How to think about pricing — what to charge, how sats translate to dollars, and strategies for different use cases.
+---
+
+## Satoshi reference table
+
+1 sat = 1/100,000,000 of a Bitcoin. At common price points:
+
+| BTC price | 1 sat | 10 sats | 100 sats | 1,000 sats |
+|---|---|---|---|---|
+| $50,000 | $0.0005 | $0.005 | $0.05 | $0.50 |
+| $80,000 | $0.0008 | $0.008 | $0.08 | $0.80 |
+| $100,000 | $0.001 | $0.01 | $0.10 | $1.00 |
+
+Lightning payments have no minimum fee floor. A 1-sat payment costs the sender ~$0.0005 — impossible with Stripe ($0.30 minimum).
+
+---
+
+## Pricing by use case
+
+| Use case | Suggested price | Reasoning |
+|---|---|---|
+| Simple data query (weather, exchange rate) | 1–10 sats | Cheap enough to be invisible, still meaningful |
+| Premium API call (LLM inference, search) | 10–100 sats | Covers compute cost, filters abuse |
+| Per-document / per-file access | 50–500 sats | Reflects content value |
+| High-value report or dataset | 500–5,000 sats | Competes with $0.50–$5 micro-transactions |
+| Real-time streaming (per chunk) | 1–5 sats | Accumulates naturally over a stream |
+
+These are starting points. The right price is what your callers will pay without friction.
+
+---
+
+## Start low, move up
+
+Because switching fees is one line of code, err on the side of low prices at launch:
+
+```typescript
+l402({ priceSats: 10, lightning }) // start here
+l402({ priceSats: 100, lightning }) // raise if demand holds
+```
+
+Payment data in the VS Code dashboard shows you call volume and revenue — use it to calibrate.
+
+---
+
+## Managed vs Soberano at scale
+
+The 0.3% managed fee only matters at volume:
+
+| Monthly volume | Managed fee | Soberano savings |
+|---|---|---|
+| 1,000 sats | 3 sats | Negligible |
+| 100,000 sats | 300 sats (~$0.24) | Small |
+| 10,000,000 sats | 30,000 sats (~$24) | Worth switching |
+
+**Rule of thumb:** if you're processing less than 1M sats/month (~$800 at $80k/BTC), the 0.3% fee is noise. Stay on Managed and focus on building. Switch to Soberano when volume makes it worthwhile — it's one line of code.
+
+---
+
+## Pricing for AI agents
+
+Agents are price-insensitive in a different way than humans — they don't feel the pain of a payment, but they do have budget limits set by their operators.
+
+**Practical guidance:**
+- Keep prices below 100 sats per call for general agent use — this fits within typical per-session budgets
+- For high-value agent tools (code execution, document analysis), 100–1,000 sats is acceptable
+- Use `priceSats` dynamically if your cost varies by input size:
+
+```typescript
+app.post("/analyze", (req, res, next) => {
+  const sats = Math.ceil(req.body.text.length / 100); // 1 sat per 100 chars
+  l402({ priceSats: sats, lightning })(req, res, next);
+}, handler);
+```
+
+---
+
+## Tiered access with multiple endpoints
+
+Price different tiers by routing to different endpoints:
+
+```typescript
+// Free tier — basic data
+app.get("/data/basic", handler);
+
+// Paid tier — full dataset, 10 sats
+app.get("/data/premium", l402({ priceSats: 10, lightning }), handler);
+
+// High-value tier — real-time feed, 100 sats
+app.get("/data/realtime", l402({ priceSats: 100, lightning }), handler);
+```
+
+Each endpoint generates its own invoice. Callers pay per call — no subscription management.
+
+---
+
+## Testing your pricing
+
+Before going live, test the full payment flow with a real wallet:
+
+1. Set `priceSats: 1` (1 sat ≈ $0.0008 — cheap enough to test freely)
+2. Use [Wallet of Satoshi](https://walletofsatoshi.com) or [Blink](https://dashboard.blink.sv) on your phone
+3. Call your endpoint, scan the invoice QR, verify 200 OK
+4. Check the [VS Code dashboard](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) or your Lightning wallet to confirm receipt
+
+Once confirmed, set your real price and deploy.
