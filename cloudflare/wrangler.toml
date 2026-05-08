@@ -6,6 +6,8 @@ account_id = "08a1be0a8add759a13042f63b8a41b9a"
 
 [vars]
 ENVIRONMENT = "production"
+# Endereços com acesso Pro vitalício — separados por vírgula, editável aqui
+OWNER_ADDRESSES = "shinydapps@blink.sv"
 
 # Secrets (set via: wrangler secret put VAR_NAME)
 # SUPABASE_URL

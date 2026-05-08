@@ -31,6 +31,7 @@ export interface Env {
   BLINK_WALLET_ID_DEMO: string;
   BLINK_WEBHOOK_SECRET: string;
   OWNER_LIGHTNING_ADDRESS: string;
+  OWNER_ADDRESSES: string;
   demo_preimages: KVNamespace;
 }
 

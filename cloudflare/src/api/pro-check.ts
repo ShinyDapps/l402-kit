@@ -5,6 +5,12 @@ export async function handleProCheck(req: Request, env: Env): Promise<Response> 
   const address = url.searchParams.get("address") ?? "";
   if (!address) return json({ error: "Missing address" }, 400);
 
+  // Owner bypass — endereços em OWNER_ADDRESSES têm Pro vitalício
+  const owners = (env.OWNER_ADDRESSES ?? "").split(",").map(s => s.trim().toLowerCase());
+  if (owners.includes(address.toLowerCase())) {
+    return json({ pro: true, active: true, expiresAt: "lifetime" });
+  }
+
   const r = await fetch(
     `${env.SUPABASE_URL}/rest/v1/pro_access?address=eq.${encodeURIComponent(address)}&expires_at=gt.${new Date().toISOString()}&limit=1&select=expires_at`,
     { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } }
