@@ -7,6 +7,9 @@ export async function handleWhitepaperExtended(req: Request, env: Env): Promise<
 
   if (auth.startsWith("L402 ")) {
     const token = auth.slice(5);
+    const colon = token.lastIndexOf(":");
+    const preimage = colon !== -1 ? token.slice(colon + 1) : "";
+
     const verified = await verifyToken(token);
     if (!verified.ok) {
       return new Response(JSON.stringify({ error: verified.reason }), {
@@ -14,6 +17,17 @@ export async function handleWhitepaperExtended(req: Request, env: Env): Promise<
         headers: { "Content-Type": "application/json" },
       });
     }
+
+    // Replay protection: each preimage is valid exactly once within its expiry window
+    const spentKey = `spent:${preimage}`;
+    const alreadySpent = await env.demo_preimages.get(spentKey);
+    if (alreadySpent) {
+      return new Response(JSON.stringify({ error: "Token already used" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    await env.demo_preimages.put(spentKey, "1", { expirationTtl: 3600 });
     const accept = req.headers.get("Accept") ?? "";
     if (accept.includes("text/html")) {
       return new Response(renderWhitepaperHtml(), {

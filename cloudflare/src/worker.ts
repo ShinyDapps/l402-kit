@@ -216,8 +216,8 @@ export default {
       else if (path === "/whitepaper-extended") res = await handleWhitepaperExtended(request, env);
       else if (path.startsWith("/docs"))       return handleDocsRedirect(request);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
-    } catch (err) {
-      res = new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+    } catch {
+      res = new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
     }
 
     return cors(res);

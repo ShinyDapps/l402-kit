@@ -1,7 +1,5 @@
 import type { Env } from "../worker";
 
-// Returns public aggregate stats (payment count + total sats) without
-// exposing the Supabase URL or anon key to the browser.
 export async function handleGlobalStats(_req: Request, env: Env): Promise<Response> {
   const [countRes, sumsRes] = await Promise.all([
     fetch(
@@ -16,8 +14,9 @@ export async function handleGlobalStats(_req: Request, env: Env): Promise<Respon
         },
       },
     ),
+    // Use Supabase RPC to SUM server-side — avoids fetching all rows
     fetch(
-      `${env.SUPABASE_URL}/rest/v1/payments?select=amount_sats`,
+      `${env.SUPABASE_URL}/rest/v1/rpc/total_payment_sats`,
       { headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` } },
     ),
   ]);
@@ -27,8 +26,10 @@ export async function handleGlobalStats(_req: Request, env: Env): Promise<Respon
 
   let totalSats = 0;
   try {
-    const rows = await sumsRes.json() as { amount_sats: number }[];
-    totalSats = rows.reduce((s, r) => s + (r.amount_sats || 0), 0);
+    if (sumsRes.ok) {
+      const result = await sumsRes.json() as number | null;
+      totalSats = result ?? 0;
+    }
   } catch { /* ignore */ }
 
   return new Response(JSON.stringify({ count: total, totalSats }), {

@@ -423,76 +423,14 @@ describe("handleDemoBtcPrice", () => {
 // ─── /api/demo/preimage ───────────────────────────────────────────────────────
 
 describe("handleDemoPreimage", () => {
-  test("GET without hash returns 400", async () => {
+  test("GET returns 410 Gone — endpoint deprecated", async () => {
     const res = await handleDemoPreimage(
       makeRequest("GET", "https://l402kit.com/api/demo/preimage"),
       makeEnv(),
     );
-    expect(res.status).toBe(400);
-  });
-
-  test("GET with unknown hash returns 404", async () => {
-    const res = await handleDemoPreimage(
-      makeRequest("GET", "https://l402kit.com/api/demo/preimage?hash=unknownhash"),
-      makeEnv(),
-    );
-    expect(res.status).toBe(404);
-  });
-
-  test("GET with known paid hash returns preimage", async () => {
-    const kv = makeKV({ "myhash": JSON.stringify({ serverPreimage: "aa".repeat(32), paid: true }) });
-    const res = await handleDemoPreimage(
-      new Request("https://l402kit.com/api/demo/preimage?hash=myhash"),
-      makeEnv({ demo_preimages: kv }),
-    );
-    expect(res.status).toBe(200);
-    const body = await res.json() as { preimage: string };
-    expect(body.preimage).toBe("aa".repeat(32));
-  });
-
-  test("GET with pending hash returns 202", async () => {
-    const kv = makeKV({ "pendinghash": JSON.stringify({ serverPreimage: "bb".repeat(32), paid: false }) });
-    // Mock Blink check returning not confirmed
-    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: { me: { defaultAccount: { wallets: [] } } } }), { status: 200 }));
-
-    const res = await handleDemoPreimage(
-      new Request("https://l402kit.com/api/demo/preimage?hash=pendinghash"),
-      makeEnv({ demo_preimages: kv }),
-    );
-    expect(res.status).toBe(202);
-    const body = await res.json() as { pending: boolean };
-    expect(body.pending).toBe(true);
-  });
-
-  test("GET with pending hash returns preimage after Blink confirms payment", async () => {
-    const preimage = "cc".repeat(32);
-    const kv = makeKV({ "confirmedhash": JSON.stringify({ serverPreimage: preimage, paid: false }) });
-    // Mock Blink returning the matching transaction
-    const blinkData = { data: { me: { defaultAccount: { wallets: [{ transactions: { edges: [{ node: { initiationVia: { paymentHash: "confirmedhash" } } }] } }] } } } };
-    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(blinkData), { status: 200 }));
-
-    const res = await handleDemoPreimage(
-      new Request("https://l402kit.com/api/demo/preimage?hash=confirmedhash"),
-      makeEnv({ demo_preimages: kv }),
-    );
-    expect(res.status).toBe(200);
-    const body = await res.json() as { preimage: string };
-    expect(body.preimage).toBe(preimage);
-  });
-
-  test("GET with paid hash does not re-check Blink", async () => {
-    const preimage = "dd".repeat(32);
-    const kv = makeKV({ "alreadypaid": JSON.stringify({ serverPreimage: preimage, paid: true }) });
-
-    const res = await handleDemoPreimage(
-      new Request("https://l402kit.com/api/demo/preimage?hash=alreadypaid"),
-      makeEnv({ demo_preimages: kv }),
-    );
-    expect(res.status).toBe(200);
-    // Blink should NOT have been called (fetch still at 0 calls for this test)
-    expect(fetchMock).not.toHaveBeenCalled();
-    const body = await res.json() as { preimage: string };
-    expect(body.preimage).toBe(preimage);
+    expect(res.status).toBe(410);
+    const body = await res.json() as { deprecated: boolean };
+    expect(body.deprecated).toBe(true);
   });
 });
 
@@ -812,7 +750,7 @@ describe(".well-known/agent.json", () => {
     expect(body.name).toBe("l402-kit");
     expect(body.protocols).toContain("l402");
     expect(body.install).toBeDefined();
-    expect(body.llms_txt).toBeDefined();
+    expect(body.fee).toBeDefined();
   });
 
   test("install field has all four package managers", async () => {
