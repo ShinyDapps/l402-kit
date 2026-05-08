@@ -1,6 +1,6 @@
 import type { Env } from "../worker";
 
-export const TESTS_TOTAL = 392;
+export const TESTS_TOTAL = 665;
 
 export async function handleDevStats(_req: Request, env: Env): Promise<Response> {
   const [starsRes, npmRes] = await Promise.allSettled([
