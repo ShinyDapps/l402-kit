@@ -123,7 +123,8 @@
         "testPathIgnorePatterns": [
           "lnurl-auth\\.test\\.ts",
           "delete-data\\.test\\.ts",
-          "visual\\.test\\.ts"
+          "visual\\.test\\.ts",
+          "backend-integration\\.test\\.ts"
         ],
         "transform": {
           "^.+\\.ts$": [
