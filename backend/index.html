@@ -410,6 +410,44 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 .hero-scaffold-link:hover { color: #f7931a; text-decoration: none; }
 .section-sep { height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(247,147,26,0.3) 30%, rgba(247,147,26,0.5) 50%, rgba(247,147,26,0.3) 70%, transparent 100%); margin: 0; border: none; }
 .faq-h2, .pricing h2, .flow h2, .for-who h2, .cta h2 { user-select: none; }
+
+/* ── L402 FLOW ANIMATION ──────────────────────────────────────────────── */
+.lfd-wrap { max-width: 620px; margin: 36px auto 44px; }
+.lfd-win { background: #0a0d16; border: 1px solid #1a2133; border-radius: 12px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.65), 0 0 0 1px rgba(255,160,51,.05); }
+.lfd-chrome { background: #0f1320; border-bottom: 1px solid #1a2133; padding: 10px 16px; display: flex; align-items: center; gap: 7px; }
+.lfd-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.lfd-dot-r { background: #ff5f57; } .lfd-dot-y { background: #febc2e; } .lfd-dot-g { background: #28c840; }
+.lfd-chrome-title { flex: 1; text-align: center; font-size: 11.5px; color: #2d3a4d; font-family: 'Fira Code', monospace; letter-spacing: .3px; }
+.lfd-body { padding: 20px 22px 18px; font-family: 'Fira Code', 'Cascadia Code', 'SF Mono', monospace; font-size: 13px; line-height: 1.75; min-height: 188px; }
+.lfd-prompt { color: #4a9eff; user-select: none; }
+.lfd-cmd { display: inline-block; overflow: hidden; white-space: nowrap; max-width: 0; vertical-align: bottom; color: #e5e5e5; animation: lfd-type 1.0s steps(34, end) .4s forwards; }
+@keyframes lfd-type { to { max-width: 30em; } }
+.lfd-cursor { display: inline-block; width: 7px; height: 13px; background: #ffa033; margin-left: 2px; vertical-align: middle; animation: lfd-blink .65s steps(1) infinite; }
+@keyframes lfd-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+.lfd-block402 { margin-top: 10px; opacity: 0; transform: translateY(5px); animation: lfd-up .28s ease-out 1.85s forwards; }
+@keyframes lfd-up { to { opacity:1; transform:translateY(0); } }
+.lfd-s402 { color: #ffa033; font-weight: 700; }
+.lfd-inv { color: #2a3650; font-size: 11.5px; margin-top: 1px; }
+.lfd-pay { margin-top: 12px; opacity: 0; animation: lfd-show .22s ease 2.6s forwards; }
+@keyframes lfd-show { to { opacity:1; } }
+.lfd-pay-row { display: flex; align-items: center; gap: 10px; }
+.lfd-bolt { color: #ffa033; font-size: 15px; animation: lfd-pop .38s cubic-bezier(.34,1.56,.64,1) 2.6s both; }
+@keyframes lfd-pop { from{transform:scale(0)} to{transform:scale(1)} }
+.lfd-paying { color: #ffa033; font-size: 13px; }
+.lfd-bar-bg { flex: 1; height: 3px; background: #1a2133; border-radius: 2px; overflow: hidden; }
+.lfd-bar-fill { height: 100%; width: 0; border-radius: 2px; background: linear-gradient(90deg, #ffa033 0%, #ffcc44 100%); animation: lfd-fill 1.05s cubic-bezier(.25,.46,.45,.94) 2.8s forwards; }
+@keyframes lfd-fill { to { width: 100%; } }
+.lfd-block200 { margin-top: 12px; opacity: 0; transform: translateY(4px); animation: lfd-up .35s ease-out 4.05s forwards; }
+.lfd-s200 { color: #2ddc6e; font-weight: 700; animation: lfd-glow200 1.8s ease-in-out 4.45s infinite alternate; }
+@keyframes lfd-glow200 { from{text-shadow:0 0 8px rgba(45,220,110,.2)} to{text-shadow:0 0 22px rgba(45,220,110,.65)} }
+.lfd-data { color: #3d6fff; font-size: 12px; margin-top: 2px; opacity: 0; animation: lfd-show .3s ease 4.35s forwards; }
+.lfd-labels { display: flex; justify-content: space-between; padding: 10px 22px 13px; font-size: 10px; color: #1e2940; font-family: 'Fira Code', monospace; letter-spacing: .3px; border-top: 1px solid #101a28; margin-top: 6px; }
+.lfd-lbl-c { animation: lfd-lbl-go .15s ease 1.6s forwards; }
+.lfd-lbl-p { animation: lfd-lbl-go .15s ease 2.6s forwards, lfd-lbl-done .15s ease 4.05s forwards; }
+.lfd-lbl-o { animation: lfd-lbl-done .15s ease 4.1s forwards; }
+@keyframes lfd-lbl-go { to { color: #ffa033; } }
+@keyframes lfd-lbl-done { to { color: #2ddc6e; } }
+@media (max-width: 600px) { .lfd-wrap { margin: 28px 16px 36px; } .lfd-body { font-size: 11.5px; padding: 16px 16px 14px; min-height: 168px; } .lfd-labels { font-size: 9.5px; padding: 9px 16px 12px; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha384-Izc791esqyEy3BEIC42q7jbE0AaOkACziN+dyyXgYeDmpeMCLz0xA+xYN3aCd5zz" crossorigin="anonymous"></script>
 </head>
@@ -457,6 +495,61 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   <div class="hero-badge">⚡ MIT Open Source · TypeScript · Python · Go · Rust · AI-native</div>
   <h1 id="heroTitle">Toda <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> é uma troca.<br>Paga via <span class="tt" data-tt="lightning">Lightning<sup class="tt-btn">ⓘ</sup></span> — <span>sem intermediário.</span></h1>
   <p id="heroSubtitle">3 linhas de código. Sem Stripe. Sem cadastro. Agentes de IA pagam nativo — máquinas pagam máquinas.</p>
+
+  <!-- L402 FLOW ANIMATION — aha moment: promise → proof → action -->
+  <div class="lfd-wrap">
+    <div class="lfd-win">
+      <div class="lfd-chrome">
+        <span class="lfd-dot lfd-dot-r"></span>
+        <span class="lfd-dot lfd-dot-y"></span>
+        <span class="lfd-dot lfd-dot-g"></span>
+        <span class="lfd-chrome-title">l402-kit · live payment flow</span>
+      </div>
+      <div class="lfd-body" id="lfdBody">
+        <div>
+          <span class="lfd-prompt">$&nbsp;</span><span class="lfd-cmd">curl https://api.example.com/data</span><span class="lfd-cursor"></span>
+        </div>
+        <div class="lfd-block402">
+          <div><span class="lfd-s402">← 402 Payment Required</span></div>
+          <div class="lfd-inv">← invoice: lnbc1sat1p5xm4q8pp5q...&nbsp;&nbsp;macaroon: eyJoYXNoIjoi...</div>
+        </div>
+        <div class="lfd-pay">
+          <div class="lfd-pay-row">
+            <span class="lfd-bolt">⚡</span>
+            <span class="lfd-paying">Paying 1 sat...</span>
+            <div class="lfd-bar-bg"><div class="lfd-bar-fill"></div></div>
+          </div>
+        </div>
+        <div class="lfd-block200">
+          <div><span class="lfd-s200">← 200 OK</span></div>
+          <div class="lfd-data">← {"btc":"$95,000","settled":"&lt;500ms","protocol":"L402"}</div>
+        </div>
+        <div class="lfd-labels">
+          <span class="lfd-lbl-c">① client request</span>
+          <span class="lfd-lbl-p">② lightning payment</span>
+          <span class="lfd-lbl-o">③ instant access</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var V=6500,F=480;
+    setTimeout(function r(){
+      var b=document.getElementById('lfdBody');
+      if(!b)return;
+      b.style.transition='opacity '+(F/1000)+'s ease';
+      b.style.opacity='0';
+      setTimeout(function(){
+        var p=b.parentNode;if(!p)return;
+        var c=b.cloneNode(true);
+        c.style.cssText='';
+        p.replaceChild(c,b);
+        setTimeout(r,V);
+      },F);
+    },V);
+  })();
+  </script>
 
   <div class="hero-actions">
     <div id="install-tabs" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">
@@ -526,49 +619,6 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <div class="stat-label">Countries blocked</div>
   </div>
 </div><hr class="section-sep">
-
-<!-- DIFERENCIAIS -->
-<section style="max-width:860px;margin:0 auto;padding:48px 24px 16px;text-align:center">
-  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
-    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">🔓 <span data-i18n="diffOpenSource">Open Source · MIT</span></span>
-    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">⚡ <span data-i18n="diffBitcoin">Bitcoin Lightning</span></span>
-    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid rgba(247,147,26,.3);border-radius:24px;padding:8px 18px;font-size:13px;color:#f7931a;font-weight:600">0.3% <span data-i18n="diffManaged">managed · no node</span></span>
-    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid rgba(45,220,110,.2);border-radius:24px;padding:8px 18px;font-size:13px;color:#2ddc6e;font-weight:500">🤖 <span data-i18n="diffAiReady">AI agent native</span></span>
-    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">🌐 <span data-i18n="diffNoKyc">No KYC · no account</span></span>
-    <span style="display:inline-flex;align-items:center;gap:7px;background:#0f0f0f;border:1px solid #1e1e1e;border-radius:24px;padding:8px 18px;font-size:13px;color:#ccc;font-weight:500">🏠 <span data-i18n="diffSelfHost">Self-host = 0% fee</span></span>
-  </div>
-</section><hr class="section-sep">
-
-<!-- PROBLEM SECTION -->
-<section class="problem">
-  <h2>Why credit cards fail for APIs</h2>
-  <p class="problem-sub">Stripe was built for humans buying products. APIs charge per-call — and that breaks everything.</p>
-  <div class="problem-grid">
-    <div class="problem-card" data-reveal="">
-      <div class="pc-icon">🤖</div>
-      <div class="pc-title">AI agents can't hold cards</div>
-      <div class="pc-desc">Autonomous agents have no billing address, no CVV, no human to click "confirm". Card payment fails.</div>
-    </div>
-    <div class="problem-card" data-reveal="">
-      <div class="pc-icon">💸</div>
-      <div class="pc-title">$0.30 minimum fee</div>
-      <div class="pc-desc">A 1-cent API call costs $0.30 in card fees. You lose money on every request under that threshold.</div>
-    </div>
-    <div class="problem-card" data-reveal="">
-      <div class="pc-icon">🌍</div>
-      <div class="pc-title">50+ countries blocked</div>
-      <div class="pc-desc">Stripe and PayPal don't operate everywhere. Your API is global — your payment processor shouldn't decide who gets in.</div>
-    </div>
-    <div class="problem-card" data-reveal="">
-      <div class="pc-icon">↩️</div>
-      <div class="pc-title">APIs can't be "returned"</div>
-      <div class="pc-desc">You already delivered the data. A chargeback lets the caller take it for free — and you pay the fee.</div>
-    </div>
-  </div>
-  <div class="problem-footer">
-    <strong>l402-kit</strong> uses the HTTP 402 standard + Bitcoin Lightning to eliminate all four problems at once — no accounts, no minimums, no chargebacks, no borders.
-  </div>
-</section><hr class="section-sep">
 
 <!-- MANAGED MODE HIGHLIGHT -->
 <section style="max-width:960px;margin:0 auto 0;padding:48px 24px 8px">
