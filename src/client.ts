@@ -58,6 +58,18 @@ export interface L402ClientOptions {
   onSpend?: (sats: number, url: string) => void;
   /** Called when a payment is blocked due to budget. */
   onBudgetExceeded?: (url: string, sats: number) => void;
+  /**
+   * Persistent agent identity for cross-session behavioral tracking (LAW-N).
+   * Convention: "agent:namespace.name" or any stable UUID string.
+   * @example "agent:research-node-7"
+   */
+  agentId?: string;
+  /**
+   * Called for every behavioral event emitted during the L402 flow.
+   * Errors thrown inside this hook are swallowed — they never break the request.
+   * Use this to forward events to LAW-N or any behavioral ledger.
+   */
+  onEvent?: (event: import("./types/events").L402CloudEvent) => void;
 }
 
 class MemoryTokenStore implements TokenStore {
@@ -75,11 +87,15 @@ export class L402Client {
   private tokenStore: TokenStore;
   private maxRetries: number;
   private budget: import("./agent/budget").BudgetTracker | null = null;
+  private agentId: string | undefined;
+  private onEvent: ((event: import("./types/events").L402CloudEvent) => void) | undefined;
 
   constructor(options: L402ClientOptions) {
     this.wallet     = options.wallet;
     this.tokenStore = options.tokenStore ?? new MemoryTokenStore();
     this.maxRetries = options.maxRetries ?? 1;
+    this.agentId    = options.agentId;
+    this.onEvent    = options.onEvent;
 
     if (options.budgetSats !== undefined) {
       // lazy import to keep bundle size minimal when budget unused
@@ -91,6 +107,23 @@ export class L402Client {
         options.onBudgetExceeded,
       );
     }
+  }
+
+  private _emit(
+    type: import("./types/events").L402EventType,
+    payload: import("./types/events").L402EventPayload,
+  ): void {
+    if (!this.onEvent) return;
+    const event: import("./types/events").L402CloudEvent = {
+      specversion: "1.0",
+      type,
+      source: "l402-kit",
+      ...(this.agentId !== undefined ? { agent_id: this.agentId } : {}),
+      timestamp: new Date().toISOString(),
+      event_id: require("crypto").randomBytes(16).toString("hex") as string,
+      payload,
+    };
+    try { this.onEvent(event); } catch { /* hooks must not break request flow */ }
   }
 
   /** Returns a spending report. Only available when budgetSats is configured. */
@@ -120,9 +153,24 @@ export class L402Client {
     // Parse 402 response — supports both L402 and x402 formats
     const { macaroon, invoice, priceSats } = await this._parse402(res402);
 
+    this._emit("l402.payment_initiated", {
+      endpoint: url,
+      amount_sats: priceSats ?? 0,
+      invoice,
+    });
+
     // Check budget before paying
     if (this.budget && priceSats !== undefined) {
-      this.budget.check(url, priceSats);
+      try {
+        this.budget.check(url, priceSats);
+      } catch (err) {
+        this._emit("l402.budget_exhausted", {
+          endpoint: url,
+          amount_sats: priceSats,
+          budget_sats: priceSats,
+        });
+        throw err;
+      }
     }
 
     // Pay invoice
@@ -139,11 +187,24 @@ export class L402Client {
       this.budget.record(url, priceSats);
     }
 
+    const macaroonHash = (() => {
+      try { return JSON.parse(Buffer.from(macaroon, "base64").toString()).hash ?? macaroon.slice(0, 16); }
+      catch { return macaroon.slice(0, 16); }
+    })();
+
+    this._emit("l402.payment_settled", {
+      endpoint: url,
+      amount_sats: priceSats ?? 0,
+      macaroon_hash: macaroonHash,
+      outcome: "success",
+    });
+
     // Cache token for future calls
     this.tokenStore.set(url, { macaroon, preimage });
 
     // Retry with credentials
     for (let attempt = 0; attempt < this.maxRetries; attempt++) {
+      this._emit("l402.retry_with_proof", { endpoint: url, attempt });
       const retryRes = await this._fetchWithToken(url, init, macaroon, preimage);
       if (retryRes.status !== 402) return retryRes;
     }
