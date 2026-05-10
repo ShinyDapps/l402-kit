@@ -5,7 +5,7 @@ description: "l402-kit — HTTP 402 payment middleware for APIs and AI agents. B
 
 # l402-kit White Paper
 
-**Version 1.1 — May 2026**
+**Version 1.2 — May 2026**
 
 ---
 
@@ -126,6 +126,62 @@ These principles are constraints. A feature that violates them does not ship.
 | 5 | **Stability at the foundation** | HTTP and Lightning are long-lived. The middleware connecting them is treated accordingly. |
 | 6 | **Composition, not construction** | l402-kit composes existing primitives; it does not reinvent them. |
 | 7 | **Adequacy to the nature of the problem** | Machine-to-machine payments require a solution built for machines. |
+
+---
+
+## The Autonomous Agent Economy
+
+HTTP was built for humans. L402 was built for machines. But there is a deeper implication that only becomes visible when you follow the protocol to its conclusion.
+
+An AI agent that operates inside the L402 protocol does not merely *consume* APIs. It can *produce* services, accumulate the proceeds, and use those proceeds to consume other services — without a human ever depositing a single satoshi.
+
+The loop is complete:
+
+```mermaid
+sequenceDiagram
+    participant W as World (other agents / humans)
+    participant A as Autonomous Agent
+    participant L as Lightning Network
+    participant R as LAW-N Reputation Ledger
+
+    W->>A: calls agent's API (pays sats)
+    A->>L: receives payment — saldo cresce
+    A->>W: calls external API (pays sats from balance)
+    L->>A: preimage (proof of payment)
+    A->>R: CloudEvent emitted (HMAC-signed)
+    R->>R: behavioral pattern recorded
+    Note over R: reputação emerge — sem humano decidir
+```
+
+**Step 1 — Birth.** The agent creates a Lightning wallet. Alby and LNbits are free, require no document, no bank account, no KYC. The agent has an address in seconds.
+
+**Step 2 — Produce.** The agent offers a service — text summarization, embeddings, data queries, compute tasks. It wraps that service with `l402-kit` middleware. Any caller pays automatically. The agent accumulates sats.
+
+**Step 3 — Consume.** With accumulated sats, the agent calls other L402-protected services using `L402Client`. It pays invoices, receives data, expands its capabilities. No human approves the transaction.
+
+**Step 4 — Audit trail.** Each transaction emits a signed CloudEvent (CloudEvents 1.0, HMAC-SHA256) carrying: agent identity, session, request causality, payment proof, timing, and behavioral context. The record is cryptographic — not a log, but a proof.
+
+**Step 5 — Reputation emerges.** Behavioral patterns accumulate in the LAW-N ledger (SAGEWORKS AI). Agents that pay consistently, respect budget constraints, and do not attempt proof reuse build reputation automatically — without any authority granting it. Agents that misbehave stop being able to access services. The system is self-regulating.
+
+No human approved the agent's wallet. No human funded its first transaction. No human decided its reputation. The economic infrastructure is the protocol itself.
+
+### What this is not
+
+This is not a blockchain. There is no token. There is no DAO. There is no governance vote. There is no whitelist.
+
+There is HTTP, Bitcoin Lightning, and cryptographic proof. The agent economy runs on infrastructure that existed before l402-kit — l402-kit is the missing protocol layer that makes it composable.
+
+### Why this matters now
+
+Three things became true simultaneously in 2025–2026:
+
+1. **Autonomous agents are real.** LangChain, AutoGPT, Claude, and dozens of frameworks deploy agents that execute multi-step tasks without human approval at each step.
+2. **Lightning wallets are free.** Any software process can hold a Lightning address. No bank. No KYC. No minimum balance.
+3. **L402 is implemented.** l402-kit runs in TypeScript, Python, Go, and Rust — the four languages where agents are built.
+
+The convergence is not theoretical. The infrastructure exists. What was missing was the protocol layer connecting them. That is l402-kit.
+
+> *"l402-kit is not a payment gateway. It is the economic infrastructure for autonomous agents — the layer that makes machine-to-machine commerce possible without human intermediaries."*
 
 ---
 
