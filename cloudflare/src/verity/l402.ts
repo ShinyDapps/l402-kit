@@ -46,29 +46,75 @@ export async function replayCheck(preimage: string, env: Env): Promise<boolean> 
   return false;
 }
 
-export async function createVerityInvoice(amountSats: number, env: Env): Promise<InvoiceResult | null> {
+export async function createVerityInvoice(amountSats: number, _env: Env): Promise<InvoiceResult | null> {
   try {
-    const r = await fetch("https://api.blink.sv/graphql", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-KEY": env.BLINK_API_KEY },
-      body: JSON.stringify({
-        query: `mutation { lnInvoiceCreate(input: { walletId: "${env.BLINK_WALLET_ID}", amount: ${amountSats} }) { invoice { paymentRequest paymentHash } errors { message } } }`,
-      }),
-      signal: AbortSignal.timeout(10_000),
+    const lnurlRes = await fetch("https://blink.sv/.well-known/lnurlp/shinydapps", {
+      signal: AbortSignal.timeout(8_000),
     });
-    if (!r.ok) return null;
-    const data = await r.json() as { data?: { lnInvoiceCreate?: { invoice?: { paymentRequest: string; paymentHash: string }; errors?: { message: string }[] } } };
-    const inv = data?.data?.lnInvoiceCreate;
-    if (!inv?.invoice || inv.errors?.length) return null;
+    if (!lnurlRes.ok) return null;
+    const lnurlData = await lnurlRes.json() as { callback: string };
+    if (!lnurlData.callback) return null;
 
-    const paymentHash = inv.invoice.paymentHash;
+    const cbRes = await fetch(`${lnurlData.callback}?amount=${amountSats * 1000}`, {
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!cbRes.ok) return null;
+    const cbData = await cbRes.json() as { pr?: string };
+    if (!cbData.pr) return null;
+
+    const paymentHash = bolt11PaymentHash(cbData.pr);
+    if (!paymentHash) return null;
+
     const exp = Date.now() + 3_600_000;
     const macaroon = btoa(JSON.stringify({ hash: paymentHash, exp }));
 
-    return { paymentRequest: inv.invoice.paymentRequest, paymentHash, macaroon };
+    return { paymentRequest: cbData.pr, paymentHash, macaroon };
   } catch {
     return null;
   }
+}
+
+function bolt11PaymentHash(invoice: string): string | null {
+  try {
+    const lower = invoice.toLowerCase();
+    const sep = lower.lastIndexOf("1");
+    if (sep === -1) return null;
+    const CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+    const dataStr = lower.slice(sep + 1, -6);
+    const vals: number[] = [];
+    for (const c of dataStr) {
+      const v = CHARSET.indexOf(c);
+      if (v === -1) return null;
+      vals.push(v);
+    }
+    let pos = 7;
+    while (pos + 2 < vals.length) {
+      const type = vals[pos];
+      const len = vals[pos + 1] * 32 + vals[pos + 2];
+      pos += 3;
+      if (type === 1 && len === 52) {
+        const field = vals.slice(pos, pos + len);
+        const bytes = convertBits(field, 5, 8, false);
+        if (bytes.length < 32) return null;
+        return bytesToHex(new Uint8Array(bytes.slice(0, 32)));
+      }
+      pos += len;
+    }
+    return null;
+  } catch { return null; }
+}
+
+function convertBits(data: number[], from: number, to: number, pad: boolean): number[] {
+  let acc = 0, bits = 0;
+  const result: number[] = [];
+  const maxv = (1 << to) - 1;
+  for (const v of data) {
+    acc = (acc << from) | v;
+    bits += from;
+    while (bits >= to) { bits -= to; result.push((acc >> bits) & maxv); }
+  }
+  if (pad && bits > 0) result.push((acc << (to - bits)) & maxv);
+  return result;
 }
 
 export function make402(service: string, priceSats: number, inv: InvoiceResult): Response {
