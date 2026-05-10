@@ -6,6 +6,7 @@ import { handleVeritySummarize } from "./services/summarize";
 import { handleVeritySentiment } from "./services/sentiment";
 import { handleVerityDomainIntel } from "./services/domainIntel";
 import { handleVerityIntegration } from "./services/integration";
+import { handleVerityWorldState } from "./services/worldstate";
 import { getAllPrices } from "./pricing";
 import { json } from "./l402";
 
@@ -21,6 +22,7 @@ export async function handleVerity(req: Request, env: Env): Promise<Response> {
     case "sentiment":   return handleVeritySentiment(req, env);
     case "domain-intel": return handleVerityDomainIntel(req, env);
     case "integration": return handleVerityIntegration(req, env);
+    case "worldstate":  return handleVerityWorldState(req, env);
     default:            return handleVerityIndex(env);
   }
 }
@@ -90,6 +92,14 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         params: "{ repoUrl: string }",
         priceSats: prices.integration,
         description: "l402-kit integration — analyzes your repo and generates complete middleware code",
+      },
+      {
+        id: "worldstate",
+        endpoint: "/api/verity/worldstate",
+        method: "GET",
+        params: "none",
+        priceSats: prices.worldstate,
+        description: "World state — UTC time + caller geolocation + local weather in one call. Zero latency.",
       },
     ],
     how_to_pay: {

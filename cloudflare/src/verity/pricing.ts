@@ -14,6 +14,7 @@ export const SERVICES: Record<string, ServiceConfig> = {
   sentiment:   { floor: 25,   base: 30,    surgeThreshold: 40  },
   domainIntel: { floor: 400,  base: 500,   surgeThreshold: 10  },
   integration: { floor: 8000, base: 10000, surgeThreshold: 3   },
+  worldstate:  { floor: 60,   base: 80,    surgeThreshold: 100 },
 };
 
 export async function getPrice(service: string, env: Env): Promise<number> {
