@@ -7,14 +7,14 @@ interface ServiceConfig {
 }
 
 export const SERVICES: Record<string, ServiceConfig> = {
-  search:      { floor: 80,   base: 100,   surgeThreshold: 50  },
-  scrape:      { floor: 150,  base: 200,   surgeThreshold: 20  },
-  btcprice:    { floor: 8,    base: 10,    surgeThreshold: 200 },
-  summarize:   { floor: 40,   base: 50,    surgeThreshold: 30  },
-  sentiment:   { floor: 25,   base: 30,    surgeThreshold: 40  },
-  domainIntel: { floor: 400,  base: 500,   surgeThreshold: 10  },
-  integration: { floor: 8000, base: 10000, surgeThreshold: 3   },
-  worldstate:  { floor: 60,   base: 80,    surgeThreshold: 100 },
+  search:      { floor: 100,  base: 100,   surgeThreshold: 50  },
+  scrape:      { floor: 200,  base: 200,   surgeThreshold: 20  },
+  btcprice:    { floor: 10,   base: 10,    surgeThreshold: 200 },
+  summarize:   { floor: 50,   base: 50,    surgeThreshold: 30  },
+  sentiment:   { floor: 30,   base: 30,    surgeThreshold: 40  },
+  domainIntel: { floor: 500,  base: 500,   surgeThreshold: 10  },
+  integration: { floor: 10000, base: 10000, surgeThreshold: 3  },
+  worldstate:  { floor: 80,   base: 80,    surgeThreshold: 100 },
 };
 
 export async function getPrice(service: string, env: Env): Promise<number> {

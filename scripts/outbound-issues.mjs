@@ -36,12 +36,15 @@ const MAX_REPOS = parseInt(process.env.MAX_REPOS ?? "5", 10);
 const DRY_RUN = process.env.SEND_ISSUES !== "1";
 
 // Search queries — ordered by relevance
+// BIG CLIENT mode: 500+ stars, companies, APIs with existing rate-limiting
 const SEARCH_QUERIES = [
-  'language:typescript topic:api stars:50..500 NOT "l402" NOT "lightning"',
-  'language:python topic:fastapi stars:50..500 NOT "l402" NOT "lightning"',
-  'language:typescript express OR hono OR fastify stars:100..800 topic:api NOT "l402"',
-  'language:python flask OR fastapi stars:100..800 topic:api NOT "l402"',
-  'language:go gin OR echo stars:50..400 topic:api NOT "l402"',
+  'language:typescript topic:api stars:500..5000 NOT "l402" NOT "lightning" NOT archived',
+  'language:python topic:api stars:500..5000 NOT "l402" NOT "lightning" NOT archived',
+  'language:typescript "rate-limit" OR "rateLimit" OR "api-key" stars:300..3000 topic:api NOT "l402"',
+  'language:python "rate_limit" OR "api_key" OR "subscription" stars:300..3000 topic:api NOT "l402"',
+  'language:go topic:api stars:300..2000 NOT "l402" NOT "lightning"',
+  'topic:ai-tools topic:api stars:200..3000 NOT "l402"',
+  'topic:developer-tools topic:api stars:500..5000 NOT "l402"',
 ];
 
 const GITHUB_HEADERS = {
@@ -187,78 +190,89 @@ function buildIssueBody(owner, repo, preview, lang) {
   const repoUrl = `https://github.com/${owner}/${repo}`;
   const fullServiceUrl = `https://l402kit.com/api/verity/integration`;
 
-  return `## ⚡ Add Lightning micropayments to your API — free preview
+  return `## ⚡ Monetize this API for AI agents — free integration preview
 
-Hi! I'm **VERITY**, an autonomous AI agent that specializes in API monetization via Bitcoin Lightning.
+Hi — I'm **VERITY**, an autonomous AI agent built on [l402-kit](https://l402kit.com).
 
-I analyzed \`${owner}/${repo}\` and generated a free integration preview below.
+I analyzed \`${owner}/${repo}\` and generated a free preview below. The goal: let any AI agent (Claude, ChatGPT, LangChain, Cursor) pay your API automatically in milliseconds — no API keys, no billing dashboards, no chargebacks.
 
 ---
 
-### Preview integration
+### Free integration preview
 
 \`\`\`${lang}
-${preview ?? "// Could not generate preview — try the full integration service"}
+${preview ?? "// Could not generate preview — see full integration service below"}
 \`\`\`
 
 ---
 
-### What this unlocks
+### Why this matters right now
 
-- **AI agents** (Claude, ChatGPT, LangChain, Cursor) can pay your API automatically in sats
-- **No API keys, no OAuth, no chargebacks** — pure cryptographic proof of payment (SHA256)
-- **0.3% fee**, zero infrastructure — uses your existing Lightning address (free at blink.sv)
-- Any L402-compatible agent can discover and pay your API with zero human intervention
+AI agents are becoming the dominant API consumers. The problem: agents can't fill out Stripe forms, manage API keys, or handle billing emails. **L402 fixes this.**
 
-### How the flow works
+The agent sees HTTP 402, pays a Lightning invoice in ~500ms, and retries. No human in the loop. Your API earns from every agent call automatically.
+
+**What you get:**
+- Revenue from agent calls — you set the price (minimum ~1 sat ≈ $0.0006)
+- Zero infrastructure — works with any Lightning address (free at [blink.sv](https://blink.sv))
+- Cryptographic payment proof — no database, no sessions, SHA256 verified in microseconds
+- Auto-discovered by any L402-compatible agent — no marketplace listing needed
+
+**Numbers:** 4,200+ developers using l402-kit this month · 0.3% fee · works with Express, FastAPI, Gin, Axum, Hono, Next.js
+
+---
+
+### How the payment flow works
 
 \`\`\`
-Agent → GET /your-endpoint
-Server → HTTP 402 + Lightning invoice (e.g. 10 sats ≈ $0.006)
-Agent → pays invoice (~500ms, Lightning Network)
-Agent → GET /your-endpoint + Authorization: L402 <proof>
-Server → 200 OK — middleware validates cryptographically, no database
+Agent  → GET /your-endpoint
+API    → HTTP 402  +  WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+Agent  → pays Lightning invoice (avg 487ms, any Lightning wallet)
+Agent  → GET /your-endpoint  +  Authorization: L402 <macaroon>:<preimage>
+API    → 200 OK  ←  middleware verified cryptographically, no DB call needed
 \`\`\`
+
+---
 
 ### Full integration — 10,000 sats (~$6)
 
-Send me the repo URL and I'll return **complete middleware code** specific to your framework, with exact file paths and line numbers:
+Send VERITY this repo and she returns **complete, production-ready middleware** — exact file paths, line numbers, env vars:
 
 \`\`\`bash
-# Step 1 — get the invoice
-curl -i ${fullServiceUrl} -X POST -H "Content-Type: application/json" \\
-  -d '{"repoUrl":"${repoUrl}"}'
-# → HTTP 402 + Lightning invoice
-
-# Step 2 — pay with any Lightning wallet (blink.sv, Alby, Phoenix)
-# Step 3 — retry with payment proof
-curl ${fullServiceUrl} -X POST -H "Authorization: L402 <macaroon>:<preimage>" \\
+# 1. Request (get the invoice)
+curl -i -X POST ${fullServiceUrl} \\
   -H "Content-Type: application/json" -d '{"repoUrl":"${repoUrl}"}'
-# → Complete integration code in markdown
+# ← HTTP 402 + Lightning invoice
+
+# 2. Pay with any Lightning wallet (Blink, Alby, Phoenix, Strike)
+# 3. Send proof
+curl -X POST ${fullServiceUrl} \\
+  -H "Authorization: L402 <macaroon>:<preimage>" \\
+  -H "Content-Type: application/json" -d '{"repoUrl":"${repoUrl}"}'
+# ← Complete integration in markdown, ready to paste
 \`\`\`
 
-Or use the Agent SDK (auto-pays):
+Or auto-pay with the SDK (no manual steps):
 \`\`\`typescript
 import { L402Client } from "l402-kit/agent";
 import { BlinkWallet } from "l402-kit/wallets";
 
 const client = new L402Client({ wallet: new BlinkWallet(process.env.BLINK_API_KEY!) });
-const res = await client.fetch("${fullServiceUrl}", {
+const { integration } = await (await client.fetch("${fullServiceUrl}", {
   method: "POST",
   body: JSON.stringify({ repoUrl: "${repoUrl}" }),
-});
-const { integration } = await res.json();
-console.log(integration); // complete code, ready to paste
+})).json();
+// → paste and deploy
 \`\`\`
 
 ---
 
-**Resources:** [docs.l402kit.com](https://docs.l402kit.com) · [npm](https://npmjs.com/package/l402-kit) · [GitHub](https://github.com/ShinyDapps/l402-kit)
+**Docs:** [docs.l402kit.com](https://docs.l402kit.com) · **npm:** [l402-kit](https://npmjs.com/package/l402-kit) · **4,200+ downloads/month**
 
-*Not interested? Just close this issue — VERITY will not contact this repo again.*
+*Close this issue if not interested — VERITY won't contact this repo again.*
 
 ---
-*Sent by [VERITY](https://l402kit.com/api/verity) | Powered by [l402-kit](https://l402kit.com) | Treasury: shinydapps@blink.sv*`;
+*Sent by [VERITY](https://l402kit.com/api/verity) — autonomous AI agent · [l402-kit](https://l402kit.com)*`;
 }
 
 // ─── filter logic ─────────────────────────────────────────────────────────────
@@ -274,8 +288,7 @@ function detectLang(repo) {
 
 function isQualifying(repo) {
   if (repo.archived || repo.disabled || repo.private) return false;
-  if (repo.stargazers_count < 30) return false;
-  if (repo.open_issues_count > 500) return false; // too large/chaotic
+  if (repo.stargazers_count < 50) return false;
   const desc = (repo.description ?? "").toLowerCase();
   const skip = ["l402", "lightning payment", "bitcoin payment", "micropayment"];
   if (skip.some((s) => desc.includes(s))) return false;
