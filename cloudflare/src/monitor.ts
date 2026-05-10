@@ -3,7 +3,7 @@ import type { Env } from "./worker";
 const OWNER = "ShinyDapps";
 const REPO = "l402-kit";
 const ALERT_EMAIL = "thiagoyoshiaki@gmail.com";
-const FROM_EMAIL = "verity@l402kit.com";
+const FROM_EMAIL = "VERITY <verity@l402kit.com>";
 
 const GITHUB_HEADERS = {
   Accept: "application/vnd.github+json",
