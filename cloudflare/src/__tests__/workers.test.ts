@@ -5,6 +5,7 @@
  */
 
 import { createHash, randomBytes } from "crypto";
+import { createHmac } from "crypto";
 import { handleInvoice } from "../api/invoice";
 import { handleVerify } from "../api/verify";
 import { handleStats } from "../api/stats";
@@ -17,6 +18,8 @@ import { handleProPoll } from "../api/pro-poll";
 import { handleProCheck } from "../api/pro-check";
 import { handleLnurlp } from "../api/lnurlp";
 import { sweepTransitWallet } from "../api/sweep";
+import { handleLawnEvents } from "../api/lawn-events";
+import { handleActivity } from "../api/activity";
 import worker from "../worker";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -45,6 +48,7 @@ function makeEnv(overrides: Record<string, unknown> = {}): any {
     BLINK_WALLET_ID_DEMO: "demo_wallet_id",
     OWNER_LIGHTNING_ADDRESS: "owner@blink.sv",
     BLINK_WEBHOOK_SECRET: "whsec_dGVzdHNlY3JldGZvcnVuaXR0ZXN0czEyMzQ1Njc4",
+    LAWN_HMAC_SECRET: "test_lawn_secret_xyz",
     demo_preimages: makeKV(),
     ...overrides,
   };
@@ -1566,5 +1570,269 @@ describe("handleProCheck", () => {
     expect(res.status).toBe(200);
     const body = await res.json() as { pro: boolean };
     expect(typeof body.pro).toBe("boolean");
+  });
+});
+
+// ─── helpers for handleLawnEvents tests ──────────────────────────────────────
+
+const LAWN_SECRET = "test_lawn_secret_xyz";
+
+function makeLawnSig(body: string, secret = LAWN_SECRET): string {
+  return "sha256=" + createHmac("sha256", secret).update(body).digest("hex");
+}
+
+function makeCloudEvent(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    specversion: "1.0",
+    type: "l402.payment.settled",
+    source: "l402-kit",
+    id: "evt-test-" + Math.random().toString(36).slice(2),
+    time: new Date().toISOString(),
+    subject: "agent-payment-flow",
+    datacontenttype: "application/json",
+    data: {
+      agent_id: "agent-001",
+      session_id: "sess-abc",
+      request_id: "req-xyz",
+      endpoint: "/api/data",
+      event_type: "payment_settled",
+      payment: { amount_sats: 10, settled: true, latency_ms: 450 },
+    },
+    ...overrides,
+  };
+}
+
+function makeLawnRequest(body: string, sig?: string): Request {
+  return new Request("https://l402kit.com/api/lawn-events", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(sig !== undefined ? { "X-LAW-N-Signature": sig } : {}),
+    },
+    body,
+  });
+}
+
+// ─── handleLawnEvents ─────────────────────────────────────────────────────────
+
+describe("handleLawnEvents", () => {
+  test("returns 401 when X-LAW-N-Signature header is missing", async () => {
+    const body = JSON.stringify(makeCloudEvent());
+    const res = await handleLawnEvents(makeLawnRequest(body), makeEnv());
+    expect(res.status).toBe(401);
+  });
+
+  test("returns 401 when signature is wrong", async () => {
+    const body = JSON.stringify(makeCloudEvent());
+    const res = await handleLawnEvents(makeLawnRequest(body, "sha256=" + "a".repeat(64)), makeEnv());
+    expect(res.status).toBe(401);
+  });
+
+  test("returns 401 when signature is malformed (not hex)", async () => {
+    const body = JSON.stringify(makeCloudEvent());
+    const res = await handleLawnEvents(makeLawnRequest(body, "sha256=notahex!"), makeEnv());
+    expect(res.status).toBe(401);
+  });
+
+  test("returns 400 when body is malformed JSON", async () => {
+    const body = "not-json";
+    const sig = makeLawnSig(body);
+    const res = await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("returns 400 when body is missing specversion", async () => {
+    const event = makeCloudEvent();
+    delete (event as Record<string, unknown>).specversion;
+    const body = JSON.stringify(event);
+    const sig = makeLawnSig(body);
+    const res = await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("returns 400 when body is missing type", async () => {
+    const event = makeCloudEvent();
+    delete (event as Record<string, unknown>).type;
+    const body = JSON.stringify(event);
+    const sig = makeLawnSig(body);
+    const res = await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("returns 400 when body is missing data", async () => {
+    const event = makeCloudEvent();
+    delete (event as Record<string, unknown>).data;
+    const body = JSON.stringify(event);
+    const sig = makeLawnSig(body);
+    const res = await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+    expect(res.status).toBe(400);
+  });
+
+  test("returns 200 with ok:true when valid event received (Supabase returns 201)", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 201 }));
+    const body = JSON.stringify(makeCloudEvent());
+    const sig = makeLawnSig(body);
+    const res = await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+    expect(res.status).toBe(200);
+    const resBody = await res.json() as { ok: boolean };
+    expect(resBody.ok).toBe(true);
+  });
+
+  test("returns 200 even when Supabase throws (graceful degradation)", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("supabase down"));
+    const body = JSON.stringify(makeCloudEvent());
+    const sig = makeLawnSig(body);
+    const res = await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+    expect(res.status).toBe(200);
+    const resBody = await res.json() as { ok: boolean };
+    expect(resBody.ok).toBe(true);
+  });
+
+  test("returns 200 even when Supabase returns 500 (graceful degradation)", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("error", { status: 500 }));
+    const body = JSON.stringify(makeCloudEvent());
+    const sig = makeLawnSig(body);
+    const res = await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+    expect(res.status).toBe(200);
+  });
+
+  test("inserts correct fields to Supabase", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 201 }));
+    const event = makeCloudEvent();
+    const body = JSON.stringify(event);
+    const sig = makeLawnSig(body);
+    await handleLawnEvents(makeLawnRequest(body, sig), makeEnv());
+
+    const callBody = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as Record<string, unknown>;
+    expect(callBody.event_id).toBe((event as Record<string, unknown>).id);
+    expect(callBody.event_type).toBe("l402.payment.settled");
+    expect(callBody.agent_id).toBe("agent-001");
+    expect(callBody.session_id).toBe("sess-abc");
+    expect(callBody.amount_sats).toBe(10);
+  });
+
+  test("worker routes POST /api/lawn-events correctly", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 201 }));
+    const body = JSON.stringify(makeCloudEvent());
+    const sig = makeLawnSig(body);
+    const req = new Request("https://l402kit.com/api/lawn-events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-LAW-N-Signature": sig },
+      body,
+    });
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+  });
+});
+
+// ─── handleActivity ───────────────────────────────────────────────────────────
+
+describe("handleActivity", () => {
+  function makeActivityReq(): Request {
+    return new Request("https://l402kit.com/api/activity");
+  }
+
+  test("returns 200 with correct shape when Supabase has data", async () => {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const allEvents = [
+      { agent_id: "agent-001", event_type: "l402.payment.settled", amount_sats: 10, settled: true },
+      { agent_id: "agent-002", event_type: "l402.payment.initiated", amount_sats: null, settled: null },
+    ];
+    const recentEvents = [
+      { id: "1", event_type: "l402.payment.settled", agent_id: "agent-001", endpoint: "/api/data", amount_sats: 10, created_at: new Date().toISOString() },
+    ];
+    const agentRows = [
+      { agent_id: "agent-001" },
+      { agent_id: "agent-001" },
+      { agent_id: "agent-002" },
+    ];
+
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(allEvents), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(recentEvents), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(agentRows), { status: 200 }));
+
+    const res = await handleActivity(makeActivityReq(), makeEnv());
+    expect(res.status).toBe(200);
+
+    const body = await res.json() as {
+      total_events: number;
+      unique_agents: number;
+      total_sats: number;
+      recent_events: unknown[];
+      top_agents: { agent_id: string; event_count: number }[];
+    };
+
+    expect(body.total_events).toBe(2);
+    expect(body.unique_agents).toBe(2);
+    expect(body.total_sats).toBe(10); // only settled events
+    expect(body.recent_events).toHaveLength(1);
+    expect(body.top_agents).toBeDefined();
+    expect(body.top_agents[0].agent_id).toBe("agent-001");
+    expect(body.top_agents[0].event_count).toBe(2);
+  });
+
+  test("returns empty state gracefully when Supabase returns empty arrays", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+
+    const res = await handleActivity(makeActivityReq(), makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { total_events: number; unique_agents: number; total_sats: number; recent_events: unknown[]; top_agents: unknown[] };
+    expect(body.total_events).toBe(0);
+    expect(body.unique_agents).toBe(0);
+    expect(body.total_sats).toBe(0);
+    expect(body.recent_events).toEqual([]);
+    expect(body.top_agents).toEqual([]);
+  });
+
+  test("returns empty state when Supabase fetch fails", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network error"));
+
+    const res = await handleActivity(makeActivityReq(), makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { total_events: number };
+    expect(body.total_events).toBe(0);
+  });
+
+  test("has Cache-Control: no-cache header", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+
+    const res = await handleActivity(makeActivityReq(), makeEnv());
+    expect(res.headers.get("Cache-Control")).toBe("no-cache");
+  });
+
+  test("only sums sats from settled payment events", async () => {
+    const allEvents = [
+      { agent_id: "a1", event_type: "l402.payment.settled", amount_sats: 100, settled: true },
+      { agent_id: "a1", event_type: "l402.payment.settled", amount_sats: 50,  settled: false }, // not settled
+      { agent_id: "a2", event_type: "l402.payment.initiated", amount_sats: 200, settled: null }, // wrong type
+    ];
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify(allEvents), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+
+    const res = await handleActivity(makeActivityReq(), makeEnv());
+    const body = await res.json() as { total_sats: number };
+    expect(body.total_sats).toBe(100); // only the first event qualifies
+  });
+
+  test("worker routes GET /api/activity correctly", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+
+    const req = new Request("https://l402kit.com/api/activity");
+    const res = await worker.fetch(req, makeEnv());
+    expect(res.status).toBe(200);
+    const body = await res.json() as { total_events: number };
+    expect(typeof body.total_events).toBe("number");
   });
 });

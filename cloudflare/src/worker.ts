@@ -18,6 +18,8 @@ import { handleCheckout } from "./api/checkout";
 import { handleDashboard } from "./api/dashboard";
 import { handleWhitepaperExtended } from "./api/whitepaper";
 import { sweepTransitWallet } from "./api/sweep";
+import { handleLawnEvents } from "./api/lawn-events";
+import { handleActivity } from "./api/activity";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -32,6 +34,7 @@ export interface Env {
   BLINK_WEBHOOK_SECRET: string;
   OWNER_LIGHTNING_ADDRESS: string;
   OWNER_ADDRESSES: string;
+  LAWN_HMAC_SECRET: string;
   demo_preimages: KVNamespace;
 }
 
@@ -214,6 +217,8 @@ export default {
       else if (path === "/api/apis.json")      res = await handleApis(request, env);
       else if (path.startsWith("/api/dashboard")) res = await handleDashboard(request, env);
       else if (path === "/whitepaper-extended") res = await handleWhitepaperExtended(request, env);
+      else if (path === "/api/lawn-events")    res = await handleLawnEvents(request, env);
+      else if (path === "/api/activity")        res = await handleActivity(request, env);
       else if (path.startsWith("/docs"))       return handleDocsRedirect(request);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     } catch {
