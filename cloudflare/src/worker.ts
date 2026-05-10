@@ -20,6 +20,9 @@ import { handleWhitepaperExtended } from "./api/whitepaper";
 import { sweepTransitWallet } from "./api/sweep";
 import { handleLawnEvents } from "./api/lawn-events";
 import { handleActivity } from "./api/activity";
+import { handleVerity } from "./verity/index";
+import { runVerityHeartbeat } from "./verity/cron/heartbeat";
+import { runFiscalAgent } from "./verity/cron/fiscal";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -35,6 +38,9 @@ export interface Env {
   OWNER_LIGHTNING_ADDRESS: string;
   OWNER_ADDRESSES: string;
   LAWN_HMAC_SECRET: string;
+  SERPER_API_KEY: string;
+  FIRECRAWL_API_KEY: string;
+  ANTHROPIC_API_KEY: string;
   demo_preimages: KVNamespace;
 }
 
@@ -164,10 +170,14 @@ function cors(res: Response): Response {
 }
 
 export default {
-  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
+  async scheduled(event: ScheduledEvent, env: Env): Promise<void> {
     await sweepTransitWallet(env);
-    // Keep Render free instance warm — ping every hour (cron runs hourly)
     try { await fetch("https://diagram-forge.onrender.com/health"); } catch { /* ignore */ }
+    await runVerityHeartbeat(env);
+    // Fiscal agent runs daily at midnight UTC
+    if (new Date(event.scheduledTime).getUTCHours() === 0) {
+      await runFiscalAgent(env);
+    }
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -219,6 +229,7 @@ export default {
       else if (path === "/whitepaper-extended") res = await handleWhitepaperExtended(request, env);
       else if (path === "/api/lawn-events")    res = await handleLawnEvents(request, env);
       else if (path === "/api/activity")        res = await handleActivity(request, env);
+      else if (path.startsWith("/api/verity"))  res = await handleVerity(request, env);
       else if (path.startsWith("/docs"))       return handleDocsRedirect(request);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     } catch {
