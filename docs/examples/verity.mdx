@@ -1,0 +1,210 @@
+---
+title: "VERITY Examples"
+description: "Code examples for all 8 VERITY services using the L402Client."
+---
+
+# VERITY Examples
+
+VERITY is a live autonomous agent at `https://l402kit.com/api/verity`. These examples show how to call her services programmatically using the l402-kit agent SDK.
+
+---
+
+## Setup
+
+```typescript
+import { L402Client } from "l402-kit/agent";
+import { BlinkWallet } from "l402-kit/wallets";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
+  budget: { maxSats: 5000 }, // hard cap per session
+});
+```
+
+---
+
+## Discover all services and current prices
+
+```typescript
+const res = await fetch("https://l402kit.com/api/verity");
+const verity = await res.json();
+
+for (const svc of verity.services) {
+  console.log(`${svc.id}: ${svc.priceSats} sats — ${svc.description}`);
+}
+```
+
+---
+
+## World State — 80 sats
+
+Get UTC time, your location, and local weather in one call.
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/worldstate");
+const { time, location, weather } = await res.json();
+
+console.log(`Time: ${time.utc}`);
+console.log(`Location: ${location.city}, ${location.country}`);
+console.log(`Weather: ${weather.temperature_c}°C, ${weather.condition}`);
+```
+
+---
+
+## BTC Price — 10 sats
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/btc-price");
+const { bitcoin } = await res.json();
+
+console.log(`BTC: $${bitcoin.usd} USD | R$${bitcoin.brl} BRL`);
+```
+
+---
+
+## Web Search — 100 sats
+
+```typescript
+const res = await client.fetch(
+  "https://l402kit.com/api/verity/search?q=bitcoin+lightning+l402",
+);
+const { results } = await res.json();
+
+for (const r of results) {
+  console.log(`${r.title}\n${r.link}\n${r.snippet}\n`);
+}
+```
+
+---
+
+## Summarize — 50 sats
+
+```typescript
+const longText = "..."; // up to 50,000 chars
+
+const res = await client.fetch("https://l402kit.com/api/verity/summarize", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: longText, language: "english" }),
+});
+const { summary } = await res.json();
+console.log(summary);
+```
+
+---
+
+## Sentiment — 30 sats
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/sentiment", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: "Lightning payments are instant and cheap!" }),
+});
+const { analysis } = await res.json();
+// { sentiment: "positive", score: 0.94, confidence: 0.91, keywords: [...] }
+```
+
+---
+
+## Domain Intel — 500 sats
+
+```typescript
+const res = await client.fetch(
+  "https://l402kit.com/api/verity/domain-intel?domain=bitcoin.org",
+);
+const { whois, dns, certificates } = await res.json();
+
+console.log(`Registered: ${whois.registered}`);
+console.log(`Expires: ${whois.expires}`);
+console.log(`A records: ${dns.a_records.join(", ")}`);
+```
+
+---
+
+## Web Scraping — 200 sats
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/scrape", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: "https://bitcoin.org/en/bitcoin-paper" }),
+});
+const { content, title } = await res.json();
+console.log(`${title}\n\n${content.slice(0, 500)}...`);
+```
+
+---
+
+## l402-kit Integration — 10,000 sats
+
+Send VERITY a public GitHub repo. She reads the code and returns a complete l402-kit integration.
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/integration", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ repoUrl: "https://github.com/owner/my-api" }),
+});
+const { integration, next_steps } = await res.json();
+
+// integration = markdown with exact code to add to your repo
+console.log(integration);
+```
+
+<Note>
+The integration service costs 10,000 sats (~$10). After payment, you receive complete middleware code specific to your framework (Express, FastAPI, Gin, Axum, etc.) — and VERITY earns the first referral to your new l402-kit-powered API.
+</Note>
+
+---
+
+## Chaining services
+
+A common agent pattern: search → scrape → summarize.
+
+```typescript
+// 1. Search for a topic (100 sats)
+const searchRes = await client.fetch(
+  "https://l402kit.com/api/verity/search?q=bitcoin+lightning+adoption+2026",
+);
+const { results } = await searchRes.json();
+const topUrl = results[0].link;
+
+// 2. Scrape the top result (200 sats)
+const scrapeRes = await client.fetch("https://l402kit.com/api/verity/scrape", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: topUrl }),
+});
+const { content } = await scrapeRes.json();
+
+// 3. Summarize the article (50 sats)
+const sumRes = await client.fetch("https://l402kit.com/api/verity/summarize", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: content }),
+});
+const { summary } = await sumRes.json();
+
+// Total cost: 350 sats (~$0.35)
+console.log(summary);
+```
+
+---
+
+## Python
+
+```python
+from l402kit import L402Client, BlinkWallet
+import os
+
+client = L402Client(
+    wallet=BlinkWallet(os.environ["BLINK_API_KEY"]),
+    budget={"max_sats": 5000},
+)
+
+# World state
+resp = client.get("https://l402kit.com/api/verity/worldstate")
+data = resp.json()
+print(f"{data['time']['utc']} | {data['location']['city']} | {data['weather']['temperature_c']}°C")
+```
