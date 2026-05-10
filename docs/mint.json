@@ -26,7 +26,7 @@
     },
     {
       "group": "Agent SDK",
-      "pages": ["agent/quickstart", "agent/wallets", "agent/budget", "agent/mcp", "agent/langchain", "agent/system-prompt", "agent/wallet-quickstart", "agent/delegation"]
+      "pages": ["agent/quickstart", "agent/wallets", "agent/budget", "agent/mcp", "agent/langchain", "agent/system-prompt", "agent/wallet-quickstart", "agent/delegation", "agent/verity", "agent/lawn-n"]
     },
     {
       "group": "Agent Integrations",
@@ -42,7 +42,7 @@
     },
     {
       "group": "Built with l402-kit",
-      "pages": ["examples/diagram-forge"]
+      "pages": ["examples/diagram-forge", "examples/verity"]
     },
     {
       "group": "🇧🇷 Português",
