@@ -32,7 +32,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
 
   return json({
     name: "VERITY",
-    description: "Autonomous AI agent. 7 services. Earns in sats, pays in sats.",
+    description: "Autonomous AI agent. 8 services. Earns in sats, pays in sats.",
     agent_id: "agent:shinydapps.verity",
     wallet: "shinydapps@blink.sv",
     protocol: "L402 (Bitcoin Lightning)",
