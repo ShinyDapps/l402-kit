@@ -2,7 +2,10 @@ import { createHmac, randomBytes } from "crypto";
 import type { L402CloudEvent } from "../types/events";
 
 export interface LawNAdapterOptions {
-  /** LAW-N ingest endpoint. e.g. "https://law-n.example.com/api/l402-events" */
+  /**
+   * LAW-N ingest endpoint.
+   * @example "https://law-n.sageworks.ai/ingest/events"
+   */
   endpoint: string;
   /** HMAC-SHA256 shared secret for request signing. */
   secret: string;
@@ -11,10 +14,12 @@ export interface LawNAdapterOptions {
 }
 
 /**
- * Creates an `onEvent` handler that forwards L402CloudEvents to a LAW-N endpoint.
+ * Creates an `onEvent` handler that forwards L402CloudEvents to a LAW-N ingest endpoint.
  *
- * Uses HMAC-SHA256 (X-LAW-N-Signature header) for authentication.
- * Network errors are swallowed — behavioral ledger writes must never break payments.
+ * - Transport: POST JSON over HTTPS (no gRPC/event bus required initially)
+ * - Auth: HMAC-SHA256 in X-LAW-N-Signature header
+ * - Delivery: fire-and-forget, at-least-once — LAW-N handles dedup/windowing
+ * - Network errors are swallowed — behavioral writes must never block payments
  *
  * @example
  * ```ts
@@ -24,8 +29,9 @@ export interface LawNAdapterOptions {
  * const client = new L402Client({
  *   wallet: myWallet,
  *   agentId: "agent:research-node-7",
+ *   network: { provider: "blink", transport: "lightning", region: "global" },
  *   onEvent: createLawNAdapter({
- *     endpoint: "https://law-n.sageworks.ai/api/l402-events",
+ *     endpoint: "https://law-n.sageworks.ai/ingest/events",
  *     secret: process.env.LAWN_SECRET!,
  *   }),
  * });

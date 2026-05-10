@@ -29,6 +29,8 @@
  * ```
  */
 
+import type { L402CloudEvent, L402EventType, LawNNetwork } from "./types/events";
+
 export interface L402Wallet {
   /** Pay a BOLT11 invoice. Must return the payment preimage as a hex string. */
   payInvoice(bolt11: string): Promise<{ preimage: string }>;
@@ -60,16 +62,27 @@ export interface L402ClientOptions {
   onBudgetExceeded?: (url: string, sats: number) => void;
   /**
    * Persistent agent identity for cross-session behavioral tracking (LAW-N).
-   * Convention: "agent:namespace.name" or any stable UUID string.
+   * Strongly recommended — without it, longitudinal pattern analysis collapses.
+   * Convention: "agent:namespace.name" or any stable UUID/string.
    * @example "agent:research-node-7"
    */
   agentId?: string;
+  /**
+   * Optional stable session ID. Auto-generated per client instance if omitted.
+   * LAW-N uses this to separate session continuity from request causality.
+   */
+  sessionId?: string;
+  /**
+   * Network metadata forwarded to LAW-N for topology analysis.
+   * @example { provider: "blink", transport: "lightning", region: "global" }
+   */
+  network?: LawNNetwork;
   /**
    * Called for every behavioral event emitted during the L402 flow.
    * Errors thrown inside this hook are swallowed — they never break the request.
    * Use this to forward events to LAW-N or any behavioral ledger.
    */
-  onEvent?: (event: import("./types/events").L402CloudEvent) => void;
+  onEvent?: (event: L402CloudEvent) => void;
 }
 
 class MemoryTokenStore implements TokenStore {
@@ -88,14 +101,19 @@ export class L402Client {
   private maxRetries: number;
   private budget: import("./agent/budget").BudgetTracker | null = null;
   private agentId: string | undefined;
-  private onEvent: ((event: import("./types/events").L402CloudEvent) => void) | undefined;
+  private sessionId: string;
+  private network: LawNNetwork | undefined;
+  private onEventHook: ((event: L402CloudEvent) => void) | undefined;
 
   constructor(options: L402ClientOptions) {
-    this.wallet     = options.wallet;
-    this.tokenStore = options.tokenStore ?? new MemoryTokenStore();
-    this.maxRetries = options.maxRetries ?? 1;
-    this.agentId    = options.agentId;
-    this.onEvent    = options.onEvent;
+    const { randomBytes } = require("crypto") as typeof import("crypto");
+    this.wallet        = options.wallet;
+    this.tokenStore    = options.tokenStore ?? new MemoryTokenStore();
+    this.maxRetries    = options.maxRetries ?? 1;
+    this.agentId       = options.agentId;
+    this.sessionId     = options.sessionId ?? `sess_${randomBytes(8).toString("hex")}`;
+    this.network       = options.network;
+    this.onEventHook   = options.onEvent;
 
     if (options.budgetSats !== undefined) {
       // lazy import to keep bundle size minimal when budget unused
@@ -109,21 +127,24 @@ export class L402Client {
     }
   }
 
-  private _emit(
-    type: import("./types/events").L402EventType,
-    payload: import("./types/events").L402EventPayload,
-  ): void {
-    if (!this.onEvent) return;
-    const event: import("./types/events").L402CloudEvent = {
+  private _emit(type: L402EventType, data: Omit<L402CloudEvent["data"], "session_id" | "request_id" | "agent_id"> & { request_id: string }): void {
+    if (!this.onEventHook) return;
+    const { randomBytes } = require("crypto") as typeof import("crypto");
+    const event: L402CloudEvent = {
       specversion: "1.0",
       type,
       source: "l402-kit",
-      ...(this.agentId !== undefined ? { agent_id: this.agentId } : {}),
-      timestamp: new Date().toISOString(),
-      event_id: require("crypto").randomBytes(16).toString("hex") as string,
-      payload,
+      id: `evt_${randomBytes(16).toString("hex")}`,
+      time: new Date().toISOString(),
+      subject: "agent-payment-flow",
+      datacontenttype: "application/json",
+      data: {
+        ...(this.agentId !== undefined ? { agent_id: this.agentId } : {}),
+        session_id: this.sessionId,
+        ...data,
+      },
     };
-    try { this.onEvent(event); } catch { /* hooks must not break request flow */ }
+    try { this.onEventHook(event); } catch { /* hooks must not break request flow */ }
   }
 
   /** Returns a spending report. Only available when budgetSats is configured. */
@@ -136,6 +157,10 @@ export class L402Client {
    * Drop-in replacement for `fetch` that handles L402 and x402 payment flows.
    */
   async fetch(url: string, init: RequestInit = {}): Promise<Response> {
+    const { randomBytes } = require("crypto") as typeof import("crypto");
+    const requestId = `req_${randomBytes(8).toString("hex")}`;
+    const clientSentAt = Math.floor(Date.now() / 1000);
+
     // Try cached token first
     const cached = this.tokenStore.get(url);
     if (cached) {
@@ -152,11 +177,15 @@ export class L402Client {
 
     // Parse 402 response — supports both L402 and x402 formats
     const { macaroon, invoice, priceSats } = await this._parse402(res402);
+    const invoiceReceivedAt = Math.floor(Date.now() / 1000);
 
-    this._emit("l402.payment_initiated", {
+    this._emit("l402.payment.initiated", {
+      request_id: requestId,
       endpoint: url,
-      amount_sats: priceSats ?? 0,
-      invoice,
+      event_type: "payment_initiated",
+      ...(this.network ? { network: this.network } : {}),
+      payment: { amount_sats: priceSats ?? 0, invoice_hash: invoice.slice(0, 16) },
+      timing: { client_sent_at: clientSentAt, invoice_received_at: invoiceReceivedAt },
     });
 
     // Check budget before paying
@@ -164,10 +193,17 @@ export class L402Client {
       try {
         this.budget.check(url, priceSats);
       } catch (err) {
-        this._emit("l402.budget_exhausted", {
+        const budgetReport = this.budget.report();
+        this._emit("l402.budget.exhausted", {
+          request_id: requestId,
           endpoint: url,
-          amount_sats: priceSats,
-          budget_sats: priceSats,
+          event_type: "budget_exhausted",
+          payment: { amount_sats: priceSats ?? 0 },
+          behavior: {
+            budget_remaining: budgetReport?.remaining ?? 0,
+            budget_exhausted: true,
+          },
+          timing: { client_sent_at: clientSentAt, invoice_received_at: invoiceReceivedAt },
         });
         throw err;
       }
@@ -182,21 +218,49 @@ export class L402Client {
       throw new L402PaymentError(`Payment failed: ${String(err)}`, invoice);
     }
 
+    const paymentCompletedAt = Math.floor(Date.now() / 1000);
+    const latencyMs = (paymentCompletedAt - clientSentAt) * 1000;
+
     // Record spend
     if (this.budget && priceSats !== undefined && priceSats > 0) {
       this.budget.record(url, priceSats);
     }
 
-    const macaroonHash = (() => {
+    const invoiceHash = (() => {
       try { return JSON.parse(Buffer.from(macaroon, "base64").toString()).hash ?? macaroon.slice(0, 16); }
       catch { return macaroon.slice(0, 16); }
     })();
 
-    this._emit("l402.payment_settled", {
+    const preimageHash = (() => {
+      try {
+        const { createHash } = require("crypto") as typeof import("crypto");
+        return createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
+      } catch { return preimage.slice(0, 16); }
+    })();
+
+    const budgetReport = this.budget?.report();
+
+    this._emit("l402.payment.settled", {
+      request_id: requestId,
       endpoint: url,
-      amount_sats: priceSats ?? 0,
-      macaroon_hash: macaroonHash,
-      outcome: "success",
+      event_type: "payment_settled",
+      ...(this.network ? { network: this.network } : {}),
+      payment: {
+        amount_sats: priceSats ?? 0,
+        invoice_hash: invoiceHash,
+        preimage_hash: preimageHash,
+        settled: true,
+        latency_ms: latencyMs,
+      },
+      behavior: {
+        budget_remaining: budgetReport?.remaining,
+        budget_exhausted: false,
+      },
+      timing: {
+        client_sent_at: clientSentAt,
+        invoice_received_at: invoiceReceivedAt,
+        payment_completed_at: paymentCompletedAt,
+      },
     });
 
     // Cache token for future calls
@@ -204,7 +268,17 @@ export class L402Client {
 
     // Retry with credentials
     for (let attempt = 0; attempt < this.maxRetries; attempt++) {
-      this._emit("l402.retry_with_proof", { endpoint: url, attempt });
+      this._emit("l402.payment.retry_with_proof", {
+        request_id: requestId,
+        endpoint: url,
+        event_type: "retry_with_proof",
+        behavior: {
+          retry_count: attempt + 1,
+          budget_remaining: budgetReport?.remaining,
+          proof_reuse_attempt: false,
+        },
+        timing: { client_sent_at: clientSentAt, payment_completed_at: paymentCompletedAt },
+      });
       const retryRes = await this._fetchWithToken(url, init, macaroon, preimage);
       if (retryRes.status !== 402) return retryRes;
     }

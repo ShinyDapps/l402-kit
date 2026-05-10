@@ -1,61 +1,73 @@
 /** CloudEvents 1.0 envelope for L402 behavioral events (LAW-N integration). */
 
 export type L402EventType =
-  | "l402.payment_initiated"
-  | "l402.payment_settled"
-  | "l402.caveat_violation"
-  | "l402.budget_exhausted"
-  | "l402.retry_with_proof";
+  | "l402.payment.initiated"
+  | "l402.payment.settled"
+  | "l402.caveat.violation"
+  | "l402.budget.exhausted"
+  | "l402.payment.retry_with_proof";
 
-export interface L402PaymentInitiatedPayload {
-  endpoint: string;
+export interface LawNNetwork {
+  provider?: string;
+  transport: string;
+  region?: string;
+}
+
+export interface LawNPayment {
   amount_sats: number;
-  invoice: string;
+  invoice_hash?: string;
+  preimage_hash?: string;
+  settled?: boolean;
+  latency_ms?: number;
 }
 
-export interface L402PaymentSettledPayload {
-  endpoint: string;
-  amount_sats: number;
-  macaroon_hash: string;
-  outcome: "success" | "failure";
+export interface LawNBehavior {
+  retry_count?: number;
+  budget_remaining?: number;
+  budget_exhausted?: boolean;
+  caveat_violations?: number;
+  proof_reuse_attempt?: boolean;
 }
 
-export interface L402CaveatViolationPayload {
-  endpoint: string;
-  macaroon_hash: string;
-  reason: string;
+export interface LawNTiming {
+  client_sent_at?: number;
+  invoice_received_at?: number;
+  payment_completed_at?: number;
 }
 
-export interface L402BudgetExhaustedPayload {
-  endpoint: string;
-  amount_sats: number;
-  budget_sats: number;
+export interface LawNRisk {
+  severity?: number;
+  trust_score?: number;
+  drift_score?: number;
 }
 
-export interface L402RetryWithProofPayload {
-  endpoint: string;
-  attempt: number;
-}
-
-export type L402EventPayload =
-  | L402PaymentInitiatedPayload
-  | L402PaymentSettledPayload
-  | L402CaveatViolationPayload
-  | L402BudgetExhaustedPayload
-  | L402RetryWithProofPayload;
-
-export interface L402CloudEvent {
-  /** CloudEvents spec version */
-  specversion: "1.0";
-  /** Event type — one of the 5 L402 behavioral events */
-  type: L402EventType;
-  /** Producer identifier */
-  source: "l402-kit";
-  /** Persistent agent identity (namespace:name or UUID) */
+export interface L402EventData {
+  /** Persistent agent identity — strongly recommended for longitudinal analysis. */
   agent_id?: string;
-  /** ISO 8601 UTC timestamp */
-  timestamp: string;
-  /** Unique event ID (hex random) */
-  event_id: string;
-  payload: L402EventPayload;
+  /** Per-client-instance session identifier. */
+  session_id: string;
+  /** Per-request identifier for causality tracing. */
+  request_id: string;
+  endpoint: string;
+  event_type: string;
+  network?: LawNNetwork;
+  payment?: LawNPayment;
+  behavior?: LawNBehavior;
+  timing?: LawNTiming;
+  /** Derived risk signals — optional, LAW-N can compute downstream. */
+  risk?: LawNRisk;
+}
+
+/** CloudEvents 1.0 envelope aligned with LAW-N ingest schema. */
+export interface L402CloudEvent {
+  specversion: "1.0";
+  type: L402EventType;
+  source: "l402-kit";
+  /** Unique event ID (hex random). */
+  id: string;
+  /** ISO 8601 UTC timestamp. */
+  time: string;
+  subject: "agent-payment-flow";
+  datacontenttype: "application/json";
+  data: L402EventData;
 }
