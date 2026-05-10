@@ -23,6 +23,7 @@ import { handleActivity } from "./api/activity";
 import { handleVerity } from "./verity/index";
 import { runVerityHeartbeat } from "./verity/cron/heartbeat";
 import { runFiscalAgent } from "./verity/cron/fiscal";
+import { runMonitor } from "./monitor";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -41,6 +42,7 @@ export interface Env {
   SERPER_API_KEY: string;
   FIRECRAWL_API_KEY: string;
   ANTHROPIC_API_KEY: string;
+  RESEND_API_KEY: string;
   demo_preimages: KVNamespace;
 }
 
@@ -223,6 +225,8 @@ export default {
     if (new Date(event.scheduledTime).getUTCHours() === 0) {
       await runFiscalAgent(env);
     }
+    // Monitor: checks payments, issue replies, HN, npm — emails if relevant
+    await runMonitor(env);
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
