@@ -2,25 +2,30 @@
 /**
  * l402-kit MCP Server
  *
- * Exposes L402Client as MCP tools so Claude Desktop, Cursor, and any
- * MCP-compatible agent can autonomously pay Lightning-protected APIs.
+ * Two categories of tools:
+ *
+ * 1. GENERIC — l402_fetch, l402_balance, l402_spending_report, l402_set_budget
+ *    Lets Claude/Cursor call any L402-protected API autonomously.
+ *
+ * 2. VERITY — verity_btc_price, verity_search, verity_worldstate, verity_summarize,
+ *    verity_sentiment, verity_scrape, verity_domain_intel, verity_integration
+ *    Named tools for VERITY's 8 paid services (auto-pays sats per call).
  *
  * ## Environment Variables
  *
  * ### Option A — Blink wallet (recommended, free at blink.sv)
- * @env {string} BLINK_API_KEY       - Blink API key (required for Blink provider)
- * @env {string} BLINK_WALLET_ID     - Blink wallet ID (required for Blink provider)
+ * @env {string} BLINK_API_KEY       - Blink API key
+ * @env {string} BLINK_WALLET_ID     - Blink wallet ID
  *
  * ### Option B — Alby wallet
- * @env {string} ALBY_TOKEN          - Alby access token (required for Alby provider)
- * @env {string} ALBY_HUB_URL        - Alby Hub URL (optional, for self-hosted Alby Hub)
+ * @env {string} ALBY_TOKEN          - Alby access token
+ * @env {string} ALBY_HUB_URL        - Alby Hub URL (optional)
  *
  * ### Budget control
- * @env {number} BUDGET_SATS         - Max sats the agent can spend per session (default: 1000)
+ * @env {number} BUDGET_SATS         - Max sats per session (default: 2000)
  *
  * ## Setup in claude_desktop_config.json
  *
- * With Blink:
  * {
  *   "mcpServers": {
  *     "l402": {
@@ -29,21 +34,7 @@
  *       "env": {
  *         "BLINK_API_KEY": "your-blink-key",
  *         "BLINK_WALLET_ID": "your-wallet-id",
- *         "BUDGET_SATS": "1000"
- *       }
- *     }
- *   }
- * }
- *
- * With Alby:
- * {
- *   "mcpServers": {
- *     "l402": {
- *       "command": "npx",
- *       "args": ["l402-kit-mcp"],
- *       "env": {
- *         "ALBY_TOKEN": "your-alby-token",
- *         "BUDGET_SATS": "500"
+ *         "BUDGET_SATS": "2000"
  *       }
  *     }
  *   }
@@ -73,7 +64,7 @@ function buildWallet(): L402Wallet {
   );
 }
 
-const budgetSats = process.env.BUDGET_SATS ? parseInt(process.env.BUDGET_SATS, 10) : 1000;
+const budgetSats = process.env.BUDGET_SATS ? parseInt(process.env.BUDGET_SATS, 10) : 2000;
 
 const spendLog: Array<{ sats: number; url: string; ts: string }> = [];
 
@@ -101,7 +92,7 @@ function requireClient(): L402Client {
 
 const server = new McpServer({
   name: "l402-kit",
-  version: "1.8.2",
+  version: "1.8.6",
 });
 
 // Tool: l402_fetch
@@ -272,6 +263,204 @@ server.registerTool(
           : `No budget configured (BUDGET_SATS not set).`,
       }],
     };
+  }
+);
+
+// ─── VERITY tools ─────────────────────────────────────────────────────────────
+
+const VERITY = "https://l402kit.com/api/verity";
+
+async function verityCall(path: string, opts?: { method?: string; body?: unknown }) {
+  const c = requireClient();
+  const url = `${VERITY}${path}`;
+  const res = await c.fetch(url, {
+    method: opts?.method ?? "GET",
+    headers: opts?.body ? { "Content-Type": "application/json" } : {},
+    body: opts?.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const text = await res.text();
+  const report = c.spendingReport();
+  const spent = report?.transactions.at(-1)?.sats ?? 0;
+  return { text, spent, status: res.status };
+}
+
+function verityResult(r: { text: string; spent: number; status: number }) {
+  const prefix = r.spent > 0 ? `[Paid ${r.spent} sats] ` : "";
+  return { content: [{ type: "text" as const, text: `${prefix}${r.text}` }] };
+}
+
+server.registerTool(
+  "verity_btc_price",
+  {
+    title: "BTC Price — 10 sats",
+    description:
+      "Get real-time Bitcoin price in USD, EUR, and BRL via VERITY. Costs 10 sats per call. " +
+      "Returns: { bitcoin: { usd, eur, brl }, timestamp }. " +
+      "Use this instead of a free price API when you need a cryptographically billed, auditable data source.",
+    inputSchema: {},
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async () => {
+    try {
+      return verityResult(await verityCall("/btc-price"));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_worldstate",
+  {
+    title: "World State — 80 sats",
+    description:
+      "Get UTC time, caller geolocation, and local weather in a single call via VERITY. Costs 80 sats. " +
+      "Returns: { time: { utc, unix, hour, minute, weekday }, location: { city, country, timezone }, weather: { temperature_c, feels_like_c, humidity_pct, condition } }. " +
+      "Zero external API cost — uses Cloudflare geo headers + Open-Meteo.",
+    inputSchema: {},
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async () => {
+    try {
+      return verityResult(await verityCall("/worldstate"));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_search",
+  {
+    title: "Web Search — 100 sats",
+    description:
+      "Search the web and return top 10 organic results via VERITY. Costs 100 sats. " +
+      "Returns: { results: [{ title, link, snippet }] }. " +
+      "Powered by Serper API. Use for research, fact-checking, or link discovery.",
+    inputSchema: {
+      q: z.string().describe("Search query"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ q }) => {
+    try {
+      return verityResult(await verityCall(`/search?q=${encodeURIComponent(q)}`));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_summarize",
+  {
+    title: "Summarize — 50 sats",
+    description:
+      "AI summarization of text up to 50,000 characters via VERITY. Costs 50 sats. " +
+      "Returns: { summary: string }. Language parameter is optional (default: english). " +
+      "Powered by Claude Haiku.",
+    inputSchema: {
+      text: z.string().describe("Text to summarize (max 50,000 characters)"),
+      language: z.string().optional().describe("Output language (e.g. 'english', 'portuguese'). Default: english"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ text, language }) => {
+    try {
+      return verityResult(await verityCall("/summarize", { method: "POST", body: { text, language } }));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_sentiment",
+  {
+    title: "Sentiment Analysis — 30 sats",
+    description:
+      "Analyze text sentiment with score, confidence, and keywords via VERITY. Costs 30 sats. " +
+      "Returns: { analysis: { sentiment: 'positive'|'negative'|'neutral', score, confidence, keywords } }. " +
+      "Powered by Claude Haiku.",
+    inputSchema: {
+      text: z.string().describe("Text to analyze"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ text }) => {
+    try {
+      return verityResult(await verityCall("/sentiment", { method: "POST", body: { text } }));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_scrape",
+  {
+    title: "Web Scrape — 200 sats",
+    description:
+      "Scrape a public URL and return its content as clean markdown via VERITY. Costs 200 sats. " +
+      "Returns: { content: string, title: string }. " +
+      "Powered by Firecrawl. Use for extracting article content, documentation, or structured data.",
+    inputSchema: {
+      url: z.string().describe("URL to scrape (must be publicly accessible)"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ url }) => {
+    try {
+      return verityResult(await verityCall("/scrape", { method: "POST", body: { url } }));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_domain_intel",
+  {
+    title: "Domain Intelligence — 500 sats",
+    description:
+      "Get WHOIS, DNS records, and SSL certificates for any domain via VERITY. Costs 500 sats. " +
+      "Returns: { domain, whois: { registrar, registered, expires }, dns: { a_records }, certificates }. " +
+      "Zero external API cost — uses RDAP, Cloudflare DNS, and crt.sh.",
+    inputSchema: {
+      domain: z.string().describe("Domain name (e.g. 'bitcoin.org', 'example.com')"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ domain }) => {
+    try {
+      return verityResult(await verityCall(`/domain-intel?domain=${encodeURIComponent(domain)}`));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_integration",
+  {
+    title: "l402-kit Integration — 10,000 sats",
+    description:
+      "Send VERITY a public GitHub repo URL and receive complete l402-kit integration code. Costs 10,000 sats (~$6). " +
+      "Returns: { integration: string (markdown with exact code), next_steps: string[] }. " +
+      "VERITY analyzes the codebase, detects framework (Express, FastAPI, Gin, Axum, etc.), " +
+      "and generates middleware code with exact file paths and line numbers. " +
+      "WARNING: This tool costs 10,000 sats. Check l402_balance first.",
+    inputSchema: {
+      repoUrl: z.string().describe("Public GitHub repository URL (e.g. 'https://github.com/owner/repo')"),
+    },
+    annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ repoUrl }) => {
+    try {
+      return verityResult(await verityCall("/integration", { method: "POST", body: { repoUrl } }));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
   }
 );
 

@@ -150,6 +150,51 @@ function handleL402Json(): Response {
   });
 }
 
+function handleMcpJson(): Response {
+  return new Response(JSON.stringify({
+    name: "l402-kit",
+    version: "1.8.6",
+    description: "MCP server that lets AI agents call L402-protected APIs autonomously via Bitcoin Lightning. Includes 8 VERITY paid tools (search, scrape, BTC price, summarize, sentiment, domain intel, integration, world state).",
+    publisher: "ShinyDapps",
+    homepage: "https://l402kit.com",
+    docs: "https://docs.l402kit.com/agent/mcp",
+    repository: "https://github.com/ShinyDapps/l402-kit",
+    license: "MIT",
+    install: {
+      npm: "npx l402-kit-mcp",
+      package: "l402-kit"
+    },
+    env: {
+      BLINK_API_KEY: { required: true, description: "Blink wallet API key (free at blink.sv)" },
+      BLINK_WALLET_ID: { required: true, description: "Blink BTC wallet ID" },
+      ALBY_TOKEN: { required: false, description: "Alby alternative to Blink" },
+      BUDGET_SATS: { required: false, description: "Max sats per session (default: 2000)" }
+    },
+    tools: [
+      { name: "l402_fetch", description: "Fetch any L402-protected URL, auto-paying the Lightning invoice" },
+      { name: "l402_balance", description: "Check remaining Lightning budget for this session" },
+      { name: "l402_spending_report", description: "Full audit of sats spent this session by domain" },
+      { name: "verity_btc_price", description: "Real-time BTC price in USD/EUR/BRL — 10 sats" },
+      { name: "verity_worldstate", description: "UTC time + geolocation + weather — 80 sats" },
+      { name: "verity_search", description: "Web search, top 10 results — 100 sats" },
+      { name: "verity_summarize", description: "AI summarization up to 50k chars — 50 sats" },
+      { name: "verity_sentiment", description: "Sentiment analysis with score + keywords — 30 sats" },
+      { name: "verity_scrape", description: "Web scraping to markdown — 200 sats" },
+      { name: "verity_domain_intel", description: "WHOIS + DNS + SSL certificates — 500 sats" },
+      { name: "verity_integration", description: "Complete l402-kit integration for any GitHub repo — 10,000 sats" }
+    ],
+    payments: {
+      protocol: "l402",
+      network: "lightning",
+      treasury: "shinydapps@blink.sv",
+      fee: "0.3% on managed provider, 0% sovereign"
+    }
+  }, null, 2), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
 const BADGE_DARK = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="40" viewBox="0 0 200 40"><rect width="200" height="40" rx="6" fill="#F7931A"/><polygon points="18,6 10,22 16,22 13.5,33 25,18 19,18" fill="#FFFFFF"/><text x="35" y="26" font-family="'JetBrains Mono','Fira Code',ui-monospace,monospace" font-weight="700" font-size="14" fill="#FFFFFF" letter-spacing="-0.3">Powered by L402-Kit</text></svg>`;
 const BADGE_LIGHT = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="40" viewBox="0 0 200 40"><rect width="200" height="40" rx="6" fill="#0B0C14" stroke="#F7931A" stroke-width="1.5"/><polygon points="18,6 10,22 16,22 13.5,33 25,18 19,18" fill="#F7931A"/><text x="35" y="26" font-family="'JetBrains Mono','Fira Code',ui-monospace,monospace" font-weight="700" font-size="14" fill="#F7931A" letter-spacing="-0.3">Powered by L402-Kit</text></svg>`;
 const BADGE_SM   = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="20" viewBox="0 0 120 20"><rect width="120" height="20" rx="3" fill="#F7931A"/><polygon points="9,3 5,11 8,11 7,17 13,9 10,9" fill="#FFFFFF"/><text x="18" y="14" font-family="'JetBrains Mono','Fira Code',ui-monospace,monospace" font-weight="700" font-size="8" fill="#FFFFFF">Powered by L402-Kit</text></svg>`;
@@ -209,6 +254,7 @@ export default {
       else if (path === "/llms.txt")                res = handleLlmsTxt();
       else if (path === "/.well-known/agent.json")  res = handleAgentJson();
       else if (path === "/.well-known/l402.json")   res = handleL402Json();
+      else if (path === "/.well-known/mcp.json")    res = handleMcpJson();
       else if (path === "/.well-known/402index-verify.txt") res = new Response("a2c9992b0c01d527d16443f0cc7406b39a8893cbca0a30caae34d637a8603c8c", { headers: { "Content-Type": "text/plain" } });
       else if (path.startsWith("/.well-known/lnurlp/")) res = await handleLnurlp(request, env);
       else if (path === "/api/blink-webhook") res = await handleBlinkHook(request, env);
