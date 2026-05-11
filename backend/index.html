@@ -19,6 +19,18 @@
 <link rel="shortcut icon" href="/logos/favicon.svg">
 <link rel="canonical" href="https://l402kit.com">
 <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+<link rel="alternate" hreflang="x-default" href="https://l402kit.com">
+<link rel="alternate" hreflang="en" href="https://l402kit.com">
+<link rel="alternate" hreflang="pt" href="https://l402kit.com?lang=pt">
+<link rel="alternate" hreflang="es" href="https://l402kit.com?lang=es">
+<link rel="alternate" hreflang="fr" href="https://l402kit.com?lang=fr">
+<link rel="alternate" hreflang="de" href="https://l402kit.com?lang=de">
+<link rel="alternate" hreflang="it" href="https://l402kit.com?lang=it">
+<link rel="alternate" hreflang="ja" href="https://l402kit.com?lang=ja">
+<link rel="alternate" hreflang="ru" href="https://l402kit.com?lang=ru">
+<link rel="alternate" hreflang="zh" href="https://l402kit.com?lang=zh">
+<link rel="alternate" hreflang="hi" href="https://l402kit.com?lang=hi">
+<link rel="alternate" hreflang="ar" href="https://l402kit.com?lang=ar">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://l402kit.com/#org","name":"ShinyDapps","url":"https://l402kit.com","sameAs":["https://github.com/ShinyDapps","https://twitter.com/shinydapps"]},{"@type":"WebSite","@id":"https://l402kit.com/#website","url":"https://l402kit.com","name":"l402-kit","publisher":{"@id":"https://l402kit.com/#org"}},{"@type":"SoftwareApplication","name":"l402-kit","applicationCategory":"DeveloperApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://l402kit.com","description":"Add pay-per-call Bitcoin Lightning payments to any API in 3 lines of code. TypeScript, Python, Go, Rust.","publisher":{"@id":"https://l402kit.com/#org"}}]}
 </script>
@@ -515,7 +527,7 @@ footer a:hover { color: var(--orange); text-decoration: none; }
       </select>
     </label>
     <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" title="Star l402-kit on GitHub" style="display:inline-flex;align-items:center;gap:0;text-decoration:none;border-radius:7px;overflow:hidden;border:1px solid #333;transition:border-color 0.2s;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'"><span style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#1a1a1a;color:#e5e5e5">⭐ Star</span><span id="ghStarCount" style="display:inline-flex;align-items:center;padding:5px 9px;background:#111;color:#f7931a;border-left:1px solid #333">–</span></a>
-    <a href="https://l402kit.com/docs/pt/introduction" class="nav-cta" id="navStartLink" data-docs-link="1" data-i18n="navStart">Comecar</a>
+    <a href="https://l402kit.com/docs" class="nav-cta" id="navStartLink" data-docs-link="1" data-i18n="navStart">Get started</a>
   </div>
 </nav>
 
@@ -2069,6 +2081,9 @@ function applyLanguage(lang) {
     if (key === 'heroTitle' || key === 'heroAiText') node.innerHTML = merged[key];
     else node.textContent = merged[key];
   });
+  // RTL support for Arabic
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang;
   applyFullPageCopy(lang);
   syncDocsLinks(lang);
   localStorage.setItem('l402_lang', lang);
@@ -2536,9 +2551,10 @@ function closeMobileNav() {
 function initLanguageSelector() {
   const select = document.getElementById('languageSelect');
   if (!select) return;
+  const qs = new URLSearchParams(location.search).get('lang');
   const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
   const saved = localStorage.getItem('l402_lang');
-  const lang = I18N[saved] ? saved : (I18N[browser] ? browser : 'en');
+  const lang = (I18N[qs] ? qs : null) || (I18N[saved] ? saved : null) || (I18N[browser] ? browser : 'en');
   select.value = lang;
   applyLanguage(lang);
   select.addEventListener('change', (e) => {
