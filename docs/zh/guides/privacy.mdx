@@ -1,0 +1,153 @@
+---
+title: 隐私架构
+description: l402-kit 如何实现零 PII 存储、基于钱包的身份验证以及分布式密钥管理——一个与 Bitcoin 相称的隐私模型。
+---
+
+## 传统支付 API 的问题
+
+Stripe、LemonSqueezy、Paddle——每一个传统支付服务商都要求：
+
+- 电子邮件地址（PII，GDPR 合规负担）
+- 账户和密码（可被钓鱼、可被泄露）
+- 中心化密钥存储（单点故障）
+- 信任服务商不会出售你的数据
+
+Lightning Network 彻底改变了这一模式。**你的钱包就是身份的密码学证明。** l402-kit 正是围绕这一前提构建的。
+
+---
+
+## 我们存储什么——以及我们不存储什么
+
+| 数据 | 是否存储 | 原因 |
+|---|---|---|
+| `payment_hash` | ✅ 是 | preimage 的 SHA-256 哈希——在 BOLT11 发票中已公开 |
+| Lightning 地址 | ✅ 是（仅所有者可见） | 路由 99.7% 分成所必需 |
+| 调用的端点 | ✅ 是 | 你的数据分析所需 |
+| `preimage`（支付密钥） | ❌ 从不 | 存储会暴露支付密钥 |
+| 电子邮件 | ❌ 从不 | 不需要——钱包即身份 |
+| 姓名 / IP / 设备 | ❌ 从不 | 任何层级均不收集 |
+| Cookie / 追踪 | ❌ 从不 | 无分析 SDK，无指纹识别 |
+
+### 为什么 `payment_hash` 存储是安全的
+
+preimage 是证明支付的 32 字节密钥。其 SHA-256 哈希值（`payment_hash`）在你创建 BOLT11 发票的那一刻就已经公开广播。存储哈希值不会暴露任何信息——preimage 从不接触我们的数据库。
+
+```
+preimage  →  SHA-256  →  payment_hash  （公开，存在于 BOLT11 中）
+   ↑
+从不存储
+```
+
+---
+
+## 身份验证：你的钱包，而非密码
+
+### 开发者控制台
+
+数据分析控制台通过 **LNURL-auth** 进行身份验证——与 Lightning Network 钱包所使用的 secp256k1 流程相同：
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+没有可被钓鱼的密码，没有可从边缘节点窃取的会话令牌。JWT 受行级安全策略约束——其他公钥无法查看任何内容。
+
+### 数据删除
+
+只有你的钱包才能授权删除你的数据。流程如下：
+
+1. 客户端调用 `/api/lnurl-auth?lightningAddress=you@yourdomain.com`
+2. 服务端返回一次性 k1 挑战 + LNURL
+3. 你的钱包使用 secp256k1 私钥对 k1 进行签名
+4. 服务端验证签名——签发一个 64 字符的一次性令牌
+5. 客户端向 `/api/delete-data` POST 请求，携带 `{ lightningAddress, token }`
+6. 服务端立即撤销令牌（防止重放攻击），删除所有相关行
+7. 数据已删除——无需提交工单，无需邮件确认
+
+**为何如此安全：** 即使攻击者知道你的 Lightning 地址，也无法在没有你私钥的情况下删除你的数据。令牌为一次性使用，10 分钟后过期。
+
+---
+
+## 密钥分布
+
+传统 SaaS：一次泄露 → 全部暴露。
+
+l402-kit 将信任分散于各个层级：
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+没有任何单一层级能够冒充你的身份、读取你的个人信息或清空你的钱包。
+
+---
+
+## 以设计实现 LGPD / GDPR 合规
+
+由于我们存储零 PII，大多数 LGPD/GDPR 义务并不适用：
+
+- **无数据主体请求** — 没有可查找的身份信息
+- **无个人数据泄露通知** — payment_hash 不属于个人数据
+- **无 Cookie 同意** — 无追踪，无 Cookie
+- **被遗忘权** — 通过 LNURL-auth 删除流程以密码学方式实现
+
+这不构成法律意见。但"我们不收集"比"我们收集并保护"是更有力的立场。
+
+---
+
+## Lightning Network 支付默认保护隐私
+
+Lightning Network 支付不会在链上暴露付款方身份：
+
+- 无姓名、无地址、无银行账户
+- 支付路由经过洋葱加密（类似 Tor）
+- 只有发票发行方知道支付已完成
+- 付款方身份对收款方始终保密
+
+你的终端用户可以匿名调用你的 API。你只需知道发票已支付。这就是双方所需要的全部信息。
+
+---
+
+## 对比
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| 是否需要邮箱 | ❌ | ✅ | ✅ |
+| 是否需要账户 | ❌ | ✅ | ✅ |
+| KYC / 身份验证 | ❌ | ✅ | ✅ |
+| 存储 PII | ❌ | ✅ | ✅ |
+| 身份验证方式 | secp256k1 wallet | email + password | email + password |
+| 删除机制 | 密码学证明 | 邮件申请 | 邮件申请 |
+| LGPD/GDPR 合规负担 | 极低 | 高 | 高 |
+| 付款方匿名 | ✅ | ❌ | ❌ |
+
+---
+
+## 这对你的用户意味着什么
+
+如果你基于 l402-kit 进行构建：
+
+- 你的用户无需向你提供电子邮件
+- 数据库泄露不会暴露任何个人信息
+- 任何 AI 代理无需账户或身份即可调用你的 API
+- 希望删除数据的用户可以通过自己的钱包即时自助完成
+
+这才是 Bitcoin 应有的支付层。

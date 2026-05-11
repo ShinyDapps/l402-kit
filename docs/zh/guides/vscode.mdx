@@ -1,0 +1,136 @@
+---
+title: VS Code 扩展
+description: 直接在 VS Code 内实时监控您的 Lightning 支付——状态栏、图表、CSV 导出，以及用比特币支付的 Pro 订阅。
+---
+
+**ShinyDapps Payments** 扩展让您无需离开编辑器即可查看 l402-kit 支付数据。安装一次，设置您的 Lightning 地址，即可在状态栏中看到 sats 实时到账。
+
+<Card title="从应用市场安装" icon="download" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">
+  ShinyDapps.shinydapps-l402 — 支持 VS Code 1.85+
+</Card>
+
+---
+
+## 快速设置
+
+1. 从 [VS Code 应用市场](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) 安装扩展。
+2. 打开命令面板（`Ctrl+Shift+P` / `Cmd+Shift+P`）。
+3. 运行 **ShinyDapps: Configure Lightning Address**。
+4. 输入您的 Lightning 地址（例如 `you@blink.sv`）。
+
+状态栏项 `⚡ 0 sats (0)` 将立即亮起。它每 30 秒轮询一次并自动更新。
+
+您也可以在 VS Code 设置中手动设置：
+
+```json
+{
+  "shinydapps.lightningAddress": "you@blink.sv"
+}
+```
+
+---
+
+## 您能看到什么
+
+### 状态栏
+
+`⚡ 1,234 sats (42)` — 始终显示已赚取的总 sats 和支付次数。
+悬停该项目可查看包含详细信息的提示框。如果您使用的是免费版，提示框还会提醒您 Pro 版可解锁完整历史记录。
+
+### 仪表盘面板
+
+点击状态栏项或运行 **ShinyDapps: Open Dashboard** 可打开完整面板。其中包含：
+
+| 区域 | 描述 |
+|---------|-------------|
+| 统计卡片 | 总支付次数、总 sats、美元估值、实时 BTC 价格 |
+| 柱状图 | 随时间变化的 sats 收益（见下方时间范围） |
+| 支付列表 | 最近 50 笔交易：时间戳、端点、sats |
+| BTC 行情 | 来自 mempool.space 的实时价格，以每美元对应 sat 显示 |
+
+该面板也会出现在侧边栏中（活动栏 → ⚡ 图标）。
+
+### 语言支持
+
+内置 11 种语言：English、Português、Español、中文、日本語、Français、Deutsch、Русский、हिन्दी、العربية、Italiano。可通过仪表盘顶部的下拉菜单切换。
+
+---
+
+## 免费版 vs Pro 版
+
+| 功能 | 免费版 | Pro 版 |
+|---------|------|-----|
+| 支付历史 | 最近 30 天 | 全部时间 |
+| 图表时间范围 | 1D · 7D | 1D · 7D · 30D · 1Y · ALL |
+| CSV 导出 | — | ✓ |
+| 状态栏 + 实时轮询 | ✓ | ✓ |
+| BTC 价格行情 | ✓ | ✓ |
+| 语言 | 11 | 11 |
+
+### 升级到 Pro 版
+
+Pro 版费用为 **每月 $9**，通过 Lightning Network 以比特币支付——无需信用卡，无需账户。
+
+在仪表盘中点击 **Upgrade with Bitcoin →**，或直接访问：
+
+```
+https://l402kit.com/api/checkout?address=YOU@DOMAIN.COM&tier=pro
+```
+
+结账页面会生成一个 BOLT11 发票，显示二维码，并轮询支付状态。确认后，Pro 版立即激活——无需重启。
+
+<Note>
+扩展会在启动时检查 Pro 状态。如果您刚完成支付，请点击仪表盘中的 **↺** 刷新按钮以立即激活。
+</Note>
+
+---
+
+## 通知
+
+当编辑器打开时收到**第一笔支付**，扩展会触发一条 VS Code 通知：
+
+> ⚡ 收到第一笔支付！打开仪表盘查看详情。
+
+点击通知中的 **Open Dashboard** 可直接跳转到面板。
+
+---
+
+## 隐私与数据
+
+- 扩展使用**可发布（只读）**密钥从 Supabase 读取支付数据，该密钥仅限于您的 Lightning 地址范围。
+- 本地不存储任何认证令牌——VS Code 设置中仅保存您的 Lightning 地址。
+- 您可以随时通过仪表盘中的 **Danger Zone → Delete all my data** 删除所有数据。这将从 Supabase 中移除支付历史和 Pro 订阅信息。
+
+---
+
+## 危险区域
+
+仪表盘包含一个自助式数据删除流程：
+
+1. 展开仪表盘底部的 **Danger Zone**。
+2. 输入您的 Lightning 地址以确认。
+3. 点击 **Delete my data**。
+
+该地址的所有支付历史和 Pro 访问权限将被永久删除。
+
+---
+
+## 故障排查
+
+<AccordionGroup>
+  <Accordion title="状态栏显示 ⚡ — (offline)">
+    扩展无法连接到 Supabase。请检查您的网络连接，并尝试点击 **↺** 刷新。
+  </Accordion>
+
+  <Accordion title="成功交易后支付未显示">
+    扩展每 30 秒轮询一次。点击 **↺** 可强制立即刷新。如果支付仍未显示，请确认 VS Code 设置中的 Lightning 地址与注册 l402-kit 时使用的地址完全一致（区分大小写）。
+  </Accordion>
+
+  <Accordion title="Pro 已激活但图表仍显示 🔒">
+    点击 **↺** 刷新。Pro 状态在加载时检查——手动刷新会立即重新验证。
+  </Accordion>
+
+  <Accordion title="我能看到支付记录，但数量似乎偏少">
+    在免费版中，仅加载**最近 30 天**的历史记录。升级到 Pro 版可查看全部时间的数据。如果您有更早的记录，Pro 版横幅会显示有多少笔支付被隐藏。
+  </Accordion>
+</AccordionGroup>

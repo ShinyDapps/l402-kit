@@ -1,0 +1,201 @@
+---
+title: LangChain 工具
+description: 即插即用的 LangChain 工具，让你的 Python 智能体能够调用 L402 保护的 API，并自动完成 Lightning 支付。
+---
+
+## 安装
+
+```bash
+pip install l402kit langchain langchain-community
+```
+
+---
+
+## 基本用法
+
+```python
+import os
+from l402kit.langchain import L402Tool
+from l402kit.wallets import BlinkWallet
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain_openai import ChatOpenAI
+from langchain import hub
+
+# 1. 创建工具
+tools = [
+    L402Tool(
+        wallet=BlinkWallet(
+            os.environ["BLINK_API_KEY"],
+            os.environ["BLINK_WALLET_ID"],
+        ),
+        budget_sats=1000,
+    )
+]
+
+# 2. 将其接入 LangChain 智能体
+llm = ChatOpenAI(model="gpt-4o")
+prompt = hub.pull("hwchase17/react")
+agent = create_react_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+# 3. 运行 — 智能体在需要时自动完成支付
+result = agent_executor.invoke({
+    "input": "What is the BTC price from https://api.example.com/btc-price?"
+})
+print(result["output"])
+```
+
+---
+
+## 使用 Alby
+
+```python
+from l402kit.wallets import AlbyWallet
+
+tools = [
+    L402Tool(
+        wallet=AlbyWallet(os.environ["ALBY_TOKEN"]),
+        budget_sats=500,
+    )
+]
+```
+
+---
+
+## 工具参考
+
+### 构造函数
+
+```python
+L402Tool(
+    wallet: L402Wallet,
+    budget_sats: int | None = None,
+    budget_per_domain: dict[str, int] | None = None,
+    on_spend: Callable[[int, str], None] | None = None,
+)
+```
+
+| 参数 | 类型 | 描述 |
+|-----------|------|-------------|
+| `wallet` | `L402Wallet` | 用于支付发票的钱包 |
+| `budget_sats` | `int` | 本次会话最多可消费的 sats |
+| `budget_per_domain` | `dict` | 每个域名的消费限额 |
+| `on_spend` | `callable` | 每次支付后调用 |
+
+### 工具 Schema（LLM 可见）
+
+```
+name: "l402_fetch"
+description: "Fetch data from an L402-protected API that requires a Lightning micropayment.
+              Handles the payment automatically.
+              Input: a URL (and optionally method/body).
+              Output: the API response as text."
+
+inputs:
+  url:    string  — The URL to fetch
+  method: string  — HTTP method: GET, POST, PUT, DELETE (default: GET)
+  body:   string  — Request body as JSON string (for POST/PUT)
+```
+
+### 方法
+
+```python
+tool._run(url, method="GET", body=None)     # 同步
+await tool._arun(url, method="GET", body=None)  # 异步
+
+tool.spending_report()  # → SpendingReport | None
+```
+
+---
+
+## 响应格式
+
+该工具返回 LLM 可直接读取的字符串：
+
+```
+# 免费端点
+HTTP 200
+{"price": 97500, "currency": "USD"}
+
+# 付费端点（priceSats 包含在 402 响应中）
+[Paid 10 sats] HTTP 200
+{"price": 97500, "currency": "USD"}
+
+# 超出预算
+[BLOCKED] Budget exceeded: need 50 sats but only 10 remaining (https://...)
+
+# 网络/钱包错误
+[ERROR] Connection refused
+```
+
+---
+
+## POST 示例
+
+```python
+result = agent_executor.invoke({
+    "input": "Submit this query to https://api.example.com/search: {\"q\": \"bitcoin\"}"
+})
+# 智能体以 method=POST 和 body='{"q":"bitcoin"}' 调用 l402_fetch
+```
+
+---
+
+## 消费报告
+
+```python
+tool = L402Tool(wallet=wallet, budget_sats=1000)
+# ... 智能体运行中 ...
+
+report = tool.spending_report()
+if report:
+    print(f"Spent {report.total} sats across {len(report.transactions)} calls")
+    for tx in report.transactions:
+        print(f"  {tx['sats']} sats → {tx['url']}")
+```
+
+---
+
+## 自定义智能体框架
+
+`L402Tool` 是 `langchain.tools.BaseTool` 的子类——它适用于任何接受 LangChain 工具的框架：LangGraph、CrewAI、AutoGen（通过适配器）等。
+
+```python
+# LangGraph 示例
+from langgraph.prebuilt import create_react_agent
+
+app = create_react_agent(llm, tools=[L402Tool(wallet=wallet, budget_sats=500)])
+result = app.invoke({"messages": [("user", "fetch https://api.example.com/data")]})
+```
+
+---
+
+## 错误处理
+
+`BudgetExceededError` 在内部被捕获——工具返回 `[BLOCKED]` 字符串而不是抛出异常，这样智能体可以在其推理循环中优雅地处理该情况。
+
+所有其他异常（网络错误、钱包故障）均以 `[ERROR] <message>` 的形式返回。
+
+如果你需要以编程方式访问：
+
+```python
+from l402kit import BudgetExceededError
+
+class MyL402Tool(L402Tool):
+    def _run(self, url, method="GET", body=None, run_manager=None):
+        result = super()._run(url, method, body, run_manager)
+        if result.startswith("[BLOCKED]"):
+            raise BudgetExceededError(url, 0, 0)  # 重新抛出供外部处理器捕获
+        return result
+```
+
+---
+
+## 未安装 LangChain 的情况
+
+如果未安装 `langchain`，在模块级别导入 `L402Tool` 会成功（优雅降级），但实例化时会抛出：
+
+```
+ImportError: langchain is required to use L402Tool.
+Install it with: pip install langchain langchain-community
+```

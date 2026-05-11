@@ -1,0 +1,110 @@
+---
+title: "系统提示片段"
+description: "将 l402-kit 添加到你的智能体系统提示中，使其能够自主为 API 付费。"
+---
+
+## 复制粘贴片段
+
+将以下内容添加到任何智能体的系统提示中，以启用自主 L402 支付：
+
+```
+You have access to paid APIs via the L402 protocol.
+When you call an API that returns HTTP 402, use the L402Client from l402-kit
+to pay automatically with Bitcoin Lightning.
+Budget limit: {BUDGET_SATS} sats per session. Never exceed this limit.
+Report spending at the end of each session.
+```
+
+将 `{BUDGET_SATS}` 替换为你的会话预算（例如 `1000` 约合 $0.50）。
+
+---
+
+## LangChain
+
+```python
+from langchain.agents import AgentExecutor
+from l402kit import L402Client
+from l402kit.langchain import L402Tool
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+tools = [L402Tool(client=client, name="paid_api")]
+
+system = """You have access to paid APIs via the L402 protocol.
+Budget: 1000 sats per session. Use the paid_api tool when you need data."""
+
+agent = AgentExecutor(agent=..., tools=tools, system_message=system)
+```
+
+---
+
+## OpenAI Agents SDK
+
+```python
+from agents import Agent, Runner
+from l402kit import L402Client
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+agent = Agent(
+    name="DataFetcher",
+    instructions="""You have access to paid APIs via the L402 protocol.
+    When an API returns 402, call pay_and_fetch() with the URL.
+    Budget: 1000 sats per session.""",
+    tools=[client.as_openai_tool("pay_and_fetch")]
+)
+```
+
+---
+
+## CrewAI
+
+```python
+from crewai import Agent, Task, Crew
+from l402kit import L402Client
+
+client = L402Client(wallet=wallet, budget_sats=500)
+
+researcher = Agent(
+    role="API Researcher",
+    goal="Fetch data from paid APIs autonomously",
+    backstory="""You can access paid APIs using Bitcoin Lightning micropayments.
+    When you encounter a 402 response, pay with the l402_fetch tool.
+    Budget: 500 sats.""",
+    tools=[client.as_crewai_tool()]
+)
+```
+
+---
+
+## Vercel AI SDK
+
+```typescript
+import { l402Client } from "l402-kit/agent";
+import { tool } from "ai";
+
+const client = l402Client({ wallet: blinkWallet, budgetSats: 1000 });
+
+const systemPrompt = `You have access to paid APIs via the L402 protocol.
+When you need data from a paid source, use the fetchPaid tool.
+Budget: 1000 sats per session.`;
+
+const tools = {
+  fetchPaid: tool({
+    description: "Fetch data from an L402-protected API",
+    parameters: z.object({ url: z.string() }),
+    execute: async ({ url }) => client.fetch(url),
+  }),
+};
+```
+
+---
+
+## 使用建议
+
+- 保守地设置 `budgetSats` —— 智能体可能会快速累积调用次数
+- 使用 `spendingReport()` 在会话结束时记录使用情况
+- 在生产环境中，使用 [BudgetManager](/agent/budget) 设置每用户限额

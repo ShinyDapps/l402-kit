@@ -1,0 +1,358 @@
+---
+title: Providers
+description: 两种模式 — Managed（0.3% 固定费率，无需节点）或 Soberano（0%，使用您自己的 Lightning 节点）。ManagedProvider、Blink、LNbits、OpenNode 及自定义。
+---
+
+## 两种模式
+
+| 模式 | Provider | 费率 | 测试网 / 沙盒 | 配置 |
+|---|---|---|---|---|
+| **Managed** ⭐ | `ManagedProvider` | 每 sat 0.3% | ❌（测试中使用 mock） | 仅需 Lightning 地址 |
+| **Soberano** | Blink | 0% | ❌ 仅主网 | 免费托管账户 |
+| **Soberano** | LNbits | 0% | ✅ RegTest / signet | 自托管或公共实例 |
+| **Soberano** | OpenNode | 0% | ✅ `testMode: true` | 免费沙盒账户 |
+| **Soberano** | Alby Hub | 0% | ✅ 通过 Hub 测试网钱包 | 自托管云节点 |
+| **Soberano** | BTCPay | 0% | ✅ 支持 RegTest | 自托管节点 |
+| **Soberano** | Custom | 0% | ✅ 任意自定义接入 | 任意 Lightning 后端 |
+
+**Managed 模式** — l402kit.com 托管 Lightning 节点。您只需添加您的 Lightning 地址，我们会自动将每笔 sat 的 99.7% 转发给您。
+
+**Soberano 模式** — 您连接自己的 Lightning 钱包/节点。0% 费率，完全自托管，兼容任意 provider。
+
+---
+
+## ManagedProvider（推荐）
+
+无需 Lightning 节点。添加您的 Lightning 地址即可开始收款 — l402kit.com 处理所有发票创建和支付路由。
+
+**费率：** 每收到 1 sat 收取 0.3%。99.7% 直接到账您的 Lightning 钱包。无月费。
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, ManagedProvider } from 'l402-kit';
+import express from 'express';
+
+const app = express();
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/premium', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'Payment confirmed ⚡' });
+});
+
+app.listen(3000);
+// 0.3% fee · no node setup · works immediately
+```
+
+```python Python
+from l402kit import l402_required, ManagedProvider
+from fastapi import FastAPI
+
+app = FastAPI()
+lightning = ManagedProvider.from_address("you@yourdomain.com")
+
+@app.get("/premium")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium():
+    return {"data": "Payment confirmed ⚡"}
+# 0.3% fee · no Lightning node required
+```
+
+```go Go
+import (
+    "fmt"
+    "net/http"
+    l402kit "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    provider := l402kit.NewManagedProvider("you@yourdomain.com")
+    http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+        PriceSats: 10,
+        Lightning: provider,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintln(w, `{"data":"Payment confirmed ⚡"}`)
+    })))
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+```rust Rust
+use axum::{middleware, routing::get, Router};
+use l402kit::{l402_middleware, Options, ManagedProvider};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
+    let app = Router::new()
+        .route("/premium", get(|| async { r#"{"data":"Payment confirmed ⚡"}"# }))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
+</CodeGroup>
+
+**工作原理：**
+1. 您的 API 调用 `ManagedProvider.fromAddress("you@domain.com")`
+2. 当调用方访问您的端点时，l402kit.com 创建一个 Lightning 发票
+3. 调用方付款 → Lightning 结算 → 99.7% 立即转发至您的 Lightning 地址
+4. 您的 API 验证加密证明并返回 `200 OK`
+
+<Note>
+0.3% 路由费是唯一成本。无月费，无需注册账户。任意 Lightning 地址均可使用（Blink、Phoenix、Alby、Strike、Wallet of Satoshi 等）。
+</Note>
+
+### 信任与可用性
+
+**l402kit.com 由谁运营？** ShinyDapps（开源，MIT 协议）。托管基础设施运行于 Cloudflare Workers —— 全球分布式，无单点故障。
+
+**可用性**：全天候监控，详见 [stats.uptimerobot.com/57uOzF17jK](https://stats.uptimerobot.com/57uOzF17jK)。SLA 目标：99.9%。
+
+**如果 l402kit.com 停止服务怎么办？** 您的验证逻辑是本地执行的 —— `SHA256(preimage) == paymentHash` 在您的进程中运行，零网络调用。只有发票*创建*会访问 l402kit.com。如果托管服务下线，只需一行代码切换到任意 soberano provider：
+
+```typescript
+// 之前（managed）
+const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
+
+// 之后（soberano — 0% 费率，完全自托管）
+const lightning = new BlinkProvider(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+```
+
+无需修改其他代码。已付款的 token 继续有效 —— 验证完全基于密码学。
+
+**能否自托管托管层？** 可以。完整源码以 MIT 协议发布于 [GitHub](https://github.com/ShinyDapps/l402-kit)。`cloudflare/` 目录包含托管 API worker —— 5 分钟内即可部署到您自己的 Cloudflare 账户。
+
+---
+
+## Blink（Soberano — 0% 费率）
+
+[Blink](https://blink.sv) 是一个免费的托管比特币 Lightning 钱包，提供 GraphQL API。无需 KYC，无月费，即开即用。使用它以 0% 费率运行 soberano 模式。
+
+<Note>
+**应急方案：** Blink 是免费服务 —— 其定价政策可能发生变化。如果 Blink 增加费用或限制 API，只需一行代码切换到另一个 soberano provider（无需其他任何改动，已付款的 token 继续有效）。零锁定。备选方案：LNbits（自托管，永久 0%）、OpenNode（商业 SLA）、Alby Hub（自托管）或 BTCPay（完全主权）。
+</Note>
+
+**快速开始：**
+1. 在 [dashboard.blink.sv](https://dashboard.blink.sv) 创建账户
+2. 进入 **API Keys** → 创建新密钥
+3. 从钱包页面复制您的 **BTC Wallet ID**
+
+<CodeGroup>
+```typescript TypeScript
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // blink_xxx...
+  process.env.BLINK_WALLET_ID!,  // UUID
+);
+```
+
+```python Python
+from l402kit.providers.blink import BlinkProvider
+
+blink = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+```
+
+```go Go
+import "github.com/shinydapps/l402-kit/go"
+
+provider := l402kit.NewBlinkProvider(
+    os.Getenv("BLINK_API_KEY"),
+    os.Getenv("BLINK_WALLET_ID"),
+)
+```
+</CodeGroup>
+
+**环境变量：**
+```bash
+BLINK_API_KEY=blink_xxxxxxxxxxxxxxxxxxxxxxxx
+BLINK_WALLET_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+---
+
+## LNbits（Soberano — 0% 费率）
+
+[LNbits](https://lnbits.com) 是一个开源 Lightning 钱包服务器。可自托管或使用公共实例。
+
+**快速开始：**
+1. 配置 LNbits（自托管或使用 legend.lnbits.com）
+2. 创建钱包 → 复制 **Invoice/read key**
+
+<CodeGroup>
+```typescript TypeScript
+import { LNbitsProvider } from 'l402-kit';
+
+const lnbits = new LNbitsProvider(
+  process.env.LNBITS_KEY!,
+  process.env.LNBITS_URL ?? 'https://legend.lnbits.com',
+);
+```
+
+```python Python
+from l402kit.providers.lnbits import LNbitsProvider
+
+lnbits = LNbitsProvider(
+    api_key=os.environ["LNBITS_KEY"],
+    base_url=os.environ.get("LNBITS_URL", "https://legend.lnbits.com"),
+)
+```
+</CodeGroup>
+
+**环境变量：**
+```bash
+LNBITS_KEY=your-invoice-read-key
+LNBITS_URL=https://your-lnbits-instance.com
+```
+
+---
+
+## OpenNode（Soberano — 0% 费率）
+
+[OpenNode](https://opennode.com) 是一个提供免费沙盒测试环境的 Lightning provider。
+
+**快速开始：**
+1. 在 [app.opennode.com](https://app.opennode.com) 创建账户
+2. 进入 **Integrations** → **API Keys** → 创建密钥
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenNodeProvider } from 'l402-kit';
+
+const opennode = new OpenNodeProvider(
+  process.env.OPENNODE_KEY!,
+  process.env.NODE_ENV !== 'production', // testMode
+);
+```
+
+```python Python
+from l402kit.providers.opennode import OpenNodeProvider
+
+opennode = OpenNodeProvider(
+    api_key=os.environ["OPENNODE_KEY"],
+    test_mode=os.environ.get("NODE_ENV") != "production",
+)
+```
+</CodeGroup>
+
+---
+
+## Alby Hub（Soberano — 0% 费率）
+
+[Alby Hub](https://hub.getalby.com) 是云端自托管 Lightning 节点。您的密钥，您的 sats —— 无托管方。
+
+**快速开始：**
+1. 在 [hub.getalby.com](https://hub.getalby.com) 创建 Hub（或自托管）
+2. 进入 **Settings → Access Tokens** → 创建具有 `invoices:create` + `invoices:read` 权限的 token
+3. 复制您的 Hub URL 和访问 token
+
+<CodeGroup>
+```typescript TypeScript
+import { AlbyProvider } from 'l402-kit';
+
+const alby = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!,  // Hub → Settings → Access Tokens
+  process.env.ALBY_HUB_URL!,       // 例如 "https://your-name.getalby.com"
+);
+```
+</CodeGroup>
+
+**环境变量：**
+```bash
+ALBY_ACCESS_TOKEN=your-alby-access-token
+ALBY_HUB_URL=https://your-name.getalby.com
+```
+
+---
+
+## BTCPay Server（Soberano — 0% 费率）
+
+[BTCPay Server](https://btcpayserver.org) 是完全主权的比特币 + Lightning 解决方案。您的节点，您的密钥，零托管。
+
+**兼容方案：** 自托管（Umbrel、Start9、VPS）或托管服务（Voltage、LunaNode）。
+
+**快速开始：**
+1. BTCPay 商店 → **Lightning → Settings**
+2. **Account → API Keys** → 生成具有 `btcpay.store.cancreatelightninginvoice` 权限的密钥
+3. 从商店 URL 复制您的 Store ID
+
+<CodeGroup>
+```typescript TypeScript
+import { BTCPayProvider } from 'l402-kit';
+
+const btcpay = new BTCPayProvider(
+  process.env.BTCPAY_URL!,       // 例如 "https://btcpay.yourdomain.com"
+  process.env.BTCPAY_API_KEY!,   // Account → API Keys
+  process.env.BTCPAY_STORE_ID!,  // 来自商店 URL
+);
+```
+</CodeGroup>
+
+**环境变量：**
+```bash
+BTCPAY_URL=https://btcpay.yourdomain.com
+BTCPAY_API_KEY=your-api-key
+BTCPAY_STORE_ID=your-store-id
+```
+
+---
+
+## 自定义 provider（Soberano — 0% 费率）
+
+实现 `LightningProvider` 接口以接入任意 Lightning 后端：
+
+<CodeGroup>
+```typescript TypeScript
+import type { LightningProvider, Invoice } from 'l402-kit';
+
+class MyProvider implements LightningProvider {
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    // Call your Lightning node API
+    const result = await myNode.createInvoice(amountSats);
+    const macaroon = Buffer.from(
+      JSON.stringify({ hash: result.hash, exp: Date.now() + 3_600_000 })
+    ).toString('base64');
+    return {
+      paymentRequest: result.bolt11,
+      paymentHash: result.hash,
+      macaroon,
+      amountSats,
+      expiresAt: Date.now() + 3_600_000,
+    };
+  }
+
+  async checkPayment(paymentHash: string): Promise<boolean> {
+    return myNode.isPaid(paymentHash);
+  }
+}
+```
+
+```python Python
+from l402kit.types import LightningProvider, Invoice
+from datetime import datetime, timedelta
+import base64, json
+
+class MyProvider(LightningProvider):
+    async def create_invoice(self, amount_sats: int) -> Invoice:
+        result = await my_node.create_invoice(amount_sats)
+        exp = int((datetime.now() + timedelta(hours=1)).timestamp() * 1000)
+        macaroon = base64.b64encode(
+            json.dumps({"hash": result.hash, "exp": exp}).encode()
+        ).decode()
+        return Invoice(
+            payment_request=result.bolt11,
+            payment_hash=result.hash,
+            macaroon=macaroon,
+            amount_sats=amount_sats,
+            expires_at=exp,
+        )
+
+    async def check_payment(self, payment_hash: str) -> bool:
+        return await my_node.is_paid(payment_hash)
+```
+</CodeGroup>

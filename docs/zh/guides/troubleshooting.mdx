@@ -1,0 +1,188 @@
+---
+title: "故障排查"
+description: "常见错误、原因及修复方法。"
+---
+
+## Token 错误
+
+### `Token already used`（401）
+
+**原因：** 相同的 preimage 被提交了两次——重放攻击或意外重试。
+
+**修复：** 每次发票付款只产生一个一次性 token。重新生成发票并再次付款。在客户端，确保 `L402Client` 按端点 URL 缓存 token（默认已启用此功能）。
+
+---
+
+### `Token expired`（401 / `valid: false`）
+
+**原因：** 发票在 1 小时后过期。Token 的 `exp` 字段以毫秒为单位。
+
+**修复：** 请求新的发票。如果过期发生得太快，请检查服务器时钟是否准确（服务器上的 `Date.now()` 与客户端上的 `time.time()` 误差必须在几秒以内）。
+
+---
+
+### `Invalid preimage format`（返回 402 而非 200）
+
+**原因：** preimage 不是恰好 64 个十六进制字符（32 字节）。
+
+**修复：** 确保您的钱包以 64 个字符的十六进制字符串形式返回原始 preimage。部分钱包以 base64 格式返回——请先对其进行解码。
+
+---
+
+### `Webhook signature mismatch`（401）
+
+**原因：** `l402-signature` 请求头与密钥不匹配，或消息体在传输过程中被修改。
+
+**修复：**
+1. 确认 `L402_WEBHOOK_SECRET` 在发送方和接收方两侧一致。
+2. 使用 `express.raw({ type: 'application/json' })`（而非 `express.json()`）在验证之前读取原始消息体——JSON 解析会重新格式化字符串并使签名失效。
+3. 检查您的反向代理（nginx、Cloudflare）是否修改了消息体。
+
+---
+
+## Provider 错误
+
+### `ManagedProvider: invoice creation failed` / HTTP 503
+
+**原因：** `l402kit.com` 暂时不可用，或 Blink API 已下线。
+
+**修复：** 使用指数退避策略重试。在 [status.blink.sv](https://status.blink.sv) 查看状态。对于要求零停机的生产工作负载，请使用独立 provider（BlinkProvider、AlbyProvider 等）并配置您自己的凭据。
+
+---
+
+### `Blink: INSUFFICIENT_CHANNEL_BALANCE`
+
+**原因：** 您的 Blink 钱包用于分账支付的出站流动性不足。
+
+**修复：** 向您的 `shinydapps@blink.sv` 钱包添加资金。平台需要少量余额来路由分账支付。这仅影响 ManagedProvider 分账功能——发票创建不受影响。
+
+---
+
+### 分账期间出现 `LNURL fetch failed`
+
+**原因：** 开发者的 Lightning Address 无法解析。`/.well-known/lnurlp/` 端点返回了非 200 状态。
+
+**修复：** 验证 Lightning Address 是否有效，以及该域名的 LNURL-pay 端点是否可访问。使用以下命令测试：
+```bash
+curl https://<domain>/.well-known/lnurlp/<username>
+```
+
+---
+
+### `AlbyProvider: HTTP 401`
+
+**原因：** Alby 访问 token 已过期或被撤销。
+
+**修复：** 在 Alby Hub → 设置 → 访问 Token 中重新生成 token。确保权限范围包含 `invoices:create`。
+
+---
+
+### `BTCPayProvider: HTTP 403`
+
+**原因：** API 密钥缺少所需权限。
+
+**修复：** 在 BTCPay Server → 账户 → API 密钥中，确保该密钥对正确的商店具有 `btcpay.store.cancreatelightninginvoice` 权限范围。
+
+---
+
+## 重放保护
+
+### 多实例 / 重放未被拦截
+
+**原因：** 默认的 `MemoryReplayAdapter` 仅在进程内有效。服务重启或跨多个实例时会被重置。
+
+**修复：** 在多实例部署中使用 `RedisReplayAdapter`：
+
+<CodeGroup>
+
+```ts TypeScript
+import Redis from "ioredis";
+import { RedisReplayAdapter } from "l402-kit";
+
+const redis = new Redis(process.env.REDIS_URL!);
+app.get("/api", l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+```python Python
+from l402kit import RedisReplayAdapter
+import redis.asyncio as redis
+
+r = redis.from_url(os.environ["REDIS_URL"])
+# pass replayAdapter to l402_required (coming soon)
+```
+
+</CodeGroup>
+
+Supabase 的 `payment_hash` 唯一约束作为持久化的第二层防护，无论内存适配器的状态如何，均可始终阻止重放攻击。
+
+---
+
+## 速率限制
+
+### `Too many requests. Max 20 invoices/minute per IP.`（429）
+
+**原因：** 同一 IP 每分钟向 ManagedProvider 端点发送的发票创建请求超过 20 次。
+
+**修复：** 实现客户端缓存——不要在每次页面加载时创建新发票。`L402Client` 会自动按端点 URL 缓存 token。对于需要生成大量发票的服务器间流程，请使用独立 provider。
+
+---
+
+## 框架特定问题
+
+### Express：中间件未触发
+
+**原因：** Express 路由处理器在 `l402()` 中间件之前注册，或中间件顺序错误。
+
+**修复：**
+```ts
+// ✅ 正确——l402 在处理器之前
+app.get("/api", l402({ priceSats: 10, lightning }), myHandler);
+
+// ❌ 错误——l402 在处理器之后注册
+app.get("/api", myHandler, l402(...));
+```
+
+---
+
+### FastAPI：402 响应出现 `422 Unprocessable Entity`
+
+**原因：** FastAPI 会根据声明的响应模型验证响应体。402 响应体与之不匹配。
+
+**修复：** 将 402 状态码排除在响应验证之外，或不在被装饰的端点上声明响应模型：
+```python
+@app.get("/premium")  # 此处不要使用 response_model=
+@l402_required(price_sats=10, lightning=provider)
+async def premium():
+    return {"data": "paid content"}
+```
+
+---
+
+### Go：`panic: l402: no Lightning provider set`
+
+**原因：** `Options.Lightning` 为 nil。
+
+**修复：** 始终设置一个 provider：
+```go
+// ✅
+l402kit.Middleware(l402kit.Options{
+    PriceSats: 10,
+    Lightning: l402kit.NewManagedProvider("you@blink.sv"),
+}, handler)
+
+// ❌ 会 panic
+l402kit.Middleware(l402kit.Options{PriceSats: 10}, handler)
+```
+
+---
+
+## 仍然遇到问题？
+
+请在 [github.com/ShinyDapps/l402-kit/issues](https://github.com/ShinyDapps/l402-kit/issues) 提交 issue，并附上以下信息：
+- SDK 语言和版本
+- 最小复现示例
+- 错误信息和堆栈跟踪

@@ -1,0 +1,158 @@
+---
+title: 钱包
+description: 连接 Blink 或 Alby，让您的代理自动支付 Lightning 发票。
+---
+
+## 支持的钱包
+
+| 钱包 | 安装方式 | 自托管 | 备注 |
+|--------|---------|:------------:|-------|
+| [Blink](https://blink.sv) | 内置 | ❌ 托管式 | 最简单的配置，GraphQL API |
+| [Alby Hub](https://getalby.com) | 内置 | ✅ 支持自托管 | REST API，支持自有 Hub |
+| 自定义 | `L402Wallet` 接口 | ✅ | 使用您自己的钱包 |
+
+---
+
+## BlinkWallet
+
+### 配置
+
+1. 在 [blink.sv](https://blink.sv) 注册账户
+2. 前往 **Dashboard → API Keys**，创建一个密钥
+3. 从控制台复制您的 **Wallet ID**
+
+```bash
+export BLINK_API_KEY="your-api-key"
+export BLINK_WALLET_ID="your-wallet-id"
+```
+
+### Node.js
+
+```typescript
+import { BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+```
+
+### 工作原理
+
+调用 [Blink GraphQL API](https://api.blink.sv/graphql)，使用 `lnInvoicePaymentSend` mutation。从已结算的交易中返回 `preImage`。
+
+---
+
+## AlbyWallet
+
+### 配置
+
+1. 在 [getalby.com](https://getalby.com) 创建账户
+2. 前往 **Settings → Access Tokens**，创建一个具有 `payments:send` 权限范围的令牌
+3. （可选）运行您自己的 [Alby Hub](https://github.com/getAlby/hub) 以实现自托管
+
+```bash
+export ALBY_TOKEN="your-access-token"
+# 可选 — 仅在自托管 Hub 时需要：
+export ALBY_HUB_URL="https://your-hub.example.com"
+```
+
+### Node.js
+
+```typescript
+import { AlbyWallet } from "l402-kit";
+
+// Alby 云端
+const wallet = new AlbyWallet(process.env.ALBY_TOKEN!);
+
+// 自托管 Hub
+const wallet = new AlbyWallet(
+  process.env.ALBY_TOKEN!,
+  process.env.ALBY_HUB_URL,  // optional base URL
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import AlbyWallet
+
+# Alby 云端
+wallet = AlbyWallet(os.environ["ALBY_TOKEN"])
+
+# 自托管 Hub
+wallet = AlbyWallet(
+    access_token=os.environ["ALBY_TOKEN"],
+    base_url=os.environ.get("ALBY_HUB_URL", "https://api.getalby.com"),
+)
+```
+
+### 工作原理
+
+使用 `Bearer` 令牌调用 Alby Hub REST API 的 `POST /payments/bolt11` 接口。从响应中返回 `payment_preimage`。
+
+---
+
+## 自定义钱包
+
+实现 `L402Wallet` 接口以使用任意 Lightning 钱包：
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import type { L402Wallet } from "l402-kit";
+
+    class PhoenixWallet implements L402Wallet {
+      async payInvoice(bolt11: string): Promise<{ preimage: string }> {
+        const res = await fetch("http://localhost:9740/payinvoice", {
+          method: "POST",
+          body: new URLSearchParams({ invoice: bolt11 }),
+        });
+        const data = await res.json();
+        return { preimage: data.paymentPreimage };
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Wallet
+    import httpx
+
+    class PhoenixWallet(L402Wallet):
+        def pay_invoice(self, bolt11: str) -> str:
+            r = httpx.post(
+                "http://localhost:9740/payinvoice",
+                data={"invoice": bolt11},
+            )
+            r.raise_for_status()
+            return r.json()["paymentPreimage"]
+    ```
+  </Tab>
+</Tabs>
+
+该接口需要实现一个方法：
+
+| 方法 | TypeScript | Python |
+|--------|-----------|--------|
+| 支付 BOLT11 发票 | `payInvoice(bolt11): Promise<{ preimage: string }>` | `pay_invoice(bolt11: str) -> str` |
+
+---
+
+## 如何选择钱包
+
+- **测试 / 原型开发** → Blink（托管式，即时配置，免费套餐）
+- **生产环境代理，最大控制权** → Alby Hub 自托管（非托管式，REST API）
+- **高吞吐量 / 低手续费** → 通过自定义 `L402Wallet` 使用 Phoenix（非托管式，ACINQ）
+- **企业级** → 通过自定义钱包使用 LNbits 自托管

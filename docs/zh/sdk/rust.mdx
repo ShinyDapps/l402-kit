@@ -1,0 +1,185 @@
+---
+title: Rust SDK
+description: l402-kit Rust SDK 完整参考 — 用于比特币闪电网络按调用付费 API 的 axum 中间件。
+---
+
+## 安装
+
+```bash
+cargo add l402kit
+```
+
+或在 `Cargo.toml` 中：
+
+```toml
+[dependencies]
+l402kit = "1.8"
+```
+
+**环境要求**：Rust 1.75+，Tokio 异步运行时
+
+---
+
+## 快速开始
+
+最快的方式是使用 `ManagedProvider` — 无需 Lightning 节点，手续费 0.3%：
+
+```rust
+use axum::{middleware, routing::get, Router, Json};
+use l402kit::{l402_middleware, Options, ManagedProvider};
+use serde_json::{json, Value};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
+
+    let app = Router::new()
+        .route("/api/data", get(handler))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn handler() -> Json<Value> {
+    Json(json!({ "data": "premium content" }))
+}
+```
+
+如需主权模式（0% 手续费），请实现 `LightningProvider` trait — 参见下方[自定义 provider](#custom-provider)。
+
+---
+
+## 自定义 provider
+
+```rust
+use std::sync::Arc;
+use l402kit::{Options, LightningProvider, Invoice, BoxFuture, L402Error};
+
+struct MyProvider;
+
+impl LightningProvider for MyProvider {
+    fn create_invoice<'a>(&'a self, amount_sats: u64) -> BoxFuture<'a, Result<Invoice, L402Error>> {
+        Box::pin(async move {
+            Ok(Invoice {
+                payment_request: "lnbc...".into(),
+                payment_hash: "abc123...".into(),
+                macaroon: "eyJ...".into(),
+                amount_sats,
+            })
+        })
+    }
+}
+
+let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
+```
+
+---
+
+## `Options`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `price_sats` | `u64` | 每次调用的价格，单位为 satoshi（**必填**） |
+| `lightning` | `Arc<dyn LightningProvider>` | 你的 Lightning 后端（**必填**） |
+| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | 每次验证支付成功后触发的回调 |
+
+### 已废弃：`with_address()`
+
+`Options::with_address(address)` 已在 v1.4.0 中移除。请改用 `Options::new(sats, ManagedProvider::new(address))`：
+
+```rust
+use l402kit::{Options, ManagedProvider};
+use std::sync::Arc;
+
+let provider = ManagedProvider::new("you@yourdomain.com".into());
+let opts = Arc::new(Options::new(10, provider));
+```
+
+---
+
+## `l402_middleware(opts: Options)`
+
+返回一个与 axum 0.8+ 兼容的 `axum::middleware::Layer`。
+
+### 行为说明
+
+| 请求 | 响应 |
+|---|---|
+| 无 `Authorization` 请求头 | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| 有效的 `L402 <macaroon>:<preimage>` | 执行处理器 |
+| 无效或已过期的 token | `401 Unauthorized` |
+| 重放的 preimage | `401 Token already used` |
+
+### 402 响应体
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## `on_payment` 回调
+
+```rust
+use l402kit::{Options, L402Token};
+
+let opts = Arc::new(
+    Options::new(10, provider).on_payment(|token: L402Token, amount_sats: u64| {
+        println!("payment received: {} sats", amount_sats);
+    }),
+);
+```
+
+---
+
+## 功能标志
+
+```toml
+[features]
+default = ["axum-middleware"]
+axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
+```
+
+禁用 `axum-middleware` 可在不依赖 axum 或 reqwest 的情况下，仅使用核心验证函数：
+
+```toml
+l402kit = { version = "1.6", default-features = false }
+```
+
+---
+
+## 验证
+
+`SHA256(preimage) == paymentHash` 使用 `sha2` crate 在本地验证 — 热路径上无需网络调用。Token 过期检查在同一操作中完成。
+
+---
+
+## 错误码
+
+| 状态码 | 含义 |
+|---|---|
+| `402` | 无支付 token — 请支付发票 |
+| `401` | 无效 token 或已过期的 macaroon |
+| `401` | 重放的 preimage（已使用） |
+
+---
+
+## 运行
+
+```bash
+cargo run
+
+# 测试 — 触发 402
+curl http://localhost:3000/api/data
+
+# 支付发票后执行：
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
+```

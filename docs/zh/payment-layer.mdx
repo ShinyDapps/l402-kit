@@ -1,0 +1,158 @@
+---
+title: "支付层"
+description: "l402-kit 如何处理 Bitcoin Lightning 支付 —— BOLT11、L402 协议与密码学验证。"
+---
+
+# 支付层
+
+l402-kit 是一个**主权中间件**，只需 3 行代码即可为任意 HTTP 端点添加 Bitcoin Lightning 付费墙。您使用自己的 Lightning 提供商——资金直接进入您的钱包，无需任何中间方。
+
+---
+
+## 协议：L402
+
+L402 是一个开放标准，通过原生支付握手对 HTTP/1.1 进行扩展：
+
+```
+Client → GET /api/data
+Server ← 402 Payment Required
+         WWW-Authenticate: L402 <macaroon>, invoice="<BOLT11>"
+
+Client pays invoice via Lightning wallet
+Client → GET /api/data
+         Authorization: L402 <macaroon>:<preimage>
+Server ← 200 OK + data
+```
+
+**macaroon** 是一个与发票 `paymentHash` 绑定的能力令牌。**preimage** 是 Lightning 节点在支付结算时释放的密码学密钥。服务器验证：
+
+```
+SHA256(preimage) == paymentHash ✓
+```
+
+无需账户、无需会话、无需 JWT —— preimage **本身**即为支付证明。
+
+---
+
+## 发票创建流程
+
+```
+Your API receives a request without valid Authorization
+     │
+     ▼
+l402-kit middleware calls lightning.createInvoice(priceSats)
+     │  (your provider: Blink, Alby, OpenNode, BTCPay, LNbits…)
+     ▼
+Provider returns BOLT11 invoice + paymentHash
+     │
+     ▼
+Middleware builds macaroon: base64({ hash: paymentHash, exp: now+1h })
+     │
+     ▼
+Your API returns 402 + invoice + macaroon to client
+```
+
+---
+
+## 支付验证流程
+
+```
+Client pays BOLT11 invoice via any Lightning wallet
+     │
+     ▼
+Lightning node releases preimage (32-byte secret)
+     │
+     ▼
+Client sends Authorization: L402 <macaroon>:<preimage>
+     │
+     ▼
+Middleware verifies locally — no network call:
+  1. Decode macaroon (base64 → JSON { hash, exp })
+  2. Check exp > now()
+  3. SHA256(preimage) === hash ✓
+     │
+     ▼
+Request passes through to your API handler → 200 OK
+```
+
+验证复杂度为 **O(1)** —— 纯密码学运算，热路径上无需数据库查询。重放防护（Supabase `payment_hash` 日志记录）异步执行，不会阻塞请求。
+
+### Macaroon 格式
+
+l402-kit 使用轻量级自定义 macaroon，而非 libmacaroon。令牌是一个经过 `base64url` 编码的 JSON 对象：
+
+```json
+{ "hash": "<paymentHash hex>", "exp": <unix timestamp> }
+```
+
+这种方式更简洁，无需任何外部库即可审计。`Authorization` 请求头格式为：
+
+```
+Authorization: L402 <base64url-macaroon>:<preimage-hex>
+```
+
+---
+
+## 费用模式
+
+| 模式 | 费率 | 配置 |
+|---|---|---|
+| **主权模式**（任意提供商） | **0%** —— 您保留 100% | 提供您自己的提供商凭证 |
+| **托管模式**（`ManagedProvider`） | 0.3% 归 l402kit.com | 无需 Lightning 节点 —— 即刻可用 |
+
+主权模式为默认模式。托管模式需显式选择启用：
+
+```typescript
+// Soberano — 0% fee, you keep 100%
+import { AlbyProvider } from 'l402-kit';
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+
+// Managed — 0.3% fee, no Lightning node needed
+import { ManagedProvider } from 'l402-kit';
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+```
+
+---
+
+## 数据存储（可选 —— Supabase）
+
+设置 `SUPABASE_URL` + `SUPABASE_ANON_KEY` 可自动记录支付信息：
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — safe to store
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+**为何存储 `payment_hash` 而非 `preimage`？** `payment_hash` 已嵌入每张 BOLT11 发票中——它本身是公开信息。只有 `preimage` 才是秘密。存储哈希值即可实现重放防护，同时不会产生任何额外的信息暴露风险。
+
+---
+
+## Lightning 提供商
+
+l402-kit 与提供商无关，任何实现了 `LightningProvider` 接口的后端均可使用：
+
+| 提供商 | 说明 |
+|---|---|
+| [Alby Hub](https://hub.getalby.com) | 自托管，0% 手续费 |
+| [Blink](https://blink.sv) | 免费托管，小额无需 KYC |
+| [BTCPay Server](https://btcpayserver.org) | 自托管，完全主权 |
+| [OpenNode](https://opennode.com) | 托管，无需配置 |
+| [LNbits](https://lnbits.com) | 自托管或云端部署 |
+
+提供商配置请参阅 [TypeScript SDK](/sdk/typescript) 或 [Python SDK](/sdk/python)。
+
+---
+
+## 安全保障
+
+| 威胁 | 缓解措施 |
+|---|---|
+| 重放攻击 | Preimage 首次验证后即标记为已使用 —— 内存或 Redis 适配器 |
+| 伪造 preimage | `SHA256(preimage) === paymentHash` 在密码学上不可伪造 |
+| 令牌过期 | Macaroon 内嵌 `exp` 时间戳 —— 每次请求均验证 |
+| Webhook 伪造 | 处理前验证 `HMAC-SHA256(secret, body)` |

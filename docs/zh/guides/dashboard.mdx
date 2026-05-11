@@ -1,0 +1,110 @@
+---
+title: 分析仪表板
+description: 通过 l402kit.com/dashboard 访问您的支付分析仪表板 — 无需账户，由密钥令牌保护。
+---
+
+[l402kit.com/dashboard](https://l402kit.com/dashboard) 上的分析仪表板可实时显示流经您 API 的所有支付统计数据：收到的总 sats 数、各端点明细、7 天趋势以及最近的交易记录。
+
+## 设置
+
+仪表板由密钥令牌 **`DASHBOARD_SECRET`** 保护。您只需生成一次，并将其存储在与其他密钥相同的地方。
+
+### 1. 生成密钥
+
+```bash
+openssl rand -hex 32
+# → shdp_dash_a1b2c3d4e5f6...
+```
+
+或使用任意密码管理器生成一个强随机字符串。
+
+### 2. 在您的 provider 中设置
+
+**Cloudflare Workers：**
+
+```bash
+cd cloudflare/
+wrangler secret put DASHBOARD_SECRET
+# 在提示时粘贴您的密钥
+```
+
+**Node.js / 其他：**
+
+```bash
+# .env
+DASHBOARD_SECRET=shdp_dash_a1b2c3d4e5f6...
+```
+
+### 3. 登录
+
+前往 [l402kit.com/dashboard](https://l402kit.com/dashboard)，输入您的密钥即可进入。无需邮箱、无需 OAuth、无需 Cookie — 密钥以 `x-dashboard-secret` 的形式随每次统计请求发送。
+
+---
+
+## 可查看的内容
+
+| 指标 | 说明 |
+|--------|-------------|
+| 总支付次数 | 已验证的 L402 支付的历史总计数 |
+| 总 sats | 所有支付的 `amount_sats` 之和 |
+| 7 天趋势 | 当前 7 天与前 7 天窗口的支付次数及 sats 对比 |
+| 按端点 | 各路由收益明细 |
+| 最近 20 条 | 最新支付记录，包含哈希、端点、金额、时间戳 |
+
+---
+
+## API
+
+相同的数据可直接通过 API 获取 — 适用于构建您自己的仪表板或接入 Grafana。
+
+```bash
+curl https://l402kit.com/api/stats \
+  -H "x-dashboard-secret: YOUR_SECRET"
+```
+
+```json
+{
+  "totalPayments": 142,
+  "totalSats": 14200,
+  "shinydappsFee": 42,
+  "trend": {
+    "payments7d": 38,
+    "payments7dPrev": 21,
+    "sats7d": 3800,
+    "sats7dPrev": 2100
+  },
+  "byOwner": {
+    "you@blink.sv": { "count": 142, "sats": 14200 }
+  },
+  "recent": [...]
+}
+```
+
+---
+
+## 安全模型
+
+- 密钥永远不会离开您的环境 — 它在 Cloudflare Worker 中使用严格相等进行服务端比较
+- 不会签发会话令牌 — 每次请求都会重新验证密钥
+- 密钥仅有只读权限 — 只能调用 `/api/stats`，不能写入或删除数据
+- 随时可通过 `wrangler secret put` 更新 `DASHBOARD_SECRET` 来生成新密钥
+
+<Note>
+切勿将 `DASHBOARD_SECRET` 提交到 git。请将其添加到您的 `.gitignore`，并使用 `wrangler secret put` 或您的 CI/CD 密钥管理器进行管理。
+</Note>
+
+---
+
+## 轮换密钥
+
+```bash
+# 生成新密钥
+openssl rand -hex 32
+
+# 在 Cloudflare Workers 中更新
+wrangler secret put DASHBOARD_SECRET
+
+# 完成 — 旧密钥立即失效
+```
+
+无需更新任何数据库条目。Worker 在每次请求时从环境中读取密钥。

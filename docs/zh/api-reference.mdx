@@ -1,0 +1,319 @@
+---
+title: "API 参考"
+description: "ManagedProvider 和 VS Code 扩展所使用的所有 l402kit.com REST 端点参考。"
+---
+
+基础 URL：`https://l402kit.com`
+
+所有响应均为 `application/json`。已为所有来源启用 CORS。
+
+---
+
+## 发票
+
+### 创建发票
+
+`POST /api/invoice`
+
+创建一个 BOLT11 Lightning 发票。由 `ManagedProvider` 自动调用——您通常不需要直接调用此接口。
+
+**请求体**
+
+| 字段 | 类型 | 必填 | 描述 |
+|---|---|---|---|
+| `amountSats` | number | ✅ | 以 satoshis 为单位的金额（最小为 1） |
+| `ownerAddress` | string | — | 您的 Lightning Address。执行分账时必填。 |
+
+**响应 200**
+
+```json
+{
+  "paymentRequest": "lnbc10n1p...",
+  "paymentHash":    "a1b2c3...",
+  "macaroon":       "eyJoYXNoIjoiYTFiMm..."
+}
+```
+
+**错误**
+
+| 状态码 | 原因 |
+|---|---|
+| 400 | `amountSats` 缺失或无效 |
+| 429 | 超出速率限制（每个 IP 每分钟 20 次请求） |
+| 503 | Lightning 提供商暂时不可用 |
+
+---
+
+### 验证令牌
+
+`POST /api/verify`
+
+在不使用 SDK 的情况下，在服务端验证 L402 令牌。
+
+**请求体**
+
+```json
+{ "token": "<macaroon>:<preimage>" }
+```
+
+**响应 200**
+
+```json
+{ "valid": true }
+```
+
+```json
+{ "valid": false, "error": "Token expired" }
+```
+
+---
+
+## 分账与支付
+
+### 执行分账
+
+`POST /api/split`
+
+手动触发对 Lightning Address 的 99.7/0.3% 分账支付。需要 `x-split-secret` 请求头。
+
+<Note>
+大多数情况下，分账会通过 Blink webhook 自动触发。仅在手动恢复或自定义集成时使用此端点。
+</Note>
+
+**请求头**
+
+| 请求头 | 值 |
+|---|---|
+| `x-split-secret` | 您的 `SPLIT_SECRET` 环境变量 |
+
+**请求体**
+
+```json
+{
+  "amountSats":   1000,
+  "ownerAddress": "you@blink.sv"
+}
+```
+
+**响应 200**
+
+```json
+{ "ok": true, "ownerSats": 997 }
+```
+
+**响应 200（已跳过——低于最小金额）**
+
+```json
+{ "ok": true, "skipped": true }
+```
+
+---
+
+## 仪表板与统计
+
+### 获取统计数据
+
+`GET /api/stats`
+
+返回支付分析数据。需要在 `Authorization` 请求头中提供 LNURL-auth 会话令牌。
+
+**响应 200**
+
+```json
+{
+  "totalPayments": 42,
+  "totalSats":     8400,
+  "shinydappsFee": 25,
+  "walletSats":    12345,
+  "walletUsdCents": 456789,
+  "byOwner": {
+    "dev@blink.sv": { "count": 42, "sats": 8400 }
+  },
+  "byDay": {
+    "2026-04-24": { "count": 5, "sats": 1000 }
+  },
+  "trend": {
+    "payments7d": 12,
+    "sats7d": 2400
+  },
+  "recent": [
+    {
+      "id": "uuid",
+      "endpoint": "/api/data",
+      "payment_hash": "a1b2...",
+      "amount_sats": 100,
+      "owner_address": "dev@blink.sv",
+      "paid_at": "2026-04-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## 专业版
+
+### 检查专业版访问权限
+
+`GET /api/pro-check?address=you@blink.sv`
+
+返回某个 Lightning Address 是否拥有有效的专业版订阅。
+
+**响应 200**
+
+```json
+{ "active": true,  "expiresAt": "2026-05-24T10:00:00Z" }
+{ "active": false }
+```
+
+### 订阅专业版
+
+`GET /api/dev-token?address=you@blink.sv`
+
+返回一个用于购买 30 天专业版订阅的 Lightning 发票（约 9,000 sats）。
+
+**响应 200**
+
+```json
+{
+  "priceSats": 9000,
+  "invoice":   "lnbc90n1p...",
+  "macaroon":  "eyJoYXNoIjoiY..."
+}
+```
+
+`POST /api/dev-token`
+
+支付发票后激活专业版。
+
+**请求体**
+
+```json
+{ "macaroon": "...", "preimage": "..." }
+```
+
+**响应 200**
+
+```json
+{ "access": true, "expiresAt": "2026-05-24T10:00:00Z" }
+```
+
+---
+
+## 认证（LNURL-auth）
+
+### 发起登录
+
+`GET /api/lnurl-auth`
+
+返回用于仪表板登录的 LNURL-auth 挑战。在仪表板中扫描二维码。
+
+### LNURL-pay 端点
+
+`GET /.well-known/lnurlp/:username`
+
+用于 Lightning Address 解析的标准 LNURL-pay 元数据。由分账机制内部使用。
+
+---
+
+## 演示
+
+### 演示索引
+
+`GET /api/demo`
+
+返回可用演示端点的相关信息。
+
+### BTC 价格（付费）
+
+`GET /api/demo/btc-price`
+
+返回实时 BTC 价格。需要有效的 L402 令牌（1 sat）。
+
+首次调用时返回 **402** 及发票与 macaroon。携带 `Authorization: L402 <macaroon>:<preimage>` 重试。
+
+### 获取 Preimage
+
+`GET /api/demo/preimage?hash=<paymentHash>`
+
+支付演示发票后，携带 `paymentHash` 调用此端点以获取您的 preimage 并构造 L402 令牌。
+
+---
+
+## Webhooks
+
+### Blink Webhook 接收器
+
+`POST /api/blink-webhook`
+
+内部端点。接收来自 Blink 的已签名支付确认（Svix HMAC-SHA256）。触发分账并记录支付。不适合直接使用。
+
+---
+
+## API 目录
+
+### 注册 API
+
+`POST /api/register`
+
+在公共目录中注册您的 L402 保护 API。当提供 `registerDirectory` 时，由 `ManagedProvider.fromAddress()` 自动调用。幂等操作——每次服务器启动时调用均安全。
+
+**请求体**
+
+| 字段 | 类型 | 必填 | 描述 |
+|---|---|---|---|
+| `url` | string | ✅ | 您的 L402 端点的公开 URL |
+| `name` | string | ✅ | 显示名称 |
+| `price_sats` | number | ✅ | 每次调用的价格（以 satoshis 为单位，最小为 1） |
+| `lightning_address` | string | ✅ | 您的 Lightning Address |
+| `description` | string | — | 简短描述 |
+| `category` | string | — | `data`、`ai`、`finance`、`weather`、`compute`、`storage` 或 `other` |
+
+**响应 200**
+
+```json
+{ "ok": true, "id": "uuid" }
+```
+
+---
+
+### 列出 API
+
+`GET /api/apis.json`
+
+返回所有已注册的 API。机器可读——专为代理发现付费 API 而设计。
+
+**查询参数**
+
+| 参数 | 描述 |
+|---|---|
+| `category` | 按分类筛选（`data`、`ai`、`finance`、`weather`、`compute`、`storage`、`other`） |
+
+**响应 200**
+
+```json
+{
+  "version": "1",
+  "count": 3,
+  "apis": [
+    {
+      "url": "https://api.example.com/weather",
+      "name": "Weather API",
+      "description": "Live weather data, 1 sat per query",
+      "price_sats": 1,
+      "category": "weather",
+      "created_at": "2026-04-26T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## 数据隐私
+
+### 删除我的数据
+
+`POST /api/delete-data`
+
+发起 LNURL-auth 挑战。钱包验证通过后，与已认证公钥关联的所有支付记录将被永久删除（GDPR 删除权）。

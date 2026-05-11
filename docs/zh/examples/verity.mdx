@@ -1,0 +1,210 @@
+---
+title: "VERITY 示例"
+description: "使用 L402Client 调用全部 8 项 VERITY 服务的代码示例。"
+---
+
+# VERITY 示例
+
+VERITY 是一个运行中的自主智能体，地址为 `https://l402kit.com/api/verity`。以下示例展示如何使用 l402-kit 智能体 SDK 以编程方式调用其服务。
+
+---
+
+## 初始化
+
+```typescript
+import { L402Client } from "l402-kit/agent";
+import { BlinkWallet } from "l402-kit/wallets";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
+  budget: { maxSats: 5000 }, // hard cap per session
+});
+```
+
+---
+
+## 发现所有服务及当前价格
+
+```typescript
+const res = await fetch("https://l402kit.com/api/verity");
+const verity = await res.json();
+
+for (const svc of verity.services) {
+  console.log(`${svc.id}: ${svc.priceSats} sats — ${svc.description}`);
+}
+```
+
+---
+
+## 世界状态 — 80 sats
+
+一次调用即可获取 UTC 时间、您的位置以及当地天气。
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/worldstate");
+const { time, location, weather } = await res.json();
+
+console.log(`Time: ${time.utc}`);
+console.log(`Location: ${location.city}, ${location.country}`);
+console.log(`Weather: ${weather.temperature_c}°C, ${weather.condition}`);
+```
+
+---
+
+## BTC 价格 — 10 sats
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/btc-price");
+const { bitcoin } = await res.json();
+
+console.log(`BTC: $${bitcoin.usd} USD | R$${bitcoin.brl} BRL`);
+```
+
+---
+
+## 网页搜索 — 100 sats
+
+```typescript
+const res = await client.fetch(
+  "https://l402kit.com/api/verity/search?q=bitcoin+lightning+l402",
+);
+const { results } = await res.json();
+
+for (const r of results) {
+  console.log(`${r.title}\n${r.link}\n${r.snippet}\n`);
+}
+```
+
+---
+
+## 文本摘要 — 50 sats
+
+```typescript
+const longText = "..."; // up to 50,000 chars
+
+const res = await client.fetch("https://l402kit.com/api/verity/summarize", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: longText, language: "english" }),
+});
+const { summary } = await res.json();
+console.log(summary);
+```
+
+---
+
+## 情感分析 — 30 sats
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/sentiment", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: "Lightning payments are instant and cheap!" }),
+});
+const { analysis } = await res.json();
+// { sentiment: "positive", score: 0.94, confidence: 0.91, keywords: [...] }
+```
+
+---
+
+## 域名情报 — 500 sats
+
+```typescript
+const res = await client.fetch(
+  "https://l402kit.com/api/verity/domain-intel?domain=bitcoin.org",
+);
+const { whois, dns, certificates } = await res.json();
+
+console.log(`Registered: ${whois.registered}`);
+console.log(`Expires: ${whois.expires}`);
+console.log(`A records: ${dns.a_records.join(", ")}`);
+```
+
+---
+
+## 网页抓取 — 200 sats
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/scrape", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: "https://bitcoin.org/en/bitcoin-paper" }),
+});
+const { content, title } = await res.json();
+console.log(`${title}\n\n${content.slice(0, 500)}...`);
+```
+
+---
+
+## l402-kit 集成 — 10,000 sats
+
+向 VERITY 提供一个公开的 GitHub 仓库，她将读取代码并返回完整的 l402-kit 集成方案。
+
+```typescript
+const res = await client.fetch("https://l402kit.com/api/verity/integration", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ repoUrl: "https://github.com/owner/my-api" }),
+});
+const { integration, next_steps } = await res.json();
+
+// integration = markdown with exact code to add to your repo
+console.log(integration);
+```
+
+<Note>
+集成服务费用为 10,000 sats（约 $10）。付款后，您将收到针对您所用框架（Express、FastAPI、Gin、Axum 等）量身定制的完整中间件代码 —— 同时 VERITY 也将获得您新建的 l402-kit 驱动 API 的第一笔推荐收益。
+</Note>
+
+---
+
+## 服务链式调用
+
+一种常见的智能体模式：搜索 → 抓取 → 摘要。
+
+```typescript
+// 1. Search for a topic (100 sats)
+const searchRes = await client.fetch(
+  "https://l402kit.com/api/verity/search?q=bitcoin+lightning+adoption+2026",
+);
+const { results } = await searchRes.json();
+const topUrl = results[0].link;
+
+// 2. Scrape the top result (200 sats)
+const scrapeRes = await client.fetch("https://l402kit.com/api/verity/scrape", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: topUrl }),
+});
+const { content } = await scrapeRes.json();
+
+// 3. Summarize the article (50 sats)
+const sumRes = await client.fetch("https://l402kit.com/api/verity/summarize", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: content }),
+});
+const { summary } = await sumRes.json();
+
+// Total cost: 350 sats (~$0.35)
+console.log(summary);
+```
+
+---
+
+## Python
+
+```python
+from l402kit import L402Client, BlinkWallet
+import os
+
+client = L402Client(
+    wallet=BlinkWallet(os.environ["BLINK_API_KEY"]),
+    budget={"max_sats": 5000},
+)
+
+# World state
+resp = client.get("https://l402kit.com/api/verity/worldstate")
+data = resp.json()
+print(f"{data['time']['utc']} | {data['location']['city']} | {data['weather']['temperature_c']}°C")
+```

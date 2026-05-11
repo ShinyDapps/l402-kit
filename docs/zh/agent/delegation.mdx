@@ -1,0 +1,113 @@
+---
+title: "代理间委托"
+description: "让协调器支付一次并将凭证共享给子代理。"
+---
+
+## 概念
+
+L402 令牌（`macaroon:preimage`）是一个可移植的字符串——一旦支付完成，它可以传递给任何需要访问相同资源的子代理。协调器持有钱包；子代理只接收令牌。
+
+```
+Orchestrator (has wallet)
+   │
+   ├── pays invoice → receives token (macaroon:preimage)
+   │
+   ├── passes token string to SubAgent A
+   └── passes token string to SubAgent B
+
+SubAgent A — calls /api/data with token  ✓  (no wallet needed)
+SubAgent B — calls /api/data with token  ✓  (no wallet needed)
+```
+
+<Note>
+令牌在 1 小时后过期。每个 preimage 在每台服务器上只能使用一次（重放保护）。对于并行访问同一端点的子代理，每个代理都需要自己的支付。
+</Note>
+
+## 何时共享令牌与独立支付
+
+有两种委托模式，各有不同的权衡：
+
+**令牌共享**适用于子代理**顺序访问相同端点**的情况。协调器支付一次，提取 `Authorization` 请求头的值，并将其作为字符串传递。子代理直接使用该请求头调用端点——无需钱包。这将成本降至最低（一次支付），但**不适合并发访问**——只有一个代理可以持有给定的 preimage，服务器会拒绝重放请求。
+
+**独立支付**（每个子代理拥有自己的 `L402Client`，共享协调器的钱包）适用于**并行或并发访问**。每个代理支付自己的发票并缓存自己的令牌。这会消耗更多 sats，但逻辑更简单，且在任何并发级别下都是安全的。
+
+**经验法则：** 如果子代理并行扇出，请为每个代理提供自己的 `L402Client`。如果它们顺序运行并访问相同端点，则共享令牌字符串。
+
+## 安全注意事项
+
+- **永远不要将钱包凭证传递给子代理。** 只传递令牌字符串（`L402 <macaroon>:<preimage>`）。一个令牌最多可以在一小时内调用一个端点——而私钥可以清空钱包。
+- **令牌在每台服务器上只能使用一次。** 在第一次被接受的请求之后，服务器会记录 preimage 哈希。使用相同 preimage 的第二次请求将返回 402。这可以防止重放攻击，但意味着你无法将一个令牌共享给两个同时访问相同服务器的子代理。
+- **预算控制在钱包级别。** 在协调器的 `L402Client` 上设置 `budgetSats`，以限制共享该钱包的所有子代理的总支出。请参阅[预算控制](/agent/budget)。
+
+## TypeScript——协调器支付，子代理使用令牌
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+// Orchestrator: has wallet, pays invoice
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+const orchestrator = new L402Client({ wallet, budgetSats: 5000 });
+
+// Fetch triggers payment; token is cached inside orchestrator
+const res = await orchestrator.fetch("https://api.example.com/data");
+const data = await res.json();
+
+// Build the delegation header from the macaroon + preimage the Lightning Network returned.
+// In practice, retrieve these from the payment result or the client's token cache.
+// Format is always: "L402 <base64-macaroon>:<hex-preimage>"
+const tokenHeader = `L402 ${macaroon}:${preimage}`; // substitute values from payment result
+
+// Sub-agent: no wallet, passes the header directly
+const subRes = await fetch("https://api.example.com/data", {
+  headers: { Authorization: tokenHeader },
+});
+```
+
+## Python——协调器支付，子代理使用令牌
+
+```python
+from l402kit import L402Client
+from l402kit.wallets.blink import BlinkWallet
+
+# Orchestrator pays
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+orchestrator = L402Client(wallet=wallet, budget_sats=5000)
+
+async with orchestrator:
+    response = await orchestrator.fetch("https://api.example.com/data")
+
+# Sub-agents: pass the Authorization header directly
+# Authorization: L402 <macaroon>:<preimage>
+```
+
+## 多代理模式：一次支付，并行读取
+
+如果多个子代理需要**同时访问相同资源**，最简洁的模式是让每个子代理使用自己的 `L402Client` 并共享同一个钱包来独立支付：
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+
+// Each sub-agent gets its own L402Client — independent payment + token cache
+const agents = Array.from({ length: 3 }, () => new L402Client({ wallet }));
+
+const results = await Promise.all(
+  agents.map((agent) => agent.fetch("https://api.example.com/data"))
+);
+```
+
+## 安全属性
+
+| 属性 | 当前工作方式 |
+|----------|--------------------|
+| 钱包隔离 | 子代理接收令牌字符串，而非私钥 |
+| 时间限制 | Macaroon 在 1 小时后过期 |
+| 重放安全 | 每个 preimage 在服务器上只能被接受一次 |
+| 预算控制 | 在协调器的 `L402Client` 上设置 `budgetSats` |
+
+## 未来版本计划
+
+完整的 macaroon 条件委托（端点范围限定、单次使用令牌、最大使用次数限制）已在规划中。请在 [GitHub](https://github.com/ShinyDapps/l402-kit) 上追踪进度。
+
+请参阅[预算控制](/agent/budget)了解会话级别的支出限制。

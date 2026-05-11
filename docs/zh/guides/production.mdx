@@ -1,0 +1,333 @@
+---
+title: 生产环境指南
+description: 将 l402-kit API 部署到生产环境——性能、可靠性与扩展性。
+---
+
+## 上线前检查清单
+
+在正式上线前逐项确认。每个条目都链接到下方对应章节。
+
+<Steps>
+  <Step title="多实例环境已配置重放保护">
+    默认适配器仅使用内存存储。如果你运行多个进程（Gunicorn workers、PM2 cluster、Kubernetes），请设置 `SUPABASE_URL` + `SUPABASE_ANON_KEY` 或使用 `RedisReplayAdapter`。[详情 →](#critical-replay-protection-in-production)
+  </Step>
+  <Step title="环境变量已存入密钥管理器">
+    永远不要硬编码 API 密钥。本地使用 `.env`，生产环境使用密钥管理器。[详情 →](#environment-variables)
+  </Step>
+  <Step title="健康检查端点已存在">
+    监控探测请求不应触发发票创建。在付费路由之前添加 `/health` 路由。[详情 →](#health-check-endpoint)
+  </Step>
+  <Step title="错误响应不泄露内部信息">
+    捕获 provider 错误并返回干净的 503——而不是堆栈跟踪。[详情 →](#error-handling)
+  </Step>
+  <Step title="价格设置经过深思熟虑">
+    `priceSats` 应当反映真实价值。1 sat ≈ $0.0006，对于高级端点收取 100 sats ≈ $0.06 是合理的。不要意外将其设置为 0。
+  </Step>
+  <Step title="对发票端点进行正常运行时间监控">
+    监控 402 响应（这是正常响应，而非错误）。UptimeRobot 等工具支持自定义状态码预期。
+  </Step>
+  <Step title="对发票创建进行速率限制">
+    每个未认证请求都会创建一个 Lightning 发票。没有速率限制，攻击者可以免费耗尽你的 provider 发票配额。在公开部署前添加 `express-rate-limit`。[详情 →](#rate-limiting)
+  </Step>
+</Steps>
+
+---
+
+## 重要：生产环境中的重放保护
+
+<Warning>
+默认的重放适配器**仅使用内存存储**——它在每次进程重启时重置，且无法跨多个服务器实例工作。在多进程生产环境（Gunicorn workers、Kubernetes pods、PM2 cluster）中，同一个 preimage 可能被接受两次。
+
+**解决方案：** 在你的环境中设置 `SUPABASE_URL` + `SUPABASE_ANON_KEY`。中间件将自动使用 Supabase 作为重放存储，该存储在所有实例之间共享。
+
+对于 Redis：显式传入 `RedisReplayAdapter`（参见 [TypeScript SDK](/sdk/typescript#replay-protection) 或 [Python SDK](/sdk/python#replay-protection)）。
+</Warning>
+
+---
+
+## 环境变量
+
+永远不要硬编码密钥。始终使用环境变量：
+
+```bash
+# .env（永远不要提交此文件）
+BLINK_API_KEY=blink_xxx
+BLINK_WALLET_ID=your-wallet-id
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=sb_publishable_xxx    # 可安全暴露给客户端
+SUPABASE_SERVICE_KEY=sb_secret_xxx      # 仅限服务端——永远不要暴露给客户端
+```
+
+```typescript
+import 'dotenv/config';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+---
+
+## 支付日志（Supabase）
+
+将每笔支付记录到 Supabase，用于 VS Code 扩展仪表板和数据分析：
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!,
+);
+
+app.use(async (req, res, next) => {
+  const original = res.json.bind(res);
+  res.json = (body) => {
+    // 记录成功的 L402 支付（在中间件通过之后）
+    if (req.l402Paid && req.l402Preimage) {
+      supabase.from('payments').insert({
+        endpoint: req.path,
+        preimage: req.l402Preimage,
+        amount_sats: req.l402AmountSats,
+      }).then(() => {});
+    }
+    return original(body);
+  };
+  next();
+});
+```
+
+---
+
+## Cloudflare Workers 部署
+
+l402-kit API 可运行在 Cloudflare Workers（V8 隔离环境，零冷启动）上。内存重放存储在每个隔离实例重置——对于高流量 API，请使用 Cloudflare KV 或 Durable Objects 进行重放保护。
+
+```typescript
+// api/data.ts
+import { l402 } from 'l402-kit';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+export default async function handler(req, res) {
+  await new Promise<void>((resolve, reject) => {
+    l402({ priceSats: 10, lightning: blink })(req, res, (err) => {
+      if (err) reject(err); else resolve();
+    });
+  });
+  res.json({ data: 'premium content' });
+}
+```
+
+---
+
+## Docker
+
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY dist ./dist
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
+```
+
+```yaml
+# docker-compose.yml
+services:
+  api:
+    build: .
+    environment:
+      BLINK_API_KEY: ${BLINK_API_KEY}
+      BLINK_WALLET_ID: ${BLINK_WALLET_ID}
+    ports:
+      - "3000:3000"
+```
+
+---
+
+## 用户数据删除
+
+提供一个删除端点，让用户可以永久删除其数据。l402-kit 后端内置了 `/api/delete-data`：
+
+```http
+POST /api/delete-data
+Content-Type: application/json
+
+{ "lightningAddress": "user@blink.sv" }
+```
+
+```json
+// 200 OK
+{ "deleted": { "payments": 42, "proAccess": true } }
+```
+
+VS Code 扩展在仪表板底部以**危险区域**面板的形式呈现此功能——用户需要输入其 Lightning 地址进行确认，随后所有支付历史和 Pro 访问权限将被清除。该操作在服务端使用 Supabase service key；anon key 没有 DELETE 权限。
+
+---
+
+## 错误处理
+
+在 provider 错误以未格式化的 500 形式出现之前将其捕获：
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, L402Error } from 'l402-kit';
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), async (req, res) => {
+  try {
+    res.json({ data: await fetchData() });
+  } catch (err) {
+    if (err instanceof L402Error) {
+      // Token 无效、已过期或已使用——让中间件处理
+      return res.status(err.status).json({ error: err.code });
+    }
+    console.error('[api/data]', err);
+    res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+});
+```
+
+```python Python
+from l402kit import l402_required, L402Error
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(L402Error)
+async def l402_exception_handler(request: Request, exc: L402Error):
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.code})
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=503, content={"error": "Service temporarily unavailable"})
+```
+</CodeGroup>
+
+**经验法则：**
+- 永远不要向客户端返回堆栈跟踪——在服务端记录日志。
+- Provider 超时（503）是暂时性的——可以使用退避策略安全重试。
+- Token 错误（401）永远不是暂时性的——不要自动重试，需要重新获取发票。
+- 速率限制错误（429）——将 `retryAfter` 字段返回给调用方。
+
+完整的结构化错误码列表请参见[错误参考](/reference/errors)。
+
+---
+
+## 速率限制
+
+每个未认证请求都会触发 Lightning provider 的 `createInvoice()`。没有速率限制，任何人都可以向你的端点发起大量请求并免费耗尽 provider 的 API 配额——即使一个 sat 都没有支付。
+
+在你的 L402 路由前添加 [`express-rate-limit`](https://www.npmjs.com/package/express-rate-limit)：
+
+```bash
+npm install express-rate-limit
+```
+
+```typescript
+import rateLimit from "express-rate-limit";
+import { l402 } from "l402-kit";
+
+// 限制发票创建：每个 IP 每分钟最多 30 个未认证请求
+const invoiceLimit = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  // 仅对不携带有效 L402 header 的请求生效
+  skip: (req) => req.headers.authorization?.startsWith("L402 ") ?? false,
+  message: { error: "Too many requests — slow down" },
+});
+
+app.get("/api/premium", invoiceLimit, l402({ priceSats: 10, lightning }), handler);
+```
+
+<Note>
+已付费的客户端通过 `skip` 函数跳过限制——该限制仅适用于触发新发票的未认证调用。合法付款方永远不会受到限流。
+</Note>
+
+对于 FastAPI：
+
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/api/premium")
+@limiter.limit("30/minute")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium(request: Request):
+    return {"data": "paid content"}
+```
+
+---
+
+## 健康检查端点
+
+始终添加一个免费的健康检查端点，以防监控工具触发发票创建：
+
+```typescript
+app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// 付费端点
+app.get('/api/data', l402({ priceSats: 10, lightning: blink }), handler);
+```
+
+---
+
+## 监控
+
+需要追踪的关键指标：
+- **402 响应率** — 健康基线较高（大多数调用方需要付费）
+- **支付验证率** — 已付费与未付费调用的比率
+- **Provider 延迟** — `blink.createInvoice()` 应低于 500ms
+- **重放尝试次数** — 峰值表明存在 token 重用攻击
+
+```typescript
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    console.log(JSON.stringify({
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      ms: Date.now() - start,
+      paid: res.statusCode !== 402,
+    }));
+  });
+  next();
+});
+```
+
+---
+
+## 性能
+
+- Token 验证为 **O(1)**——纯加密运算，无数据库，无网络请求
+- 发票创建（402 路径）会调用你的 Lightning provider API——如果预计同一端点在支付前被频繁访问，请添加缓存
+- 重放存储使用内存 `Set`——对于多实例部署，请替换为 Redis
+
+```typescript
+// Redis 重放存储示例
+import { Redis } from 'ioredis';
+const redis = new Redis(process.env.REDIS_URL!);
+
+// 向中间件传入自定义重放函数
+app.get('/api', l402({
+  priceSats: 10,
+  lightning: blink,
+  checkReplay: async (preimage) => {
+    const set = await redis.set(`l402:${preimage}`, '1', 'NX', 'EX', 86400);
+    return set === 'OK';
+  },
+}), handler);
+```

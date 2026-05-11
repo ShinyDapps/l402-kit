@@ -1,0 +1,168 @@
+---
+title: LNURL 集成
+description: 将 LNURL-auth 用于无密码登录，将 LNURL-pay 用于闪电地址支付，与 l402-kit 配合使用。
+---
+
+## 什么是 LNURL？
+
+[LNURL](https://github.com/lnurl/luds) 是一套构建在 Lightning Network 之上的开放标准。LNURL 无需在应用中直接暴露原始的闪电发票或节点公钥，而是定义了钱包能够处理的、对人友好的基于 URL 的协议。当钱包扫描 LNURL 二维码时，它会解码 URL，从你的服务器获取 JSON 响应，然后采取相应的操作（签署挑战、获取支付请求等）——对用户来说这一切都是不可见的。
+
+l402-kit 内置了两个 LNURL 功能：
+
+| 功能 | 使用场景 |
+|---|---|
+| **LNURL-auth** | 无密码登录——钱包签署挑战，无需邮箱或密码 |
+| **LNURL-pay** | 闪电地址（`you@domain.com`）——任何人都可以通过人类可读的地址向你付款 |
+
+这两种协议适用于所有主流的闪电钱包（Phoenix、Blink、Zeus、Breez、Alby），且无需额外依赖——你的服务器只需提供一个 JSON 端点，并可选择性地验证 secp256k1 签名。
+
+---
+
+## LNURL-auth——无密码登录
+
+l402-kit.com 的支付仪表板使用了 LNURL-auth。你可以在自己的应用中使用相同的流程。
+
+### 工作原理
+
+```
+1. 你的服务器生成一个挑战（k1）——一个随机的 32 字节十六进制字符串
+2. 将其编码为 LNURL 并显示为二维码
+3. 用户使用任意支持 LNURL-auth 的钱包扫描（Phoenix、Blink、Zeus、Breez...）
+4. 钱包用其闪电节点密钥对 k1 进行签名 → 将签名和公钥发送到你的回调地址
+5. 你验证签名——若有效，则用户通过身份验证
+```
+
+用户的身份即其闪电节点公钥——稳定、全球唯一且自主掌控。
+
+### 端点
+
+```
+GET /api/lnurl-auth
+```
+
+返回一个 LNURL 挑战。将其编码为二维码并在你的登录流程中展示。
+
+```json
+{
+  "lnurl": "LNURL1DP68GURN8GHJ7...",
+  "k1": "a1b2c3..."
+}
+```
+
+钱包回调后，通过以下方式进行验证：
+
+```
+GET /api/lnurl-auth?k1=<challenge>&sig=<signature>&key=<pubkey>
+```
+
+### TypeScript——验证 LNURL-auth 签名
+
+```typescript
+import { createHash } from "crypto";
+import * as secp256k1 from "@noble/curves/secp256k1";
+
+function verifyLnurlAuth(k1: string, sig: string, key: string): boolean {
+  try {
+    const msgHash = createHash("sha256").update(Buffer.from(k1, "hex")).digest();
+    return secp256k1.secp256k1.verify(sig, msgHash, key);
+  } catch {
+    return false;
+  }
+}
+```
+
+<Note>
+LNURL-auth 不需要邮箱、密码或 OAuth。用户的身份即其闪电公钥——可跨钱包携带、无法被审查、全球唯一。
+</Note>
+
+---
+
+## LNURL-pay——闪电地址
+
+闪电地址（`you@domain.com`）是一个人类可读的别名，可解析为 LNURL-pay 端点。l402-kit 在以下位置暴露该端点：
+
+```
+GET /.well-known/lnurlp/{username}
+```
+
+这在分账机制内部使用——当你设置 `ownerAddress: "you@blink.sv"` 时，Worker 会解析 `blink.sv/.well-known/lnurlp/you` 以获取 BOLT11 发票。
+
+### 如何设置你自己的闪电地址
+
+1. 在 `https://yourdomain.com/.well-known/lnurlp/{username}` 部署一个 LNURL-pay 端点
+2. 返回标准的 LNURL-pay 元数据响应：
+
+```json
+{
+  "callback": "https://yourdomain.com/lnurlp/pay",
+  "maxSendable": 100000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Pay you@yourdomain.com\"]]",
+  "tag": "payRequest"
+}
+```
+
+3. `callback` 端点接收 `?amount=<msats>` 并返回：
+
+```json
+{
+  "pr": "lnbc10n1p...",
+  "routes": []
+}
+```
+
+### 使用 BTCPay Server 自托管
+
+BTCPay Server 内置了 LNURL-pay——只需在商店设置中启用即可。你的闪电地址将变为 `you@yourbtcpay.com`。
+
+```typescript
+import { BTCPayProvider } from "l402-kit";
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,
+  process.env.BTCPAY_API_KEY!,
+  process.env.BTCPAY_STORE_ID!,
+);
+// 闪电地址：you@yourbtcpay.com——零中间商，0% 手续费
+```
+
+---
+
+## API 目录的所有权验证
+
+当你通过 `POST /api/register` 注册 API 时，l402-kit 会自动检查你的 API 域名下是否存在 `/.well-known/l402.txt` 文件。如果找到该文件且其中包含你的闪电地址，你的列表将获得**已验证**徽章。
+
+**创建该文件：**
+
+```
+# https://api.yourdomain.com/.well-known/l402.txt
+you@blink.sv
+```
+
+**然后进行注册：**
+
+```typescript
+ManagedProvider.fromAddress("you@blink.sv", {
+  registerDirectory: {
+    url: "https://api.yourdomain.com/v1/data",
+    name: "My Data API",
+    priceSats: 10,
+  },
+});
+// 响应：{ ok: true, id: "...", verified: true }
+```
+
+已验证的 API 在目录中排名更高，并显示 ✓ 徽章。
+
+---
+
+## 兼容钱包
+
+| 钱包 | LNURL-auth | LNURL-pay | 自托管 |
+|---|---|---|---|
+| [Phoenix](https://phoenix.acinq.co) | ✅ | ✅ | ✅ |
+| [Blink](https://blink.sv) | ✅ | ✅ | ❌ 托管式 |
+| [Zeus](https://zeusln.app) | ✅ | ✅ | ✅ |
+| [Breez](https://breez.technology) | ✅ | ✅ | ✅ |
+| [Alby](https://getalby.com) | ✅ | ✅ | ✅ Hub |
+| [Mutiny](https://mutinywallet.com) | ✅ | ✅ | ✅ |

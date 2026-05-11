@@ -1,0 +1,183 @@
+---
+title: Go SDK
+description: l402-kit Go SDK 完整参考文档 — 用于 Bitcoin Lightning 按调用计费 API 的 net/http 中间件。
+---
+
+## 安装
+
+```bash
+go get github.com/shinydapps/l402-kit/go@v1.8.2
+```
+
+**要求**：Go 1.21+
+
+---
+
+## 快速开始
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+    "os"
+
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    lightning := l402.NewBlinkProvider(
+        os.Getenv("BLINK_API_KEY"),
+        os.Getenv("BLINK_WALLET_ID"),
+    )
+
+    mux := http.NewServeMux()
+    mux.Handle("/api/data", l402.Middleware(l402.Options{
+        PriceSats: 10,
+        Lightning: lightning,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
+    })))
+
+    http.ListenAndServe(":8080", mux)
+}
+```
+
+免费获取 Blink 凭据，请访问 [dashboard.blink.sv](https://dashboard.blink.sv)。付款将直接发送到您的钱包。
+
+---
+
+## 自托管模式（使用自定义提供商）
+
+```go
+import l402 "github.com/shinydapps/l402-kit/go"
+
+type MyProvider struct{}
+
+func (p *MyProvider) CreateInvoice(ctx context.Context, amountSats int) (l402.Invoice, error) {
+    // create invoice with your Lightning node
+    // return l402.Invoice{PaymentRequest: "lnbc...", PaymentHash: "...", Macaroon: "..."}
+}
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: &MyProvider{},
+}, handler))
+```
+
+---
+
+## `l402.Options`
+
+| 字段 | 类型 | 默认值 | 描述 |
+|---|---|---|---|
+| `PriceSats` | `int` | **必填** | 每次调用的价格（以 satoshis 计） |
+| `Lightning` | `LightningProvider` | **必填** | 您的 Lightning 后端（使用 `NewBlinkProvider`） |
+| `OnPayment` | `func(L402Token, int)` | 无 | 每次验证支付成功后触发的回调函数 |
+
+---
+
+## `l402.Middleware(opts Options, next http.Handler) http.Handler`
+
+返回一个与 `net/http`、Chi、Gorilla Mux 及任何标准 Go HTTP 框架兼容的 `http.Handler`。
+
+### 行为说明
+
+| 请求 | 响应 |
+|---|---|
+| 无 `Authorization` 请求头 | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| 有效的 `L402 <macaroon>:<preimage>` | `next.ServeHTTP(w, r)` |
+| 无效或已过期的令牌 | `401 Unauthorized` |
+| 重放的 preimage | `401 Token already used` |
+
+### 402 响应体
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## `LightningProvider` 接口
+
+```go
+type LightningProvider interface {
+    CreateInvoice(ctx context.Context, amountSats int) (Invoice, error)
+}
+```
+
+---
+
+## `OnPayment` 回调
+
+```go
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+    OnPayment: func(token l402.L402Token, amountSats int) {
+        log.Printf("payment: %d sats, preimage: %s", amountSats, token.Preimage)
+    },
+}, handler))
+```
+
+---
+
+## 验证机制
+
+`SHA256(preimage) == paymentHash` 在内存中本地验证 — **亚毫秒级，热路径上无网络调用**。令牌过期时间（macaroon 中的 `exp` 字段）在同一操作中一并检查。
+
+重放防护默认使用内存映射（适用于单进程）。对于多实例部署，请使用共享存储（Redis 或类似方案）— 每次验证请求将增加 **5~50 毫秒** 的往返延迟。
+
+---
+
+## Chi 路由器示例
+
+`l402.Middleware` 返回标准的 `http.Handler`，因此可直接与 Chi 的 `r.Handle` 配合使用：
+
+```go
+import (
+    "github.com/go-chi/chi/v5"
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+r := chi.NewRouter()
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+r.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+}, http.HandlerFunc(handler)))
+```
+
+---
+
+## 错误代码
+
+| 状态码 | 含义 |
+|---|---|
+| `402` | 无支付令牌 — 请支付发票 |
+| `401` | 无效令牌或 macaroon 已过期 |
+| `401` | 重放令牌（preimage 已被使用） |
+
+---
+
+## 运行
+
+```bash
+go run main.go
+
+# Test — triggers 402
+curl http://localhost:8080/api/data
+
+# Pay invoice, then:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:8080/api/data
+```

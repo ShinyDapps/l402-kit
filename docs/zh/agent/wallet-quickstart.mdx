@@ -1,0 +1,89 @@
+---
+title: "钱包快速入门"
+description: "60 秒获取一个 Lightning 钱包。无需银行。无需 KYC。支持 193 个国家/地区。"
+---
+
+您需要一个 Lightning 钱包来支付 L402 API。两种选择——均免费，均可全球使用。
+
+---
+
+## 选项 A — Blink（推荐）
+
+<Steps>
+  <Step title="创建账户">
+    前往 [blink.sv](https://blink.sv)，使用手机号码或邮箱注册。
+  </Step>
+  <Step title="复制您的 Lightning 地址">
+    在应用中：**设置 → Lightning 地址**。格式如 `yourname@blink.sv`。
+  </Step>
+  <Step title="获取您的 API 密钥">
+    前往 [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → 创建一个密钥。
+  </Step>
+  <Step title="在 l402-kit 中使用">
+    ```typescript
+    import { ManagedProvider } from "l402-kit";
+
+    const provider = ManagedProvider.fromAddress("yourname@blink.sv");
+    ```
+
+    或使用 Agent SDK：
+
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ BLINK_API_KEY: "your-key" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## 选项 B — Alby
+
+<Steps>
+  <Step title="创建账户">
+    前往 [getalby.com](https://getalby.com) 注册。
+  </Step>
+  <Step title="获取您的 OAuth 令牌">
+    前往 [getalby.com/api-tokens](https://getalby.com/api-tokens)，创建一个具有 `payments:send` 权限范围的令牌。
+  </Step>
+  <Step title="在 l402-kit 中使用">
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ ALBY_TOKEN: "your-token" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## 通过环境变量实现零配置
+
+l402-kit 可自动从环境变量中检测您的钱包。无需修改代码：
+
+```bash
+# Blink
+export BLINK_API_KEY="your-key"
+
+# Alby
+export ALBY_TOKEN="your-token"
+```
+
+```typescript
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env); // 自动检测 Blink 或 Alby
+```
+
+---
+
+## 为钱包充值
+
+两种钱包都会为您提供一个 Lightning 地址用于接收 sats。测试步骤：
+
+1. 前往 [coinfos.net](https://coinfos.net) 或任意水龙头网站
+2. 向您的 Lightning 地址发送 1000 sats
+3. 运行 `npm install l402-kit && node -e "require('l402-kit/agent').healthCheck()"`
+
+**无需银行。无繁琐 KYC。支持 193 个国家/地区。**

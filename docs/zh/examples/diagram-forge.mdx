@@ -1,0 +1,199 @@
+---
+title: "Diagram Forge"
+description: "AI 生成的实时架构图，支持任意 GitHub 仓库 — 通过 Lightning L402 付款"
+icon: "circle-nodes"
+---
+
+## 什么是 Diagram Forge？
+
+[Diagram Forge](https://forge.l402kit.com) 使用 Claude AI 分析任意 GitHub 仓库，并生成一张**交互式动态架构图** — 包含官方技术 Logo、粒子动画流、节点检查器，以及导出为 SVG/PNG/Markdown 的功能。
+
+支付通过 Lightning Network 使用 L402 协议完成 — 无需注册账号、无需信用卡、无需订阅。按次付费分析。
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/docs/demo-viewer.gif" alt="Diagram Forge interactive viewer demo" />
+</Frame>
+
+---
+
+## 快速开始
+
+### 方式一 — Web 应用（最快）
+
+1. 前往 **[forge.l402kit.com](https://forge.l402kit.com)**
+2. 粘贴任意公开 GitHub URL（例如 `https://github.com/vercel/next.js`）
+3. 选择档位：**Basic**（100 sats）、**Full**（500 sats）或 **Live ✦**（1000 sats）
+4. 点击 **Analyze & Generate Diagram**
+5. 使用任意钱包支付 Lightning 发票 — 或输入优惠码免费使用
+6. 交互式架构图将自动打开
+
+### 方式二 — VS Code 扩展
+
+从 Marketplace 安装：
+
+```bash
+code --install-extension ShinyDapps.diagram-forge
+```
+
+或在扩展面板（`Ctrl+Shift+X`）中搜索 **"Diagram Forge"**。
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/vscode-extension/media/demo-extension.gif" alt="Diagram Forge VS Code extension — idle, confirming, analyzing, done" />
+</Frame>
+
+**使用方法：**
+1. 打开任意包含 GitHub 远程仓库的项目
+2. 点击活动栏（左侧边栏）中的 **Diagram Forge 图标**
+3. 点击 **Analyze Repo** — GitHub URL 将自动检测
+4. 选择档位并输入优惠码（可选）
+5. 使用 Lightning 付款或使用优惠码
+6. 架构图将在浏览器中打开
+
+### 方式三 — 连接 GitHub（Web 应用）
+
+在 Web 应用顶部导航栏点击 **Connect GitHub**，授权后即可在下拉列表中查看所有仓库 — 无需手动复制粘贴 URL。
+
+---
+
+## 分析档位
+
+| 档位 | 价格 | 内容说明 |
+|------|-------|-------------|
+| **Basic** | 100 sats（约 $0.10） | 快速扫描 — 前 10 个文件，检测主要服务 |
+| **Full** | 500 sats（约 $0.50） | 完整仓库 — 所有服务、连接关系、monorepo |
+| **Live ✦** | 1000 sats（约 $1.00） | 完整分析 + 带粒子流动的动态 SVG |
+
+<Info>
+  由于无需支付支付处理手续费，Lightning 价格明显低于银行卡价格。
+</Info>
+
+---
+
+## 没有 Lightning 钱包？
+
+2 分钟内即可完成设置：
+
+<CardGroup cols={3}>
+  <Card title="Wallet of Satoshi" icon="mobile" href="https://www.walletofsatoshi.com/">
+    最简单的移动端钱包 — 托管式，即开即用
+  </Card>
+  <Card title="Phoenix" icon="mobile" href="https://phoenix.acinq.co/">
+    移动端，非托管，无 KYC
+  </Card>
+  <Card title="Alby" icon="browser" href="https://getalby.com/">
+    浏览器扩展 — 可直接在 VS Code 中使用
+  </Card>
+</CardGroup>
+
+安装完成后，购买少量比特币（即使 $1 也足够完成数十次分析），在 Diagram Forge 显示发票时扫描二维码即可完成支付。
+
+---
+
+## 优惠码
+
+有优惠码？在点击分析之前，将其输入 **"Promo code (optional)"** 字段 — 分析将完全免费执行，无需钱包。
+
+优惠码有时间限制和使用次数限制。请访问 [forge.l402kit.com](https://forge.l402kit.com) 或关注 [@ShinyDapps](https://github.com/ShinyDapps) 获取当前可用的优惠码。
+
+---
+
+## 架构图内容说明
+
+每张架构图包含：
+
+- **节点（Nodes）** — 在代码中检测到的服务、数据库、消息队列、API、ML 模型、CDN
+- **边（Edges）** — 组件之间的连接关系，附带协议标签（HTTP、SQL、gRPC、WebSocket、AMQP……）
+- **Logo** — 80+ 种技术的官方 Simple Icons 品牌图标
+- **动画流** — 粒子沿边运动，按协议类型着色（黄色 = Lightning，蓝色 = HTTP，绿色 = SQL……）
+
+**交互式查看器功能：**
+- 平移与缩放（滚轮缩放，拖拽平移）
+- 点击任意节点查看其连接关系和描述
+- 大型架构图的缩略图导航
+- 按名称或类型搜索节点
+- 导出格式：SVG、PNG、Markdown、Draw.io
+- 分享链接：`/g/:id` — 每张架构图的永久分享 URL
+
+---
+
+## 从图片导入
+
+没有 GitHub 仓库？上传白板照片、截图、Visio 文件或 PDF — Claude 将提取其中的架构信息并生成同样的交互式架构图。
+
+支持格式：JPG、PNG、WEBP、GIF、PDF
+
+---
+
+## 架构评测
+
+生成架构图后，在查看器中点击 **Benchmark** 即可获得 6 个维度的质量评分：
+
+| 维度 | 评测内容 |
+|---|---|
+| 可扩展性 | 水平扩展潜力、瓶颈分析 |
+| 可靠性 | 单点故障、冗余设计 |
+| 安全性 | 认证、加密、暴露面 |
+| 可观测性 | 日志、指标、链路追踪覆盖度 |
+| 可维护性 | 耦合度、复杂度、模块化程度 |
+| 成本效率 | 可选 — 各服务成本与价值对比 |
+
+---
+
+## 隐私说明
+
+- 您的代码将在安全服务器上**临时克隆**，分析完成后立即删除
+- 如果您使用分享链接，仅存储**图元数据**（节点标签、边的连接关系 — 不含源代码）
+- 无需账号，除架构图外不保留任何数据
+
+---
+
+## 如何使用 l402-kit
+
+Diagram Forge 基于 `l402-kit` 的 **Managed Mode** 构建 — 这是无需运行节点即可接受 Lightning 支付的最简方式：
+
+```typescript
+import { l402, ManagedProvider } from "l402-kit";
+
+const provider = ManagedProvider.fromAddress("pinkfalcon21@primal.net", {
+  registerDirectory: {
+    url: "https://forge.l402kit.com/analyze",
+    name: "Diagram Forge — Architecture Analysis",
+    priceSats: 500,
+    description: "AI-powered living architecture diagrams from any repo",
+    category: "ai",
+  },
+});
+
+// Gate the /analyze endpoint — returns 402 until paid
+app.post("/analyze", l402({ priceSats: 500, lightning: provider }), handler);
+```
+
+当客户端在没有有效 preimage 的情况下调用 `POST /analyze` 时：
+
+```
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+客户端支付发票后，携带 `Authorization: L402 <macaroon>:<preimage>` 重新发起请求。
+
+想构建类似的服务？请参阅 [l402-kit 快速开始](/quickstart)。
+
+---
+
+## 相关链接
+
+<CardGroup cols={2}>
+  <Card title="Web 应用" icon="globe" href="https://forge.l402kit.com">
+    在浏览器中分析任意公开 GitHub 仓库
+  </Card>
+  <Card title="VS Code 扩展" icon="code" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.diagram-forge">
+    在 VS Code 内体验完整的侧边栏功能
+  </Card>
+  <Card title="源代码" icon="github" href="https://github.com/shinydapps-creator/diagram-forge">
+    MIT 许可证 — 随意 fork、扩展、二次开发
+  </Card>
+  <Card title="l402-kit 快速开始" icon="bolt" href="/quickstart">
+    几分钟内构建您自己的 L402 付费网关服务
+  </Card>
+</CardGroup>

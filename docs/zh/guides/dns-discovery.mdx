@@ -1,0 +1,68 @@
+---
+title: "DNS 发现"
+description: "让代理通过 DNS TXT 记录发现您的 L402 端点——无需 HTTP 请求。"
+---
+
+## 为什么使用 DNS 发现
+
+具有互联网访问权限的代理可以在发出任何 HTTP 请求之前解析 DNS。如果您将 L402 端点发布为 DNS TXT 记录，代理将自动发现它——甚至在访问您的 API 之前。
+
+## TXT 记录格式
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+字段说明：
+- `v=l402` — 协议标识符
+- `endpoint=` — 您的 L402 保护 URL
+- `price=` — 以 sats 为单位的价格（可选，仅供参考）
+- `docs=` — 文档链接（可选）
+
+## 在 Cloudflare 上配置
+
+1. 前往 **Cloudflare 控制台 → DNS**
+2. 添加一条新记录：
+
+| 类型 | 名称 | 内容 | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | 自动 |
+
+## 使用 dig 验证
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# 预期输出：
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## 代理如何使用
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// 代理解析 DNS 以找到您的端点
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// 返回："https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## l402-kit 自身的记录
+
+以下示例使用虚构域名（`api.example.com`）来说明格式——请将其替换为您实际的端点。
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## 优势
+
+- **零 HTTP 开销** — 在任何 API 调用之前完成发现
+- **原生代理支持** — DNS 是机器发现服务的方式，而非人类
+- **无需 API 密钥** — 完全开放的发现机制
+- **可缓存** — TTL 控制代理重新解析的频率
+
+请参阅 [.well-known/agent.json](https://api.example.com/.well-known/agent.json) 了解互补的 HTTP 发现标准。

@@ -1,0 +1,224 @@
+---
+title: 预算控制
+description: 设置消费限额、按域名追踪支付记录，并在每笔交易前获取回调。
+---
+
+## 为什么预算控制很重要
+
+在循环中调用付费 API 的 AI 代理可能迅速累积大量费用。预算控制让您能够：
+
+- 限制每个会话的总消费上限
+- 设置按域名的限额（例如，在 `api.weather.com` 上每次会话最多 100 sats）
+- 在每笔支付前接收回调
+- 随时获取完整的消费报告
+
+---
+
+## 全局预算
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+      budgetSats: 500, // 本次会话最多 500 sats
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=500,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+当 402 响应包含 `priceSats` 字段且该金额将超过剩余预算时，客户端会在**付款之前**抛出 `BudgetExceededError` —— 不会花费任何 satoshis。
+
+---
+
+## 按域名预算
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 2000,
+      budgetPerDomain: {
+        "api.weather.com": 100,
+        "api.finance.com": 500,
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=2000,
+        budget_per_domain={
+            "api.weather.com": 100,
+            "api.finance.com": 500,
+        },
+    )
+    ```
+  </Tab>
+</Tabs>
+
+按域名限额与全局限额独立检查 —— 两者都必须通过，支付才能继续。
+
+---
+
+## 回调
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 1000,
+      onSpend: (sats, url) => {
+        console.log(`✓ Paid ${sats} sats → ${url}`);
+        // 记录到您的遥测系统、更新仪表板等
+      },
+      onBudgetExceeded: (url, sats) => {
+        console.warn(`✗ Blocked: ${sats} sats requested by ${url} — budget exhausted`);
+        // 发送警报、通知 Slack 等
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    def on_spend(sats: int, url: str) -> None:
+        print(f"✓ Paid {sats} sats → {url}")
+
+    def on_budget_exceeded(url: str, sats: int) -> None:
+        print(f"✗ Blocked: {sats} sats requested by {url} — budget exhausted")
+
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=1000,
+        on_spend=on_spend,
+        on_budget_exceeded=on_budget_exceeded,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+`onBudgetExceeded` / `on_budget_exceeded` 会在抛出 `BudgetExceededError` 之前被调用 —— 适用于日志记录或发送警报。
+
+---
+
+## 消费报告
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const report = client.spendingReport();
+
+    if (report) {
+      console.log(`Total spent: ${report.total} sats`);
+      console.log(`Remaining:   ${report.remaining} sats`);
+      console.log("By domain:", report.byDomain);
+      // { "api.weather.com": 42, "api.finance.com": 105 }
+
+      for (const tx of report.transactions) {
+        console.log(`  ${tx.ts}  ${tx.sats} sats  ${tx.url}`);
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    report = client.spending_report()
+
+    if report:
+        print(f"Total spent: {report.total} sats")
+        print(f"Remaining:   {report.remaining} sats")
+        print("By domain:", report.by_domain)
+        # {"api.weather.com": 42, "api.finance.com": 105}
+
+        for tx in report.transactions:
+            print(f"  {tx['ts']}  {tx['sats']} sats  {tx['url']}")
+    ```
+  </Tab>
+</Tabs>
+
+当未配置预算时，`spendingReport()` 返回 `null` / `None`。
+
+---
+
+## 处理 BudgetExceededError
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { BudgetExceededError } from "l402-kit";
+
+    try {
+      const res = await client.fetch("https://api.example.com/premium");
+    } catch (err) {
+      if (err instanceof BudgetExceededError) {
+        console.log(`Need ${err.required} sats, only ${err.remaining} remaining`);
+        // 优雅降级 —— 返回缓存数据、跳过此步骤等
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import BudgetExceededError
+
+    try:
+        r = client.get("https://api.example.com/premium")
+    except BudgetExceededError as e:
+        print(f"Need {e.required} sats, only {e.remaining} remaining")
+        # 优雅降级
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## 并发注意事项
+
+<Warning>
+**当预算限额重要时，请勿在并发的 `Promise.all` 调用中共享同一个 `L402Client` 实例。**
+
+`BudgetTracker.check()` 和 `record()` 之间存在一个 `await`（即 Lightning 付款）。两个并发的 `client.fetch()` 调用可能在任何一个记录消费之前都通过了预算检查 —— 这意味着合并费用可能暂时超出您的预算上限一笔付款的金额。
+
+**安全模式 —— 顺序调用：**
+```typescript
+for (const url of urls) {
+  const res = await client.fetch(url); // 逐一等待
+}
+```
+
+**风险模式 —— 并行调用：**
+```typescript
+// 两者可能都在调用 budget.record() 之前通过了 budget.check()
+const results = await Promise.all(urls.map(url => client.fetch(url)));
+```
+
+**并行工作负载的缓解方案：** 保守地设置 `budgetSats`（例如设为真实限额的 80%），以吸收一次并发支付导致的超支。如需严格执行，请按顺序处理调用。
+</Warning>
+
+---
+
+## 完整选项参考
+
+| 选项 | TypeScript | Python | 默认值 | 描述 |
+|--------|-----------|--------|---------|-------------|
+| 全局预算 | `budgetSats` | `budget_sats` | 无限制 | 会话的最大 sats 数 |
+| 按域名 | `budgetPerDomain` | `budget_per_domain` | `{}` | `域名 → 最大 sats` 的映射 |
+| 消费钩子 | `onSpend` | `on_spend` | — | 每次支付后调用 |
+| 超限钩子 | `onBudgetExceeded` | `on_budget_exceeded` | — | 抛出错误前调用 |

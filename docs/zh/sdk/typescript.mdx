@@ -1,0 +1,393 @@
+---
+title: TypeScript SDK
+description: l402-kit TypeScript/Node.js SDK 完整参考文档 —— 用于 Bitcoin Lightning 按调用计费 API 的 Express 中间件。
+---
+
+## 安装
+
+```bash
+npm install l402-kit
+```
+
+**环境要求**：Node.js 18+，Express 4+
+
+---
+
+## 快速开始
+
+<Tabs>
+  <Tab title="自有钱包（0% 手续费）">
+```typescript
+import express from 'express';
+import { l402, BlinkProvider } from 'l402-kit';
+
+const app = express();
+
+// 付款直接进入您的 Blink 钱包 —— 0% 手续费
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+  <Tab title="托管模式（无需自建节点）">
+```typescript
+import express from 'express';
+import { l402, ManagedProvider } from 'l402-kit';
+
+const app = express();
+
+// l402kit.com 托管节点，您可获得每笔付款的 99.7%。
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+</Tabs>
+
+---
+
+## `l402(options)` —— 中间件
+
+返回一个 Express `RequestHandler`，对路由强制执行 L402 支付验证。
+
+### 选项
+
+| 选项 | 类型 | 默认值 | 描述 |
+|---|---|---|---|
+| `priceSats` | `number` | **必填** | 每次调用的价格（单位：sats） |
+| `lightning` | `LightningProvider` | **必填** | 您的 Lightning 后端 |
+| `supabaseUrl` | `string` | 环境变量 `SUPABASE_URL` | 用于记录支付日志的 Supabase URL |
+| `supabaseKey` | `string` | 环境变量 `SUPABASE_ANON_KEY` | 用于记录支付日志的 Supabase 密钥 |
+| `onPayment` | `(token, amountSats) => void` | — | 每次验证成功后触发的回调函数 |
+| `webhookUrl` | `string` | — | 接收已签名支付事件的终端地址 |
+| `webhookSecret` | `string` | — | 用于 webhook 签名的 HMAC-SHA256 密钥 |
+| `replayAdapter` | `ReplayAdapter` | 内存模式 | 可插拔的重放攻击防护后端 |
+
+### 行为说明
+
+| 请求 | 响应 |
+|---|---|
+| 无 `Authorization` 请求头 | `402 Payment Required`，附带 BOLT11 发票和 macaroon |
+| 有效的 `L402 <macaroon>:<preimage>` | `next()` —— 执行处理函数 |
+| 无效或已过期的令牌 | `401 Unauthorized` |
+| 重放的 preimage | `401 Token already used` |
+
+### 402 响应体
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1p...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "priceSats": 10
+}
+```
+
+### WWW-Authenticate 请求头
+
+```
+WWW-Authenticate: L402 macaroon="eyJ...", invoice="lnbc..."
+```
+
+---
+
+## 提供商
+
+### `AlbyProvider` —— 推荐用于主权模式
+
+[Alby](https://getalby.com) —— 非托管钱包，您掌控私钥。
+
+```typescript
+import { AlbyProvider } from 'l402-kit';
+
+// 1. 在 hub.getalby.com 创建 Alby Hub（或自托管）
+// 2. 进入 设置 → 访问令牌 → 创建令牌（权限范围：invoices:create, invoices:read）
+const lightning = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!, // Hub 访问令牌
+  process.env.ALBY_HUB_URL!,      // 例如 "https://your-name.getalby.com"
+);
+```
+
+### `BTCPayProvider` —— 自托管，零信任
+
+运行您自己的 [BTCPay Server](https://btcpaystore.com)，实现完全主权。
+
+```typescript
+import { BTCPayProvider } from 'l402-kit';
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,         // https://your-btcpay.com
+  process.env.BTCPAY_API_KEY!,     // 商店 API 密钥
+  process.env.BTCPAY_STORE_ID!,    // 商店 ID
+);
+```
+
+### `BlinkProvider` —— 托管模式，最易上手
+
+[Blink](https://blink.sv) —— 免费，小额无需 KYC。
+
+```typescript
+import { BlinkProvider } from 'l402-kit';
+
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // dashboard.blink.sv → API Keys
+  process.env.BLINK_WALLET_ID!,  // 您的 BTC 钱包 ID
+);
+```
+
+### `LNbitsProvider`
+
+自托管或使用 [legend.lnbits.com](https://legend.lnbits.com)。
+
+```typescript
+import { LNbitsProvider } from 'l402-kit';
+
+const lightning = new LNbitsProvider(
+  process.env.LNBITS_API_KEY!,
+  'https://your-lnbits-instance.com', // 可选，默认为 legend.lnbits.com
+);
+```
+
+### `OpenNodeProvider`
+
+```typescript
+import { OpenNodeProvider } from 'l402-kit';
+
+const lightning = new OpenNodeProvider(
+  process.env.OPENNODE_API_KEY!,
+  false, // testMode —— 设为 true 可使用沙盒环境
+);
+```
+
+### `ManagedProvider` —— 云托管模式（0.3% 手续费）
+
+l402kit.com 托管 Lightning 节点，您可获得每笔付款的 99.7%，需明确选择启用。
+
+```typescript
+import { ManagedProvider } from 'l402-kit';
+
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+// 可选：自动注册至公共 API 目录
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com', {
+  registerDirectory: {
+    url: 'https://api.you.com/v1/data',
+    name: 'My Data API',
+    priceSats: 10,
+    category: 'data',          // data | ai | finance | weather | compute | storage | other
+    description: '可选描述',
+  },
+});
+```
+
+注册在启动时触发一次（即发即忘，错误静默处理）。API 将出现在 `l402kit.com/apis.json`，供代理自动发现。
+
+---
+
+## 重放攻击防护
+
+### 默认 —— 内存模式（适用于开发环境）
+
+内置功能，重启后重置，适合单进程部署。
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+```
+
+### Redis（生产环境 —— 多实例部署）
+
+```typescript
+import Redis from 'ioredis';
+import { l402, RedisReplayAdapter } from 'l402-kit';
+
+const replay = new RedisReplayAdapter(
+  new Redis(process.env.REDIS_URL!),
+  86400, // TTL（秒），此处为 24 小时
+);
+
+app.get('/api', l402({ priceSats: 10, lightning, replayAdapter: replay }), handler);
+```
+
+`RedisReplayAdapter` 使用 `SET key 1 NX EX ttl` —— 原子操作，无竞态条件。
+
+---
+
+## 支付 webhook
+
+每次支付后接收已签名的事件通知。
+
+```typescript
+import { l402, verifyWebhook } from 'l402-kit';
+
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  webhookUrl: 'https://yourapi.com/webhooks/l402',
+  webhookSecret: process.env.L402_WEBHOOK_SECRET!,
+}), handler);
+
+// Webhook 接收端
+app.post('/webhooks/l402', express.raw({ type: '*/*' }), (req, res) => {
+  const valid = verifyWebhook(
+    process.env.L402_WEBHOOK_SECRET!,
+    req.body.toString(),
+    req.headers['l402-signature'] as string,
+  );
+  if (!valid) return res.status(401).end();
+
+  const event = JSON.parse(req.body.toString());
+  console.log('Payment:', event.data.paymentHash, event.data.amountSats);
+  res.json({ ok: true });
+});
+```
+
+**Webhook 负载：**
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "payment.received",
+  "created": 1700000000,
+  "data": {
+    "endpoint": "/api/data",
+    "amountSats": 10,
+    "paymentHash": "sha256-of-preimage"
+  }
+}
+```
+
+---
+
+## `onPayment` 回调
+
+在每次支付验证通过后、`next()` 执行前同步触发的钩子：
+
+```typescript
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  onPayment: async ({ macaroon, preimage }, amountSats) => {
+    await myAnalytics.track('payment', { amountSats });
+  },
+}), handler);
+```
+
+---
+
+## Supabase 支付日志
+
+在环境变量中设置 `SUPABASE_URL` 和 `SUPABASE_ANON_KEY`，即可自动记录支付日志。
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+// SUPABASE_URL 和 SUPABASE_ANON_KEY 会自动从 process.env 读取
+```
+
+**支付表结构**（`payments`）：
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) —— 可安全存储
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+<Note>
+`payment_hash` 存储的是 `SHA256(preimage)`，而非原始 preimage。preimage 是 32 字节的 Lightning 支付密钥 —— 其哈希值已在 BOLT11 发票中公开。
+</Note>
+
+---
+
+## 独立工具函数
+
+```typescript
+import { verifyToken, parseToken, checkAndMarkPreimage } from 'l402-kit';
+
+// 验证令牌（返回 true/false）
+const isValid = await verifyToken('eyJoYXNoIjoi...:deadbeef...');
+
+// 解析令牌各部分
+const { macaroon, preimage } = parseToken(token);
+
+// 自定义重放检查（返回 true 表示首次使用，返回 false 表示重放）
+const isFirstUse = await checkAndMarkPreimage(preimage);
+```
+
+---
+
+## 类型定义
+
+```typescript
+import type { L402Options, LightningProvider, Invoice, L402Token } from 'l402-kit';
+
+interface L402Options {
+  priceSats: number;
+  lightning: LightningProvider;
+  supabaseUrl?: string;
+  supabaseKey?: string;
+  onPayment?: (token: L402Token, amountSats: number) => void | Promise<void>;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  replayAdapter?: ReplayAdapter;
+}
+
+interface Invoice {
+  paymentRequest: string;
+  paymentHash: string;
+  macaroon: string;
+  amountSats: number;
+  expiresAt: number;        // Unix 毫秒时间戳
+}
+
+interface LightningProvider {
+  createInvoice(amountSats: number): Promise<Invoice>;
+  checkPayment(paymentHash: string): Promise<boolean>;
+}
+```
+
+---
+
+## 验证耗时
+
+令牌验证在内存中执行 `SHA256(preimage) == paymentHash` —— **亚毫秒级，热路径上无网络请求**。
+
+内存模式 `ReplayAdapter`（默认）同样为同步执行。若使用 `RedisReplayAdapter`，每次请求需额外承担 **5–50 ms** 的 Redis 往返延迟。请根据高频端点的实际情况合理规划容量。
+
+---
+
+## x402 兼容性（`X-Payment` 请求头）
+
+该中间件在支持标准 `Authorization: L402 …` 请求头的同时，也静默接受 `X-Payment` 请求头（由 Coinbase 的 [x402 协议](https://x402.org) 使用）。两者处理方式完全相同 —— 适用于需要同时兼容两种协议客户端的场景。
+
+```typescript
+// 使用 x402 请求头的客户端 —— 透明处理
+// X-Payment: <macaroon>:<preimage>
+```
+
+无需任何配置，始终处于启用状态。
+
+---
+
+## 迁移指南
+
+### v1.1 → v1.2
+
+重命名 `payments` 表中的列：
+
+```sql
+ALTER TABLE payments RENAME COLUMN preimage TO payment_hash;
+```

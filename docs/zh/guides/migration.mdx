@@ -1,0 +1,180 @@
+---
+title: 迁移指南
+description: 从 Managed 模式迁移到 Soberano 模式、在版本间升级，或切换 Lightning 提供商——零停机。
+---
+
+## Managed → Soberano（0% 手续费，完全自托管）
+
+你最初选择 `ManagedProvider` 是因为它是最快的上手方式。当你准备好实现完全自托管和 0% 手续费时，迁移只需一行代码。
+
+<Steps>
+  <Step title="设置你的 Lightning 提供商">
+    选择一个 soberano 提供商。[Blink](https://dashboard.blink.sv) 免费、无需 KYC、即时设置。
+
+    ```bash
+    # Blink: 创建账户 → API Keys → 复制密钥 + 钱包 ID
+    BLINK_API_KEY=blink_xxxxxxxxxxxxxxxxxxxxxxxx
+    BLINK_WALLET_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    ```
+  </Step>
+  <Step title="替换提供商——仅需一行">
+    ```typescript
+    // 之前
+    import { ManagedProvider } from 'l402-kit';
+    const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+    // 之后
+    import { BlinkProvider } from 'l402-kit';
+    const lightning = new BlinkProvider(
+      process.env.BLINK_API_KEY!,
+      process.env.BLINK_WALLET_ID!,
+    );
+    ```
+
+    ```python
+    # 之前
+    from l402kit import ManagedProvider
+    lightning = ManagedProvider.from_address("you@yourdomain.com")
+
+    # 之后
+    from l402kit.providers.blink import BlinkProvider
+    lightning = BlinkProvider(
+        api_key=os.environ["BLINK_API_KEY"],
+        wallet_id=os.environ["BLINK_WALLET_ID"],
+    )
+    ```
+
+    其他所有内容——中间件设置、令牌验证、端点代码——保持完全不变。
+  </Step>
+  <Step title="部署">
+    由 managed 提供商签发的令牌在迁移后**继续有效**。验证是纯加密运算（`SHA256(preimage) == paymentHash`）——与哪个提供商创建了发票无关。
+
+    无需迁移窗口，无停机时间，无需更新数据库。
+  </Step>
+</Steps>
+
+<Note>
+在 ManagedProvider 下已支付的令牌在切换提供商后仍然有效。macaroon 中只包含哈希值和过期时间——不含任何特定于提供商的数据。
+</Note>
+
+---
+
+## 在 soberano 提供商之间切换
+
+相同的模式——替换提供商实例，其他任何内容均无需更改。
+
+```typescript
+// Blink → LNbits
+import { LNbitsProvider } from 'l402-kit';
+const lightning = new LNbitsProvider(
+  process.env.LNBITS_KEY!,
+  process.env.LNBITS_URL ?? 'https://legend.lnbits.com',
+);
+
+// Blink → OpenNode
+import { OpenNodeProvider } from 'l402-kit';
+const lightning = new OpenNodeProvider(process.env.OPENNODE_KEY!, false);
+```
+
+---
+
+## v1.x → v1.8（当前版本）
+
+无破坏性变更。SDK 采用累加式更新——新增提供商、新增 agent 工具、新增 replay 适配器。使用以下命令升级：
+
+```bash
+npm install l402-kit@latest
+pip install --upgrade l402kit
+cargo update l402kit
+go get github.com/shinydapps/l402-kit/go@latest
+```
+
+如果你锁定了特定版本，请查看 [changelog](https://github.com/ShinyDapps/l402-kit/releases) 了解新增内容。
+
+---
+
+## 框架迁移
+
+### Express → Fastify
+
+```typescript
+// Express
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+
+// Fastify
+import { l402Fastify } from 'l402-kit/fastify';
+
+fastify.get('/api', {
+  preHandler: l402Fastify({ priceSats: 10, lightning }),
+}, handler);
+```
+
+### Express → Hono（Cloudflare Workers）
+
+```typescript
+import { Hono } from 'hono';
+import { l402Hono } from 'l402-kit/hono';
+
+const app = new Hono();
+app.use('/api/*', l402Hono({ priceSats: 10, lightning }));
+app.get('/api/data', (c) => c.json({ data: 'paid' }));
+```
+
+### Flask → FastAPI
+
+```python
+# Flask
+from l402kit.flask import l402_required
+
+@app.route('/api')
+@l402_required(price_sats=10, lightning=provider)
+def handler():
+    return jsonify({'data': 'paid'})
+
+# FastAPI
+from l402kit import l402_required
+
+@app.get('/api')
+@l402_required(price_sats=10, lightning=provider)
+async def handler():
+    return {'data': 'paid'}
+```
+
+---
+
+## Replay 存储迁移
+
+### 内存存储 → Supabase
+
+设置环境变量——中间件会自动检测并切换：
+
+```bash
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+```
+
+进行中的令牌继续有效。Supabase 存储从激活时刻开始记录——无需迁移任何历史数据。
+
+### 内存存储 → Redis
+
+```typescript
+import { Redis } from 'ioredis';
+import { RedisReplayAdapter } from 'l402-kit';
+
+const redis = new Redis(process.env.REDIS_URL!);
+
+app.get('/api', l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+<CardGroup cols={2}>
+  <Card title="Providers" icon="plug" href="/providers">
+    所有提供商选项与设置
+  </Card>
+  <Card title="Production Guide" icon="rocket" href="/guides/production">
+    部署检查清单
+  </Card>
+</CardGroup>

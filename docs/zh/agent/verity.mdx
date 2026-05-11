@@ -1,0 +1,271 @@
+---
+title: "VERITY"
+description: "具备8个L402保护服务的自主AI代理。赚取sats，以sats支付。"
+---
+
+# VERITY
+
+VERITY 是一个基于 l402-kit 构建的自主AI代理。她通过 L402 协议销售8项服务，积累比特币国库，并根据需求自动调整价格——无需人工干预。
+
+**发现端点：** `GET https://l402kit.com/api/verity`
+
+---
+
+## 8项服务
+
+| 服务 | 端点 | 价格 | 依赖 |
+|---|---|---|---|
+| 网页搜索 | `/api/verity/search` | 100 sats | — |
+| 网页抓取 | `/api/verity/scrape` | 200 sats | — |
+| BTC 价格 | `/api/verity/btc-price` | 10 sats | — |
+| 文本摘要 | `/api/verity/summarize` | 50 sats | — |
+| 情感分析 | `/api/verity/sentiment` | 30 sats | — |
+| 域名情报 | `/api/verity/domain-intel` | 500 sats | — |
+| l402-kit 集成 | `/api/verity/integration` | 10,000 sats | — |
+| 世界状态 | `/api/verity/worldstate` | 80 sats | — |
+
+价格是动态的——VERITY 每30分钟根据需求调整一次价格。
+
+---
+
+## 如何支付
+
+每项服务均遵循标准 L402 流程：
+
+```bash
+# 第一步 — 请求服务（获取发票）
+curl -i https://l402kit.com/api/verity/btc-price
+
+# HTTP/1.1 402 Payment Required
+# WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+
+# 第二步 — 使用任意 Lightning 钱包支付发票
+# 第三步 — 携带证明重试请求
+curl -H "Authorization: L402 <macaroon>:<preimage>" \
+  https://l402kit.com/api/verity/btc-price
+```
+
+---
+
+## 使用 L402Client 自动支付
+
+```typescript
+import { L402Client } from "l402-kit/agent";
+import { BlinkWallet } from "l402-kit/wallets";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
+  budget: { maxSats: 500 },
+});
+
+// BTC 价格 — 10 sats
+const price = await client.fetch("https://l402kit.com/api/verity/btc-price");
+const data = await price.json();
+console.log(data.bitcoin.usd);
+
+// 世界状态 — 80 sats
+const world = await client.fetch("https://l402kit.com/api/verity/worldstate");
+const state = await world.json();
+console.log(state.time.utc, state.location.city, state.weather.temperature_c);
+```
+
+---
+
+## 服务参考
+
+### 搜索 — 100 sats
+网页搜索，返回前10条自然搜索结果。
+
+```bash
+# GET
+curl -H "Authorization: L402 <token>" \
+  "https://l402kit.com/api/verity/search?q=bitcoin+lightning"
+
+# POST
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"q":"bitcoin lightning"}' \
+  https://l402kit.com/api/verity/search
+```
+
+**响应：**
+```json
+{
+  "agent": "VERITY",
+  "service": "search",
+  "query": "bitcoin lightning",
+  "results": [
+    { "title": "...", "link": "...", "snippet": "..." }
+  ],
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+---
+
+### 网页抓取 — 200 sats
+以 markdown 格式返回完整页面内容。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}' \
+  https://l402kit.com/api/verity/scrape
+```
+
+---
+
+### BTC 价格 — 10 sats
+实时获取比特币以 USD、EUR 和 BRL 计价的价格。
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  https://l402kit.com/api/verity/btc-price
+```
+
+**响应：**
+```json
+{
+  "bitcoin": { "usd": 98000, "eur": 90000, "brl": 550000 },
+  "timestamp": "2026-05-10T12:00:00.000Z"
+}
+```
+
+---
+
+### 文本摘要 — 50 sats
+AI 摘要，支持最多 50,000 个字符。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"...long text...", "language":"portuguese"}' \
+  https://l402kit.com/api/verity/summarize
+```
+
+---
+
+### 情感分析 — 30 sats
+情感分析，包含分数、置信度和关键词。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Bitcoin is the future of money"}' \
+  https://l402kit.com/api/verity/sentiment
+```
+
+**响应：**
+```json
+{
+  "analysis": {
+    "sentiment": "positive",
+    "score": 0.92,
+    "confidence": 0.88,
+    "keywords": ["bitcoin", "future", "money"]
+  }
+}
+```
+
+---
+
+### 域名情报 — 500 sats
+WHOIS、DNS 记录和 SSL 证书。无需 API 密钥——使用公共 RDAP 和 crt.sh。
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  "https://l402kit.com/api/verity/domain-intel?domain=example.com"
+```
+
+**响应：**
+```json
+{
+  "domain": "example.com",
+  "whois": { "registrar": "...", "registered": "...", "expires": "..." },
+  "dns": { "a_records": ["93.184.216.34"] },
+  "certificates": [{ "issued": "...", "expires": "...", "issuer": "..." }]
+}
+```
+
+---
+
+### l402-kit 集成 — 10,000 sats
+提交一个公开的 GitHub 仓库 URL。VERITY 分析代码库并返回完整的 l402-kit 集成代码。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"repoUrl":"https://github.com/owner/repo"}' \
+  https://l402kit.com/api/verity/integration
+```
+
+**响应：**
+```json
+{
+  "repo": "owner/repo",
+  "integration": "## Detected: Express.js\n\n```typescript\nimport { l402 } from 'l402-kit';\n...",
+  "next_steps": ["Apply integration code", "Set env vars", "Deploy and test"]
+}
+```
+
+---
+
+### 世界状态 — 80 sats
+单次调用返回 UTC 时间 + 调用方地理位置 + 当地天气。零外部 API 费用。
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  https://l402kit.com/api/verity/worldstate
+```
+
+**响应：**
+```json
+{
+  "time": {
+    "utc": "2026-05-10T14:32:00.000Z",
+    "unix": 1778421120,
+    "hour": 14, "minute": 32, "weekday": "Sun"
+  },
+  "location": {
+    "city": "São Paulo", "country": "BR", "timezone": "America/Sao_Paulo"
+  },
+  "weather": {
+    "temperature_c": 23.4,
+    "feels_like_c": 22.1,
+    "humidity_pct": 68,
+    "condition": "partly cloudy"
+  }
+}
+```
+
+---
+
+## 动态定价
+
+VERITY 每30分钟调整一次价格：
+
+```
+高需求（每小时调用量 > 阈值） → 价格 × 1.1
+零需求（连续2小时无调用）     → 价格 × 0.9
+底价保护                       → 价格永不低于最低值
+```
+
+随时查看当前价格：
+```bash
+curl https://l402kit.com/api/verity | jq '.services[].priceSats'
+```
+
+---
+
+## 架构
+
+```
+VERITY (agent:shinydapps.verity)
+  ├── 8 个 L402 保护服务
+  ├── 国库：shinydapps@blink.sv
+  ├── 心跳：每30分钟（价格调整）
+  ├── 财务代理：每日报告（已赚取 sats + BRL 等值）
+  └── LAW-N：每笔交易触发行为事件
+```
+
+VERITY 是开源的——相同的架构可以被 fork 用于创建您自己的自主代理。

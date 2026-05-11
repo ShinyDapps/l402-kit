@@ -1,0 +1,221 @@
+---
+title: 测试
+description: 端到端测试您的 L402 集成——本地环境、CI 流水线以及真实支付场景。
+---
+
+## 概述
+
+测试 L402 API 分为两个层次：
+1. **单元测试 / 集成测试** — 在不进行真实 Lightning 支付的情况下验证中间件逻辑
+2. **端到端测试** — 使用真实钱包和真实 sats 验证完整流程
+
+---
+
+## 单元测试——模拟 Provider
+
+传入一个模拟的 `LightningProvider` 以完全绕过 Lightning：
+
+```typescript
+import { l402, LightningProvider, Invoice } from "l402-kit";
+import request from "supertest";
+import express from "express";
+
+const mockProvider: LightningProvider = {
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    const hash = "abc123def456abc123def456abc123def456abc123def456abc123def456abc1";
+    const macaroon = Buffer.from(
+      JSON.stringify({ hash, exp: Date.now() + 3_600_000 })
+    ).toString("base64");
+    return { paymentRequest: "lnbc1...", paymentHash: hash, macaroon, amountSats };
+  },
+  async checkPayment(paymentHash: string): Promise<boolean> {
+    return true; // always paid in tests
+  },
+};
+
+const app = express();
+app.get("/premium", l402({ priceSats: 10, lightning: mockProvider }), (_req, res) => {
+  res.json({ data: "ok" });
+});
+
+// 测试 1 — 无认证信息 → 402
+const res402 = await request(app).get("/premium");
+assert(res402.status === 402);
+assert(res402.body.invoice === "lnbc1...");
+
+// 测试 2 — 有效 token → 200
+// SHA256("correct-preimage") 必须等于上方的 paymentHash，或使用真实的哈希对
+const macaroon = res402.body.macaroon;
+const preimage = "correct-preimage-hex"; // 必须满足 SHA256(preimage) == paymentHash
+const res200 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${macaroon}:${preimage}`);
+assert(res200.status === 200);
+```
+
+### 为测试生成有效的 preimage
+
+```typescript
+import { createHash, randomBytes } from "crypto";
+
+// 生成真实的哈希/preimage 对
+const preimage = randomBytes(32).toString("hex");
+const paymentHash = createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
+
+// 在模拟 provider 中使用这些值
+const mockProvider: LightningProvider = {
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    const macaroon = Buffer.from(
+      JSON.stringify({ hash: paymentHash, exp: Date.now() + 3_600_000 })
+    ).toString("base64");
+    return { paymentRequest: "lnbc1...", paymentHash, macaroon, amountSats };
+  },
+  async checkPayment(): Promise<boolean> { return true; },
+};
+
+// 在测试中：
+// Authorization: L402 <macaroon>:<preimage>
+// 这满足 SHA256(preimage) == paymentHash ✓
+```
+
+---
+
+## Python——使用 pytest 和模拟 provider
+
+```python
+import pytest
+import hashlib
+import secrets
+import base64
+import json
+from fastapi.testclient import TestClient
+from l402kit.types import LightningProvider, Invoice
+from your_app import app
+
+class MockProvider(LightningProvider):
+    def __init__(self):
+        self.preimage = secrets.token_hex(32)
+        self.payment_hash = hashlib.sha256(bytes.fromhex(self.preimage)).hexdigest()
+
+    async def create_invoice(self, amount_sats: int) -> Invoice:
+        exp = int((__import__("time").time() + 3600) * 1000)
+        macaroon = base64.b64encode(
+            json.dumps({"hash": self.payment_hash, "exp": exp}).encode()
+        ).decode()
+        return Invoice(
+            payment_request="lnbc1...",
+            payment_hash=self.payment_hash,
+            macaroon=macaroon,
+            amount_sats=amount_sats,
+        )
+
+    async def check_payment(self, payment_hash: str) -> bool:
+        return True
+
+def test_402_then_200(monkeypatch):
+    provider = MockProvider()
+    monkeypatch.setattr("your_app.lightning", provider)
+    client = TestClient(app)
+
+    # 步骤 1：无认证信息 → 402
+    res = client.get("/premium")
+    assert res.status_code == 402
+    macaroon = res.json()["macaroon"]
+
+    # 步骤 2：有效 L402 token → 200
+    auth = f"L402 {macaroon}:{provider.preimage}"
+    res = client.get("/premium", headers={"Authorization": auth})
+    assert res.status_code == 200
+```
+
+---
+
+## 测试重放保护
+
+验证 preimage 无法被重复使用：
+
+```typescript
+const res1 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${macaroon}:${preimage}`);
+assert(res1.status === 200); // 首次使用——通过
+
+const res2 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${macaroon}:${preimage}`);
+assert(res2.status === 401); // 重放攻击——已拒绝
+assert(res2.body.error === "Token already used");
+```
+
+---
+
+## CI 流水线
+
+在 CI 中使用模拟 provider——无需 Lightning 节点或 API 密钥：
+
+```yaml
+# .github/workflows/test.yml
+- name: Run tests
+  run: npm test
+  env:
+    NODE_ENV: test
+    # 测试环境使用模拟 provider，无需 BLINK_API_KEY
+```
+
+通过环境变量来选择 provider：
+
+```typescript
+const lightning = process.env.NODE_ENV === "test"
+  ? mockProvider
+  : ManagedProvider.fromAddress(process.env.LIGHTNING_ADDRESS!);
+```
+
+---
+
+## 使用真实 sats 进行端到端测试
+
+完整支付流程测试（适用于预发布/Staging 环境）：
+
+1. 设置 `priceSats: 1`——每次测试运行费用约 $0.0008
+2. 使用 [OpenNode 沙盒环境](https://app.opennode.com)（`testMode: true`）进行无真实资金的支付测试：
+   ```typescript
+   const lightning = new OpenNodeProvider(process.env.OPENNODE_KEY!, true); // testMode
+   ```
+3. 或者使用您的 Blink 钱包——1 sat 的支付几乎免费
+
+### 使用测试钱包进行自动化 E2E 测试
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+// 使用预算有限的专用测试钱包
+const wallet = new BlinkWallet(
+  process.env.TEST_BLINK_API_KEY!,
+  process.env.TEST_BLINK_WALLET_ID!,
+);
+const client = new L402Client({ wallet, budgetSats: 100 });
+
+const res = await client.fetch("http://localhost:3000/premium");
+assert(res.ok);
+const data = await res.json();
+assert(data.data !== undefined);
+```
+
+---
+
+## 上线前检查清单
+
+<Steps>
+  <Step title="使用模拟 provider 通过单元测试">
+    验证 402 → 支付 → 200 的完整流程。验证重放保护（第二次使用返回 401）。
+  </Step>
+  <Step title="测试 Token 过期逻辑">
+    在模拟 macaroon 中设置 `exp: Date.now() - 1`——验证中间件是否返回 401。
+  </Step>
+  <Step title="以 priceSats: 1 完成真实支付的完整 E2E 测试">
+    使用真实钱包、真实支付，确认收到 200 OK。可在手机上使用 Wallet of Satoshi 或 Blink。
+  </Step>
+  <Step title="确认重放保护适配您的部署环境">
+    单进程：默认内存适配器即可。多进程（Kubernetes、PM2 集群）：请使用 Supabase 或 Redis 适配器。参见[生产环境指南](/guides/production)。
+  </Step>
+</Steps>
