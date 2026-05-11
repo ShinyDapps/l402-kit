@@ -1,0 +1,393 @@
+---
+title: TypeScript SDK
+description: مرجع كامل لـ l402-kit TypeScript/Node.js SDK — وسيط Express لواجهات برمجة تطبيقات Bitcoin Lightning بالدفع مقابل كل استدعاء.
+---
+
+## التثبيت
+
+```bash
+npm install l402-kit
+```
+
+**المتطلبات**: Node.js 18+، Express 4+
+
+---
+
+## البدء السريع
+
+<Tabs>
+  <Tab title="محفظتك الخاصة (رسوم 0%)">
+```typescript
+import express from 'express';
+import { l402, BlinkProvider } from 'l402-kit';
+
+const app = express();
+
+// تذهب المدفوعات مباشرةً إلى محفظة Blink الخاصة بك — رسوم 0%
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+  <Tab title="مُدار (لا حاجة لعقدة)">
+```typescript
+import express from 'express';
+import { l402, ManagedProvider } from 'l402-kit';
+
+const app = express();
+
+// يستضيف l402kit.com العقدة. تستلم 99.7% من كل دفعة.
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+</Tabs>
+
+---
+
+## `l402(options)` — الوسيط
+
+يُعيد `RequestHandler` من Express يُطبّق دفع L402 على المسار.
+
+### الخيارات
+
+| الخيار | النوع | الافتراضي | الوصف |
+|---|---|---|---|
+| `priceSats` | `number` | **مطلوب** | السعر لكل استدعاء بالـ satoshis |
+| `lightning` | `LightningProvider` | **مطلوب** | الواجهة الخلفية لـ Lightning الخاصة بك |
+| `supabaseUrl` | `string` | متغير بيئة `SUPABASE_URL` | رابط Supabase لتسجيل المدفوعات |
+| `supabaseKey` | `string` | متغير بيئة `SUPABASE_ANON_KEY` | مفتاح Supabase لتسجيل المدفوعات |
+| `onPayment` | `(token, amountSats) => void` | — | استدعاء راجع يُشغَّل بعد كل دفعة مُتحقَّق منها |
+| `webhookUrl` | `string` | — | نقطة النهاية الخاصة بك لاستقبال أحداث الدفع الموقَّعة |
+| `webhookSecret` | `string` | — | سر HMAC-SHA256 لتوقيع الـ webhook |
+| `replayAdapter` | `ReplayAdapter` | في الذاكرة | خلفية قابلة للتوصيل لحماية إعادة التشغيل |
+
+### السلوك
+
+| الطلب | الاستجابة |
+|---|---|
+| لا يوجد ترويسة `Authorization` | `402 Payment Required` مع فاتورة BOLT11 + macaroon |
+| `L402 <macaroon>:<preimage>` صالح | `next()` — يُنفَّذ المعالج |
+| رمز غير صالح أو منتهي الصلاحية | `401 Unauthorized` |
+| preimage مُعاد استخدامه | `401 Token already used` |
+
+### نص استجابة 402
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1p...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "priceSats": 10
+}
+```
+
+### ترويسة WWW-Authenticate
+
+```
+WWW-Authenticate: L402 macaroon="eyJ...", invoice="lnbc..."
+```
+
+---
+
+## المزودون
+
+### `AlbyProvider` — موصى به لوضع السيادة الكاملة
+
+[Alby](https://getalby.com) — محفظة غير حضانية. أنت تتحكم في المفاتيح.
+
+```typescript
+import { AlbyProvider } from 'l402-kit';
+
+// 1. أنشئ Alby Hub على hub.getalby.com (أو استضفه بنفسك)
+// 2. الإعدادات ← رموز الوصول ← أنشئ رمزاً (النطاقات: invoices:create, invoices:read)
+const lightning = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!, // رمز وصول Hub
+  process.env.ALBY_HUB_URL!,      // مثال: "https://your-name.getalby.com"
+);
+```
+
+### `BTCPayProvider` — مستضاف ذاتياً، ثقة صفرية
+
+شغّل [BTCPay Server](https://btcpaystore.com) الخاص بك. سيادة كاملة.
+
+```typescript
+import { BTCPayProvider } from 'l402-kit';
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,         // https://your-btcpay.com
+  process.env.BTCPAY_API_KEY!,     // مفتاح API الخاص بالمتجر
+  process.env.BTCPAY_STORE_ID!,    // معرّف المتجر
+);
+```
+
+### `BlinkProvider` — حضاني، أسهل بداية
+
+[Blink](https://blink.sv) — مجاني، لا KYC للمبالغ الصغيرة.
+
+```typescript
+import { BlinkProvider } from 'l402-kit';
+
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // dashboard.blink.sv ← مفاتيح API
+  process.env.BLINK_WALLET_ID!,  // معرّف محفظة BTC الخاصة بك
+);
+```
+
+### `LNbitsProvider`
+
+مستضاف ذاتياً أو عبر [legend.lnbits.com](https://legend.lnbits.com).
+
+```typescript
+import { LNbitsProvider } from 'l402-kit';
+
+const lightning = new LNbitsProvider(
+  process.env.LNBITS_API_KEY!,
+  'https://your-lnbits-instance.com', // اختياري، يُستخدم legend.lnbits.com افتراضياً
+);
+```
+
+### `OpenNodeProvider`
+
+```typescript
+import { OpenNodeProvider } from 'l402-kit';
+
+const lightning = new OpenNodeProvider(
+  process.env.OPENNODE_API_KEY!,
+  false, // testMode — اضبطه على true للبيئة التجريبية
+);
+```
+
+### `ManagedProvider` — وضع السحابة (رسوم 0.3%)
+
+يستضيف l402kit.com عقدة Lightning. تستلم 99.7% من كل دفعة. يتطلب الاشتراك الصريح.
+
+```typescript
+import { ManagedProvider } from 'l402-kit';
+
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+// اختياري: التسجيل التلقائي في دليل API العام
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com', {
+  registerDirectory: {
+    url: 'https://api.you.com/v1/data',
+    name: 'My Data API',
+    priceSats: 10,
+    category: 'data',          // data | ai | finance | weather | compute | storage | other
+    description: 'Optional',
+  },
+});
+```
+
+يُشغَّل التسجيل مرة واحدة عند بدء التشغيل (fire-and-forget، الأخطاء صامتة). تظهر الواجهة البرمجية على `l402kit.com/apis.json` ليتمكن الوكلاء من اكتشافها تلقائياً.
+
+---
+
+## حماية إعادة التشغيل
+
+### الافتراضي — في الذاكرة (بيئة التطوير)
+
+مدمج. يُعاد ضبطه عند إعادة التشغيل. مناسب للنشر ذي العملية الواحدة.
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+```
+
+### Redis (الإنتاج — متعدد النسخ)
+
+```typescript
+import Redis from 'ioredis';
+import { l402, RedisReplayAdapter } from 'l402-kit';
+
+const replay = new RedisReplayAdapter(
+  new Redis(process.env.REDIS_URL!),
+  86400, // مدة الصلاحية بالثواني (24 ساعة)
+);
+
+app.get('/api', l402({ priceSats: 10, lightning, replayAdapter: replay }), handler);
+```
+
+يستخدم `RedisReplayAdapter` الأمر `SET key 1 NX EX ttl` — ذري وخالٍ من تعارض السباق.
+
+---
+
+## Webhooks الدفع
+
+استلم حدثاً موقَّعاً بعد كل دفعة.
+
+```typescript
+import { l402, verifyWebhook } from 'l402-kit';
+
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  webhookUrl: 'https://yourapi.com/webhooks/l402',
+  webhookSecret: process.env.L402_WEBHOOK_SECRET!,
+}), handler);
+
+// مستقبل الـ webhook
+app.post('/webhooks/l402', express.raw({ type: '*/*' }), (req, res) => {
+  const valid = verifyWebhook(
+    process.env.L402_WEBHOOK_SECRET!,
+    req.body.toString(),
+    req.headers['l402-signature'] as string,
+  );
+  if (!valid) return res.status(401).end();
+
+  const event = JSON.parse(req.body.toString());
+  console.log('Payment:', event.data.paymentHash, event.data.amountSats);
+  res.json({ ok: true });
+});
+```
+
+**حمولة الـ webhook:**
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "payment.received",
+  "created": 1700000000,
+  "data": {
+    "endpoint": "/api/data",
+    "amountSats": 10,
+    "paymentHash": "sha256-of-preimage"
+  }
+}
+```
+
+---
+
+## استدعاء `onPayment` الراجع
+
+خطاف متزامن يُستدعى بعد كل دفعة مُتحقَّق منها، قبل `next()`:
+
+```typescript
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  onPayment: async ({ macaroon, preimage }, amountSats) => {
+    await myAnalytics.track('payment', { amountSats });
+  },
+}), handler);
+```
+
+---
+
+## تسجيل المدفوعات عبر Supabase
+
+اضبط `SUPABASE_URL` + `SUPABASE_ANON_KEY` في بيئتك لتسجيل المدفوعات تلقائياً.
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+// يُقرأ SUPABASE_URL و SUPABASE_ANON_KEY من process.env تلقائياً
+```
+
+**مخطط جدول المدفوعات** (`payments`):
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — آمن للتخزين
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+<Note>
+يخزّن `payment_hash` القيمة `SHA256(preimage)` وليس الـ preimage الخام. الـ preimage هو سر دفع Lightning المؤلف من 32 بايت — وتجزئته متاحة للعموم بالفعل في فاتورة BOLT11.
+</Note>
+
+---
+
+## أدوات مستقلة
+
+```typescript
+import { verifyToken, parseToken, checkAndMarkPreimage } from 'l402-kit';
+
+// التحقق من رمز (يُعيد true/false)
+const isValid = await verifyToken('eyJoYXNoIjoi...:deadbeef...');
+
+// تحليل أجزاء الرمز
+const { macaroon, preimage } = parseToken(token);
+
+// فحص إعادة التشغيل المخصص (يُعيد true = أول استخدام، false = إعادة تشغيل)
+const isFirstUse = await checkAndMarkPreimage(preimage);
+```
+
+---
+
+## الأنواع
+
+```typescript
+import type { L402Options, LightningProvider, Invoice, L402Token } from 'l402-kit';
+
+interface L402Options {
+  priceSats: number;
+  lightning: LightningProvider;
+  supabaseUrl?: string;
+  supabaseKey?: string;
+  onPayment?: (token: L402Token, amountSats: number) => void | Promise<void>;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  replayAdapter?: ReplayAdapter;
+}
+
+interface Invoice {
+  paymentRequest: string;
+  paymentHash: string;
+  macaroon: string;
+  amountSats: number;
+  expiresAt: number;        // Unix ms
+}
+
+interface LightningProvider {
+  createInvoice(amountSats: number): Promise<Invoice>;
+  checkPayment(paymentHash: string): Promise<boolean>;
+}
+```
+
+---
+
+## توقيت التحقق
+
+يُشغّل التحقق من الرمز العملية `SHA256(preimage) == paymentHash` في الذاكرة — **أقل من ميلي ثانية، بدون استدعاء شبكة** على المسار الساخن.
+
+يعمل `ReplayAdapter` في الذاكرة (الافتراضي) أيضاً بشكل متزامن. إذا استخدمت `RedisReplayAdapter`، أضف **5–50 مللي ثانية** لزمن رحلة Redis ذهاباً وإياباً لكل طلب. ضع في اعتبارك هذا الأمر عند تخطيط السعة لنقاط النهاية عالية التردد.
+
+---
+
+## توافق x402 (ترويسة `X-Payment`)
+
+يقبل الوسيط بصمت ترويسة `X-Payment` (المستخدمة في [بروتوكول x402](https://x402.org) من Coinbase) إضافةً إلى الترويسة القياسية `Authorization: L402 …`. يُعامَل كلاهما بشكل متطابق — مفيد إذا أردت خدمة العملاء الذين يتحدثون أياً من البروتوكولين.
+
+```typescript
+// عميل يستخدم ترويسة x402 — يُعالَج بشفافية
+// X-Payment: <macaroon>:<preimage>
+```
+
+لا يلزم أي إعداد؛ فهو مُفعَّل دائماً.
+
+---
+
+## دليل الترقية
+
+### v1.1 ← v1.2
+
+أعد تسمية العمود في جدول `payments` الخاص بك:
+
+```sql
+ALTER TABLE payments RENAME COLUMN preimage TO payment_hash;
+```

@@ -1,0 +1,158 @@
+---
+title: "طبقة الدفع"
+description: "كيف يعالج l402-kit مدفوعات Bitcoin Lightning — BOLT11 وبروتوكول L402 والتحقق التشفيري."
+---
+
+# طبقة الدفع
+
+l402-kit هو **وسيط مستقل** يضيف جدار دفع Bitcoin Lightning إلى أي نقطة نهاية HTTP في 3 أسطر من الكود. تحضر مزود Lightning الخاص بك — تذهب الأموال مباشرةً إلى محفظتك، دون وسيط.
+
+---
+
+## البروتوكول: L402
+
+L402 هو معيار مفتوح يوسّع HTTP/1.1 بمصافحة دفع أصلية:
+
+```
+Client → GET /api/data
+Server ← 402 Payment Required
+         WWW-Authenticate: L402 <macaroon>, invoice="<BOLT11>"
+
+Client pays invoice via Lightning wallet
+Client → GET /api/data
+         Authorization: L402 <macaroon>:<preimage>
+Server ← 200 OK + data
+```
+
+**macaroon** هو رمز صلاحية مرتبط بـ `paymentHash` الخاص بالفاتورة. **preimage** هو السر التشفيري الذي يُصدره عقدة Lightning عند اكتمال الدفع. يتحقق الخادم من:
+
+```
+SHA256(preimage) == paymentHash ✓
+```
+
+لا حساب، لا جلسة، لا JWT — الـ preimage **هو** إثبات الدفع.
+
+---
+
+## تدفق إنشاء الفاتورة
+
+```
+Your API receives a request without valid Authorization
+     │
+     ▼
+l402-kit middleware calls lightning.createInvoice(priceSats)
+     │  (your provider: Blink, Alby, OpenNode, BTCPay, LNbits…)
+     ▼
+Provider returns BOLT11 invoice + paymentHash
+     │
+     ▼
+Middleware builds macaroon: base64({ hash: paymentHash, exp: now+1h })
+     │
+     ▼
+Your API returns 402 + invoice + macaroon to client
+```
+
+---
+
+## تدفق التحقق من الدفع
+
+```
+Client pays BOLT11 invoice via any Lightning wallet
+     │
+     ▼
+Lightning node releases preimage (32-byte secret)
+     │
+     ▼
+Client sends Authorization: L402 <macaroon>:<preimage>
+     │
+     ▼
+Middleware verifies locally — no network call:
+  1. Decode macaroon (base64 → JSON { hash, exp })
+  2. Check exp > now()
+  3. SHA256(preimage) === hash ✓
+     │
+     ▼
+Request passes through to your API handler → 200 OK
+```
+
+التحقق يعمل بكفاءة **O(1)** — تشفير خالص، دون بحث في قاعدة البيانات على المسار الساخن. تعمل حماية إعادة التشغيل (تسجيل `payment_hash` في Supabase) بشكل غير متزامن ولا تعيق الطلب.
+
+### صيغة Macaroon
+
+يستخدم l402-kit macaroon مخصصًا خفيف الوزن — وليس libmacaroon. الرمز هو كائن JSON مُرمَّز بـ `base64url`:
+
+```json
+{ "hash": "<paymentHash hex>", "exp": <unix timestamp> }
+```
+
+هذا أبسط وقابل للتدقيق دون أي مكتبة خارجية. صيغة رأس `Authorization` هي:
+
+```
+Authorization: L402 <base64url-macaroon>:<preimage-hex>
+```
+
+---
+
+## نموذج الرسوم
+
+| الوضع | الرسوم | الإعداد |
+|---|---|---|
+| **المستقل** (أي مزود) | **0%** — تحتفظ بـ 100% | أحضر بيانات اعتماد مزودك الخاص |
+| **المُدار** (`ManagedProvider`) | 0.3% لصالح l402kit.com | لا حاجة لعقدة Lightning — يعمل فورًا |
+
+الوضع المستقل هو الافتراضي. الوضع المُدار يتطلب تفعيلًا صريحًا:
+
+```typescript
+// Soberano — 0% fee, you keep 100%
+import { AlbyProvider } from 'l402-kit';
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+
+// Managed — 0.3% fee, no Lightning node needed
+import { ManagedProvider } from 'l402-kit';
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+```
+
+---
+
+## تخزين البيانات (اختياري — Supabase)
+
+عيّن `SUPABASE_URL` + `SUPABASE_ANON_KEY` لتسجيل المدفوعات تلقائيًا:
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — safe to store
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+**لماذا `payment_hash` بدلًا من `preimage`؟** الـ `payment_hash` مُضمَّن بالفعل في كل فاتورة BOLT11 — وهو عام بطبيعته. فقط الـ `preimage` هو السر. تخزين الهاش يوفر حماية من إعادة التشغيل دون أي تعرض إضافي.
+
+---
+
+## مزودو Lightning
+
+l402-kit لا يرتبط بمزود محدد. أي واجهة خلفية تُنفّذ `LightningProvider` تعمل:
+
+| المزود | ملاحظات |
+|---|---|
+| [Alby Hub](https://hub.getalby.com) | ذاتي الحضانة، 0% رسوم |
+| [Blink](https://blink.sv) | حضانة مجانية، لا KYC للمبالغ الصغيرة |
+| [BTCPay Server](https://btcpayserver.org) | مستضاف ذاتيًا، استقلالية كاملة |
+| [OpenNode](https://opennode.com) | حضانة مُدارة، لا إعداد مطلوب |
+| [LNbits](https://lnbits.com) | مستضاف ذاتيًا أو سحابيًا |
+
+راجع [TypeScript SDK](/sdk/typescript) أو [Python SDK](/sdk/python) لإعداد المزود.
+
+---
+
+## ضمانات الأمان
+
+| التهديد | وسيلة التخفيف |
+|---|---|
+| هجوم إعادة التشغيل | يُعلَّم الـ preimage كمستخدم بعد أول تحقق — في الذاكرة أو محوّل Redis |
+| preimage مزيف | `SHA256(preimage) === paymentHash` غير قابل للتزوير تشفيريًا |
+| انتهاء صلاحية الرمز | يتضمن Macaroon طابع زمني `exp` — يُتحقق منه في كل طلب |
+| انتحال Webhook | يُتحقق من `HMAC-SHA256(secret, body)` قبل المعالجة |

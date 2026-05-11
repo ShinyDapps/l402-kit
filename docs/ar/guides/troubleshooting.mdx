@@ -1,0 +1,188 @@
+---
+title: "استكشاف الأخطاء وإصلاحها"
+description: "الأخطاء الشائعة وأسبابها وكيفية إصلاحها."
+---
+
+## أخطاء الرمز المميز
+
+### `Token already used` (401)
+
+**السبب:** تم إرسال نفس preimage مرتين — هجوم إعادة تشغيل أو إعادة محاولة غير مقصودة.
+
+**الإصلاح:** كل عملية دفع فاتورة تنتج رمزًا يُستخدم مرة واحدة. أنشئ فاتورة جديدة وادفعها مرة أخرى. على جانب العميل، تأكد من أن `L402Client` يخزن الرموز مؤقتًا لكل عنوان URL للنقطة النهائية (وهو ما يفعله بشكل افتراضي).
+
+---
+
+### `Token expired` (401 / `valid: false`)
+
+**السبب:** تنتهي صلاحية الفواتير بعد ساعة واحدة. حقل `exp` في الرمز المميز بالميلي ثانية.
+
+**الإصلاح:** اطلب فاتورة جديدة. إذا كانت الصلاحية تنتهي بسرعة كبيرة، تحقق من دقة ساعة الخادم (`Date.now()` على الخادم مقابل `time.time()` على العميل يجب أن يكون الفارق بينهما ضمن ثوانٍ قليلة).
+
+---
+
+### `Invalid preimage format` (يُعاد 402 بدلاً من 200)
+
+**السبب:** الـ preimage ليس بالضبط 64 حرفًا سداسيًا (32 بايت).
+
+**الإصلاح:** تأكد من أن محفظتك تُعيد الـ preimage الخام كسلسلة سداسية مكونة من 64 حرفًا. بعض المحافظ تُعيده بترميز base64 — قم بفك تشفيره أولاً.
+
+---
+
+### `Webhook signature mismatch` (401)
+
+**السبب:** رأس `l402-signature` لا يتطابق مع السر أو تم تعديل الجسم أثناء النقل.
+
+**الإصلاح:**
+1. تأكد من أن `L402_WEBHOOK_SECRET` متطابق على كل من المُرسل والمستقبل.
+2. استخدم `express.raw({ type: 'application/json' })` (وليس `express.json()`) لقراءة الجسم الخام قبل التحقق — فتحليل JSON يُعيد تنسيق السلسلة ويُبطل التوقيع.
+3. تحقق من أن وكيل العكس (nginx, Cloudflare) لا يُعدّل الجسم.
+
+---
+
+## أخطاء المزود
+
+### `ManagedProvider: invoice creation failed` / HTTP 503
+
+**السبب:** `l402kit.com` غير متاح مؤقتًا أو واجهة برمجة تطبيقات Blink معطلة.
+
+**الإصلاح:** أعد المحاولة مع تراجع أسي. تحقق من الحالة على [status.blink.sv](https://status.blink.sv). بالنسبة لأعباء العمل الإنتاجية التي تتطلب عدم التوقف، استخدم مزودًا مستقلاً (BlinkProvider, AlbyProvider, إلخ) ببيانات اعتمادك الخاصة.
+
+---
+
+### `Blink: INSUFFICIENT_CHANNEL_BALANCE`
+
+**السبب:** محفظة Blink لديك تفتقر إلى سيولة صادرة كافية لدفعة التقسيم.
+
+**الإصلاح:** أضف أموالاً إلى محفظة `shinydapps@blink.sv` الخاصة بك. تحتاج المنصة إلى رصيد صغير لتوجيه مدفوعات التقسيم. يؤثر هذا فقط على تقسيم ManagedProvider — إنشاء الفاتورة لا يتأثر.
+
+---
+
+### `LNURL fetch failed` أثناء التقسيم
+
+**السبب:** عنوان Lightning الخاص بالمطور لا يُحلَّل. أعادت نقطة النهاية `/.well-known/lnurlp/` حالة غير 200.
+
+**الإصلاح:** تحقق من صحة عنوان Lightning وإمكانية الوصول إلى نقطة نهاية LNURL-pay للنطاق. اختبر باستخدام:
+```bash
+curl https://<domain>/.well-known/lnurlp/<username>
+```
+
+---
+
+### `AlbyProvider: HTTP 401`
+
+**السبب:** رمز وصول Alby منتهي الصلاحية أو مُلغى.
+
+**الإصلاح:** أعد إنشاء الرمز في Alby Hub ← الإعدادات ← رموز الوصول. تأكد من أن النطاق يشمل `invoices:create`.
+
+---
+
+### `BTCPayProvider: HTTP 403`
+
+**السبب:** مفتاح API يفتقر إلى الإذن المطلوب.
+
+**الإصلاح:** في BTCPay Server ← الحساب ← مفاتيح API، تأكد من أن المفتاح يملك نطاق `btcpay.store.cancreatelightninginvoice` للمتجر الصحيح.
+
+---
+
+## حماية الإعادة
+
+### حالات متعددة / لا يتم اكتشاف عمليات الإعادة
+
+**السبب:** `MemoryReplayAdapter` الافتراضي يعمل داخل العملية فحسب. عند إعادة التشغيل أو عبر حالات متعددة، يتم إعادة تعيينه.
+
+**الإصلاح:** استخدم `RedisReplayAdapter` لعمليات النشر متعددة الحالات:
+
+<CodeGroup>
+
+```ts TypeScript
+import Redis from "ioredis";
+import { RedisReplayAdapter } from "l402-kit";
+
+const redis = new Redis(process.env.REDIS_URL!);
+app.get("/api", l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+```python Python
+from l402kit import RedisReplayAdapter
+import redis.asyncio as redis
+
+r = redis.from_url(os.environ["REDIS_URL"])
+# pass replayAdapter to l402_required (coming soon)
+```
+
+</CodeGroup>
+
+يعمل قيد التفرد `payment_hash` في Supabase كطبقة ثانية دائمة بغض النظر عن محول الذاكرة، لذلك يتم حجب عمليات الإعادة دائمًا حتى بدون Redis.
+
+---
+
+## حدود المعدل
+
+### `Too many requests. Max 20 invoices/minute per IP.` (429)
+
+**السبب:** أكثر من 20 طلب إنشاء فاتورة في الدقيقة من نفس عنوان IP، مما يضرب نقطة نهاية ManagedProvider.
+
+**الإصلاح:** نفّذ التخزين المؤقت على جانب العميل — لا تُنشئ فاتورة جديدة عند كل تحميل للصفحة. يخزن `L402Client` الرموز مؤقتًا لكل عنوان URL للنقطة النهائية تلقائيًا. بالنسبة لتدفقات الخادم إلى الخادم التي تُنشئ فواتير كثيرة، استخدم مزودًا مستقلاً.
+
+---
+
+## خاص بالإطار
+
+### Express: الوسيط لا يُفعَّل
+
+**السبب:** تم تسجيل معالج مسار Express قبل وسيط `l402()`، أو ترتيب الوسيط خاطئ.
+
+**الإصلاح:**
+```ts
+// ✅ صحيح — l402 قبل المعالج
+app.get("/api", l402({ priceSats: 10, lightning }), myHandler);
+
+// ❌ خاطئ — l402 مسجل بعد المعالج
+app.get("/api", myHandler, l402(...));
+```
+
+---
+
+### FastAPI: `422 Unprocessable Entity` على استجابة 402
+
+**السبب:** يتحقق FastAPI من أجسام الاستجابة مقابل نموذج الاستجابة المُعلن. جسم 402 لا يتطابق.
+
+**الإصلاح:** إما استبعاد حالة 402 من التحقق من الاستجابة أو عدم الإعلان عن نموذج استجابة على النقاط النهائية المُزينة:
+```python
+@app.get("/premium")  # no response_model= here
+@l402_required(price_sats=10, lightning=provider)
+async def premium():
+    return {"data": "paid content"}
+```
+
+---
+
+### Go: `panic: l402: no Lightning provider set`
+
+**السبب:** `Options.Lightning` يساوي nil.
+
+**الإصلاح:** قم دائمًا بتعيين مزود:
+```go
+// ✅
+l402kit.Middleware(l402kit.Options{
+    PriceSats: 10,
+    Lightning: l402kit.NewManagedProvider("you@blink.sv"),
+}, handler)
+
+// ❌ يُسبب panic
+l402kit.Middleware(l402kit.Options{PriceSats: 10}, handler)
+```
+
+---
+
+## لا تزال عالقًا؟
+
+افتح مشكلة على [github.com/ShinyDapps/l402-kit/issues](https://github.com/ShinyDapps/l402-kit/issues) مع:
+- لغة SDK وإصدارها
+- مثال مصغر للإعادة
+- رسالة الخطأ وتتبع المكدس

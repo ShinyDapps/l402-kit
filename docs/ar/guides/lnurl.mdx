@@ -1,0 +1,168 @@
+---
+title: تكامل LNURL
+description: استخدم LNURL-auth لتسجيل الدخول بدون كلمة مرور و LNURL-pay لمدفوعات Lightning Address إلى جانب l402-kit.
+---
+
+## ما هو LNURL؟
+
+[LNURL](https://github.com/lnurl/luds) هو مجموعة من المعايير المفتوحة المبنية فوق Lightning Network. بدلاً من عرض فواتير Lightning الخام أو مفاتيح العقد العامة مباشرةً في تطبيقك، يُعرِّف LNURL بروتوكولات مبنية على URLs سهلة الاستخدام تعرف المحافظ كيف تتعامل معها. عندما تمسح محفظة رمز QR الخاص بـ LNURL، تقوم بفك تشفير الرابط، وجلب استجابة JSON من خادمك، ثم تتخذ الإجراء المناسب (التوقيع على تحدٍّ، جلب طلب دفع، إلخ) — وكل ذلك بشكل غير مرئي للمستخدم.
+
+يأتي l402-kit مزوداً بميزتَي LNURL جاهزتَين للاستخدام:
+
+| الميزة | حالة الاستخدام |
+|---|---|
+| **LNURL-auth** | تسجيل الدخول بدون كلمة مرور — المحفظة توقّع على تحدٍّ، بدون بريد إلكتروني أو كلمة مرور |
+| **LNURL-pay** | Lightning Address (`you@domain.com`) — يمكن لأي شخص الدفع لك باستخدام عنوان بشري القراءة |
+
+كلا البروتوكولَين يعملان عبر جميع محافظ Lightning الرئيسية (Phoenix، Blink، Zeus، Breez، Alby) ولا يتطلبان أي تبعيات إضافية — يحتاج خادمك فقط إلى تقديم نقطة نهاية JSON والتحقق اختيارياً من توقيع secp256k1.
+
+---
+
+## LNURL-auth — تسجيل الدخول بدون كلمة مرور
+
+يستخدم l402-kit.com بروتوكول LNURL-auth للوحة تحكم المدفوعات. يمكنك استخدام نفس التدفق في تطبيقك الخاص.
+
+### كيف يعمل
+
+```
+1. يولّد خادمك تحدياً (k1) — سلسلة hex عشوائية مؤلفة من 32 بايت
+2. تقوم بتشفيره كـ LNURL وعرضه كرمز QR
+3. يمسح المستخدم الرمز بأي محفظة تدعم LNURL-auth (Phoenix، Blink، Zeus، Breez...)
+4. المحفظة توقّع على k1 باستخدام مفتاح عقدة Lightning → ترسل التوقيع + المفتاح العام إلى callback الخاص بك
+5. تتحقق من التوقيع — إذا كان صالحاً، يُعتبر المستخدم مصادَقاً عليه
+```
+
+هوية المستخدم هي المفتاح العام لعقدة Lightning الخاصة به — ثابتة وعالمية وذاتية السيادة.
+
+### نقطة النهاية
+
+```
+GET /api/lnurl-auth
+```
+
+تُعيد تحدي LNURL. قم بتشفيره كرمز QR وعرضه في تدفق تسجيل الدخول الخاص بك.
+
+```json
+{
+  "lnurl": "LNURL1DP68GURN8GHJ7...",
+  "k1": "a1b2c3..."
+}
+```
+
+بعد callback المحفظة، تحقق عبر:
+
+```
+GET /api/lnurl-auth?k1=<challenge>&sig=<signature>&key=<pubkey>
+```
+
+### TypeScript — التحقق من توقيع LNURL-auth
+
+```typescript
+import { createHash } from "crypto";
+import * as secp256k1 from "@noble/curves/secp256k1";
+
+function verifyLnurlAuth(k1: string, sig: string, key: string): boolean {
+  try {
+    const msgHash = createHash("sha256").update(Buffer.from(k1, "hex")).digest();
+    return secp256k1.secp256k1.verify(sig, msgHash, key);
+  } catch {
+    return false;
+  }
+}
+```
+
+<Note>
+لا يتطلب LNURL-auth بريداً إلكترونياً، ولا كلمة مرور، ولا OAuth. هوية المستخدم هي مفتاحه العام في Lightning — قابل للنقل عبر المحافظ، غير قابل للرقابة، وفريد على مستوى العالم.
+</Note>
+
+---
+
+## LNURL-pay — Lightning Address
+
+Lightning Address (`you@domain.com`) هو اسم مستعار بشري القراءة يُحلَّل إلى نقطة نهاية LNURL-pay. يُعرِّض l402-kit نقطة نهاية على:
+
+```
+GET /.well-known/lnurlp/{username}
+```
+
+يُستخدم هذا داخلياً بواسطة آلية التقسيم — عندما تضبط `ownerAddress: "you@blink.sv"`، يقوم Worker بحل `blink.sv/.well-known/lnurlp/you` للحصول على فاتورة BOLT11.
+
+### كيفية إعداد Lightning Address الخاص بك
+
+1. انشر نقطة نهاية LNURL-pay على `https://yourdomain.com/.well-known/lnurlp/{username}`
+2. أعِد استجابة بيانات تعريف LNURL-pay القياسية:
+
+```json
+{
+  "callback": "https://yourdomain.com/lnurlp/pay",
+  "maxSendable": 100000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Pay you@yourdomain.com\"]]",
+  "tag": "payRequest"
+}
+```
+
+3. نقطة نهاية `callback` تستقبل `?amount=<msats>` وتُعيد:
+
+```json
+{
+  "pr": "lnbc10n1p...",
+  "routes": []
+}
+```
+
+### الاستضافة الذاتية مع BTCPay Server
+
+يأتي BTCPay Server مزوداً بـ LNURL-pay مدمجاً — فقط فعّله في إعدادات متجرك. يصبح Lightning Address الخاص بك `you@yourbtcpay.com`.
+
+```typescript
+import { BTCPayProvider } from "l402-kit";
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,
+  process.env.BTCPAY_API_KEY!,
+  process.env.BTCPAY_STORE_ID!,
+);
+// Lightning Address: you@yourbtcpay.com — بدون وسيط، رسوم 0%
+```
+
+---
+
+## التحقق من الملكية لدليل API
+
+عندما تسجّل واجهة برمجية تطبيقاتك على `POST /api/register`، يتحقق l402-kit تلقائياً من وجود ملف `/.well-known/l402.txt` على نطاق واجهتك البرمجية. إذا وُجد وتضمّن Lightning Address الخاص بك، يحصل إدراجك على شارة **تم التحقق**.
+
+**أنشئ الملف:**
+
+```
+# https://api.yourdomain.com/.well-known/l402.txt
+you@blink.sv
+```
+
+**ثم قم بالتسجيل:**
+
+```typescript
+ManagedProvider.fromAddress("you@blink.sv", {
+  registerDirectory: {
+    url: "https://api.yourdomain.com/v1/data",
+    name: "My Data API",
+    priceSats: 10,
+  },
+});
+// Response: { ok: true, id: "...", verified: true }
+```
+
+تحتل واجهات API الموثَّقة مراتب أعلى في الدليل وتعرض شارة ✓.
+
+---
+
+## المحافظ المتوافقة
+
+| المحفظة | LNURL-auth | LNURL-pay | الحضانة الذاتية |
+|---|---|---|---|
+| [Phoenix](https://phoenix.acinq.co) | ✅ | ✅ | ✅ |
+| [Blink](https://blink.sv) | ✅ | ✅ | ❌ حضانة مشتركة |
+| [Zeus](https://zeusln.app) | ✅ | ✅ | ✅ |
+| [Breez](https://breez.technology) | ✅ | ✅ | ✅ |
+| [Alby](https://getalby.com) | ✅ | ✅ | ✅ Hub |
+| [Mutiny](https://mutinywallet.com) | ✅ | ✅ | ✅ |

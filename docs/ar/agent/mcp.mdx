@@ -1,0 +1,211 @@
+---
+title: خادم MCP
+description: أضف l402-kit كأداة MCP حتى يتمكن Claude Desktop وCursor وأي ذكاء اصطناعي متوافق مع MCP من الدفع لواجهات برمجة Lightning تلقائيًا.
+---
+
+## ما هو MCP؟
+
+[بروتوكول سياق النموذج](https://modelcontextprotocol.io) هو المعيار المفتوح من Anthropic لمنح نماذج اللغة الكبيرة إمكانية الوصول إلى الأدوات الخارجية. يأتي l402-kit مزوَّدًا بخادم MCP جاهز للاستخدام يحتوي على فئتين من الأدوات:
+
+### أدوات L402 العامة
+
+| الأداة | الوصف |
+|------|-------------|
+| `l402_fetch` | جلب أي رابط — يدفع تلقائيًا إذا أعاد استجابة 402 |
+| `l402_balance` | التحقق من الميزانية المتبقية في Lightning |
+| `l402_spending_report` | تفصيل كامل للمدفوعات في الجلسة الحالية |
+
+### أدوات VERITY — خدمات مدفوعة مع دفع تلقائي
+
+| الأداة | السعر | الوصف |
+|------|------:|-------------|
+| `verity_btc_price` | 10 sats | سعر BTC الفوري بالدولار الأمريكي واليورو والريال البرازيلي |
+| `verity_worldstate` | 80 sats | التوقيت العالمي UTC + الموقع الجغرافي + الطقس المحلي |
+| `verity_search` | 100 sats | بحث على الويب، أفضل 10 نتائج عضوية |
+| `verity_summarize` | 50 sats | تلخيص بالذكاء الاصطناعي لما يصل إلى 50,000 حرف |
+| `verity_sentiment` | 30 sats | درجة المشاعر + الكلمات المفتاحية |
+| `verity_scrape` | 200 sats | استخراج محتوى الويب بتنسيق markdown نظيف |
+| `verity_domain_intel` | 500 sats | WHOIS + DNS + شهادات SSL |
+| `verity_integration` | 10,000 sats | تكامل l402-kit الكامل لأي مستودع GitHub |
+
+تدفع أدوات VERITY بشكل مستقل — لا حاجة لمعالجة الفواتير يدويًا.
+
+---
+
+## الإعداد في Claude Desktop
+
+### 1. تثبيت Node.js ≥ 18
+
+### 2. ضبط إعدادات المحفظة
+
+<Tabs>
+  <Tab title="Blink">
+    عدِّل ملف `claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "BLINK_API_KEY": "your-blink-api-key",
+            "BLINK_WALLET_ID": "your-wallet-id",
+            "BUDGET_SATS": "2000"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Alby">
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "ALBY_TOKEN": "your-alby-access-token",
+            "BUDGET_SATS": "2000"
+          }
+        }
+      }
+    }
+    ```
+
+    لاستخدام Alby Hub المستضاف ذاتيًا، أضف:
+    ```json
+    "ALBY_HUB_URL": "https://your-hub.example.com"
+    ```
+  </Tab>
+</Tabs>
+
+**موقع ملف الإعداد:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+### 3. أعد تشغيل Claude Desktop
+
+ستظهر الأدوات `l402_fetch` و`l402_balance` و`l402_spending_report` في قائمة أدوات Claude.
+
+---
+
+## متغيرات البيئة
+
+| المتغير | مطلوب | الوصف |
+|----------|:--------:|-------------|
+| `BLINK_API_KEY` | Blink فقط | مفتاح Blink API الخاص بك |
+| `BLINK_WALLET_ID` | Blink فقط | معرف محفظة Blink الخاصة بك |
+| `ALBY_TOKEN` | Alby فقط | رمز وصول Alby |
+| `ALBY_HUB_URL` | اختياري | عنوان URL مخصص لـ Alby Hub |
+| `BUDGET_SATS` | اختياري | الحد الأقصى للإنفاق لكل جلسة (الافتراضي: `2000`) |
+
+---
+
+## استخدام الأدوات
+
+بمجرد تشغيل الخادم، يمكن لـ Claude استدعاء VERITY وأي واجهة برمجة محمية بـ L402 بشكل مستقل:
+
+```
+أنت: ما سعر BTC الآن؟
+
+Claude: [يستدعي verity_btc_price]
+        [تم الدفع 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
+
+        سعر Bitcoin حاليًا 97,500 دولار أمريكي (التكلفة: 10 sats)
+```
+
+```
+أنت: لخّص هذا المقال: <يلصق 5,000 كلمة>
+
+Claude: [يستدعي verity_summarize مع text="..."]
+        [تم الدفع 50 sats] {"summary":"..."}
+```
+
+```
+أنت: ابحث عن "lightning network adoption 2026"
+
+Claude: [يستدعي verity_search مع q="lightning network adoption 2026"]
+        [تم الدفع 100 sats] {"results":[...]}
+```
+
+```
+أنت: كم أنفقت حتى الآن؟
+
+Claude: [يستدعي l402_spending_report]
+        === L402 Spending Report ===
+        Total spent:  160 sats
+        Remaining:    1840 sats
+
+        By domain:
+          l402kit.com: 160 sats
+```
+
+---
+
+## سجل MCP
+
+يُدرج l402-kit في [سجل Glama MCP](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit).
+
+البيان القابل للقراءة آليًا: `GET https://l402kit.com/.well-known/mcp.json`
+
+---
+
+## الإعداد مع Cursor
+
+أضف نفس كتلة الإعداد إلى إعدادات MCP في Cursor تحت **Settings → MCP Servers**.
+
+---
+
+## الإعداد مع أي عميل MCP
+
+يقرأ الخادم من `stdin` ويكتب إلى `stdout` (نقل stdio):
+
+```bash
+BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
+```
+
+يمكن لأي عميل متوافق مع MCP الاتصال باستخدام نقل stdio.
+
+---
+
+## بناء خادم MCP مخصص
+
+يمكنك أيضًا تضمين `L402Client` مباشرةً في خادم MCP الخاص بك:
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { L402Client, BlinkWallet } from "l402-kit";
+import { z } from "zod";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+  budgetSats: 1000,
+});
+
+const server = new McpServer({ name: "my-agent", version: "1.0.0" });
+
+server.tool(
+  "fetch_weather",
+  "Get current weather for a city — pays automatically",
+  { city: z.string() },
+  async ({ city }) => {
+    const res = await client.fetch(`https://api.weather.com/current?city=${city}`);
+    const text = await res.text();
+    return { content: [{ type: "text", text }] };
+  },
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+---
+
+## ملاحظات الأمان
+
+- سقف الميزانية (`BUDGET_SATS`) هو ضمانتك الأساسية — اضبطه بشكل محافظ
+- كل عملية `npx l402-kit-mcp` لها ميزانيتها الخاصة في الذاكرة؛ تُعاد تهيئتها عند إعادة التشغيل
+- للوكلاء في بيئة الإنتاج، احفظ سجل الإنفاق عبر استدعاء `onSpend` إلى مخزن خارجي

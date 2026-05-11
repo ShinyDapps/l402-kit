@@ -1,0 +1,109 @@
+---
+title: "تكامل AutoGPT"
+description: "استخدم l402-kit كمكوّن إضافي أو مهارة في AutoGPT للوصول المستقل إلى واجهات برمجة التطبيقات المدفوعة."
+---
+
+## المفهوم
+
+يعمل AutoGPT والوكلاء المستقلون المماثلون على تنفيذ المهام في حلقات واستدعاء الأدوات. يقوم l402-kit بتغليف أي واجهة برمجة تطبيقات مدفوعة كأداة قابلة للاستدعاء — يدفع الوكيل ويعيد المحاولة ويستمر دون تدخل بشري.
+
+## التثبيت
+
+```bash
+pip install l402kit
+```
+
+## L402Client كأمر متوافق مع AutoGPT
+
+```python
+import os
+import asyncio
+from l402kit import L402Client
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=2000)
+
+# AutoGPT-style command definition
+COMMANDS = {
+    "l402_fetch": {
+        "description": "Fetch data from a paid API using Bitcoin Lightning micropayment",
+        "signature": '("url": "<string>")',
+        "example": '("url": "https://api.example.com/data")',
+    }
+}
+
+def execute_command(command: str, args: dict) -> str:
+    if command == "l402_fetch":
+        url = args.get("url", "")
+        try:
+            response = asyncio.run(client.get(url))
+            return f"Success: {response.text[:500]}"
+        except Exception as e:
+            return f"Error: {str(e)}"
+    return f"Unknown command: {command}"
+```
+
+## إضافة إلى موجّه النظام
+
+أضف إلى موجّه النظام الخاص بوكيل AutoGPT:
+
+```
+COMMANDS:
+- l402_fetch: Fetch data from a paid API using Bitcoin Lightning
+  Args: url (string) — the API endpoint
+  Cost: varies per endpoint (typically 1-100 sats)
+  Use when: the API returns HTTP 402 Payment Required
+
+BUDGET: {BUDGET_SATS} sats total for this session.
+Track spending and stop if budget is exceeded.
+```
+
+## مثال على حلقة مستقلة كاملة
+
+```python
+import asyncio
+from l402kit import L402Client, BudgetExceededError
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+async def autonomous_data_collector(urls: list[str]) -> list[dict]:
+    results = []
+    for url in urls:
+        try:
+            response = await client.get(url)
+            results.append({
+                "url": url,
+                "status": "success",
+                "data": response.json(),
+                "cost_sats": client.last_payment_sats
+            })
+        except BudgetExceededError:
+            results.append({"url": url, "status": "budget_exceeded"})
+            break
+        except Exception as e:
+            results.append({"url": url, "status": "error", "error": str(e)})
+
+    print(f"Total spent: {client.spent_sats} sats")
+    return results
+
+# Run
+results = asyncio.run(autonomous_data_collector([
+    "https://l402kit.com/api/demo",
+    "https://api.example.com/data",
+]))
+```
+
+## تتبع الميزانية
+
+```python
+# Check remaining budget before each call
+if client.spent_sats + 100 > client.budget_sats:
+    print("Approaching budget limit, stopping.")
+else:
+    response = await client.get(url)
+```
+
+راجع [التحكم في الميزانية](/agent/budget) للاطلاع على حدود الجلسات المتقدمة و[البدء السريع بالمحفظة](/agent/wallet-quickstart) للحصول على محفظة.

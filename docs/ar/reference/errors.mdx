@@ -1,0 +1,166 @@
+---
+title: "مرجع الأخطاء"
+description: "رموز أخطاء دلالية من l402-kit للوكلاء والمطورين."
+---
+
+جميع الأخطاء الصادرة من l402-kit تتبع تنسيق JSON منظمًا حتى يتمكن الوكلاء من تحليلها والتصرف بناءً عليها برمجيًا.
+
+```json
+{
+  "error": "ERROR_CODE",
+  "code": 402,
+  "cause": "Human-readable explanation",
+  "action": "recommended_action",
+  "retry": false
+}
+```
+
+---
+
+## رموز الأخطاء
+
+### PAYMENT_FAILED
+
+```json
+{
+  "error": "PAYMENT_FAILED",
+  "code": 402,
+  "cause": "Insufficient balance in wallet",
+  "action": "increase_budget",
+  "retry": false
+}
+```
+
+لم تتمكن المحفظة من دفع الفاتورة. تحقق من الرصيد وحد `budgetSats`.
+
+---
+
+### TOKEN_EXPIRED
+
+```json
+{
+  "error": "TOKEN_EXPIRED",
+  "code": 402,
+  "cause": "Macaroon expiry timestamp exceeded",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+تم إنشاء رمز L402 لكن لم يُستخدم قبل انتهاء صلاحيته (الافتراضي: ساعة واحدة). أعد إرسال الطلب للحصول على فاتورة جديدة.
+
+---
+
+### BUDGET_EXCEEDED
+
+```json
+{
+  "error": "BUDGET_EXCEEDED",
+  "code": 402,
+  "cause": "Session budget of {n} sats exhausted",
+  "action": "stop_or_increase_budget",
+  "retry": false
+}
+```
+
+أنفق الوكيل أكثر من `budgetSats` في الجلسة الحالية. ارفع الميزانية أو أنهِ الجلسة.
+
+---
+
+### INVALID_MACAROON
+
+```json
+{
+  "error": "INVALID_MACAROON",
+  "code": 402,
+  "cause": "Macaroon is not valid base64 JSON",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+تعذّر فك ترميز macaroon. يحدث هذا عادةً بسبب رمز تالف. أعد المحاولة من البداية.
+
+---
+
+### TOKEN_ALREADY_USED
+
+```json
+{
+  "error": "TOKEN_ALREADY_USED",
+  "code": 401,
+  "cause": "Preimage was already presented — replay attack blocked",
+  "action": "do_not_retry",
+  "retry": false
+}
+```
+
+تم تفعيل الحماية من إعادة التشغيل. كل preimage لا يمكن استخدامه إلا مرة واحدة. لا تُعد استخدام الرموز أبدًا.
+
+---
+
+### NODE_UNREACHABLE
+
+```json
+{
+  "error": "NODE_UNREACHABLE",
+  "code": 503,
+  "cause": "Lightning node did not respond within timeout",
+  "action": "retry_with_backoff",
+  "retry": true
+}
+```
+
+موفر Lightning غير متاح. أعد المحاولة مع تراجع أسي.
+
+---
+
+### INVOICE_EXPIRED
+
+```json
+{
+  "error": "INVOICE_EXPIRED",
+  "code": 402,
+  "cause": "BOLT11 invoice expired before payment was submitted",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+تنتهي صلاحية فواتير BOLT11 (الافتراضي: 600 ثانية). أعد إرسال الطلب الأصلي للحصول على فاتورة جديدة.
+
+---
+
+### WRONG_PREIMAGE
+
+```json
+{
+  "error": "WRONG_PREIMAGE",
+  "code": 402,
+  "cause": "SHA256(preimage) does not match paymentHash in macaroon",
+  "action": "check_wallet_payment",
+  "retry": false
+}
+```
+
+فشل التحقق التشفيري. preimage لا يُثبت سداد هذه الفاتورة.
+
+---
+
+## معالجة الأخطاء في الوكلاء
+
+```typescript
+import { l402 } from "l402-kit/agent";
+
+try {
+  const res = await client.fetch("https://api.example.com/data");
+} catch (err: any) {
+  if (err.error === "BUDGET_EXCEEDED") {
+    // stop and report to user
+  } else if (err.retry === true) {
+    // safe to retry after short delay
+    await sleep(1000);
+    const res = await client.fetch("https://api.example.com/data");
+  }
+}
+```

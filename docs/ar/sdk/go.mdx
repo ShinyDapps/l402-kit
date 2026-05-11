@@ -1,0 +1,183 @@
+---
+title: Go SDK
+description: مرجع كامل لـ l402-kit Go SDK — وسيط net/http لواجهات برمجة تطبيقات Bitcoin Lightning المدفوعة لكل استدعاء.
+---
+
+## التثبيت
+
+```bash
+go get github.com/shinydapps/l402-kit/go@v1.8.2
+```
+
+**المتطلبات**: Go 1.21+
+
+---
+
+## البدء السريع
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+    "os"
+
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    lightning := l402.NewBlinkProvider(
+        os.Getenv("BLINK_API_KEY"),
+        os.Getenv("BLINK_WALLET_ID"),
+    )
+
+    mux := http.NewServeMux()
+    mux.Handle("/api/data", l402.Middleware(l402.Options{
+        PriceSats: 10,
+        Lightning: lightning,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
+    })))
+
+    http.ListenAndServe(":8080", mux)
+}
+```
+
+احصل على بيانات اعتماد Blink مجاناً من [dashboard.blink.sv](https://dashboard.blink.sv). تذهب المدفوعات مباشرةً إلى محفظتك.
+
+---
+
+## وضع الاستضافة الذاتية (أحضر مزودك الخاص)
+
+```go
+import l402 "github.com/shinydapps/l402-kit/go"
+
+type MyProvider struct{}
+
+func (p *MyProvider) CreateInvoice(ctx context.Context, amountSats int) (l402.Invoice, error) {
+    // create invoice with your Lightning node
+    // return l402.Invoice{PaymentRequest: "lnbc...", PaymentHash: "...", Macaroon: "..."}
+}
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: &MyProvider{},
+}, handler))
+```
+
+---
+
+## `l402.Options`
+
+| الحقل | النوع | الافتراضي | الوصف |
+|---|---|---|---|
+| `PriceSats` | `int` | **مطلوب** | السعر لكل استدعاء بالـ satoshis |
+| `Lightning` | `LightningProvider` | **مطلوب** | واجهة Lightning الخلفية الخاصة بك (استخدم `NewBlinkProvider`) |
+| `OnPayment` | `func(L402Token, int)` | — | دالة رد نداء تُشغَّل بعد كل دفعة تم التحقق منها |
+
+---
+
+## `l402.Middleware(opts Options, next http.Handler) http.Handler`
+
+يُعيد `http.Handler` متوافقاً مع `net/http` وChi وGorilla Mux وأي إطار عمل Go HTTP قياسي.
+
+### السلوك
+
+| الطلب | الاستجابة |
+|---|---|
+| لا يوجد ترويسة `Authorization` | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| `L402 <macaroon>:<preimage>` صالح | `next.ServeHTTP(w, r)` |
+| رمز غير صالح أو منتهي الصلاحية | `401 Unauthorized` |
+| preimage مُعاد استخدامه | `401 Token already used` |
+
+### جسم استجابة 402
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## واجهة `LightningProvider`
+
+```go
+type LightningProvider interface {
+    CreateInvoice(ctx context.Context, amountSats int) (Invoice, error)
+}
+```
+
+---
+
+## دالة رد نداء `OnPayment`
+
+```go
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+    OnPayment: func(token l402.L402Token, amountSats int) {
+        log.Printf("payment: %d sats, preimage: %s", amountSats, token.Preimage)
+    },
+}, handler))
+```
+
+---
+
+## التحقق
+
+يتم التحقق من `SHA256(preimage) == paymentHash` محلياً في الذاكرة — **أقل من ميلي ثانية، بدون استدعاء شبكة** على المسار الحرج. يُفحص انتهاء صلاحية الرمز (الحقل `exp` في الـ macaroon) في نفس العملية.
+
+يستخدم حارس إعادة التشغيل خريطة في الذاكرة افتراضياً (آمنة لعملية واحدة). لعمليات النشر متعددة النسخ، استخدم مخزناً مشتركاً (Redis أو ما شابه) — مما يُضيف **5–50 مللي ثانية** زمن ذهاب وإياب لكل طلب تم التحقق منه.
+
+---
+
+## مثال على موجّه Chi
+
+يُعيد `l402.Middleware` معالج `http.Handler` قياسياً، لذا يعمل مباشرةً مع `r.Handle` في Chi:
+
+```go
+import (
+    "github.com/go-chi/chi/v5"
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+r := chi.NewRouter()
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+r.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+}, http.HandlerFunc(handler)))
+```
+
+---
+
+## رموز الأخطاء
+
+| الحالة | المعنى |
+|---|---|
+| `402` | لا يوجد رمز دفع — ادفع الفاتورة |
+| `401` | رمز غير صالح أو macaroon منتهي الصلاحية |
+| `401` | رمز مُعاد استخدامه (preimage مستخدم مسبقاً) |
+
+---
+
+## التشغيل
+
+```bash
+go run main.go
+
+# Test — triggers 402
+curl http://localhost:8080/api/data
+
+# Pay invoice, then:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:8080/api/data
+```

@@ -1,0 +1,113 @@
+---
+title: "تفويض من وكيل إلى وكيل"
+description: "دع المنسق يدفع مرة واحدة ويشارك بيانات الاعتماد مع الوكلاء الفرعيين."
+---
+
+## المفهوم
+
+رمز L402 (`macaroon:preimage`) عبارة عن سلسلة نصية قابلة للنقل — بمجرد الدفع، يمكن تمريرها إلى أي وكيل فرعي يحتاج إلى الوصول إلى نفس المورد. يحتفظ المنسق بالمحفظة؛ بينما يتلقى الوكلاء الفرعيون الرمز فقط.
+
+```
+Orchestrator (has wallet)
+   │
+   ├── pays invoice → receives token (macaroon:preimage)
+   │
+   ├── passes token string to SubAgent A
+   └── passes token string to SubAgent B
+
+SubAgent A — calls /api/data with token  ✓  (no wallet needed)
+SubAgent B — calls /api/data with token  ✓  (no wallet needed)
+```
+
+<Note>
+تنتهي صلاحية الرموز بعد ساعة واحدة. لا يمكن استخدام كل preimage إلا مرة واحدة لكل خادم (حماية من إعادة التشغيل). بالنسبة للوكلاء الفرعيين المتوازيين الذين يصلون إلى نفس نقطة النهاية، يحتاج كل منهم إلى دفعة خاصة به.
+</Note>
+
+## متى تشارك رمزاً مقابل الدفع بشكل مستقل
+
+هناك نمطان للتفويض، لكل منهما مقايضات مختلفة:
+
+**مشاركة الرمز** تعمل عندما يصل الوكلاء الفرعيون إلى **نفس نقطة النهاية بشكل متسلسل**. يدفع المنسق مرة واحدة، ويستخرج قيمة رأس `Authorization`، ويمررها كسلسلة نصية. يستدعي الوكلاء الفرعيون نقطة النهاية بهذا الرأس مباشرةً — دون الحاجة إلى محفظة. يُقلل هذا التكلفة (دفعة واحدة) لكنه **غير آمن للوصول المتزامن** — لا يمكن إلا لوكيل واحد الاحتفاظ بـ preimage معين، والخوادم ترفض الطلبات المعادة.
+
+**الدفع المستقل** (كل وكيل فرعي لديه `L402Client` خاص به يشارك محفظة المنسق) يعمل للـ**وصول المتوازي أو المتزامن**. يدفع كل وكيل فاتورته الخاصة ويخزن رمزه الخاص مؤقتاً. يكلف هذا sats أكثر لكنه أبسط في التفكير وآمن عند أي مستوى من التزامن.
+
+**قاعدة عامة:** إذا كان وكلاؤك الفرعيون يتفرعون بشكل متوازٍ، فامنح كل منهم `L402Client` خاصاً به. إذا كانوا يعملون بشكل متسلسل ويصلون إلى نفس نقطة النهاية، فشارك سلسلة الرمز.
+
+## اعتبارات الأمان
+
+- **لا تمرر أبداً بيانات اعتماد المحفظة إلى الوكلاء الفرعيين.** مرر سلسلة الرمز فقط (`L402 <macaroon>:<preimage>`). يمكن للرمز استدعاء نقطة نهاية واحدة لمدة تصل إلى ساعة واحدة — أما المفتاح الخاص فيمكنه تفريغ المحفظة.
+- **الرموز للاستخدام مرة واحدة لكل خادم.** بعد الطلب الأول المقبول، يسجل الخادم تجزئة preimage. يعيد الطلب الثاني بنفس preimage الاستجابة 402. هذا يمنع هجمات إعادة التشغيل لكنه يعني أنك لا تستطيع مشاركة رمز واحد بين وكيلين فرعيين متزامنين يصلان إلى نفس الخادم.
+- **التحكم في الميزانية يكون على مستوى المحفظة.** اضبط `budgetSats` على `L402Client` الخاص بالمنسق لتحديد إجمالي الإنفاق عبر جميع الوكلاء الفرعيين الذين يشاركون تلك المحفظة. انظر [التحكم في الميزانية](/agent/budget).
+
+## TypeScript — المنسق يدفع، والوكيل الفرعي يستخدم الرمز
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+// Orchestrator: has wallet, pays invoice
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+const orchestrator = new L402Client({ wallet, budgetSats: 5000 });
+
+// Fetch triggers payment; token is cached inside orchestrator
+const res = await orchestrator.fetch("https://api.example.com/data");
+const data = await res.json();
+
+// Build the delegation header from the macaroon + preimage the Lightning Network returned.
+// In practice, retrieve these from the payment result or the client's token cache.
+// Format is always: "L402 <base64-macaroon>:<hex-preimage>"
+const tokenHeader = `L402 ${macaroon}:${preimage}`; // substitute values from payment result
+
+// Sub-agent: no wallet, passes the header directly
+const subRes = await fetch("https://api.example.com/data", {
+  headers: { Authorization: tokenHeader },
+});
+```
+
+## Python — المنسق يدفع، والوكيل الفرعي يستخدم الرمز
+
+```python
+from l402kit import L402Client
+from l402kit.wallets.blink import BlinkWallet
+
+# Orchestrator pays
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+orchestrator = L402Client(wallet=wallet, budget_sats=5000)
+
+async with orchestrator:
+    response = await orchestrator.fetch("https://api.example.com/data")
+
+# Sub-agents: pass the Authorization header directly
+# Authorization: L402 <macaroon>:<preimage>
+```
+
+## نمط متعدد الوكلاء: دفعة واحدة، قراءات متوازية
+
+إذا كان عدة وكلاء فرعيين يحتاجون إلى **نفس المورد بشكل متزامن**، فإن أوضح نمط هو أن يدفع كل وكيل فرعي بشكل مستقل باستخدام `L402Client` خاص به مع محفظة مشتركة:
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+
+// Each sub-agent gets its own L402Client — independent payment + token cache
+const agents = Array.from({ length: 3 }, () => new L402Client({ wallet }));
+
+const results = await Promise.all(
+  agents.map((agent) => agent.fetch("https://api.example.com/data"))
+);
+```
+
+## خصائص الأمان
+
+| الخاصية | كيف تعمل اليوم |
+|----------|--------------------|
+| عزل المحفظة | يتلقى الوكلاء الفرعيون سلسلة الرمز، وليس المفاتيح الخاصة أبداً |
+| مقيد بالوقت | تنتهي صلاحية Macaroons بعد ساعة واحدة |
+| آمن من إعادة التشغيل | لا يمكن قبول كل preimage إلا مرة واحدة من قبل الخادم |
+| التحكم في الميزانية | اضبط `budgetSats` على `L402Client` الخاص بالمنسق |
+
+## قادم في إصدار مستقبلي
+
+تفويض شرط macaroon الكامل (تحديد نطاق نقطة النهاية، الرموز ذات الاستخدام الواحد، حدود الاستخدام الأقصى) مخطط له. تابع التقدم على [GitHub](https://github.com/ShinyDapps/l402-kit).
+
+انظر [التحكم في الميزانية](/agent/budget) للاطلاع على حدود الإنفاق على مستوى الجلسة.

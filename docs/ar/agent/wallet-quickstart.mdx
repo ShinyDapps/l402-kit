@@ -1,0 +1,89 @@
+---
+title: "البدء السريع بالمحفظة"
+description: "احصل على محفظة Lightning في 60 ثانية. بدون بنك. بدون KYC. تعمل في 193 دولة."
+---
+
+تحتاج إلى محفظة Lightning لدفع تكاليف واجهات برمجة التطبيقات L402. خياران — كلاهما مجاني، وكلاهما يعمل عالمياً.
+
+---
+
+## الخيار A — Blink (موصى به)
+
+<Steps>
+  <Step title="إنشاء حساب">
+    انتقل إلى [blink.sv](https://blink.sv) وسجّل باستخدام رقم هاتف أو بريد إلكتروني.
+  </Step>
+  <Step title="انسخ عنوان Lightning الخاص بك">
+    في التطبيق: **الإعدادات ← عنوان Lightning**. يبدو كالتالي: `yourname@blink.sv`.
+  </Step>
+  <Step title="احصل على مفتاح API الخاص بك">
+    انتقل إلى [dashboard.blink.sv](https://dashboard.blink.sv) ← **مفاتيح API** ← أنشئ مفتاحاً.
+  </Step>
+  <Step title="الاستخدام في l402-kit">
+    ```typescript
+    import { ManagedProvider } from "l402-kit";
+
+    const provider = ManagedProvider.fromAddress("yourname@blink.sv");
+    ```
+
+    أو مع Agent SDK:
+
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ BLINK_API_KEY: "your-key" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## الخيار B — Alby
+
+<Steps>
+  <Step title="إنشاء حساب">
+    انتقل إلى [getalby.com](https://getalby.com) وسجّل.
+  </Step>
+  <Step title="احصل على رمز OAuth الخاص بك">
+    انتقل إلى [getalby.com/api-tokens](https://getalby.com/api-tokens) وأنشئ رمزاً بصلاحية `payments:send`.
+  </Step>
+  <Step title="الاستخدام في l402-kit">
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ ALBY_TOKEN: "your-token" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## إعداد تلقائي عبر متغيرات البيئة
+
+يكتشف l402-kit محفظتك تلقائياً من متغيرات البيئة. لا حاجة لتغييرات في الكود:
+
+```bash
+# Blink
+export BLINK_API_KEY="your-key"
+
+# Alby
+export ALBY_TOKEN="your-token"
+```
+
+```typescript
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env); // auto-detects Blink or Alby
+```
+
+---
+
+## تمويل محفظتك
+
+تمنحك كلتا المحفظتين عنوان Lightning لاستقبال sats. للاختبار:
+
+1. انتقل إلى [coinfos.net](https://coinfos.net) أو أي صنبور (faucet)
+2. أرسل 1000 sats إلى عنوان Lightning الخاص بك
+3. شغّل `npm install l402-kit && node -e "require('l402-kit/agent').healthCheck()"`
+
+**بدون بنك. بدون KYC معقّد. يعمل في 193 دولة.**

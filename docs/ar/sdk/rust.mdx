@@ -1,0 +1,185 @@
+---
+title: Rust SDK
+description: مرجع كامل لـ l402-kit Rust SDK — وسيط axum لواجهات برمجة التطبيقات المدفوعة عبر Bitcoin Lightning.
+---
+
+## التثبيت
+
+```bash
+cargo add l402kit
+```
+
+أو في `Cargo.toml`:
+
+```toml
+[dependencies]
+l402kit = "1.8"
+```
+
+**المتطلبات**: Rust 1.75+، بيئة تشغيل Tokio غير المتزامنة
+
+---
+
+## البدء السريع
+
+أسرع طريقة تستخدم `ManagedProvider` — لا حاجة إلى عقدة Lightning، رسوم 0.3%:
+
+```rust
+use axum::{middleware, routing::get, Router, Json};
+use l402kit::{l402_middleware, Options, ManagedProvider};
+use serde_json::{json, Value};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
+
+    let app = Router::new()
+        .route("/api/data", get(handler))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn handler() -> Json<Value> {
+    Json(json!({ "data": "premium content" }))
+}
+```
+
+للوضع المستقل (رسوم 0%)، نفّذ سمة `LightningProvider` — راجع [مزوّد مخصص](#custom-provider) أدناه.
+
+---
+
+## مزوّد مخصص
+
+```rust
+use std::sync::Arc;
+use l402kit::{Options, LightningProvider, Invoice, BoxFuture, L402Error};
+
+struct MyProvider;
+
+impl LightningProvider for MyProvider {
+    fn create_invoice<'a>(&'a self, amount_sats: u64) -> BoxFuture<'a, Result<Invoice, L402Error>> {
+        Box::pin(async move {
+            Ok(Invoice {
+                payment_request: "lnbc...".into(),
+                payment_hash: "abc123...".into(),
+                macaroon: "eyJ...".into(),
+                amount_sats,
+            })
+        })
+    }
+}
+
+let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
+```
+
+---
+
+## `Options`
+
+| الحقل | النوع | الوصف |
+|---|---|---|
+| `price_sats` | `u64` | السعر لكل طلب بالـ satoshis (**مطلوب**) |
+| `lightning` | `Arc<dyn LightningProvider>` | واجهة Lightning الخلفية الخاصة بك (**مطلوب**) |
+| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | دالة استدعاء تُشغَّل بعد كل دفعة مُتحقق منها |
+
+### مهمل: `with_address()`
+
+تمت إزالة `Options::with_address(address)` في الإصدار v1.4.0. استخدم `Options::new(sats, ManagedProvider::new(address))` بدلاً من ذلك:
+
+```rust
+use l402kit::{Options, ManagedProvider};
+use std::sync::Arc;
+
+let provider = ManagedProvider::new("you@yourdomain.com".into());
+let opts = Arc::new(Options::new(10, provider));
+```
+
+---
+
+## `l402_middleware(opts: Options)`
+
+يُعيد طبقة `axum::middleware::Layer` متوافقة مع axum 0.8+.
+
+### السلوك
+
+| الطلب | الاستجابة |
+|---|---|
+| لا يوجد ترويسة `Authorization` | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| `L402 <macaroon>:<preimage>` صالح | تنفيذ المعالج |
+| رمز منتهي الصلاحية أو غير صالح | `401 Unauthorized` |
+| preimage مُعاد استخدامه | `401 Token already used` |
+
+### جسم استجابة 402
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## دالة استدعاء `on_payment`
+
+```rust
+use l402kit::{Options, L402Token};
+
+let opts = Arc::new(
+    Options::new(10, provider).on_payment(|token: L402Token, amount_sats: u64| {
+        println!("payment received: {} sats", amount_sats);
+    }),
+);
+```
+
+---
+
+## علامات الميزات
+
+```toml
+[features]
+default = ["axum-middleware"]
+axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
+```
+
+عطّل `axum-middleware` لاستخدام دوال التحقق الأساسية فقط دون axum أو reqwest:
+
+```toml
+l402kit = { version = "1.6", default-features = false }
+```
+
+---
+
+## التحقق
+
+يتم التحقق من `SHA256(preimage) == paymentHash` محليًا باستخدام حزمة `sha2` — دون أي استدعاء شبكي في المسار الرئيسي. يتم التحقق من انتهاء صلاحية الرمز في نفس العملية.
+
+---
+
+## رموز الأخطاء
+
+| الحالة | المعنى |
+|---|---|
+| `402` | لا يوجد رمز دفع — ادفع الفاتورة |
+| `401` | رمز غير صالح أو macaroon منتهي الصلاحية |
+| `401` | preimage مُعاد استخدامه (مستخدم مسبقًا) |
+
+---
+
+## التشغيل
+
+```bash
+cargo run
+
+# اختبار — يُشغّل 402
+curl http://localhost:3000/api/data
+
+# ادفع الفاتورة، ثم:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
+```

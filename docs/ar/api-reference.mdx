@@ -1,0 +1,319 @@
+---
+title: "مرجع API"
+description: "مرجع لجميع نقاط نهاية REST الخاصة بـ l402kit.com والمستخدمة بواسطة ManagedProvider وامتداد VS Code."
+---
+
+عنوان URL الأساسي: `https://l402kit.com`
+
+جميع الاستجابات من نوع `application/json`. يتم تفعيل CORS لجميع المصادر.
+
+---
+
+## الفواتير
+
+### إنشاء فاتورة
+
+`POST /api/invoice`
+
+ينشئ فاتورة BOLT11 Lightning. يتم استدعاؤه تلقائياً بواسطة `ManagedProvider` — نادراً ما تحتاج إلى استدعائه مباشرةً.
+
+**نص الطلب**
+
+| الحقل | النوع | مطلوب | الوصف |
+|---|---|---|---|
+| `amountSats` | number | ✅ | المبلغ بالـ satoshis (الحد الأدنى 1) |
+| `ownerAddress` | string | — | عنوان Lightning الخاص بك. مطلوب لتنفيذ عملية التقسيم. |
+
+**الاستجابة 200**
+
+```json
+{
+  "paymentRequest": "lnbc10n1p...",
+  "paymentHash":    "a1b2c3...",
+  "macaroon":       "eyJoYXNoIjoiYTFiMm..."
+}
+```
+
+**الأخطاء**
+
+| الكود | السبب |
+|---|---|
+| 400 | `amountSats` مفقود أو غير صالح |
+| 429 | تم تجاوز حد الطلبات (20 طلباً/دقيقة لكل IP) |
+| 503 | مزود Lightning غير متاح مؤقتاً |
+
+---
+
+### التحقق من الرمز
+
+`POST /api/verify`
+
+يتحقق من صحة رمز L402 من جانب الخادم دون استخدام SDK.
+
+**نص الطلب**
+
+```json
+{ "token": "<macaroon>:<preimage>" }
+```
+
+**الاستجابة 200**
+
+```json
+{ "valid": true }
+```
+
+```json
+{ "valid": false, "error": "Token expired" }
+```
+
+---
+
+## التقسيم والمدفوعات
+
+### تنفيذ التقسيم
+
+`POST /api/split`
+
+يُشغّل يدوياً دفعة تقسيم بنسبة 99.7/0.3% إلى عنوان Lightning. يتطلب رأس `x-split-secret`.
+
+<Note>
+في معظم الحالات، يتم تشغيل التقسيم تلقائياً عبر Blink webhook. استخدم نقطة النهاية هذه فقط للاسترداد اليدوي أو التكاملات المخصصة.
+</Note>
+
+**الترويسات**
+
+| الترويسة | القيمة |
+|---|---|
+| `x-split-secret` | متغير البيئة `SPLIT_SECRET` الخاص بك |
+
+**نص الطلب**
+
+```json
+{
+  "amountSats":   1000,
+  "ownerAddress": "you@blink.sv"
+}
+```
+
+**الاستجابة 200**
+
+```json
+{ "ok": true, "ownerSats": 997 }
+```
+
+**الاستجابة 200 (تم التخطي — أقل من الحد الأدنى)**
+
+```json
+{ "ok": true, "skipped": true }
+```
+
+---
+
+## لوحة التحكم والإحصاءات
+
+### الحصول على الإحصاءات
+
+`GET /api/stats`
+
+تُعيد تحليلات الدفع. تتطلب رمز جلسة LNURL-auth في ترويسة `Authorization`.
+
+**الاستجابة 200**
+
+```json
+{
+  "totalPayments": 42,
+  "totalSats":     8400,
+  "shinydappsFee": 25,
+  "walletSats":    12345,
+  "walletUsdCents": 456789,
+  "byOwner": {
+    "dev@blink.sv": { "count": 42, "sats": 8400 }
+  },
+  "byDay": {
+    "2026-04-24": { "count": 5, "sats": 1000 }
+  },
+  "trend": {
+    "payments7d": 12,
+    "sats7d": 2400
+  },
+  "recent": [
+    {
+      "id": "uuid",
+      "endpoint": "/api/data",
+      "payment_hash": "a1b2...",
+      "amount_sats": 100,
+      "owner_address": "dev@blink.sv",
+      "paid_at": "2026-04-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## الباقة الاحترافية
+
+### التحقق من الوصول الاحترافي
+
+`GET /api/pro-check?address=you@blink.sv`
+
+يُعيد ما إذا كان عنوان Lightning يمتلك اشتراكاً احترافياً نشطاً.
+
+**الاستجابة 200**
+
+```json
+{ "active": true,  "expiresAt": "2026-05-24T10:00:00Z" }
+{ "active": false }
+```
+
+### الاشتراك في الباقة الاحترافية
+
+`GET /api/dev-token?address=you@blink.sv`
+
+يُعيد فاتورة Lightning لشراء اشتراك احترافي لمدة 30 يوماً (~9,000 sats).
+
+**الاستجابة 200**
+
+```json
+{
+  "priceSats": 9000,
+  "invoice":   "lnbc90n1p...",
+  "macaroon":  "eyJoYXNoIjoiY..."
+}
+```
+
+`POST /api/dev-token`
+
+تفعيل الباقة الاحترافية بعد دفع الفاتورة.
+
+**نص الطلب**
+
+```json
+{ "macaroon": "...", "preimage": "..." }
+```
+
+**الاستجابة 200**
+
+```json
+{ "access": true, "expiresAt": "2026-05-24T10:00:00Z" }
+```
+
+---
+
+## المصادقة (LNURL-auth)
+
+### بدء تسجيل الدخول
+
+`GET /api/lnurl-auth`
+
+يُعيد تحدي LNURL-auth لتسجيل الدخول إلى لوحة التحكم. امسح رمز QR في لوحة التحكم.
+
+### نقطة نهاية LNURL-pay
+
+`GET /.well-known/lnurlp/:username`
+
+بيانات تعريفية قياسية لـ LNURL-pay الخاصة بدقة عنوان Lightning. تُستخدم داخلياً بواسطة آلية التقسيم.
+
+---
+
+## العرض التوضيحي
+
+### فهرس العرض التوضيحي
+
+`GET /api/demo`
+
+يُعيد معلومات حول نقاط النهاية التوضيحية المتاحة.
+
+### سعر BTC (مدفوع)
+
+`GET /api/demo/btc-price`
+
+يُعيد سعر BTC المباشر. يتطلب رمز L402 صالحاً (1 sat).
+
+يُعيد **402** مع فاتورة و macaroon عند الاستدعاء الأول. أعد المحاولة مع `Authorization: L402 <macaroon>:<preimage>`.
+
+### الكشف عن Preimage
+
+`GET /api/demo/preimage?hash=<paymentHash>`
+
+بعد دفع الفاتورة التوضيحية، استدعِ نقطة النهاية هذه مع `paymentHash` لاسترداد preimage الخاص بك وبناء رمز L402.
+
+---
+
+## Webhooks
+
+### مستقبل Blink Webhook
+
+`POST /api/blink-webhook`
+
+نقطة نهاية داخلية. تستقبل تأكيدات الدفع الموقّعة من Blink (Svix HMAC-SHA256). تُشغّل التقسيم وتسجّل الدفعة. غير مخصصة للاستخدام المباشر.
+
+---
+
+## دليل API
+
+### تسجيل API
+
+`POST /api/register`
+
+سجّل واجهة API المحمية بـ L402 في الدليل العام. يتم استدعاؤه تلقائياً بواسطة `ManagedProvider.fromAddress()` عند توفير `registerDirectory`. يدعم التكرار الآمن — آمن للاستدعاء عند كل بدء تشغيل للخادم.
+
+**نص الطلب**
+
+| الحقل | النوع | مطلوب | الوصف |
+|---|---|---|---|
+| `url` | string | ✅ | عنوان URL العام لنقطة نهاية L402 |
+| `name` | string | ✅ | اسم العرض |
+| `price_sats` | number | ✅ | السعر لكل استدعاء بالـ satoshis (الحد الأدنى 1) |
+| `lightning_address` | string | ✅ | عنوان Lightning الخاص بك |
+| `description` | string | — | وصف مختصر |
+| `category` | string | — | `data` أو `ai` أو `finance` أو `weather` أو `compute` أو `storage` أو `other` |
+
+**الاستجابة 200**
+
+```json
+{ "ok": true, "id": "uuid" }
+```
+
+---
+
+### قائمة واجهات API
+
+`GET /api/apis.json`
+
+يُعيد جميع واجهات API المسجّلة. قابل للقراءة آلياً — مصمم للوكلاء لاكتشاف واجهات API المدفوعة.
+
+**معاملات الاستعلام**
+
+| المعامل | الوصف |
+|---|---|
+| `category` | تصفية حسب الفئة (`data` أو `ai` أو `finance` أو `weather` أو `compute` أو `storage` أو `other`) |
+
+**الاستجابة 200**
+
+```json
+{
+  "version": "1",
+  "count": 3,
+  "apis": [
+    {
+      "url": "https://api.example.com/weather",
+      "name": "Weather API",
+      "description": "Live weather data, 1 sat per query",
+      "price_sats": 1,
+      "category": "weather",
+      "created_at": "2026-04-26T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## خصوصية البيانات
+
+### حذف بياناتي
+
+`POST /api/delete-data`
+
+يبدأ تحدي LNURL-auth. بعد التحقق من المحفظة، يتم حذف جميع سجلات الدفع المرتبطة بالمفتاح العام الموثّق بشكل دائم (حق المحو وفق GDPR).

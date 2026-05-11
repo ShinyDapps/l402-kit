@@ -1,0 +1,68 @@
+---
+title: "اكتشاف DNS"
+description: "دع الوكلاء يكتشفون نقطة نهاية L402 الخاصة بك عبر سجل DNS TXT — دون الحاجة إلى أي طلب HTTP."
+---
+
+## لماذا اكتشاف DNS
+
+يمكن للوكلاء الذين يمتلكون وصولاً إلى الإنترنت تحليل DNS قبل إجراء أي طلب HTTP. إذا نشرت نقطة نهاية L402 الخاصة بك كسجل DNS TXT، فسيكتشفها الوكلاء تلقائياً — حتى قبل الوصول إلى واجهة برمجة التطبيقات الخاصة بك.
+
+## تنسيق سجل TXT
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+الحقول:
+- `v=l402` — معرّف البروتوكول
+- `endpoint=` — رابط URL المحمي بـ L402
+- `price=` — السعر بالـ sats (اختياري، للمعلومات فقط)
+- `docs=` — رابط وثائقك (اختياري)
+
+## الإعداد على Cloudflare
+
+1. انتقل إلى **Cloudflare Dashboard → DNS**
+2. أضف سجلاً جديداً:
+
+| Type | Name | Content | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## التحقق باستخدام dig
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Expected output:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## كيف يستخدمه الوكلاء
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// Agent resolves DNS to find your endpoint
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Returns: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## سجل l402-kit الخاص
+
+يستخدم المثال أدناه نطاقاً وهمياً (`api.example.com`) لتوضيح التنسيق — استبدله بنقطة النهاية الحقيقية الخاصة بك.
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## الفوائد
+
+- **صفر تكلفة HTTP** — الاكتشاف قبل أي استدعاء لواجهة برمجة التطبيقات
+- **مصمم للوكلاء** — DNS هو الطريقة التي تجد بها الأجهزة الخدمات، لا البشر
+- **لا حاجة لمفتاح API** — اكتشاف مفتوح تماماً
+- **قابل للتخزين المؤقت** — يتحكم TTL في مدى تكرار إعادة تحليل الوكلاء
+
+اطلع على [.well-known/agent.json](https://api.example.com/.well-known/agent.json) للاطلاع على معيار اكتشاف HTTP التكميلي.

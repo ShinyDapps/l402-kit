@@ -1,0 +1,199 @@
+---
+title: "Diagram Forge"
+description: "مخططات معمارية حية مُولَّدة بالذكاء الاصطناعي من أي مستودع GitHub — مدفوعة عبر Lightning L402"
+icon: "circle-nodes"
+---
+
+## ما هو Diagram Forge؟
+
+يقوم [Diagram Forge](https://forge.l402kit.com) بتحليل أي مستودع GitHub باستخدام Claude AI ويُولِّد **مخططًا معماريًا تفاعليًا ومتحركًا** — مكتملًا بشعارات التقنيات الرسمية، وتدفقات الجسيمات المتحركة، ومفتش العقد، والتصدير إلى SVG/PNG/Markdown.
+
+تتم معالجة الدفع عبر Lightning Network باستخدام بروتوكول L402 — بدون حسابات، وبدون بطاقات ائتمانية، وبدون اشتراكات. ادفع مقابل كل تحليل.
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/docs/demo-viewer.gif" alt="Diagram Forge interactive viewer demo" />
+</Frame>
+
+---
+
+## البدء
+
+### الخيار الأول — تطبيق الويب (الأسرع)
+
+1. انتقل إلى **[forge.l402kit.com](https://forge.l402kit.com)**
+2. الصق أي رابط GitHub عام (مثال: `https://github.com/vercel/next.js`)
+3. اختر مستوى: **Basic** (100 sats)، أو **Full** (500 sats)، أو **Live ✦** (1000 sats)
+4. انقر على **Analyze & Generate Diagram**
+5. ادفع فاتورة Lightning باستخدام أي محفظة — أو أدخل رمز ترويجي للوصول المجاني
+6. يفتح مخططك التفاعلي تلقائيًا
+
+### الخيار الثاني — إضافة VS Code
+
+ثبِّتها من Marketplace:
+
+```bash
+code --install-extension ShinyDapps.diagram-forge
+```
+
+أو ابحث عن **"Diagram Forge"** في لوحة الإضافات (`Ctrl+Shift+X`).
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/vscode-extension/media/demo-extension.gif" alt="Diagram Forge VS Code extension — idle, confirming, analyzing, done" />
+</Frame>
+
+**طريقة الاستخدام:**
+1. افتح أي مشروع يحتوي على remote من GitHub
+2. انقر على **أيقونة Diagram Forge** في شريط النشاط (الشريط الجانبي الأيسر)
+3. انقر على **Analyze Repo** — يتم اكتشاف رابط GitHub تلقائيًا
+4. اختر المستوى + أدخل الرمز الترويجي (اختياري)
+5. ادفع باستخدام Lightning أو استخدم رمزًا ترويجيًا
+6. يفتح المخطط في المتصفح
+
+### الخيار الثالث — ربط GitHub (تطبيق الويب)
+
+انقر على **Connect GitHub** في شريط التنقل العلوي لتطبيق الويب للتفويض والحصول على قائمة منسدلة بجميع مستودعاتك — دون الحاجة إلى نسخ الروابط ولصقها.
+
+---
+
+## مستويات التحليل
+
+| المستوى | السعر | ما تحصل عليه |
+|------|-------|-------------|
+| **Basic** | 100 sats (~$0.10) | فحص سريع — أعلى 10 ملفات، الخدمات الرئيسية المكتشفة |
+| **Full** | 500 sats (~$0.50) | المستودع كاملًا — جميع الخدمات والاتصالات والـ monorepos |
+| **Live ✦** | 1000 sats (~$1.00) | تحليل كامل + SVG متحرك مع تدفقات الجسيمات |
+
+<Info>
+  أسعار Lightning أقل بشكل ملحوظ من أسعار البطاقات لأنه لا توجد رسوم معالجة دفع.
+</Info>
+
+---
+
+## لا تملك محفظة Lightning؟
+
+ابدأ في أقل من دقيقتين:
+
+<CardGroup cols={3}>
+  <Card title="Wallet of Satoshi" icon="mobile" href="https://www.walletofsatoshi.com/">
+    أبسط محفظة موبايل — custodial، إعداد فوري
+  </Card>
+  <Card title="Phoenix" icon="mobile" href="https://phoenix.acinq.co/">
+    موبايل، self-custodial، بدون KYC
+  </Card>
+  <Card title="Alby" icon="browser" href="https://getalby.com/">
+    إضافة للمتصفح — تعمل مباشرة في VS Code
+  </Card>
+</CardGroup>
+
+بعد التثبيت، اشترِ كميةً صغيرة من Bitcoin (حتى ما يعادل دولارًا واحدًا يكفي لعشرات التحليلات) وامسح رمز QR عندما يعرض Diagram Forge الفاتورة.
+
+---
+
+## الرموز الترويجية
+
+هل لديك رمز ترويجي؟ أدخله في حقل **"Promo code (optional)"** قبل النقر على Analyze — يعمل التحليل مجانًا تمامًا، دون الحاجة إلى محفظة.
+
+الرموز الترويجية محدودة بالوقت والاستخدام. تحقق من [forge.l402kit.com](https://forge.l402kit.com) أو تابع [@ShinyDapps](https://github.com/ShinyDapps) للحصول على الرموز الحالية.
+
+---
+
+## ما يُظهره المخطط
+
+يتضمن كل مخطط:
+
+- **العقد** — الخدمات وقواعد البيانات وقوائم الانتظار وواجهات API ونماذج ML وشبكات CDN المكتشفة في كودك
+- **الحواف** — الاتصالات بين المكونات مع تسميات البروتوكول (HTTP, SQL, gRPC, WebSocket, AMQP…)
+- **الشعارات** — علامة Simple Icons الرسمية لأكثر من 80 تقنية
+- **التدفقات المتحركة** — جسيمات تتحرك على طول الحواف، مُلوَّنة حسب نوع البروتوكول (أصفر = Lightning، أزرق = HTTP، أخضر = SQL…)
+
+**ميزات المشاهد التفاعلي:**
+- التحريك والتكبير (مرر للتكبير، اسحب للتحريك)
+- انقر على أي عقدة لفحص اتصالاتها ووصفها
+- خريطة مصغرة للمخططات الكبيرة
+- البحث عن العقد بالاسم أو النوع
+- التصدير: SVG, PNG, Markdown, Draw.io
+- رابط المشاركة: `/g/:id` — رابط قابل للمشاركة ودائم لكل مخطط
+
+---
+
+## الاستيراد من صورة
+
+لا تملك مستودع GitHub؟ ارفع صورة لوحة بيضاء، أو لقطة شاشة، أو ملف Visio، أو PDF — يستخرج Claude المعمارية ويُولِّد نفس المخطط التفاعلي.
+
+الصيغ المدعومة: JPG, PNG, WEBP, GIF, PDF
+
+---
+
+## معيار المعمارية
+
+بعد توليد مخطط، انقر على **Benchmark** في المشاهد للحصول على نقاط جودة بستة أبعاد:
+
+| البُعد | ما يقيسه |
+|---|---|
+| قابلية التوسع | إمكانية التوسع الأفقي، نقاط الاختناق |
+| الموثوقية | نقاط الفشل الفردية، التكرار |
+| الأمان | المصادقة، التشفير، سطح التعرض |
+| قابلية المراقبة | تغطية السجلات والمقاييس والتتبع |
+| قابلية الصيانة | الاقتران، التعقيد، النمطية |
+| كفاءة التكلفة | اختياريًا — التكلفة لكل خدمة مقابل القيمة |
+
+---
+
+## الخصوصية
+
+- يتم **استنساخ كودك مؤقتًا** على خادم آمن، وتحليله، ثم حذفه فورًا
+- يتم تخزين **بيانات الرسم البياني فقط** (تسميات العقد، اتصالات الحواف — بدون كود المصدر) إذا استخدمت روابط المشاركة
+- لا يلزم حساب، ولا احتفاظ بالبيانات بعد المخطط
+
+---
+
+## كيف يستخدم l402-kit
+
+تم بناء Diagram Forge على **الوضع المُدار** لـ `l402-kit` — أبسط طريقة لقبول مدفوعات Lightning دون تشغيل عقدة:
+
+```typescript
+import { l402, ManagedProvider } from "l402-kit";
+
+const provider = ManagedProvider.fromAddress("pinkfalcon21@primal.net", {
+  registerDirectory: {
+    url: "https://forge.l402kit.com/analyze",
+    name: "Diagram Forge — Architecture Analysis",
+    priceSats: 500,
+    description: "AI-powered living architecture diagrams from any repo",
+    category: "ai",
+  },
+});
+
+// Gate the /analyze endpoint — returns 402 until paid
+app.post("/analyze", l402({ priceSats: 500, lightning: provider }), handler);
+```
+
+عندما يستدعي العميل `POST /analyze` بدون preimage صالح:
+
+```
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+يدفع العميل الفاتورة ويعيد المحاولة مع `Authorization: L402 <macaroon>:<preimage>`.
+
+هل تريد بناء شيء مشابه؟ راجع [دليل البدء السريع لـ l402-kit](/quickstart).
+
+---
+
+## الروابط
+
+<CardGroup cols={2}>
+  <Card title="تطبيق الويب" icon="globe" href="https://forge.l402kit.com">
+    حلِّل أي مستودع GitHub عام في متصفحك
+  </Card>
+  <Card title="إضافة VS Code" icon="code" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.diagram-forge">
+    تجربة الشريط الجانبي الكاملة داخل VS Code
+  </Card>
+  <Card title="الكود المصدري" icon="github" href="https://github.com/shinydapps-creator/diagram-forge">
+    مرخص بـ MIT — انسخه، وطوِّره، وابنِ عليه
+  </Card>
+  <Card title="دليل البدء السريع لـ l402-kit" icon="bolt" href="/quickstart">
+    ابنِ خدمتك المحمية بـ L402 في دقائق
+  </Card>
+</CardGroup>
