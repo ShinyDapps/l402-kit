@@ -142,20 +142,21 @@ async function sendReplyAlert(
       from: "VERITY <verity@l402kit.com>",
       to: "thiagoyoshiaki@gmail.com",
       subject: `${actionEmoji} VERITY respondeu: ${owner}/${repo}`,
-      html: `
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
         <div style="font-family:monospace;max-width:600px;margin:0 auto;padding:20px">
           <h2 style="color:#F7931A">${actionEmoji} VERITY respondeu autonomamente</h2>
           <p><b>Repo:</b> <a href="${issueUrl}">${owner}/${repo}</a></p>
-          <p><b>Usuário:</b> @${user}</p>
-          <p><b>Ação:</b> ${action}</p>
+          <p><b>Usuario:</b> @${user}</p>
+          <p><b>Acao:</b> ${action}</p>
           <hr style="border-color:#333">
-          <p><b>Comentário deles:</b></p>
+          <p><b>Comentario deles:</b></p>
           <blockquote style="border-left:3px solid #888;padding-left:12px;color:#aaa">${comment.slice(0, 300)}</blockquote>
           <p><b>Resposta da VERITY:</b></p>
           <blockquote style="border-left:3px solid #F7931A;padding-left:12px">${reply.replace(/\n/g, "<br>")}</blockquote>
           <hr style="border-color:#333">
-          <p style="color:#888;font-size:12px">VERITY · <a href="https://l402kit.com/api/verity" style="color:#F7931A">l402kit.com/api/verity</a></p>
-        </div>`,
+          <p style="color:#888;font-size:12px">Gerado autonomamente pela VERITY sem intervencao humana.<br>
+          Treasury: shinydapps@blink.sv &middot; <a href="https://l402kit.com/api/verity" style="color:#F7931A">l402kit.com/api/verity</a></p>
+        </div></body></html>`,
     }),
     signal: AbortSignal.timeout(10_000),
   });

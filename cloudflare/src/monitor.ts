@@ -112,17 +112,17 @@ export async function runMonitor(env: Env): Promise<void> {
 
   if (alerts.length === 0) return;
 
-  const html = `
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
     <div style="font-family:monospace;max-width:600px;margin:0 auto;padding:20px">
-      <h2 style="color:#F7931A">⚡ VERITY — Alerta</h2>
+      <h2 style="color:#F7931A">VERITY — Alerta</h2>
       ${alerts.map(a => `<div style="margin:16px 0;padding:12px;border-left:3px solid #F7931A">${a}</div>`).join("")}
       <hr style="border-color:#333;margin:24px 0">
       <p style="color:#888;font-size:12px">
-        Treasury: shinydapps@blink.sv ·
-        <a href="https://l402kit.com/activity" style="color:#F7931A">Dashboard</a> ·
+        Treasury: shinydapps@blink.sv &middot;
+        <a href="https://l402kit.com/activity" style="color:#F7931A">Dashboard</a> &middot;
         <a href="https://l402kit.com/api/verity" style="color:#F7931A">VERITY</a>
       </p>
-    </div>`;
+    </div></body></html>`;
 
   await sendEmail(`⚡ VERITY — ${alerts.length} alerta(s)`, html, env);
 }
