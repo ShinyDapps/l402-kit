@@ -1,0 +1,168 @@
+---
+title: LNURL-Integration
+description: Verwende LNURL-auth für passwortloses Login und LNURL-pay für Lightning Address-Zahlungen zusammen mit l402-kit.
+---
+
+## Was ist LNURL?
+
+[LNURL](https://github.com/lnurl/luds) ist eine Sammlung offener Standards, die auf dem Lightning Network aufbauen. Anstatt rohe Lightning-Invoices oder Node-Pubkeys direkt in deiner App zu exponieren, definiert LNURL benutzerfreundliche URL-basierte Protokolle, mit denen Wallets umzugehen wissen. Wenn eine Wallet einen LNURL-QR-Code scannt, dekodiert sie eine URL, ruft eine JSON-Antwort von deinem Server ab und führt dann die entsprechende Aktion aus (eine Challenge signieren, eine Pay-Request abrufen usw.) — für den Benutzer vollständig unsichtbar.
+
+l402-kit wird mit zwei LNURL-Funktionen ausgeliefert:
+
+| Funktion | Anwendungsfall |
+|---|---|
+| **LNURL-auth** | Passwortloses Login — Wallet signiert eine Challenge, keine E-Mail oder kein Passwort |
+| **LNURL-pay** | Lightning Address (`du@domain.com`) — jeder kann dich über eine menschenlesbare Adresse bezahlen |
+
+Beide Protokolle funktionieren mit allen gängigen Lightning-Wallets (Phoenix, Blink, Zeus, Breez, Alby) und benötigen keine zusätzlichen Abhängigkeiten — dein Server muss nur einen JSON-Endpunkt bereitstellen und optional eine secp256k1-Signatur verifizieren.
+
+---
+
+## LNURL-auth — passwortloses Login
+
+l402-kit.com verwendet LNURL-auth für das Zahlungs-Dashboard. Du kannst denselben Ablauf in deiner eigenen App verwenden.
+
+### Funktionsweise
+
+```
+1. Your server generates a challenge (k1) — a random 32-byte hex string
+2. You encode it as a LNURL and display as QR
+3. User scans with any LNURL-auth wallet (Phoenix, Blink, Zeus, Breez...)
+4. Wallet signs k1 with its Lightning node key → sends signature + pubkey to your callback
+5. You verify the signature — if valid, the user is authenticated
+```
+
+Die Identität des Benutzers ist sein Lightning-Node-Pubkey — stabil, global und selbstbestimmt.
+
+### Endpunkt
+
+```
+GET /api/lnurl-auth
+```
+
+Gibt eine LNURL-Challenge zurück. Als QR kodieren und in deinem Login-Ablauf anzeigen.
+
+```json
+{
+  "lnurl": "LNURL1DP68GURN8GHJ7...",
+  "k1": "a1b2c3..."
+}
+```
+
+Nach dem Wallet-Callback verifizieren über:
+
+```
+GET /api/lnurl-auth?k1=<challenge>&sig=<signature>&key=<pubkey>
+```
+
+### TypeScript — LNURL-auth-Signatur verifizieren
+
+```typescript
+import { createHash } from "crypto";
+import * as secp256k1 from "@noble/curves/secp256k1";
+
+function verifyLnurlAuth(k1: string, sig: string, key: string): boolean {
+  try {
+    const msgHash = createHash("sha256").update(Buffer.from(k1, "hex")).digest();
+    return secp256k1.secp256k1.verify(sig, msgHash, key);
+  } catch {
+    return false;
+  }
+}
+```
+
+<Note>
+LNURL-auth benötigt keine E-Mail, kein Passwort, kein OAuth. Die Identität des Benutzers ist sein Lightning-Pubkey — übertragbar zwischen Wallets, nicht zensierbar, global einzigartig.
+</Note>
+
+---
+
+## LNURL-pay — Lightning Address
+
+Eine Lightning Address (`du@domain.com`) ist ein menschenlesbarer Alias, der zu einem LNURL-pay-Endpunkt aufgelöst wird. l402-kit stellt einen bereit unter:
+
+```
+GET /.well-known/lnurlp/{username}
+```
+
+Dieser wird intern vom Split-Mechanismus verwendet — wenn du `ownerAddress: "du@blink.sv"` festlegst, löst der Worker `blink.sv/.well-known/lnurlp/du` auf, um eine BOLT11-Invoice zu erhalten.
+
+### So richtest du deine eigene Lightning Address ein
+
+1. Stelle einen LNURL-pay-Endpunkt unter `https://deinedomain.com/.well-known/lnurlp/{username}` bereit
+2. Gib die standardmäßige LNURL-pay-Metadatenantwort zurück:
+
+```json
+{
+  "callback": "https://yourdomain.com/lnurlp/pay",
+  "maxSendable": 100000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Pay you@yourdomain.com\"]]",
+  "tag": "payRequest"
+}
+```
+
+3. Der `callback`-Endpunkt empfängt `?amount=<msats>` und gibt zurück:
+
+```json
+{
+  "pr": "lnbc10n1p...",
+  "routes": []
+}
+```
+
+### Self-Hosted mit BTCPay Server
+
+BTCPay Server wird mit integriertem LNURL-pay geliefert — aktiviere es einfach in deinen Store-Einstellungen. Deine Lightning Address wird zu `du@deinbtcpay.com`.
+
+```typescript
+import { BTCPayProvider } from "l402-kit";
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,
+  process.env.BTCPAY_API_KEY!,
+  process.env.BTCPAY_STORE_ID!,
+);
+// Lightning Address: du@deinbtcpay.com — kein Intermediär, 0% Gebühr
+```
+
+---
+
+## Eigentümerverifizierung für das API-Verzeichnis
+
+Wenn du deine API unter `POST /api/register` registrierst, prüft l402-kit automatisch, ob eine `/.well-known/l402.txt`-Datei in der Domain deiner API vorhanden ist. Wenn sie gefunden wird und deine Lightning Address enthält, erhält dein Eintrag ein **verifiziertes** Abzeichen.
+
+**Erstelle die Datei:**
+
+```
+# https://api.yourdomain.com/.well-known/l402.txt
+you@blink.sv
+```
+
+**Dann registrieren:**
+
+```typescript
+ManagedProvider.fromAddress("you@blink.sv", {
+  registerDirectory: {
+    url: "https://api.yourdomain.com/v1/data",
+    name: "My Data API",
+    priceSats: 10,
+  },
+});
+// Response: { ok: true, id: "...", verified: true }
+```
+
+Verifizierte APIs werden im Verzeichnis höher eingestuft und zeigen ein ✓-Abzeichen an.
+
+---
+
+## Kompatible Wallets
+
+| Wallet | LNURL-auth | LNURL-pay | Self-Custody |
+|---|---|---|---|
+| [Phoenix](https://phoenix.acinq.co) | ✅ | ✅ | ✅ |
+| [Blink](https://blink.sv) | ✅ | ✅ | ❌ custodial |
+| [Zeus](https://zeusln.app) | ✅ | ✅ | ✅ |
+| [Breez](https://breez.technology) | ✅ | ✅ | ✅ |
+| [Alby](https://getalby.com) | ✅ | ✅ | ✅ Hub |
+| [Mutiny](https://mutinywallet.com) | ✅ | ✅ | ✅ |

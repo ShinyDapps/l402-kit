@@ -1,0 +1,185 @@
+---
+title: Rust SDK
+description: Vollständige Referenz für das l402-kit Rust SDK — axum-Middleware für Bitcoin Lightning Pay-per-Call APIs.
+---
+
+## Installation
+
+```bash
+cargo add l402kit
+```
+
+Oder in `Cargo.toml`:
+
+```toml
+[dependencies]
+l402kit = "1.8"
+```
+
+**Voraussetzungen**: Rust 1.75+, Tokio async runtime
+
+---
+
+## Schnellstart
+
+Der schnellste Weg verwendet `ManagedProvider` — kein Lightning-Node erforderlich, 0,3% Gebühr:
+
+```rust
+use axum::{middleware, routing::get, Router, Json};
+use l402kit::{l402_middleware, Options, ManagedProvider};
+use serde_json::{json, Value};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
+
+    let app = Router::new()
+        .route("/api/data", get(handler))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn handler() -> Json<Value> {
+    Json(json!({ "data": "premium content" }))
+}
+```
+
+Für den souveränen Modus (0% Gebühr) implementieren Sie das `LightningProvider`-Trait — siehe [Benutzerdefinierter Provider](#custom-provider) unten.
+
+---
+
+## Benutzerdefinierter Provider
+
+```rust
+use std::sync::Arc;
+use l402kit::{Options, LightningProvider, Invoice, BoxFuture, L402Error};
+
+struct MyProvider;
+
+impl LightningProvider for MyProvider {
+    fn create_invoice<'a>(&'a self, amount_sats: u64) -> BoxFuture<'a, Result<Invoice, L402Error>> {
+        Box::pin(async move {
+            Ok(Invoice {
+                payment_request: "lnbc...".into(),
+                payment_hash: "abc123...".into(),
+                macaroon: "eyJ...".into(),
+                amount_sats,
+            })
+        })
+    }
+}
+
+let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
+```
+
+---
+
+## `Options`
+
+| Feld | Typ | Beschreibung |
+|---|---|---|
+| `price_sats` | `u64` | Preis pro Aufruf in satoshis (**erforderlich**) |
+| `lightning` | `Arc<dyn LightningProvider>` | Ihr Lightning-Backend (**erforderlich**) |
+| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | Callback, der nach jeder verifizierten Zahlung ausgelöst wird |
+
+### Veraltet: `with_address()`
+
+`Options::with_address(address)` wurde in v1.4.0 entfernt. Verwenden Sie stattdessen `Options::new(sats, ManagedProvider::new(address))`:
+
+```rust
+use l402kit::{Options, ManagedProvider};
+use std::sync::Arc;
+
+let provider = ManagedProvider::new("you@yourdomain.com".into());
+let opts = Arc::new(Options::new(10, provider));
+```
+
+---
+
+## `l402_middleware(opts: Options)`
+
+Gibt einen `axum::middleware::Layer` zurück, der mit axum 0.8+ kompatibel ist.
+
+### Verhalten
+
+| Anfrage | Antwort |
+|---|---|
+| Kein `Authorization`-Header | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| Gültiges `L402 <macaroon>:<preimage>` | Handler wird ausgeführt |
+| Ungültiges oder abgelaufenes Token | `401 Unauthorized` |
+| Wiederverwendetes preimage | `401 Token already used` |
+
+### 402-Antwort-Body
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## `on_payment`-Callback
+
+```rust
+use l402kit::{Options, L402Token};
+
+let opts = Arc::new(
+    Options::new(10, provider).on_payment(|token: L402Token, amount_sats: u64| {
+        println!("payment received: {} sats", amount_sats);
+    }),
+);
+```
+
+---
+
+## Feature-Flags
+
+```toml
+[features]
+default = ["axum-middleware"]
+axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
+```
+
+Deaktivieren Sie `axum-middleware`, um nur die Kernverifizierungsfunktionen ohne axum oder reqwest zu verwenden:
+
+```toml
+l402kit = { version = "1.6", default-features = false }
+```
+
+---
+
+## Verifizierung
+
+`SHA256(preimage) == paymentHash` wird lokal mit dem `sha2`-Crate verifiziert — kein Netzwerkaufruf auf dem kritischen Pfad. Die Token-Ablaufzeit wird in derselben Operation geprüft.
+
+---
+
+## Fehlercodes
+
+| Status | Bedeutung |
+|---|---|
+| `402` | Kein Zahlungstoken — bezahlen Sie die Rechnung |
+| `401` | Ungültiges Token oder abgelaufener macaroon |
+| `401` | Wiederverwendetes preimage (bereits verwendet) |
+
+---
+
+## Ausführen
+
+```bash
+cargo run
+
+# Test — löst 402 aus
+curl http://localhost:3000/api/data
+
+# Rechnung bezahlen, dann:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
+```

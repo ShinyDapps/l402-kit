@@ -1,0 +1,166 @@
+---
+title: "Fehlerreferenz"
+description: "Semantische Fehlercodes aus l402-kit für Agenten und Entwickler."
+---
+
+Alle Fehler aus l402-kit folgen einem strukturierten JSON-Format, damit Agenten sie programmatisch parsen und darauf reagieren können.
+
+```json
+{
+  "error": "ERROR_CODE",
+  "code": 402,
+  "cause": "Human-readable explanation",
+  "action": "recommended_action",
+  "retry": false
+}
+```
+
+---
+
+## Fehlercodes
+
+### PAYMENT_FAILED
+
+```json
+{
+  "error": "PAYMENT_FAILED",
+  "code": 402,
+  "cause": "Insufficient balance in wallet",
+  "action": "increase_budget",
+  "retry": false
+}
+```
+
+Das Wallet konnte die Rechnung nicht bezahlen. Überprüfen Sie das Guthaben und das `budgetSats`-Limit.
+
+---
+
+### TOKEN_EXPIRED
+
+```json
+{
+  "error": "TOKEN_EXPIRED",
+  "code": 402,
+  "cause": "Macaroon expiry timestamp exceeded",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+Das L402-Token wurde generiert, aber nicht vor Ablauf seiner TTL (Standard: 1 Stunde) verwendet. Wiederholen Sie die Anfrage, um eine neue Rechnung zu erhalten.
+
+---
+
+### BUDGET_EXCEEDED
+
+```json
+{
+  "error": "BUDGET_EXCEEDED",
+  "code": 402,
+  "cause": "Session budget of {n} sats exhausted",
+  "action": "stop_or_increase_budget",
+  "retry": false
+}
+```
+
+Der Agent hat in der aktuellen Sitzung mehr als `budgetSats` ausgegeben. Erhöhen Sie das Budget oder beenden Sie die Sitzung.
+
+---
+
+### INVALID_MACAROON
+
+```json
+{
+  "error": "INVALID_MACAROON",
+  "code": 402,
+  "cause": "Macaroon is not valid base64 JSON",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+Der macaroon konnte nicht dekodiert werden. Dies wird meist durch ein beschädigtes Token verursacht. Starten Sie den Vorgang von vorne.
+
+---
+
+### TOKEN_ALREADY_USED
+
+```json
+{
+  "error": "TOKEN_ALREADY_USED",
+  "code": 401,
+  "cause": "Preimage was already presented — replay attack blocked",
+  "action": "do_not_retry",
+  "retry": false
+}
+```
+
+Der Replay-Schutz wurde ausgelöst. Jeder preimage kann nur einmal verwendet werden. Verwenden Sie Tokens niemals erneut.
+
+---
+
+### NODE_UNREACHABLE
+
+```json
+{
+  "error": "NODE_UNREACHABLE",
+  "code": 503,
+  "cause": "Lightning node did not respond within timeout",
+  "action": "retry_with_backoff",
+  "retry": true
+}
+```
+
+Der Lightning-Anbieter ist nicht erreichbar. Wiederholen Sie den Versuch mit exponentiellem Backoff.
+
+---
+
+### INVOICE_EXPIRED
+
+```json
+{
+  "error": "INVOICE_EXPIRED",
+  "code": 402,
+  "cause": "BOLT11 invoice expired before payment was submitted",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+BOLT11-Rechnungen laufen ab (Standard: 600 Sekunden). Wiederholen Sie die ursprüngliche Anfrage, um eine neue Rechnung zu erhalten.
+
+---
+
+### WRONG_PREIMAGE
+
+```json
+{
+  "error": "WRONG_PREIMAGE",
+  "code": 402,
+  "cause": "SHA256(preimage) does not match paymentHash in macaroon",
+  "action": "check_wallet_payment",
+  "retry": false
+}
+```
+
+Die kryptografische Überprüfung ist fehlgeschlagen. Der preimage beweist keine Zahlung dieser Rechnung.
+
+---
+
+## Fehlerbehandlung in Agenten
+
+```typescript
+import { l402 } from "l402-kit/agent";
+
+try {
+  const res = await client.fetch("https://api.example.com/data");
+} catch (err: any) {
+  if (err.error === "BUDGET_EXCEEDED") {
+    // stop and report to user
+  } else if (err.retry === true) {
+    // safe to retry after short delay
+    await sleep(1000);
+    const res = await client.fetch("https://api.example.com/data");
+  }
+}
+```

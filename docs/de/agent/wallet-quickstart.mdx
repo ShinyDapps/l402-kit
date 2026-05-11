@@ -1,0 +1,89 @@
+---
+title: "Wallet Schnellstart"
+description: "Richte ein Lightning Wallet in 60 Sekunden ein. Keine Bank. Kein KYC. Funktioniert in 193 Ländern."
+---
+
+Du benötigst ein Lightning Wallet, um L402-APIs zu bezahlen. Zwei Optionen — beide kostenlos, beide weltweit nutzbar.
+
+---
+
+## Option A — Blink (empfohlen)
+
+<Steps>
+  <Step title="Konto erstellen">
+    Gehe zu [blink.sv](https://blink.sv) und registriere dich mit einer Telefonnummer oder E-Mail-Adresse.
+  </Step>
+  <Step title="Lightning-Adresse kopieren">
+    In der App: **Einstellungen → Lightning-Adresse**. Sie sieht so aus: `yourname@blink.sv`.
+  </Step>
+  <Step title="API-Schlüssel abrufen">
+    Gehe zu [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → erstelle einen Schlüssel.
+  </Step>
+  <Step title="In l402-kit verwenden">
+    ```typescript
+    import { ManagedProvider } from "l402-kit";
+
+    const provider = ManagedProvider.fromAddress("yourname@blink.sv");
+    ```
+
+    Oder mit dem Agent SDK:
+
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ BLINK_API_KEY: "your-key" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Option B — Alby
+
+<Steps>
+  <Step title="Konto erstellen">
+    Gehe zu [getalby.com](https://getalby.com) und registriere dich.
+  </Step>
+  <Step title="OAuth-Token abrufen">
+    Gehe zu [getalby.com/api-tokens](https://getalby.com/api-tokens) und erstelle ein Token mit dem Berechtigungsbereich `payments:send`.
+  </Step>
+  <Step title="In l402-kit verwenden">
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ ALBY_TOKEN: "your-token" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Konfigurationsfreie Einrichtung über Umgebungsvariablen
+
+l402-kit erkennt dein Wallet automatisch anhand von Umgebungsvariablen. Keine Codeänderungen erforderlich:
+
+```bash
+# Blink
+export BLINK_API_KEY="your-key"
+
+# Alby
+export ALBY_TOKEN="your-token"
+```
+
+```typescript
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env); // erkennt automatisch Blink oder Alby
+```
+
+---
+
+## Wallet aufladen
+
+Beide Wallets stellen dir eine Lightning-Adresse zur Verfügung, über die du sats empfangen kannst. Zum Testen:
+
+1. Gehe zu [coinfos.net](https://coinfos.net) oder einem beliebigen Faucet
+2. Sende 1000 sats an deine Lightning-Adresse
+3. Führe `npm install l402-kit && node -e "require('l402-kit/agent').healthCheck()"` aus
+
+**Keine Bank. Kein aufwendiges KYC. Funktioniert in 193 Ländern.**

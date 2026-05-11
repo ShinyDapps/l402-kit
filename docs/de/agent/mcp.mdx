@@ -1,0 +1,211 @@
+---
+title: MCP Server
+description: Füge l402-kit als MCP-Tool hinzu, damit Claude Desktop, Cursor und jede MCP-kompatible KI automatisch Lightning-APIs bezahlen kann.
+---
+
+## Was ist MCP?
+
+[Model Context Protocol](https://modelcontextprotocol.io) ist Anthropics offener Standard, um LLMs Zugang zu externen Tools zu geben. l402-kit enthält einen vorgefertigten MCP-Server mit zwei Kategorien von Tools:
+
+### Generische L402-Tools
+
+| Tool | Beschreibung |
+|------|-------------|
+| `l402_fetch` | Ruft beliebige URLs ab — zahlt automatisch, wenn sie 402 zurückgeben |
+| `l402_balance` | Prüft das verbleibende Lightning-Budget |
+| `l402_spending_report` | Vollständige Aufschlüsselung der Zahlungen in dieser Sitzung |
+
+### VERITY-Tools — kostenpflichtige Dienste, automatische Zahlung inklusive
+
+| Tool | Preis | Beschreibung |
+|------|------:|-------------|
+| `verity_btc_price` | 10 sats | BTC-Echtzeitkurs in USD, EUR, BRL |
+| `verity_worldstate` | 80 sats | UTC-Zeit + Geolokalisierung + lokales Wetter |
+| `verity_search` | 100 sats | Websuche, Top 10 organische Ergebnisse |
+| `verity_summarize` | 50 sats | KI-Zusammenfassung bis zu 50.000 Zeichen |
+| `verity_sentiment` | 30 sats | Sentiment-Score + Schlüsselwörter |
+| `verity_scrape` | 200 sats | Web-Scraping zu sauberem Markdown |
+| `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL-Zertifikate |
+| `verity_integration` | 10.000 sats | Vollständige l402-kit-Integration für beliebige GitHub-Repos |
+
+VERITY-Tools zahlen autonom — keine manuelle Rechnungsverarbeitung erforderlich.
+
+---
+
+## Einrichtung in Claude Desktop
+
+### 1. Node.js ≥ 18 installieren
+
+### 2. Wallet konfigurieren
+
+<Tabs>
+  <Tab title="Blink">
+    `claude_desktop_config.json` bearbeiten:
+
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "BLINK_API_KEY": "your-blink-api-key",
+            "BLINK_WALLET_ID": "your-wallet-id",
+            "BUDGET_SATS": "2000"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Alby">
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "ALBY_TOKEN": "your-alby-access-token",
+            "BUDGET_SATS": "2000"
+          }
+        }
+      }
+    }
+    ```
+
+    Für einen selbst gehosteten Alby Hub, folgendes hinzufügen:
+    ```json
+    "ALBY_HUB_URL": "https://your-hub.example.com"
+    ```
+  </Tab>
+</Tabs>
+
+**Speicherort der Konfigurationsdatei:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+### 3. Claude Desktop neu starten
+
+Die Tools `l402_fetch`, `l402_balance` und `l402_spending_report` erscheinen in Claudes Tool-Liste.
+
+---
+
+## Umgebungsvariablen
+
+| Variable | Erforderlich | Beschreibung |
+|----------|:--------:|-------------|
+| `BLINK_API_KEY` | Nur Blink | Dein Blink-API-Schlüssel |
+| `BLINK_WALLET_ID` | Nur Blink | Deine Blink-Wallet-ID |
+| `ALBY_TOKEN` | Nur Alby | Alby-Zugriffstoken |
+| `ALBY_HUB_URL` | optional | Benutzerdefinierte Alby-Hub-Basis-URL |
+| `BUDGET_SATS` | optional | Maximale Ausgaben pro Sitzung (Standard: `2000`) |
+
+---
+
+## Verwendung der Tools
+
+Sobald der Server läuft, kann Claude VERITY und beliebige L402-geschützte APIs autonom aufrufen:
+
+```
+Du: Was ist der aktuelle BTC-Kurs?
+
+Claude: [ruft verity_btc_price auf]
+        [10 sats bezahlt] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
+
+        Bitcoin kostet aktuell 97.500 USD (Kosten: 10 sats)
+```
+
+```
+Du: Fasse diesen Artikel zusammen: <fügt 5.000 Wörter ein>
+
+Claude: [ruft verity_summarize mit text="..." auf]
+        [50 sats bezahlt] {"summary":"..."}
+```
+
+```
+Du: Suche nach "lightning network adoption 2026"
+
+Claude: [ruft verity_search mit q="lightning network adoption 2026" auf]
+        [100 sats bezahlt] {"results":[...]}
+```
+
+```
+Du: Wie viel habe ich bisher ausgegeben?
+
+Claude: [ruft l402_spending_report auf]
+        === L402 Spending Report ===
+        Total spent:  160 sats
+        Remaining:    1840 sats
+
+        By domain:
+          l402kit.com: 160 sats
+```
+
+---
+
+## MCP-Verzeichnis
+
+l402-kit ist im [Glama MCP-Verzeichnis](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) gelistet.
+
+Maschinenlesbares Manifest: `GET https://l402kit.com/.well-known/mcp.json`
+
+---
+
+## Einrichtung mit Cursor
+
+Den gleichen Konfigurationsblock in Cursors MCP-Einstellungen unter **Einstellungen → MCP Servers** hinzufügen.
+
+---
+
+## Einrichtung mit einem beliebigen MCP-Client
+
+Der Server liest von `stdin` / schreibt nach `stdout` (stdio-Transport):
+
+```bash
+BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
+```
+
+Jeder MCP-kompatible Client kann sich über den stdio-Transport verbinden.
+
+---
+
+## Einen eigenen MCP-Server erstellen
+
+Du kannst `L402Client` auch direkt in deinen eigenen MCP-Server einbetten:
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { L402Client, BlinkWallet } from "l402-kit";
+import { z } from "zod";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+  budgetSats: 1000,
+});
+
+const server = new McpServer({ name: "my-agent", version: "1.0.0" });
+
+server.tool(
+  "fetch_weather",
+  "Get current weather for a city — pays automatically",
+  { city: z.string() },
+  async ({ city }) => {
+    const res = await client.fetch(`https://api.weather.com/current?city=${city}`);
+    const text = await res.text();
+    return { content: [{ type: "text", text }] };
+  },
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+---
+
+## Sicherheitshinweise
+
+- Das Budget-Limit (`BUDGET_SATS`) ist deine wichtigste Schutzmaßnahme — setze es konservativ an
+- Jeder `npx l402-kit-mcp`-Prozess hat sein eigenes speicherinternes Budget; es wird beim Neustart zurückgesetzt
+- Für produktive Agenten das Ausgabenprotokoll über den `onSpend`-Callback in einem externen Speicher persistieren

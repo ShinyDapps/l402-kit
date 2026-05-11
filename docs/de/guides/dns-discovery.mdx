@@ -1,0 +1,68 @@
+---
+title: "DNS Discovery"
+description: "Lass Agenten deinen L402-Endpunkt über einen DNS-TXT-Eintrag entdecken — keine HTTP-Anfrage erforderlich."
+---
+
+## Warum DNS Discovery
+
+Agenten mit Internetzugang können DNS auflösen, bevor sie eine HTTP-Anfrage stellen. Wenn du deinen L402-Endpunkt als DNS-TXT-Eintrag veröffentlichst, entdecken ihn Agenten automatisch — noch bevor sie deine API aufrufen.
+
+## TXT-Eintragsformat
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+Felder:
+- `v=l402` — Protokollkennung
+- `endpoint=` — deine L402-geschützte URL
+- `price=` — Preis in sats (optional, informativ)
+- `docs=` — Link zu deiner Dokumentation (optional)
+
+## Einrichtung auf Cloudflare
+
+1. Gehe zu **Cloudflare Dashboard → DNS**
+2. Füge einen neuen Eintrag hinzu:
+
+| Type | Name | Content | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## Überprüfung mit dig
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Erwartete Ausgabe:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## Wie Agenten es verwenden
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// Agent löst DNS auf, um deinen Endpunkt zu finden
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Gibt zurück: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## Eigener Eintrag von l402-kit
+
+Das folgende Beispiel verwendet eine fiktive Domain (`api.example.com`), um das Format zu veranschaulichen — ersetze sie durch deinen tatsächlichen Endpunkt.
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## Vorteile
+
+- **Kein HTTP-Overhead** — Entdeckung vor jedem API-Aufruf
+- **Agenten-nativ** — DNS ist die Art und Weise, wie Maschinen Dienste finden, nicht Menschen
+- **Kein API-Schlüssel erforderlich** — vollständig offene Entdeckung
+- **Cachebar** — TTL steuert, wie oft Agenten erneut auflösen
+
+Siehe [.well-known/agent.json](https://api.example.com/.well-known/agent.json) für den ergänzenden HTTP-Discovery-Standard.

@@ -1,0 +1,153 @@
+---
+title: Datenschutzarchitektur
+description: Wie l402-kit null personenbezogene Daten speichert, per Wallet authentifiziert und Schlüssel verteilt hält — ein Datenschutzmodell, das Bitcoin würdig ist.
+---
+
+## Das Problem mit herkömmlichen Zahlungs-APIs
+
+Stripe, LemonSqueezy, Paddle — jeder konventionelle Zahlungsanbieter erfordert:
+
+- Eine E-Mail-Adresse (personenbezogene Daten, DSGVO-Haftung)
+- Ein Konto und ein Passwort (phishbar, angreifbar)
+- Zentralisierte Schlüsselspeicherung (Single Point of Failure)
+- Vertrauen, dass der Anbieter Ihre Daten nicht verkauft
+
+Das Lightning Network verändert das Modell grundlegend. **Ihre Wallet ist kryptografischer Identitätsnachweis.** l402-kit ist auf dieser Prämisse aufgebaut.
+
+---
+
+## Was wir speichern — und was nicht
+
+| Daten | Gespeichert | Warum |
+|---|---|---|
+| `payment_hash` | ✅ Ja | SHA-256 des preimage — bereits öffentlich in der BOLT11-Rechnung |
+| Lightning-Adresse | ✅ Ja (nur Eigentümer) | Erforderlich zur Weiterleitung der 99,7%-Aufteilung |
+| Aufgerufener Endpunkt | ✅ Ja | Erforderlich für Ihre Analysen |
+| `preimage` (Zahlungsgeheimnis) | ❌ Niemals | Würde den Zahlungsschlüssel offenlegen |
+| E-Mail | ❌ Niemals | Nicht benötigt — die Wallet ist die Identität |
+| Name / IP / Gerät | ❌ Niemals | Wird auf keiner Ebene erfasst |
+| Cookies / Tracking | ❌ Niemals | Keine Analyse-SDKs, kein Fingerprinting |
+
+### Warum `payment_hash` sicher gespeichert werden kann
+
+Der preimage ist das 32-Byte-Geheimnis, das die Zahlung beweist. Sein SHA-256-Hash (`payment_hash`) wird bereits öffentlich in der BOLT11-Rechnung übertragen, sobald Sie diese erstellen. Die Speicherung des Hashes enthüllt nichts — der preimage berührt unsere Datenbank niemals.
+
+```
+preimage  →  SHA-256  →  payment_hash  (öffentlich, in BOLT11)
+   ↑
+niemals gespeichert
+```
+
+---
+
+## Authentifizierung: Ihre Wallet, kein Passwort
+
+### Entwickler-Dashboard
+
+Das Analyse-Dashboard authentifiziert sich über **LNURL-auth** — denselben secp256k1-Ablauf, der von Lightning-Wallets verwendet wird:
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+Kein Passwort zum Phishen. Kein Session-Token, das am Edge gestohlen werden könnte. Das JWT ist durch Row Level Security eingeschränkt — andere Pubkeys sehen nichts.
+
+### Datenlöschung
+
+Nur Ihre Wallet kann die Löschung Ihrer Daten autorisieren. Der Ablauf:
+
+1. Client ruft `/api/lnurl-auth?lightningAddress=you@yourdomain.com` auf
+2. Server gibt eine einmalige k1-Challenge + LNURL zurück
+3. Ihre Wallet signiert k1 mit ihrem privaten secp256k1-Schlüssel
+4. Server verifiziert die Signatur — stellt ein einmalig verwendbares 64-Zeichen-Token aus
+5. Client sendet POST an `/api/delete-data` mit `{ lightningAddress, token }`
+6. Server widerruft das Token sofort (verhindert Replay-Angriffe), löscht alle Zeilen
+7. Daten sind gelöscht — kein Support-Ticket, keine E-Mail-Bestätigung
+
+**Warum dies sicher ist:** Ein Angreifer, der Ihre Lightning-Adresse kennt, kann Ihre Daten ohne Ihren privaten Schlüssel nicht löschen. Das Token ist einmalig verwendbar und läuft nach 10 Minuten ab.
+
+---
+
+## Schlüsselverteilung
+
+Herkömmliches SaaS: ein Sicherheitsvorfall → alles offengelegt.
+
+l402-kit verteilt das Vertrauen auf mehrere Ebenen:
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+Keine einzelne Ebene verfügt über genug Informationen, um Sie zu imitieren, Ihre Identität zu lesen oder Ihre Wallet zu leeren.
+
+---
+
+## LGPD / DSGVO-Konformität durch Design
+
+Da wir keinerlei personenbezogene Daten speichern, gelten die meisten LGPD/DSGVO-Pflichten nicht:
+
+- **Keine Auskunftsersuchen betroffener Personen** — es gibt keine Identität zum Nachschlagen
+- **Keine Benachrichtigungspflicht bei Datenpannen bezüglich personenbezogener Daten** — payment_hash ist kein personenbezogenes Datum
+- **Keine Cookie-Einwilligung** — kein Tracking, keine Cookies
+- **Recht auf Löschung** — kryptografisch erfüllt über LNURL-auth-Löschung
+
+Dies ist keine Rechtsberatung. Aber „wir erheben es nicht" ist eine stärkere Position als „wir erheben es und schützen es."
+
+---
+
+## Lightning-Zahlungen sind standardmäßig privat
+
+Lightning-Zahlungen identifizieren den Zahler nicht on-chain:
+
+- Kein Name, keine Adresse, kein Bankkonto
+- Die Zahlungsroute ist Onion-verschlüsselt (wie Tor)
+- Nur der Rechnungsaussteller weiß, dass die Zahlung abgewickelt wurde
+- Die Identität des Zahlers wird dem Zahlungsempfänger niemals offenbart
+
+Ihre Endnutzer bezahlen Ihre API anonym. Sie wissen, dass die Rechnung bezahlt wurde. Das ist alles, was beide Parteien benötigen.
+
+---
+
+## Vergleich
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| E-Mail erforderlich | ❌ | ✅ | ✅ |
+| Konto erforderlich | ❌ | ✅ | ✅ |
+| KYC / Identität | ❌ | ✅ | ✅ |
+| Personenbezogene Daten gespeichert | ❌ | ✅ | ✅ |
+| Authentifizierungsmethode | secp256k1 wallet | E-Mail + Passwort | E-Mail + Passwort |
+| Löschmechanismus | kryptografischer Nachweis | E-Mail-Anfrage | E-Mail-Anfrage |
+| LGPD/DSGVO-Aufwand | minimal | hoch | hoch |
+| Zahler anonym | ✅ | ❌ | ❌ |
+
+---
+
+## Was das für Ihre Nutzer bedeutet
+
+Wenn Sie auf l402-kit aufbauen:
+
+- Ihre Nutzer müssen Ihnen niemals ihre E-Mail-Adresse mitteilen
+- Ein Sicherheitsvorfall in Ihrer Datenbank legt keine personenbezogenen Daten offen
+- Jeder KI-Agent kann Ihre API ohne Konto oder Identität bezahlen
+- Nutzer, die ihre Daten löschen möchten, tun dies selbst, sofort, mit ihrer Wallet
+
+Dies ist die Zahlungsschicht, die Bitcoin verdient.

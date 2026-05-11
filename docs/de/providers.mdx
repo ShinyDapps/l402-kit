@@ -1,0 +1,358 @@
+---
+title: Anbieter
+description: Zwei Modi — Managed (0,3% pauschal, kein Node) oder Soberano (0%, eigener Lightning Node). ManagedProvider, Blink, LNbits, OpenNode und benutzerdefiniert.
+---
+
+## Zwei Modi
+
+| Modus | Anbieter | Gebühr | Testnetz / Sandbox | Einrichtung |
+|---|---|---|---|---|
+| **Managed** ⭐ | `ManagedProvider` | 0,3% pro sat | ❌ (Mock in Tests verwenden) | Nur Lightning-Adresse |
+| **Soberano** | Blink | 0% | ❌ nur mainnet | Kostenloses Verwahrkonto |
+| **Soberano** | LNbits | 0% | ✅ RegTest / signet | Selbst hosten oder öffentliche Instanz |
+| **Soberano** | OpenNode | 0% | ✅ `testMode: true` | Kostenloses Sandbox-Konto |
+| **Soberano** | Alby Hub | 0% | ✅ über Hub-Testnetz-Wallet | Self-custodial Cloud-Node |
+| **Soberano** | BTCPay | 0% | ✅ RegTest-Unterstützung | Selbst gehosteter Node |
+| **Soberano** | Benutzerdefiniert | 0% | ✅ was auch immer Sie anschließen | Jedes Lightning-Backend |
+
+**Managed-Modus** — l402kit.com betreibt den Lightning Node. Sie fügen Ihre Lightning-Adresse hinzu. Wir leiten automatisch 99,7% jedes sat an Sie weiter.
+
+**Soberano-Modus** — Sie verbinden Ihr eigenes Lightning-Wallet/Node. 0% Gebühr, vollständige Verwahrung, funktioniert mit jedem Anbieter.
+
+---
+
+## ManagedProvider (Empfohlen)
+
+Kein Lightning Node erforderlich. Fügen Sie Ihre Lightning-Adresse hinzu und beginnen Sie zu verdienen — l402kit.com kümmert sich um die gesamte Rechnungserstellung und Zahlungsweiterleitung.
+
+**Gebühr:** 0,3% pro empfangenem sat. 99,7% landen direkt in Ihrem Lightning-Wallet. Keine monatliche Gebühr.
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, ManagedProvider } from 'l402-kit';
+import express from 'express';
+
+const app = express();
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/premium', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'Payment confirmed ⚡' });
+});
+
+app.listen(3000);
+// 0.3% fee · no node setup · works immediately
+```
+
+```python Python
+from l402kit import l402_required, ManagedProvider
+from fastapi import FastAPI
+
+app = FastAPI()
+lightning = ManagedProvider.from_address("you@yourdomain.com")
+
+@app.get("/premium")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium():
+    return {"data": "Payment confirmed ⚡"}
+# 0.3% fee · no Lightning node required
+```
+
+```go Go
+import (
+    "fmt"
+    "net/http"
+    l402kit "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    provider := l402kit.NewManagedProvider("you@yourdomain.com")
+    http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+        PriceSats: 10,
+        Lightning: provider,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintln(w, `{"data":"Payment confirmed ⚡"}`)
+    })))
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+```rust Rust
+use axum::{middleware, routing::get, Router};
+use l402kit::{l402_middleware, Options, ManagedProvider};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
+    let app = Router::new()
+        .route("/premium", get(|| async { r#"{"data":"Payment confirmed ⚡"}"# }))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
+</CodeGroup>
+
+**So funktioniert es:**
+1. Ihre API ruft `ManagedProvider.fromAddress("you@domain.com")` auf
+2. Wenn ein Aufrufer Ihren Endpunkt erreicht, erstellt l402kit.com eine Lightning-Rechnung
+3. Aufrufer zahlt → Lightning begleicht → 99,7% werden sofort an Ihre Lightning-Adresse weitergeleitet
+4. Ihre API verifiziert den kryptografischen Nachweis und gibt `200 OK` zurück
+
+<Note>
+Die 0,3% Routing-Gebühr ist die einzige Kosten. Keine monatliche Gebühr. Keine Kontoregistrierung. Jede Lightning-Adresse funktioniert (Blink, Phoenix, Alby, Strike, Wallet of Satoshi usw.).
+</Note>
+
+### Vertrauen & Verfügbarkeit
+
+**Wer betreibt l402kit.com?** ShinyDapps (Open Source, MIT). Die verwaltete Infrastruktur läuft auf Cloudflare Workers — global verteilt, kein einzelner Server, der ausfallen kann.
+
+**Betriebszeit**: Rund um die Uhr überwacht unter [stats.uptimerobot.com/57uOzF17jK](https://stats.uptimerobot.com/57uOzF17jK). SLA-Ziel: 99,9%.
+
+**Was passiert, wenn l402kit.com verschwindet?** Ihre Verifizierungslogik ist lokal — `SHA256(preimage) == paymentHash` läuft in Ihrem Prozess, null Netzwerkaufrufe. Nur die Rechnungs-*erstellung* berührt l402kit.com. Wenn der verwaltete Dienst ausfällt, wechseln Sie mit einer Zeile zu einem beliebigen Soberano-Anbieter:
+
+```typescript
+// Vorher (managed)
+const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
+
+// Nachher (soberano — 0% Gebühr, vollständige Verwahrung)
+const lightning = new BlinkProvider(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+```
+
+Keine weiteren Codeänderungen. Bereits bezahlte Tokens funktionieren weiterhin — die Verifizierung ist rein kryptografisch.
+
+**Kann ich die verwaltete Schicht selbst hosten?** Ja. Der vollständige Quellcode ist auf [GitHub](https://github.com/ShinyDapps/l402-kit) unter MIT verfügbar. `cloudflare/` enthält den verwalteten API-Worker — deployen Sie ihn in 5 Minuten in Ihrem eigenen Cloudflare-Konto.
+
+---
+
+## Blink (Soberano — 0% Gebühr)
+
+[Blink](https://blink.sv) ist ein kostenloses Bitcoin Lightning-Verwahr-Wallet mit einer GraphQL-API. Kein KYC, keine monatliche Gebühr, sofortige Einrichtung. Verwenden Sie es, um im Soberano-Modus mit 0% Gebühr zu betreiben.
+
+<Note>
+**Notfallplan:** Blink ist ein kostenloser Dienst — seine Preisgestaltung kann sich ändern. Wenn Blink Gebühren hinzufügt oder die API einschränkt, wechseln Sie mit einer Codezeile zu einem anderen Soberano-Anbieter (keine weiteren Änderungen erforderlich, bereits bezahlte Tokens funktionieren weiterhin). Null Abhängigkeit. Gute Alternativen: LNbits (selbst gehostet, dauerhaft 0%), OpenNode (kommerzielles SLA), Alby Hub (self-custodial) oder BTCPay (vollständig souverän).
+</Note>
+
+**Erste Schritte:**
+1. Konto erstellen unter [dashboard.blink.sv](https://dashboard.blink.sv)
+2. Zu **API-Schlüssel** gehen → neuen Schlüssel erstellen
+3. Ihre **BTC Wallet-ID** von der Wallet-Seite kopieren
+
+<CodeGroup>
+```typescript TypeScript
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // blink_xxx...
+  process.env.BLINK_WALLET_ID!,  // UUID
+);
+```
+
+```python Python
+from l402kit.providers.blink import BlinkProvider
+
+blink = BlinkProvider(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+```
+
+```go Go
+import "github.com/shinydapps/l402-kit/go"
+
+provider := l402kit.NewBlinkProvider(
+    os.Getenv("BLINK_API_KEY"),
+    os.Getenv("BLINK_WALLET_ID"),
+)
+```
+</CodeGroup>
+
+**Umgebungsvariablen:**
+```bash
+BLINK_API_KEY=blink_xxxxxxxxxxxxxxxxxxxxxxxx
+BLINK_WALLET_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+---
+
+## LNbits (Soberano — 0% Gebühr)
+
+[LNbits](https://lnbits.com) ist ein Open-Source-Lightning-Wallet-Server. Selbst hosten oder eine öffentliche Instanz verwenden.
+
+**Erste Schritte:**
+1. LNbits einrichten (selbst hosten oder legend.lnbits.com verwenden)
+2. Wallet erstellen → den **Rechnungs-/Leseschlüssel** kopieren
+
+<CodeGroup>
+```typescript TypeScript
+import { LNbitsProvider } from 'l402-kit';
+
+const lnbits = new LNbitsProvider(
+  process.env.LNBITS_KEY!,
+  process.env.LNBITS_URL ?? 'https://legend.lnbits.com',
+);
+```
+
+```python Python
+from l402kit.providers.lnbits import LNbitsProvider
+
+lnbits = LNbitsProvider(
+    api_key=os.environ["LNBITS_KEY"],
+    base_url=os.environ.get("LNBITS_URL", "https://legend.lnbits.com"),
+)
+```
+</CodeGroup>
+
+**Umgebungsvariablen:**
+```bash
+LNBITS_KEY=your-invoice-read-key
+LNBITS_URL=https://your-lnbits-instance.com
+```
+
+---
+
+## OpenNode (Soberano — 0% Gebühr)
+
+[OpenNode](https://opennode.com) ist ein Lightning-Anbieter mit einer kostenlosen Sandbox zum Testen.
+
+**Erste Schritte:**
+1. Konto erstellen unter [app.opennode.com](https://app.opennode.com)
+2. Zu **Integrationen** → **API-Schlüssel** gehen → Schlüssel erstellen
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenNodeProvider } from 'l402-kit';
+
+const opennode = new OpenNodeProvider(
+  process.env.OPENNODE_KEY!,
+  process.env.NODE_ENV !== 'production', // testMode
+);
+```
+
+```python Python
+from l402kit.providers.opennode import OpenNodeProvider
+
+opennode = OpenNodeProvider(
+    api_key=os.environ["OPENNODE_KEY"],
+    test_mode=os.environ.get("NODE_ENV") != "production",
+)
+```
+</CodeGroup>
+
+---
+
+## Alby Hub (Soberano — 0% Gebühr)
+
+[Alby Hub](https://hub.getalby.com) ist ein self-custodial Lightning Node in der Cloud. Ihre Schlüssel, Ihre sats — kein Verwahrer.
+
+**Erste Schritte:**
+1. Hub erstellen unter [hub.getalby.com](https://hub.getalby.com) (oder selbst hosten)
+2. Zu **Einstellungen → Zugriffstoken** gehen → Token mit den Berechtigungen `invoices:create` + `invoices:read` erstellen
+3. Ihre Hub-URL und Ihr Zugriffstoken kopieren
+
+<CodeGroup>
+```typescript TypeScript
+import { AlbyProvider } from 'l402-kit';
+
+const alby = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!,  // Hub → Einstellungen → Zugriffstoken
+  process.env.ALBY_HUB_URL!,       // z. B. "https://your-name.getalby.com"
+);
+```
+</CodeGroup>
+
+**Umgebungsvariablen:**
+```bash
+ALBY_ACCESS_TOKEN=your-alby-access-token
+ALBY_HUB_URL=https://your-name.getalby.com
+```
+
+---
+
+## BTCPay Server (Soberano — 0% Gebühr)
+
+[BTCPay Server](https://btcpayserver.org) ist vollständig selbstsouveränes Bitcoin + Lightning. Ihr Node, Ihre Schlüssel, null Verwahrung.
+
+**Kompatibel mit:** selbst gehostet (Umbrel, Start9, VPS) oder verwaltet (Voltage, LunaNode).
+
+**Erste Schritte:**
+1. BTCPay-Store → **Lightning → Einstellungen**
+2. **Konto → API-Schlüssel** → Schlüssel mit dem Bereich `btcpay.store.cancreatelightninginvoice` generieren
+3. Ihre Store-ID aus der Store-URL kopieren
+
+<CodeGroup>
+```typescript TypeScript
+import { BTCPayProvider } from 'l402-kit';
+
+const btcpay = new BTCPayProvider(
+  process.env.BTCPAY_URL!,       // z. B. "https://btcpay.yourdomain.com"
+  process.env.BTCPAY_API_KEY!,   // Konto → API-Schlüssel
+  process.env.BTCPAY_STORE_ID!,  // aus der Store-URL
+);
+```
+</CodeGroup>
+
+**Umgebungsvariablen:**
+```bash
+BTCPAY_URL=https://btcpay.yourdomain.com
+BTCPAY_API_KEY=your-api-key
+BTCPAY_STORE_ID=your-store-id
+```
+
+---
+
+## Benutzerdefinierter Anbieter (Soberano — 0% Gebühr)
+
+Implementieren Sie das `LightningProvider`-Interface, um jedes Lightning-Backend zu verwenden:
+
+<CodeGroup>
+```typescript TypeScript
+import type { LightningProvider, Invoice } from 'l402-kit';
+
+class MyProvider implements LightningProvider {
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    // Call your Lightning node API
+    const result = await myNode.createInvoice(amountSats);
+    const macaroon = Buffer.from(
+      JSON.stringify({ hash: result.hash, exp: Date.now() + 3_600_000 })
+    ).toString('base64');
+    return {
+      paymentRequest: result.bolt11,
+      paymentHash: result.hash,
+      macaroon,
+      amountSats,
+      expiresAt: Date.now() + 3_600_000,
+    };
+  }
+
+  async checkPayment(paymentHash: string): Promise<boolean> {
+    return myNode.isPaid(paymentHash);
+  }
+}
+```
+
+```python Python
+from l402kit.types import LightningProvider, Invoice
+from datetime import datetime, timedelta
+import base64, json
+
+class MyProvider(LightningProvider):
+    async def create_invoice(self, amount_sats: int) -> Invoice:
+        result = await my_node.create_invoice(amount_sats)
+        exp = int((datetime.now() + timedelta(hours=1)).timestamp() * 1000)
+        macaroon = base64.b64encode(
+            json.dumps({"hash": result.hash, "exp": exp}).encode()
+        ).decode()
+        return Invoice(
+            payment_request=result.bolt11,
+            payment_hash=result.hash,
+            macaroon=macaroon,
+            amount_sats=amount_sats,
+            expires_at=exp,
+        )
+
+    async def check_payment(self, payment_hash: str) -> bool:
+        return await my_node.is_paid(payment_hash)
+```
+</CodeGroup>
