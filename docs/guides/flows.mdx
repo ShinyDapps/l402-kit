@@ -3,9 +3,15 @@ title: System Flows
 description: Visual diagrams of every flow in the l402-kit platform — payment, authentication, subscription, and infrastructure.
 ---
 
+This page documents every major flow in the l402-kit platform as sequence and flowchart diagrams. Each section pairs a visual with a concise explanation of what happens and why it works that way. Start with Flow 1 (core L402) to understand the cryptographic foundation, then read whichever flows are relevant to your integration.
+
+---
+
 ## 1. Core L402 Payment Flow
 
 The fundamental request cycle. No accounts, no passwords — just a cryptographic receipt.
+
+When a client first hits a protected endpoint it receives an HTTP 402 response containing two things: a BOLT11 Lightning invoice and a macaroon. The client pays the invoice through the Lightning Network (typically in under a second), receives a 32-byte preimage as proof, and retries the request with `Authorization: L402 <macaroon>:<preimage>`. The server verifies the token locally using `SHA256(preimage) === macaroon.hash` — no database call, no network round trip, sub-millisecond latency. Once verified, the token is valid until its expiry. Subsequent requests reuse the same header.
 
 ```mermaid
 sequenceDiagram
@@ -35,6 +41,8 @@ sequenceDiagram
 
 ## 2. Token Anatomy
 
+The `Authorization` header carries two components separated by a colon. The **macaroon** is a base64-encoded JSON object `{hash, exp}` — it tells the server what payment hash to expect and when the token expires. The **preimage** is the 32-byte secret the Lightning Network returned to the payer. Together they form an unforgeable, self-contained credential that any server can verify offline.
+
 ```mermaid
 flowchart LR
     T["Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;"]
@@ -47,7 +55,7 @@ flowchart LR
 
 ## 3. Managed Mode — Fee Split Flow
 
-When you use `ManagedProvider`, l402kit.com creates the invoice, receives the payment, and forwards 99.7% to your Lightning Address automatically.
+When you use `ManagedProvider`, l402kit.com creates the invoice, receives the payment, and forwards 99.7% to your Lightning Address automatically. The 0.3% platform fee covers Lightning routing and API infrastructure. Your wallet never touches the Cloudflare Worker — the split is a server-side Lightning payment fired after the client's request is verified, using your Lightning Address to generate a fresh BOLT11 invoice on the fly.
 
 ```mermaid
 sequenceDiagram
@@ -77,6 +85,8 @@ sequenceDiagram
 ---
 
 ## 4. Pro Subscription Flow
+
+Pro subscriptions follow a similar L402 pattern but add persistent state. The client pays a one-time invoice and receives a 30-day subscription record in Supabase. Payment confirmation arrives either via Blink webhook (fast path, ~2 seconds) or via polling (fallback for wallets that don't trigger webhooks). Subsequent `/api/pro-check` calls verify the `expires_at` timestamp without another payment.
 
 ```mermaid
 sequenceDiagram

@@ -5,12 +5,16 @@ description: Use LNURL-auth for passwordless login and LNURL-pay for Lightning A
 
 ## What is LNURL?
 
-[LNURL](https://github.com/lnurl/luds) is a set of open standards built on top of the Lightning Network. l402-kit ships with two LNURL features out of the box:
+[LNURL](https://github.com/lnurl/luds) is a set of open standards built on top of the Lightning Network. Rather than exposing raw Lightning invoices or node pubkeys directly in your app, LNURL defines human-friendly URL-based protocols that wallets know how to handle. When a wallet scans a LNURL QR code, it decodes a URL, fetches a JSON response from your server, and then takes the appropriate action (signing a challenge, fetching a pay request, etc.) — all invisibly to the user.
+
+l402-kit ships with two LNURL features out of the box:
 
 | Feature | Use case |
 |---|---|
 | **LNURL-auth** | Passwordless login — wallet signs a challenge, no email or password |
 | **LNURL-pay** | Lightning Address (`you@domain.com`) — anyone can pay you with a human-readable address |
+
+Both protocols work across all major Lightning wallets (Phoenix, Blink, Zeus, Breez, Alby) and require no additional dependencies — your server only needs to serve a JSON endpoint and optionally verify a secp256k1 signature.
 
 ---
 
@@ -28,7 +32,7 @@ l402-kit.com uses LNURL-auth for the payment dashboard. You can use the same flo
 5. You verify the signature — if valid, the user is authenticated
 ```
 
-The user's identity is their Lightning node pubkey — stable, global, and self-soberano.
+The user's identity is their Lightning node pubkey — stable, global, and self-sovereign.
 
 ### Endpoint
 
