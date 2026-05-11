@@ -24,6 +24,7 @@ import { handleVerity } from "./verity/index";
 import { runVerityHeartbeat } from "./verity/cron/heartbeat";
 import { runFiscalAgent } from "./verity/cron/fiscal";
 import { runMonitor } from "./monitor";
+import { runGithubResponder } from "./github-responder";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -43,6 +44,7 @@ export interface Env {
   FIRECRAWL_API_KEY: string;
   ANTHROPIC_API_KEY: string;
   RESEND_API_KEY: string;
+  GITHUB_PAT: string;
   demo_preimages: KVNamespace;
 }
 
@@ -227,6 +229,8 @@ export default {
     }
     // Monitor: checks payments, issue replies, HN, npm — emails if relevant
     await runMonitor(env);
+    // GitHub responder: reads new comments, replies autonomously with Haiku
+    await runGithubResponder(env);
   },
 
   async fetch(request: Request, env: Env): Promise<Response> {
