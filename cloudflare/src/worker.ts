@@ -19,6 +19,7 @@ import { handleDashboard } from "./api/dashboard";
 import { handleWhitepaperExtended } from "./api/whitepaper";
 import { sweepTransitWallet } from "./api/sweep";
 import { handleLawnEvents } from "./api/lawn-events";
+import { handleMcpHttp } from "./api/mcp-http";
 import { handleActivity } from "./api/activity";
 import { handleVerity } from "./verity/index";
 import { runVerityHeartbeat } from "./verity/cron/heartbeat";
@@ -44,6 +45,8 @@ export interface Env {
   FIRECRAWL_API_KEY: string;
   ANTHROPIC_API_KEY: string;
   RESEND_API_KEY: string;
+  BRAVE_API_KEY: string;   // optional — free search tier (2000/month), add via wrangler secret
+  GROQ_API_KEY: string;    // optional — free inference tier (14400/day), add via wrangler secret
   GITHUB_PAT: string;
   demo_preimages: KVNamespace;
 }
@@ -203,6 +206,44 @@ const BADGE_DARK = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="
 const BADGE_LIGHT = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="40" viewBox="0 0 200 40"><rect width="200" height="40" rx="6" fill="#0B0C14" stroke="#F7931A" stroke-width="1.5"/><polygon points="18,6 10,22 16,22 13.5,33 25,18 19,18" fill="#F7931A"/><text x="35" y="26" font-family="'JetBrains Mono','Fira Code',ui-monospace,monospace" font-weight="700" font-size="14" fill="#F7931A" letter-spacing="-0.3">Powered by L402-Kit</text></svg>`;
 const BADGE_SM   = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="20" viewBox="0 0 120 20"><rect width="120" height="20" rx="3" fill="#F7931A"/><polygon points="9,3 5,11 8,11 7,17 13,9 10,9" fill="#FFFFFF"/><text x="18" y="14" font-family="'JetBrains Mono','Fira Code',ui-monospace,monospace" font-weight="700" font-size="8" fill="#FFFFFF">Powered by L402-Kit</text></svg>`;
 
+function handleServerCard(): Response {
+  return new Response(JSON.stringify({
+    name: "l402-kit",
+    qualifiedName: "shinydapps/l402-kit",
+    description: "MCP server that lets AI agents call L402-protected APIs via Bitcoin Lightning. Includes 9 VERITY paid tools (search, scrape, BTC price, summarize, sentiment, domain intel, integration, world state, translate) plus l402_fetch and l402_balance.",
+    iconUrl: "https://l402kit.com/badge/powered-by-l402kit-sm.svg",
+    transport: "stdio",
+    packageName: "l402-kit",
+    packageRegistry: "npm",
+    installCommand: "npx l402-kit-mcp",
+    configSchema: {
+      type: "object",
+      properties: {
+        BLINK_API_KEY: { type: "string", description: "Blink wallet API key (free at blink.sv)" },
+        BLINK_WALLET_ID: { type: "string", description: "Blink BTC wallet ID" },
+        BUDGET_SATS: { type: "string", description: "Max sats per session (default: 2000)" }
+      },
+      required: ["BLINK_API_KEY", "BLINK_WALLET_ID"]
+    },
+    tools: [
+      { name: "l402_fetch", description: "Fetch any L402-protected URL, auto-paying the Lightning invoice" },
+      { name: "l402_balance", description: "Check remaining Lightning budget for this session" },
+      { name: "verity_btc_price", description: "Real-time BTC price — 10 sats" },
+      { name: "verity_search", description: "Web search top 10 results — 100 sats" },
+      { name: "verity_scrape", description: "Web scraping to markdown — 200 sats" },
+      { name: "verity_summarize", description: "AI summarization — 50 sats" },
+      { name: "verity_sentiment", description: "Sentiment analysis — 30 sats" },
+      { name: "verity_domain_intel", description: "WHOIS + DNS + SSL — 500 sats" },
+      { name: "verity_worldstate", description: "Time + geolocation + weather — 80 sats" },
+      { name: "verity_translate", description: "AI translation to 11 locales — 50 sats" },
+      { name: "verity_integration", description: "Full l402-kit integration for any GitHub repo — 10000 sats" }
+    ]
+  }, null, 2), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
 function handleBadge(variant: "dark" | "light" | "sm"): Response {
   const svg = variant === "light" ? BADGE_LIGHT : variant === "sm" ? BADGE_SM : BADGE_DARK;
   return new Response(svg, {
@@ -263,6 +304,7 @@ export default {
       else if (path === "/.well-known/agent.json")  res = handleAgentJson();
       else if (path === "/.well-known/l402.json")   res = handleL402Json();
       else if (path === "/.well-known/mcp.json")    res = handleMcpJson();
+      else if (path === "/.well-known/mcp/server-card.json") res = handleServerCard();
       else if (path === "/.well-known/402index-verify.txt") res = new Response("a2c9992b0c01d527d16443f0cc7406b39a8893cbca0a30caae34d637a8603c8c", { headers: { "Content-Type": "text/plain" } });
       else if (path.startsWith("/.well-known/lnurlp/")) res = await handleLnurlp(request, env);
       else if (path === "/api/blink-webhook") res = await handleBlinkHook(request, env);
@@ -282,6 +324,7 @@ export default {
       else if (path.startsWith("/api/dashboard")) res = await handleDashboard(request, env);
       else if (path === "/whitepaper-extended") res = await handleWhitepaperExtended(request, env);
       else if (path === "/api/lawn-events")    res = await handleLawnEvents(request, env);
+      else if (path === "/api/mcp" || path === "/api/mcp/") res = await handleMcpHttp(request, env);
       else if (path === "/api/activity")        res = await handleActivity(request, env);
       else if (path.startsWith("/api/verity"))  res = await handleVerity(request, env);
       else if (path.startsWith("/docs"))       return handleDocsRedirect(request);

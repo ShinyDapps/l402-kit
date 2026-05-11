@@ -1,0 +1,48 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ThiagoDataEngineer/l402-kit",
+  "description": "MCP server for L402-protected APIs via Bitcoin Lightning. Pay-per-call AI tools in sats.",
+  "version": "1.8.7",
+  "repository": {
+    "url": "https://github.com/ShinyDapps/l402-kit",
+    "source": "github"
+  },
+  "version_detail": {
+    "version": "1.8.7"
+  },
+  "packages": [
+    {
+      "registry_name": "npm",
+      "name": "l402-kit",
+      "version": "1.8.7",
+      "identifier": "l402-kit",
+      "registryType": "npm",
+      "transport": {
+        "type": "stdio"
+      },
+      "package_arguments": [
+        {
+          "description": "Run the MCP server",
+          "is_required": true,
+          "value": "l402-kit-mcp",
+          "value_hint": "l402-kit-mcp",
+          "format": "string"
+        }
+      ],
+      "environment_variables": [
+        {
+          "name": "BLINK_API_KEY",
+          "description": "Blink wallet API key (free at blink.sv) — used to pay Lightning invoices automatically"
+        },
+        {
+          "name": "BLINK_WALLET_ID",
+          "description": "Blink BTC wallet ID"
+        },
+        {
+          "name": "BUDGET_SATS",
+          "description": "Max sats per session (default: 2000)"
+        }
+      ]
+    }
+  ]
+}

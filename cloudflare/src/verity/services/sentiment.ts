@@ -1,12 +1,11 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
 import { getPrice, recordCall } from "../pricing";
-import { callHaiku } from "../haiku";
+import { infer } from "../providers/inference";
 
 const SERVICE = "sentiment";
 
 export async function handleVeritySentiment(req: Request, env: Env): Promise<Response> {
-  if (!env.ANTHROPIC_API_KEY) return json({ error: "Service temporarily unavailable" }, 503);
   if (req.method !== "POST") return json({ error: "POST required. Body: { text: string }" }, 405);
 
   const auth = req.headers.get("Authorization") ?? "";
@@ -23,7 +22,7 @@ export async function handleVeritySentiment(req: Request, env: Env): Promise<Res
 
     await recordCall(SERVICE, env);
 
-    const raw = await callHaiku(
+    const raw = await infer(
       `Analyze the sentiment of the following text. Respond ONLY with valid JSON in this exact format:
 {"sentiment":"positive"|"negative"|"neutral","score":0.0-1.0,"confidence":0.0-1.0,"keywords":["word1","word2"]}
 

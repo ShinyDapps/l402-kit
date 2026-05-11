@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "BLINK_API_KEY": { "type": "string", "description": "Blink wallet API key (free at blink.sv)" },
+    "BLINK_WALLET_ID": { "type": "string", "description": "Blink BTC wallet ID" },
+    "BUDGET_SATS": { "type": "string", "description": "Max sats per session (default: 2000)" }
+  },
+  "required": ["BLINK_API_KEY", "BLINK_WALLET_ID"]
+}

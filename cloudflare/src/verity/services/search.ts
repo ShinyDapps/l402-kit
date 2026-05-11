@@ -1,12 +1,11 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
 import { getPrice, recordCall } from "../pricing";
+import { searchWeb } from "../providers/search";
 
 const SERVICE = "search";
 
 export async function handleVeritySearch(req: Request, env: Env): Promise<Response> {
-  if (!env.SERPER_API_KEY) return json({ error: "Service temporarily unavailable" }, 503);
-
   const auth = req.headers.get("Authorization") ?? "";
 
   if (auth.startsWith("L402 ")) {
@@ -24,26 +23,16 @@ export async function handleVeritySearch(req: Request, env: Env): Promise<Respon
 
     await recordCall(SERVICE, env);
 
-    try {
-      const r = await fetch("https://google.serper.dev/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-KEY": env.SERPER_API_KEY },
-        body: JSON.stringify({ q, num: 10 }),
-        signal: AbortSignal.timeout(8_000),
-      });
-      if (!r.ok) return json({ error: "Search provider unavailable" }, 503);
-      const data = await r.json() as { organic?: { title: string; link: string; snippet: string }[] };
+    const response = await searchWeb(q, env);
+    if (!response) return json({ error: "Search provider unavailable" }, 503);
 
-      return json({
-        agent: "VERITY",
-        service: SERVICE,
-        query: q,
-        results: (data.organic ?? []).slice(0, 10).map(({ title, link, snippet }) => ({ title, link, snippet })),
-        paid_with: "⚡ Lightning L402",
-      });
-    } catch {
-      return json({ error: "Search failed" }, 503);
-    }
+    return json({
+      agent: "VERITY",
+      service: SERVICE,
+      query: q,
+      results: response.results,
+      paid_with: "⚡ Lightning L402",
+    });
   }
 
   const price = await getPrice(SERVICE, env);

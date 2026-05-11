@@ -1,12 +1,11 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
 import { getPrice, recordCall } from "../pricing";
-import { callHaiku } from "../haiku";
+import { infer } from "../providers/inference";
 
 const SERVICE = "summarize";
 
 export async function handleVeritySummarize(req: Request, env: Env): Promise<Response> {
-  if (!env.ANTHROPIC_API_KEY) return json({ error: "Service temporarily unavailable" }, 503);
   if (req.method !== "POST") return json({ error: "POST required. Body: { text: string, language?: string }" }, 405);
 
   const auth = req.headers.get("Authorization") ?? "";
@@ -24,7 +23,7 @@ export async function handleVeritySummarize(req: Request, env: Env): Promise<Res
     const language = body.language ?? "same as input";
     await recordCall(SERVICE, env);
 
-    const summary = await callHaiku(
+    const summary = await infer(
       `Summarize the following text concisely in ${language}. Return only the summary, no preamble.\n\n${text}`,
       env,
     );

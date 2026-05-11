@@ -1,10 +1,12 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
 import { getPrice, recordCall } from "../pricing";
-import { callHaiku } from "../haiku";
+import { infer } from "../providers/inference";
+import { scrapeUrl } from "../providers/scrape";
+import { searchWeb } from "../providers/search";
+import { callSelf, shouldBuy } from "../consumer";
 
 const SERVICE = "integration";
-
 const GITHUB_RE = /^https?:\/\/github\.com\/([^/]+)\/([^/?\s]+)/;
 
 export async function handleVerityIntegration(req: Request, env: Env): Promise<Response> {
@@ -26,18 +28,40 @@ export async function handleVerityIntegration(req: Request, env: Env): Promise<R
     if (!match) return json({ error: "Invalid GitHub repo URL" }, 400);
 
     const [, owner, repo] = match;
+    const price = await getPrice(SERVICE, env);
     await recordCall(SERVICE, env);
 
-    const context = await fetchRepoContext(owner, repo);
-    if (!context) return json({ error: "Could not read repository. Make sure it is public." }, 400);
+    // Gather context in parallel: code files + Consumer-enriched docs + search
+    const [codeContext, docsResult, searchResult] = await Promise.allSettled([
+      fetchRepoContext(owner, repo),
+      // Consumer self-call: scrape README/docs (free internal, records COGS)
+      shouldBuy(20, price)
+        ? callSelf("scrape", env, () => scrapeUrl(`https://github.com/${owner}/${repo}#readme`, env))
+        : Promise.resolve({ ok: false, cogsSats: 0 }),
+      // Consumer self-call: search for issues and tech context
+      shouldBuy(50, price)
+        ? callSelf("search", env, () => searchWeb(`${owner}/${repo} github integration api`, env))
+        : Promise.resolve({ ok: false, cogsSats: 0 }),
+    ]);
 
-    const integration = await callHaiku(
+    const code   = codeContext.status === "fulfilled" ? codeContext.value : null;
+    const docs   = docsResult.status  === "fulfilled" && docsResult.value.ok ? docsResult.value.data as { content?: string } | null : null;
+    const search = searchResult.status === "fulfilled" && searchResult.value.ok ? searchResult.value.data : null;
+
+    if (!code && !docs) return json({ error: "Could not read repository. Make sure it is public." }, 400);
+
+    const contextParts: string[] = [];
+    if (code)   contextParts.push(`=== SOURCE FILES ===\n${code}`);
+    if (docs?.content)   contextParts.push(`=== README/DOCS ===\n${String(docs.content).slice(0, 4000)}`);
+    if (search) contextParts.push(`=== WEB CONTEXT ===\n${JSON.stringify(search).slice(0, 1000)}`);
+
+    const integration = await infer(
       `You are VERITY, an autonomous AI agent that integrates l402-kit (Bitcoin Lightning micropayments) into APIs.
 
 Analyze this repository and generate a complete l402-kit integration.
 
 REPOSITORY CONTEXT:
-${context}
+${contextParts.join("\n\n")}
 
 Generate:
 1. Which framework is detected (Express, FastAPI, Gin, Axum, etc.)
@@ -45,19 +69,20 @@ Generate:
 3. Environment variables needed (BLINK_API_KEY, BLINK_WALLET_ID)
 4. A one-line npm/pip/cargo/go install command
 
-Format as markdown with code blocks. Be specific — show actual file paths and line numbers where to add the code.
-End with: "Integrated by VERITY | Powered by l402-kit | shinydapps@blink.sv"`,
+Format as markdown with code blocks. Be specific — show actual file paths and line numbers where to add the code.`,
       env,
       "You are VERITY, an autonomous AI agent specializing in API monetization via Bitcoin Lightning.",
     );
 
     if (!integration) return json({ error: "Integration generation failed" }, 503);
 
+    const footer = `\n\n---\n⚡ Integrated by [VERITY](https://l402kit.com/api/verity) · ${price.toLocaleString()} sats · https://l402kit.com/api/verity/integration`;
+
     return json({
       agent: "VERITY",
       service: SERVICE,
       repo: `${owner}/${repo}`,
-      integration,
+      integration: integration + footer,
       next_steps: [
         "Apply the integration code to your repository",
         "Set BLINK_API_KEY and BLINK_WALLET_ID environment variables",
@@ -90,7 +115,7 @@ async function fetchRepoContext(owner: string, repo: string): Promise<string | n
 
     const toFetch = files
       .filter(f => f.type === "file" && interesting.includes(f.name))
-      .slice(0, 4);
+      .slice(0, 5);
 
     const contents = await Promise.allSettled(
       toFetch.map(async f => {
@@ -106,8 +131,7 @@ async function fetchRepoContext(owner: string, repo: string): Promise<string | n
       .filter((r): r is PromiseFulfilledResult<string | null> => r.status === "fulfilled" && r.value !== null)
       .map(r => r.value as string);
 
-    if (parts.length === 0) return null;
-    return parts.join("\n\n");
+    return parts.length ? parts.join("\n\n") : null;
   } catch {
     return null;
   }

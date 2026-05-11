@@ -1,5 +1,6 @@
 import type { Env } from "../../worker";
-import { SERVICES, getPrice } from "../pricing";
+import { DEFAULTS, getPrice } from "../pricing";
+import { getDailySpend, getDailyBudget } from "../consumer";
 
 export async function runFiscalAgent(env: Env): Promise<void> {
   try {
@@ -9,7 +10,7 @@ export async function runFiscalAgent(env: Env): Promise<void> {
     let totalSats = 0;
     const breakdown: Record<string, { calls: number; price: number; revenue: number }> = {};
 
-    for (const service of Object.keys(SERVICES)) {
+    for (const service of Object.keys(DEFAULTS)) {
       let dailyCalls = 0;
       for (let h = 0; h < 24; h++) {
         const raw = await env.demo_preimages.get(`verity_calls:${service}:${hour - h}`);
@@ -36,10 +37,20 @@ export async function runFiscalAgent(env: Env): Promise<void> {
 
     const brlEquivalent = btcBrl > 0 ? ((totalSats / 100_000_000) * btcBrl).toFixed(2) : "unavailable";
 
+    const [consumerSpent, consumerBudget] = await Promise.all([
+      getDailySpend(env),
+      getDailyBudget(env),
+    ]);
+    const netSats = totalSats - consumerSpent;
+
     const report = {
       date: today,
       agent: "VERITY",
-      total_sats: totalSats,
+      revenue_sats: totalSats,
+      consumer_spent_sats: consumerSpent,
+      consumer_budget_sats: consumerBudget,
+      net_sats: netSats,
+      margin_pct: totalSats > 0 ? ((netSats / totalSats) * 100).toFixed(2) : "0.00",
       brl_equivalent: brlEquivalent,
       btc_brl_rate: btcBrl,
       breakdown,
