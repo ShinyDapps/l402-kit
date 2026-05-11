@@ -428,6 +428,74 @@
             "hi/introduction",
             "hi/quickstart"
           ]
+        },
+        {
+          "group": "SDKs",
+          "pages": [
+            "hi/sdk/typescript",
+            "hi/sdk/python",
+            "hi/sdk/go",
+            "hi/sdk/rust"
+          ]
+        },
+        {
+          "group": "Agent SDK",
+          "pages": [
+            "hi/agent/quickstart",
+            "hi/agent/wallets",
+            "hi/agent/budget",
+            "hi/agent/mcp",
+            "hi/agent/langchain",
+            "hi/agent/system-prompt",
+            "hi/agent/wallet-quickstart",
+            "hi/agent/delegation",
+            "hi/agent/verity",
+            "hi/agent/lawn-n"
+          ]
+        },
+        {
+          "group": "Agent Integrations",
+          "pages": [
+            "hi/agent/crewai",
+            "hi/agent/openai-agents",
+            "hi/agent/vercel-ai",
+            "hi/agent/autogpt"
+          ]
+        },
+        {
+          "group": "Guides",
+          "pages": [
+            "hi/guides/pricing",
+            "hi/guides/testing",
+            "hi/guides/dashboard",
+            "hi/guides/vscode",
+            "hi/guides/privacy",
+            "hi/guides/flows",
+            "hi/guides/ai-agents",
+            "hi/guides/lnurl",
+            "hi/guides/security",
+            "hi/guides/production",
+            "hi/guides/migration",
+            "hi/guides/troubleshooting",
+            "hi/guides/dns-discovery"
+          ]
+        },
+        {
+          "group": "Reference",
+          "pages": [
+            "hi/providers",
+            "hi/api-reference",
+            "hi/reference/errors",
+            "hi/competitive",
+            "hi/payment-layer"
+          ]
+        },
+        {
+          "group": "Examples",
+          "pages": [
+            "hi/examples/diagram-forge",
+            "hi/examples/verity"
+          ]
         }
       ]
     },

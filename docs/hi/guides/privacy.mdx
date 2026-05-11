@@ -1,0 +1,153 @@
+---
+title: गोपनीयता आर्किटेक्चर
+description: l402-kit किस प्रकार शून्य PII संग्रहीत करता है, वॉलेट द्वारा प्रमाणित करता है, और keys वितरित रखता है — Bitcoin के योग्य एक गोपनीयता मॉडल।
+---
+
+## पारंपरिक payment APIs के साथ समस्या
+
+Stripe, LemonSqueezy, Paddle — हर पारंपरिक payment provider को आवश्यकता होती है:
+
+- एक ईमेल पते की (PII, GDPR दायित्व)
+- एक account और password की (phishable, breachable)
+- केंद्रीकृत key storage की (विफलता का एकल बिंदु)
+- इस विश्वास की कि provider आपका डेटा नहीं बेचता
+
+Lightning मॉडल को पूरी तरह बदल देता है। **आपका wallet पहचान का क्रिप्टोग्राफिक प्रमाण है।** l402-kit उसी आधार पर बना है।
+
+---
+
+## हम क्या संग्रहीत करते हैं — और क्या नहीं
+
+| डेटा | संग्रहीत | क्यों |
+|---|---|---|
+| `payment_hash` | ✅ हाँ | preimage का SHA-256 — BOLT11 invoice में पहले से सार्वजनिक |
+| Lightning Address | ✅ हाँ (केवल owner) | 99.7% split को route करने के लिए आवश्यक |
+| कॉल किया गया Endpoint | ✅ हाँ | आपके analytics के लिए आवश्यक |
+| `preimage` (payment secret) | ❌ कभी नहीं | payment key उजागर हो जाती |
+| ईमेल | ❌ कभी नहीं | आवश्यक नहीं — wallet ही पहचान है |
+| नाम / IP / डिवाइस | ❌ कभी नहीं | किसी भी layer पर एकत्र नहीं किया जाता |
+| Cookies / tracking | ❌ कभी नहीं | कोई analytics SDK नहीं, कोई fingerprinting नहीं |
+
+### `payment_hash` संग्रहीत करना सुरक्षित क्यों है
+
+preimage वह 32-byte secret है जो भुगतान सिद्ध करती है। इसका SHA-256 hash (`payment_hash`) उसी क्षण BOLT11 invoice में सार्वजनिक रूप से प्रसारित हो जाता है जब आप इसे बनाते हैं। hash संग्रहीत करने से कुछ भी उजागर नहीं होता — preimage कभी हमारे database को नहीं छूती।
+
+```
+preimage  →  SHA-256  →  payment_hash  (public, in BOLT11)
+   ↑
+never stored
+```
+
+---
+
+## प्रमाणीकरण: आपका wallet, password नहीं
+
+### Developer dashboard
+
+analytics dashboard **LNURL-auth** के माध्यम से प्रमाणित होता है — वही secp256k1 flow जो Lightning wallets उपयोग करते हैं:
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+phish करने के लिए कोई password नहीं। edge से चुराने के लिए कोई session token नहीं। JWT, Row Level Security द्वारा scoped है — अन्य pubkeys को कुछ दिखाई नहीं देता।
+
+### डेटा हटाना
+
+केवल आपका wallet आपके डेटा को हटाने को अधिकृत कर सकता है। flow:
+
+1. Client `/api/lnurl-auth?lightningAddress=you@yourdomain.com` को कॉल करता है
+2. Server एक one-time k1 challenge + LNURL लौटाता है
+3. आपका wallet अपनी secp256k1 private key से k1 पर हस्ताक्षर करता है
+4. Server हस्ताक्षर सत्यापित करता है — एक single-use 64-char token जारी करता है
+5. Client `/api/delete-data` पर `{ lightningAddress, token }` के साथ POST करता है
+6. Server token तुरंत रद्द करता है (replay रोकता है), सभी rows हटाता है
+7. डेटा चला गया — कोई support ticket नहीं, कोई ईमेल पुष्टि नहीं
+
+**यह मजबूत क्यों है:** एक हमलावर जो आपका Lightning Address जानता है, आपकी private key के बिना आपका डेटा नहीं हटा सकता। token single-use है और 10 मिनट में समाप्त हो जाता है।
+
+---
+
+## Key वितरण
+
+पारंपरिक SaaS: एक breach → सब कुछ उजागर।
+
+l402-kit विश्वास को layers में वितरित करता है:
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+कोई एकल layer आपका प्रतिरूपण करने, आपकी पहचान पढ़ने, या आपके wallet को खाली करने के लिए पर्याप्त नहीं है।
+
+---
+
+## डिज़ाइन द्वारा LGPD / GDPR अनुपालन
+
+क्योंकि हम शून्य PII संग्रहीत करते हैं, अधिकांश LGPD/GDPR दायित्व लागू नहीं होते:
+
+- **कोई data subject requests नहीं** — देखने के लिए कोई पहचान नहीं है
+- **व्यक्तिगत डेटा के लिए कोई breach अधिसूचना नहीं** — payment_hash व्यक्तिगत डेटा नहीं है
+- **कोई cookie consent नहीं** — कोई tracking नहीं, कोई cookies नहीं
+- **मिटाने का अधिकार** — LNURL-auth delete के माध्यम से क्रिप्टोग्राफिक रूप से पूर्ण
+
+यह कोई कानूनी राय नहीं है। लेकिन "हम इसे एकत्र नहीं करते" "हम इसे एकत्र करते हैं और इसे सुरक्षित रखते हैं" से एक मजबूत स्थिति है।
+
+---
+
+## Lightning payments डिफ़ॉल्ट रूप से निजी हैं
+
+Lightning payments on-chain पर भुगतानकर्ता की पहचान नहीं करते:
+
+- कोई नाम नहीं, कोई पता नहीं, कोई bank account नहीं
+- payment route onion-encrypted है (Tor की तरह)
+- केवल invoice जारीकर्ता जानता है कि भुगतान settle हुआ
+- भुगतानकर्ता की पहचान कभी payee को नहीं बताई जाती
+
+आपके end-users आपके API को गुमनाम रूप से भुगतान करते हैं। आप जानते हैं कि invoice का भुगतान हुआ। किसी भी पक्ष को बस इतना ही चाहिए।
+
+---
+
+## तुलना
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| ईमेल आवश्यक | ❌ | ✅ | ✅ |
+| Account आवश्यक | ❌ | ✅ | ✅ |
+| KYC / पहचान | ❌ | ✅ | ✅ |
+| PII संग्रहीत | ❌ | ✅ | ✅ |
+| Auth विधि | secp256k1 wallet | email + password | email + password |
+| हटाने का तंत्र | क्रिप्टोग्राफिक प्रमाण | ईमेल अनुरोध | ईमेल अनुरोध |
+| LGPD/GDPR overhead | न्यूनतम | अधिक | अधिक |
+| भुगतानकर्ता गुमनाम | ✅ | ❌ | ❌ |
+
+---
+
+## आपके users के लिए इसका क्या अर्थ है
+
+यदि आप l402-kit पर निर्माण करते हैं:
+
+- आपके users कभी आपको अपना ईमेल नहीं देते
+- आपके database के breach से कुछ भी व्यक्तिगत उजागर नहीं होता
+- कोई भी AI agent बिना account या पहचान के आपके API को भुगतान कर सकता है
+- जो users अपना डेटा हटाना चाहते हैं वे इसे स्वयं, तुरंत, अपने wallet से करते हैं
+
+यह वह payment layer है जिसके Bitcoin योग्य है।

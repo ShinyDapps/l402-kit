@@ -1,0 +1,68 @@
+---
+title: "DNS Discovery"
+description: "एजेंट्स को DNS TXT रिकॉर्ड के ज़रिए आपका L402 एंडपॉइंट खोजने दें — कोई HTTP अनुरोध की ज़रूरत नहीं।"
+---
+
+## DNS discovery क्यों
+
+इंटरनेट एक्सेस वाले एजेंट्स कोई भी HTTP अनुरोध करने से पहले DNS रिज़ॉल्व कर सकते हैं। यदि आप अपना L402 एंडपॉइंट DNS TXT रिकॉर्ड के रूप में प्रकाशित करते हैं, तो एजेंट्स इसे स्वचालित रूप से खोज लेते हैं — यहाँ तक कि आपके API से संपर्क करने से पहले भी।
+
+## TXT रिकॉर्ड फॉर्मेट
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+फ़ील्ड्स:
+- `v=l402` — प्रोटोकॉल पहचानकर्ता
+- `endpoint=` — आपका L402-संरक्षित URL
+- `price=` — sats में कीमत (वैकल्पिक, सूचनात्मक)
+- `docs=` — आपके डॉक्स का लिंक (वैकल्पिक)
+
+## Cloudflare पर सेटअप
+
+1. **Cloudflare Dashboard → DNS** पर जाएं
+2. एक नया रिकॉर्ड जोड़ें:
+
+| Type | Name | Content | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## dig से सत्यापित करें
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Expected output:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## एजेंट्स इसका उपयोग कैसे करते हैं
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// Agent resolves DNS to find your endpoint
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Returns: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## l402-kit का अपना रिकॉर्ड
+
+नीचे दिया गया उदाहरण फॉर्मेट को दर्शाने के लिए एक काल्पनिक डोमेन (`api.example.com`) का उपयोग करता है — इसे अपने वास्तविक एंडपॉइंट से बदलें।
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## लाभ
+
+- **शून्य HTTP ओवरहेड** — किसी भी API कॉल से पहले discovery
+- **एजेंट-नेटिव** — DNS वह तरीका है जिससे मशीनें सेवाएं खोजती हैं, इंसान नहीं
+- **कोई API key आवश्यक नहीं** — पूरी तरह खुली discovery
+- **कैश योग्य** — TTL नियंत्रित करता है कि एजेंट्स कितनी बार पुनः-रिज़ॉल्व करें
+
+पूरक HTTP discovery मानक के लिए [.well-known/agent.json](https://api.example.com/.well-known/agent.json) देखें।

@@ -1,0 +1,185 @@
+---
+title: Rust SDK
+description: l402-kit Rust SDK का पूर्ण संदर्भ — Bitcoin Lightning pay-per-call APIs के लिए axum middleware।
+---
+
+## इंस्टॉलेशन
+
+```bash
+cargo add l402kit
+```
+
+या `Cargo.toml` में:
+
+```toml
+[dependencies]
+l402kit = "1.8"
+```
+
+**आवश्यकताएं**: Rust 1.75+, Tokio async runtime
+
+---
+
+## क्विकस्टार्ट
+
+सबसे तेज़ तरीका `ManagedProvider` का उपयोग करना है — कोई Lightning node की ज़रूरत नहीं, 0.3% शुल्क:
+
+```rust
+use axum::{middleware, routing::get, Router, Json};
+use l402kit::{l402_middleware, Options, ManagedProvider};
+use serde_json::{json, Value};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
+
+    let app = Router::new()
+        .route("/api/data", get(handler))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn handler() -> Json<Value> {
+    Json(json!({ "data": "premium content" }))
+}
+```
+
+स्वायत्त मोड (0% शुल्क) के लिए, `LightningProvider` trait लागू करें — नीचे [कस्टम प्रोवाइडर](#custom-provider) देखें।
+
+---
+
+## कस्टम प्रोवाइडर
+
+```rust
+use std::sync::Arc;
+use l402kit::{Options, LightningProvider, Invoice, BoxFuture, L402Error};
+
+struct MyProvider;
+
+impl LightningProvider for MyProvider {
+    fn create_invoice<'a>(&'a self, amount_sats: u64) -> BoxFuture<'a, Result<Invoice, L402Error>> {
+        Box::pin(async move {
+            Ok(Invoice {
+                payment_request: "lnbc...".into(),
+                payment_hash: "abc123...".into(),
+                macaroon: "eyJ...".into(),
+                amount_sats,
+            })
+        })
+    }
+}
+
+let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
+```
+
+---
+
+## `Options`
+
+| फ़ील्ड | प्रकार | विवरण |
+|---|---|---|
+| `price_sats` | `u64` | प्रति कॉल मूल्य satoshis में (**आवश्यक**) |
+| `lightning` | `Arc<dyn LightningProvider>` | आपका Lightning बैकएंड (**आवश्यक**) |
+| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | प्रत्येक सत्यापित भुगतान के बाद चलने वाला कॉलबैक |
+
+### पुराना: `with_address()`
+
+`Options::with_address(address)` को v1.4.0 में हटा दिया गया था। इसके बजाय `Options::new(sats, ManagedProvider::new(address))` का उपयोग करें:
+
+```rust
+use l402kit::{Options, ManagedProvider};
+use std::sync::Arc;
+
+let provider = ManagedProvider::new("you@yourdomain.com".into());
+let opts = Arc::new(Options::new(10, provider));
+```
+
+---
+
+## `l402_middleware(opts: Options)`
+
+axum 0.8+ के साथ संगत एक `axum::middleware::Layer` लौटाता है।
+
+### व्यवहार
+
+| अनुरोध | प्रतिक्रिया |
+|---|---|
+| कोई `Authorization` हेडर नहीं | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| मान्य `L402 <macaroon>:<preimage>` | हैंडलर निष्पादित होता है |
+| अमान्य या समाप्त टोकन | `401 Unauthorized` |
+| पुनः उपयोग किया गया preimage | `401 Token already used` |
+
+### 402 प्रतिक्रिया बॉडी
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## `on_payment` कॉलबैक
+
+```rust
+use l402kit::{Options, L402Token};
+
+let opts = Arc::new(
+    Options::new(10, provider).on_payment(|token: L402Token, amount_sats: u64| {
+        println!("payment received: {} sats", amount_sats);
+    }),
+);
+```
+
+---
+
+## फीचर फ्लैग्स
+
+```toml
+[features]
+default = ["axum-middleware"]
+axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
+```
+
+axum या reqwest के बिना केवल कोर सत्यापन फ़ंक्शंस का उपयोग करने के लिए `axum-middleware` को अक्षम करें:
+
+```toml
+l402kit = { version = "1.6", default-features = false }
+```
+
+---
+
+## सत्यापन
+
+`SHA256(preimage) == paymentHash` को `sha2` crate का उपयोग करके स्थानीय रूप से सत्यापित किया जाता है — हॉट पाथ पर कोई नेटवर्क कॉल नहीं। टोकन समाप्ति की जांच उसी ऑपरेशन में की जाती है।
+
+---
+
+## एरर कोड
+
+| स्टेटस | अर्थ |
+|---|---|
+| `402` | कोई भुगतान टोकन नहीं — invoice का भुगतान करें |
+| `401` | अमान्य टोकन या समाप्त macaroon |
+| `401` | पुनः उपयोग किया गया preimage (पहले से उपयोग हो चुका) |
+
+---
+
+## चलाना
+
+```bash
+cargo run
+
+# परीक्षण — 402 ट्रिगर करता है
+curl http://localhost:3000/api/data
+
+# invoice का भुगतान करें, फिर:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
+```

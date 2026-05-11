@@ -1,0 +1,319 @@
+---
+title: "API Reference"
+description: "ManagedProvider और VS Code एक्सटेंशन द्वारा उपयोग किए जाने वाले सभी l402kit.com REST एंडपॉइंट्स का संदर्भ।"
+---
+
+Base URL: `https://l402kit.com`
+
+सभी responses `application/json` हैं। CORS सभी origins के लिए सक्षम है।
+
+---
+
+## Invoices
+
+### Invoice बनाएं
+
+`POST /api/invoice`
+
+एक BOLT11 Lightning invoice बनाता है। `ManagedProvider` द्वारा स्वतः कॉल किया जाता है — आपको शायद ही कभी इसे सीधे कॉल करने की आवश्यकता होगी।
+
+**Request body**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `amountSats` | number | ✅ | satoshis में राशि (न्यूनतम 1) |
+| `ownerAddress` | string | — | आपका Lightning Address। split निष्पादित करने के लिए आवश्यक। |
+
+**Response 200**
+
+```json
+{
+  "paymentRequest": "lnbc10n1p...",
+  "paymentHash":    "a1b2c3...",
+  "macaroon":       "eyJoYXNoIjoiYTFiMm..."
+}
+```
+
+**Errors**
+
+| Code | Reason |
+|---|---|
+| 400 | `amountSats` अनुपस्थित या अमान्य |
+| 429 | Rate limit पार हो गई (प्रति IP 20 requests/मिनट) |
+| 503 | Lightning provider अस्थायी रूप से अनुपलब्ध |
+
+---
+
+### Token सत्यापित करें
+
+`POST /api/verify`
+
+SDK के बिना server-side पर एक L402 token को सत्यापित करता है।
+
+**Request body**
+
+```json
+{ "token": "<macaroon>:<preimage>" }
+```
+
+**Response 200**
+
+```json
+{ "valid": true }
+```
+
+```json
+{ "valid": false, "error": "Token expired" }
+```
+
+---
+
+## Split & Payments
+
+### Split निष्पादित करें
+
+`POST /api/split`
+
+एक Lightning Address पर 99.7/0.3% split payment को मैन्युअल रूप से ट्रिगर करता है। `x-split-secret` header आवश्यक है।
+
+<Note>
+अधिकांश मामलों में split Blink webhook के माध्यम से स्वतः ट्रिगर होता है। इस एंडपॉइंट का उपयोग केवल मैन्युअल रिकवरी या कस्टम integrations के लिए करें।
+</Note>
+
+**Headers**
+
+| Header | Value |
+|---|---|
+| `x-split-secret` | आपका `SPLIT_SECRET` env variable |
+
+**Request body**
+
+```json
+{
+  "amountSats":   1000,
+  "ownerAddress": "you@blink.sv"
+}
+```
+
+**Response 200**
+
+```json
+{ "ok": true, "ownerSats": 997 }
+```
+
+**Response 200 (छोड़ा गया — न्यूनतम से कम)**
+
+```json
+{ "ok": true, "skipped": true }
+```
+
+---
+
+## Dashboard & Stats
+
+### Stats प्राप्त करें
+
+`GET /api/stats`
+
+payment analytics लौटाता है। `Authorization` header में LNURL-auth session token आवश्यक है।
+
+**Response 200**
+
+```json
+{
+  "totalPayments": 42,
+  "totalSats":     8400,
+  "shinydappsFee": 25,
+  "walletSats":    12345,
+  "walletUsdCents": 456789,
+  "byOwner": {
+    "dev@blink.sv": { "count": 42, "sats": 8400 }
+  },
+  "byDay": {
+    "2026-04-24": { "count": 5, "sats": 1000 }
+  },
+  "trend": {
+    "payments7d": 12,
+    "sats7d": 2400
+  },
+  "recent": [
+    {
+      "id": "uuid",
+      "endpoint": "/api/data",
+      "payment_hash": "a1b2...",
+      "amount_sats": 100,
+      "owner_address": "dev@blink.sv",
+      "paid_at": "2026-04-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Pro Tier
+
+### Pro Access जांचें
+
+`GET /api/pro-check?address=you@blink.sv`
+
+यह लौटाता है कि किसी Lightning Address की सक्रिय Pro subscription है या नहीं।
+
+**Response 200**
+
+```json
+{ "active": true,  "expiresAt": "2026-05-24T10:00:00Z" }
+{ "active": false }
+```
+
+### Pro के लिए Subscribe करें
+
+`GET /api/dev-token?address=you@blink.sv`
+
+30-दिन की Pro subscription (~9,000 sats) खरीदने के लिए एक Lightning invoice लौटाता है।
+
+**Response 200**
+
+```json
+{
+  "priceSats": 9000,
+  "invoice":   "lnbc90n1p...",
+  "macaroon":  "eyJoYXNoIjoiY..."
+}
+```
+
+`POST /api/dev-token`
+
+invoice का भुगतान करने के बाद Pro सक्रिय करें।
+
+**Request body**
+
+```json
+{ "macaroon": "...", "preimage": "..." }
+```
+
+**Response 200**
+
+```json
+{ "access": true, "expiresAt": "2026-05-24T10:00:00Z" }
+```
+
+---
+
+## Authentication (LNURL-auth)
+
+### Login शुरू करें
+
+`GET /api/lnurl-auth`
+
+dashboard login के लिए एक LNURL-auth challenge लौटाता है। dashboard में QR स्कैन करें।
+
+### LNURL-pay Endpoint
+
+`GET /.well-known/lnurlp/:username`
+
+Lightning Address resolution के लिए मानक LNURL-pay metadata। split mechanism द्वारा आंतरिक रूप से उपयोग किया जाता है।
+
+---
+
+## Demo
+
+### Demo Index
+
+`GET /api/demo`
+
+उपलब्ध demo endpoints के बारे में जानकारी लौटाता है।
+
+### BTC Price (भुगतान सहित)
+
+`GET /api/demo/btc-price`
+
+लाइव BTC price लौटाता है। एक वैध L402 token (1 sat) आवश्यक है।
+
+पहली कॉल पर invoice + macaroon के साथ **402** लौटाता है। `Authorization: L402 <macaroon>:<preimage>` के साथ पुनः प्रयास करें।
+
+### Preimage प्रकट करें
+
+`GET /api/demo/preimage?hash=<paymentHash>`
+
+demo invoice का भुगतान करने के बाद, अपना preimage प्राप्त करने और L402 token बनाने के लिए इस एंडपॉइंट को `paymentHash` के साथ कॉल करें।
+
+---
+
+## Webhooks
+
+### Blink Webhook Receiver
+
+`POST /api/blink-webhook`
+
+आंतरिक एंडपॉइंट। Blink से हस्ताक्षरित payment confirmations प्राप्त करता है (Svix HMAC-SHA256)। split ट्रिगर करता है और payment लॉग करता है। सीधे उपयोग के लिए नहीं है।
+
+---
+
+## API Directory
+
+### एक API Register करें
+
+`POST /api/register`
+
+अपनी L402-protected API को public directory में Register करें। `registerDirectory` प्रदान किए जाने पर `ManagedProvider.fromAddress()` द्वारा स्वतः कॉल किया जाता है। Idempotent — हर server start पर कॉल करना सुरक्षित है।
+
+**Request body**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `url` | string | ✅ | आपके L402 endpoint का Public URL |
+| `name` | string | ✅ | Display नाम |
+| `price_sats` | number | ✅ | satoshis में प्रति कॉल मूल्य (न्यूनतम 1) |
+| `lightning_address` | string | ✅ | आपका Lightning Address |
+| `description` | string | — | संक्षिप्त विवरण |
+| `category` | string | — | `data`, `ai`, `finance`, `weather`, `compute`, `storage`, या `other` |
+
+**Response 200**
+
+```json
+{ "ok": true, "id": "uuid" }
+```
+
+---
+
+### APIs की सूची
+
+`GET /api/apis.json`
+
+सभी registered APIs लौटाता है। Machine-readable — agents द्वारा paid APIs खोजने के लिए डिज़ाइन किया गया।
+
+**Query parameters**
+
+| Param | Description |
+|---|---|
+| `category` | category के अनुसार फ़िल्टर करें (`data`, `ai`, `finance`, `weather`, `compute`, `storage`, `other`) |
+
+**Response 200**
+
+```json
+{
+  "version": "1",
+  "count": 3,
+  "apis": [
+    {
+      "url": "https://api.example.com/weather",
+      "name": "Weather API",
+      "description": "Live weather data, 1 sat per query",
+      "price_sats": 1,
+      "category": "weather",
+      "created_at": "2026-04-26T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Data Privacy
+
+### मेरा Data हटाएं
+
+`POST /api/delete-data`
+
+एक LNURL-auth challenge शुरू करता है। wallet verification के बाद, authenticated pubkey से जुड़े सभी payment records स्थायी रूप से हटा दिए जाते हैं (GDPR right-to-erasure)।

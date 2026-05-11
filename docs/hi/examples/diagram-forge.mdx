@@ -1,0 +1,199 @@
+---
+title: "Diagram Forge"
+description: "किसी भी GitHub रेपो से AI-जनित लाइव आर्किटेक्चर डायग्राम — Lightning L402 के ज़रिए भुगतान"
+icon: "circle-nodes"
+---
+
+## Diagram Forge क्या है?
+
+[Diagram Forge](https://forge.l402kit.com) किसी भी GitHub रिपॉजिटरी का Claude AI से विश्लेषण करता है और एक **इंटरैक्टिव, एनिमेटेड आर्किटेक्चर डायग्राम** बनाता है — जिसमें आधिकारिक टेक लोगो, एनिमेटेड पार्टिकल फ्लो, नोड इंस्पेक्टर, और SVG/PNG/Markdown में एक्सपोर्ट शामिल हैं।
+
+भुगतान Lightning Network के ज़रिए L402 प्रोटोकॉल का उपयोग करके होता है — कोई अकाउंट नहीं, कोई क्रेडिट कार्ड नहीं, कोई सब्सक्रिप्शन नहीं। प्रति विश्लेषण भुगतान करें।
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/docs/demo-viewer.gif" alt="Diagram Forge interactive viewer demo" />
+</Frame>
+
+---
+
+## शुरुआत कैसे करें
+
+### विकल्प 1 — वेब ऐप (सबसे तेज़)
+
+1. **[forge.l402kit.com](https://forge.l402kit.com)** पर जाएं
+2. कोई भी पब्लिक GitHub URL पेस्ट करें (जैसे `https://github.com/vercel/next.js`)
+3. एक टियर चुनें: **Basic** (100 sats), **Full** (500 sats), या **Live ✦** (1000 sats)
+4. **Analyze & Generate Diagram** पर क्लिक करें
+5. किसी भी वॉलेट से Lightning इनवॉइस का भुगतान करें — या मुफ्त एक्सेस के लिए प्रोमो कोड दर्ज करें
+6. आपका इंटरैक्टिव डायग्राम अपने आप खुल जाता है
+
+### विकल्प 2 — VS Code एक्सटेंशन
+
+Marketplace से इंस्टॉल करें:
+
+```bash
+code --install-extension ShinyDapps.diagram-forge
+```
+
+या Extensions पैनल (`Ctrl+Shift+X`) में **"Diagram Forge"** खोजें।
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/vscode-extension/media/demo-extension.gif" alt="Diagram Forge VS Code extension — idle, confirming, analyzing, done" />
+</Frame>
+
+**उपयोग:**
+1. GitHub रिमोट वाला कोई भी प्रोजेक्ट खोलें
+2. Activity Bar (बाईं साइडबार) में **Diagram Forge आइकन** पर क्लिक करें
+3. **Analyze Repo** पर क्लिक करें — GitHub URL अपने आप डिटेक्ट हो जाता है
+4. टियर चुनें + प्रोमो कोड दर्ज करें (वैकल्पिक)
+5. Lightning से भुगतान करें या प्रोमो कोड उपयोग करें
+6. डायग्राम ब्राउज़र में खुलता है
+
+### विकल्प 3 — GitHub कनेक्ट करें (वेब ऐप)
+
+वेब ऐप के टॉप नेव में **Connect GitHub** पर क्लिक करें, अधिकृत करें और अपने सभी रेपो की ड्रॉपडाउन सूची पाएं — URL कॉपी-पेस्ट करने की ज़रूरत नहीं।
+
+---
+
+## विश्लेषण टियर
+
+| टियर | मूल्य | आपको क्या मिलता है |
+|------|-------|-------------|
+| **Basic** | 100 sats (~$0.10) | त्वरित स्कैन — शीर्ष 10 फ़ाइलें, मुख्य सेवाएं डिटेक्ट की गईं |
+| **Full** | 500 sats (~$0.50) | पूरा रेपो — सभी सेवाएं, कनेक्शन, मोनोरेपो |
+| **Live ✦** | 1000 sats (~$1.00) | पूर्ण विश्लेषण + पार्टिकल फ्लो के साथ एनिमेटेड SVG |
+
+<Info>
+  Lightning कीमतें कार्ड कीमतों से काफी कम हैं क्योंकि कोई पेमेंट प्रोसेसिंग शुल्क नहीं है।
+</Info>
+
+---
+
+## Lightning वॉलेट नहीं है?
+
+2 मिनट से कम में शुरू करें:
+
+<CardGroup cols={3}>
+  <Card title="Wallet of Satoshi" icon="mobile" href="https://www.walletofsatoshi.com/">
+    सबसे सरल मोबाइल वॉलेट — कस्टोडियल, तुरंत सेटअप
+  </Card>
+  <Card title="Phoenix" icon="mobile" href="https://phoenix.acinq.co/">
+    मोबाइल, सेल्फ-कस्टोडियल, कोई KYC नहीं
+  </Card>
+  <Card title="Alby" icon="browser" href="https://getalby.com/">
+    ब्राउज़र एक्सटेंशन — VS Code में सीधे काम करता है
+  </Card>
+</CardGroup>
+
+इंस्टॉल करने के बाद, थोड़ी सी Bitcoin खरीदें (यहां तक कि $1 भी दर्जनों विश्लेषणों के लिए काफी है) और जब Diagram Forge इनवॉइस दिखाए तो QR कोड स्कैन करें।
+
+---
+
+## प्रोमो कोड
+
+प्रोमो कोड है? Analyze पर क्लिक करने से पहले **"Promo code (optional)"** फ़ील्ड में दर्ज करें — विश्लेषण बिल्कुल मुफ्त चलता है, कोई वॉलेट ज़रूरी नहीं।
+
+प्रोमो कोड समय-सीमित और उपयोग-सीमित होते हैं। वर्तमान कोड के लिए [forge.l402kit.com](https://forge.l402kit.com) देखें या [@ShinyDapps](https://github.com/ShinyDapps) को फॉलो करें।
+
+---
+
+## डायग्राम में क्या दिखता है
+
+हर डायग्राम में शामिल हैं:
+
+- **नोड्स** — आपके कोड में डिटेक्ट की गई सेवाएं, डेटाबेस, क्यू, APIs, ML मॉडल, CDNs
+- **एज** — प्रोटोकॉल लेबल के साथ कंपोनेंट के बीच कनेक्शन (HTTP, SQL, gRPC, WebSocket, AMQP…)
+- **लोगो** — 80+ तकनीकों के लिए आधिकारिक Simple Icons ब्रांडिंग
+- **एनिमेटेड फ्लो** — एज के साथ चलने वाले पार्टिकल, प्रोटोकॉल प्रकार के अनुसार रंगीन (पीला = Lightning, नीला = HTTP, हरा = SQL…)
+
+**इंटरैक्टिव व्यूअर की विशेषताएं:**
+- पैन और ज़ूम (ज़ूम के लिए स्क्रॉल, पैन के लिए ड्रैग)
+- किसी भी नोड पर क्लिक करके उसके कनेक्शन और विवरण देखें
+- बड़े डायग्राम के लिए मिनीमैप
+- नाम या प्रकार से नोड खोजें
+- एक्सपोर्ट: SVG, PNG, Markdown, Draw.io
+- शेयर लिंक: `/g/:id` — प्रत्येक डायग्राम के लिए स्थायी शेयर करने योग्य URL
+
+---
+
+## इमेज से इम्पोर्ट करें
+
+GitHub रेपो नहीं है? व्हाइटबोर्ड फोटो, स्क्रीनशॉट, Visio फ़ाइल, या PDF अपलोड करें — Claude आर्किटेक्चर निकालता है और वही इंटरैक्टिव डायग्राम बनाता है।
+
+समर्थित फॉर्मेट: JPG, PNG, WEBP, GIF, PDF
+
+---
+
+## आर्किटेक्चर बेंचमार्क
+
+डायग्राम बनने के बाद, 6-आयामी गुणवत्ता स्कोर पाने के लिए व्यूअर में **Benchmark** पर क्लिक करें:
+
+| आयाम | यह क्या मापता है |
+|---|---|
+| स्केलेबिलिटी | क्षैतिज स्केलिंग क्षमता, बाधाएं |
+| विश्वसनीयता | विफलता के एकल बिंदु, अतिरेकता |
+| सुरक्षा | Auth, एन्क्रिप्शन, एक्सपोज़र सतह |
+| ऑब्जर्वेबिलिटी | लॉगिंग, मेट्रिक्स, ट्रेसिंग कवरेज |
+| रखरखाव योग्यता | कपलिंग, जटिलता, मॉड्यूलरिटी |
+| लागत दक्षता | वैकल्पिक रूप से — मूल्य बनाम सेवा प्रति लागत |
+
+---
+
+## गोपनीयता
+
+- आपका कोड एक सुरक्षित सर्वर पर **अस्थायी रूप से क्लोन** किया जाता है, विश्लेषण किया जाता है, फिर तुरंत हटा दिया जाता है
+- केवल **ग्राफ मेटाडेटा** (नोड लेबल, एज कनेक्शन — कोई सोर्स कोड नहीं) संग्रहीत होता है यदि आप शेयर लिंक उपयोग करते हैं
+- कोई अकाउंट आवश्यक नहीं, डायग्राम से परे कोई डेटा रिटेंशन नहीं
+
+---
+
+## यह l402-kit का उपयोग कैसे करता है
+
+Diagram Forge `l402-kit` के **Managed Mode** पर बना है — नोड चलाए बिना Lightning भुगतान स्वीकार करने का सबसे सरल तरीका:
+
+```typescript
+import { l402, ManagedProvider } from "l402-kit";
+
+const provider = ManagedProvider.fromAddress("pinkfalcon21@primal.net", {
+  registerDirectory: {
+    url: "https://forge.l402kit.com/analyze",
+    name: "Diagram Forge — Architecture Analysis",
+    priceSats: 500,
+    description: "AI-powered living architecture diagrams from any repo",
+    category: "ai",
+  },
+});
+
+// Gate the /analyze endpoint — returns 402 until paid
+app.post("/analyze", l402({ priceSats: 500, lightning: provider }), handler);
+```
+
+जब कोई क्लाइंट valid preimage के बिना `POST /analyze` कॉल करता है:
+
+```
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+क्लाइंट इनवॉइस का भुगतान करता है और `Authorization: L402 <macaroon>:<preimage>` के साथ पुनः प्रयास करता है।
+
+कुछ इसी तरह बनाना चाहते हैं? [l402-kit quickstart](/quickstart) देखें।
+
+---
+
+## लिंक
+
+<CardGroup cols={2}>
+  <Card title="वेब ऐप" icon="globe" href="https://forge.l402kit.com">
+    अपने ब्राउज़र में किसी भी पब्लिक GitHub रेपो का विश्लेषण करें
+  </Card>
+  <Card title="VS Code एक्सटेंशन" icon="code" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.diagram-forge">
+    VS Code के अंदर पूर्ण साइडबार अनुभव
+  </Card>
+  <Card title="सोर्स कोड" icon="github" href="https://github.com/shinydapps-creator/diagram-forge">
+    MIT-लाइसेंस्ड — इसे फोर्क करें, विस्तार करें, इस पर बनाएं
+  </Card>
+  <Card title="l402-kit Quickstart" icon="bolt" href="/quickstart">
+    मिनटों में अपनी L402-गेटेड सेवा बनाएं
+  </Card>
+</CardGroup>

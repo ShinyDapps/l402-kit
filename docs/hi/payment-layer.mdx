@@ -1,0 +1,158 @@
+---
+title: "Payment Layer"
+description: "l402-kit Bitcoin Lightning भुगतान कैसे प्रोसेस करता है — BOLT11, L402 प्रोटोकॉल, और क्रिप्टोग्राफ़िक सत्यापन।"
+---
+
+# Payment Layer
+
+l402-kit एक **soberano middleware** है जो किसी भी HTTP endpoint में 3 लाइन कोड में Bitcoin Lightning paywall जोड़ता है। आप अपना Lightning provider लाते हैं — फंड सीधे आपके wallet में जाते हैं, कोई intermediary की आवश्यकता नहीं।
+
+---
+
+## प्रोटोकॉल: L402
+
+L402 एक open standard है जो HTTP/1.1 को एक native payment handshake के साथ विस्तारित करता है:
+
+```
+Client → GET /api/data
+Server ← 402 Payment Required
+         WWW-Authenticate: L402 <macaroon>, invoice="<BOLT11>"
+
+Client pays invoice via Lightning wallet
+Client → GET /api/data
+         Authorization: L402 <macaroon>:<preimage>
+Server ← 200 OK + data
+```
+
+**macaroon** एक capability token है जो invoice के `paymentHash` से बंधा होता है। **preimage** वह क्रिप्टोग्राफ़िक secret है जो Lightning node द्वारा भुगतान settle होने पर जारी किया जाता है। सर्वर सत्यापित करता है:
+
+```
+SHA256(preimage) == paymentHash ✓
+```
+
+कोई account नहीं, कोई session नहीं, कोई JWT नहीं — preimage **ही** भुगतान का प्रमाण है।
+
+---
+
+## Invoice निर्माण प्रवाह
+
+```
+Your API receives a request without valid Authorization
+     │
+     ▼
+l402-kit middleware calls lightning.createInvoice(priceSats)
+     │  (your provider: Blink, Alby, OpenNode, BTCPay, LNbits…)
+     ▼
+Provider returns BOLT11 invoice + paymentHash
+     │
+     ▼
+Middleware builds macaroon: base64({ hash: paymentHash, exp: now+1h })
+     │
+     ▼
+Your API returns 402 + invoice + macaroon to client
+```
+
+---
+
+## Payment सत्यापन प्रवाह
+
+```
+Client pays BOLT11 invoice via any Lightning wallet
+     │
+     ▼
+Lightning node releases preimage (32-byte secret)
+     │
+     ▼
+Client sends Authorization: L402 <macaroon>:<preimage>
+     │
+     ▼
+Middleware verifies locally — no network call:
+  1. Decode macaroon (base64 → JSON { hash, exp })
+  2. Check exp > now()
+  3. SHA256(preimage) === hash ✓
+     │
+     ▼
+Request passes through to your API handler → 200 OK
+```
+
+सत्यापन **O(1)** है — शुद्ध क्रिप्टोग्राफ़ी, hot path पर कोई database lookup नहीं। Replay protection (Supabase `payment_hash` logging) असynchronously चलता है और request को block नहीं करता।
+
+### Macaroon format
+
+l402-kit एक lightweight custom macaroon उपयोग करता है — libmacaroon नहीं। Token एक `base64url`-encoded JSON object है:
+
+```json
+{ "hash": "<paymentHash hex>", "exp": <unix timestamp> }
+```
+
+यह सरल है और किसी external library के बिना auditable है। `Authorization` header format है:
+
+```
+Authorization: L402 <base64url-macaroon>:<preimage-hex>
+```
+
+---
+
+## Fee मॉडल
+
+| मोड | शुल्क | सेटअप |
+|---|---|---|
+| **Soberano** (कोई भी provider) | **0%** — आप 100% रखते हैं | अपने provider credentials लाएं |
+| **Managed** (`ManagedProvider`) | l402kit.com को 0.3% | कोई Lightning node नहीं — तुरंत काम करता है |
+
+Soberano mode डिफ़ॉल्ट है। Managed mode एक explicit opt-in है:
+
+```typescript
+// Soberano — 0% fee, you keep 100%
+import { AlbyProvider } from 'l402-kit';
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+
+// Managed — 0.3% fee, no Lightning node needed
+import { ManagedProvider } from 'l402-kit';
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+```
+
+---
+
+## डेटा संग्रहण (वैकल्पिक — Supabase)
+
+भुगतान स्वचालित रूप से log करने के लिए `SUPABASE_URL` + `SUPABASE_ANON_KEY` सेट करें:
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — safe to store
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+**`preimage` की जगह `payment_hash` क्यों?** `payment_hash` पहले से ही हर BOLT11 invoice में embedded होता है — यह design के अनुसार public है। केवल `preimage` secret है। hash संग्रहीत करने से बिना किसी अतिरिक्त exposure के replay protection मिलती है।
+
+---
+
+## Lightning Providers
+
+l402-kit provider-agnostic है। कोई भी backend जो `LightningProvider` implement करता है वह काम करता है:
+
+| Provider | नोट्स |
+|---|---|
+| [Alby Hub](https://hub.getalby.com) | Self-custodial, 0% शुल्क |
+| [Blink](https://blink.sv) | निःशुल्क custodial, छोटी राशि के लिए कोई KYC नहीं |
+| [BTCPay Server](https://btcpayserver.org) | Self-hosted, पूर्ण soberanoty |
+| [OpenNode](https://opennode.com) | Custodial, कोई सेटअप नहीं |
+| [LNbits](https://lnbits.com) | Self-hosted या cloud |
+
+Provider सेटअप के लिए [TypeScript SDK](/sdk/typescript) या [Python SDK](/sdk/python) देखें।
+
+---
+
+## सुरक्षा गारंटी
+
+| खतरा | समाधान |
+|---|---|
+| Replay attack | पहले सत्यापन के बाद Preimage को उपयोग किया हुआ चिह्नित किया जाता है — in-memory या Redis adapter |
+| नकली preimage | `SHA256(preimage) === paymentHash` क्रिप्टोग्राफ़िक रूप से अजेय है |
+| Token expiry | Macaroon में `exp` timestamp embedded है — प्रत्येक request पर सत्यापित |
+| Webhook spoofing | प्रोसेस करने से पहले `HMAC-SHA256(secret, body)` सत्यापित किया जाता है |

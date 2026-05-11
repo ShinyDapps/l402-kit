@@ -1,0 +1,168 @@
+---
+title: LNURL Integration
+description: पासवर्डरहित लॉगिन के लिए LNURL-auth और Lightning Address भुगतान के लिए LNURL-pay का उपयोग l402-kit के साथ करें।
+---
+
+## LNURL क्या है?
+
+[LNURL](https://github.com/lnurl/luds) Lightning Network के ऊपर बने खुले मानकों का एक समूह है। अपने ऐप में सीधे raw Lightning invoices या node pubkeys उजागर करने के बजाय, LNURL मानव-अनुकूल URL-आधारित प्रोटोकॉल परिभाषित करता है जिन्हें वॉलेट संभालना जानते हैं। जब कोई वॉलेट LNURL QR कोड स्कैन करता है, तो वह एक URL डिकोड करता है, आपके सर्वर से JSON प्रतिक्रिया प्राप्त करता है, और फिर उचित कार्रवाई करता है (चुनौती पर हस्ताक्षर करना, pay request प्राप्त करना, आदि) — उपयोगकर्ता को बिना कुछ दिखे।
+
+l402-kit दो LNURL सुविधाओं के साथ आता है:
+
+| सुविधा | उपयोग का मामला |
+|---|---|
+| **LNURL-auth** | पासवर्डरहित लॉगिन — वॉलेट एक चुनौती पर हस्ताक्षर करता है, कोई ईमेल या पासवर्ड नहीं |
+| **LNURL-pay** | Lightning Address (`you@domain.com`) — कोई भी आपको मानव-पठनीय पते से भुगतान कर सकता है |
+
+दोनों प्रोटोकॉल सभी प्रमुख Lightning वॉलेट (Phoenix, Blink, Zeus, Breez, Alby) पर काम करते हैं और किसी अतिरिक्त निर्भरता की आवश्यकता नहीं है — आपके सर्वर को केवल एक JSON endpoint सर्व करना है और वैकल्पिक रूप से secp256k1 हस्ताक्षर सत्यापित करना है।
+
+---
+
+## LNURL-auth — पासवर्डरहित लॉगिन
+
+l402-kit.com भुगतान डैशबोर्ड के लिए LNURL-auth का उपयोग करता है। आप अपने ऐप में भी यही प्रवाह उपयोग कर सकते हैं।
+
+### यह कैसे काम करता है
+
+```
+1. आपका सर्वर एक चुनौती (k1) उत्पन्न करता है — एक यादृच्छिक 32-byte hex स्ट्रिंग
+2. आप इसे LNURL के रूप में एनकोड करते हैं और QR के रूप में प्रदर्शित करते हैं
+3. उपयोगकर्ता किसी भी LNURL-auth वॉलेट (Phoenix, Blink, Zeus, Breez...) से स्कैन करता है
+4. वॉलेट अपनी Lightning node key से k1 पर हस्ताक्षर करता है → signature + pubkey आपके callback पर भेजता है
+5. आप हस्ताक्षर सत्यापित करते हैं — यदि वैध है, तो उपयोगकर्ता प्रमाणित है
+```
+
+उपयोगकर्ता की पहचान उनकी Lightning node pubkey है — स्थिर, वैश्विक, और स्व-संप्रभु।
+
+### Endpoint
+
+```
+GET /api/lnurl-auth
+```
+
+एक LNURL चुनौती लौटाता है। QR के रूप में एनकोड करें और अपने लॉगिन प्रवाह में प्रदर्शित करें।
+
+```json
+{
+  "lnurl": "LNURL1DP68GURN8GHJ7...",
+  "k1": "a1b2c3..."
+}
+```
+
+वॉलेट callback के बाद, इसके माध्यम से सत्यापित करें:
+
+```
+GET /api/lnurl-auth?k1=<challenge>&sig=<signature>&key=<pubkey>
+```
+
+### TypeScript — LNURL-auth हस्ताक्षर सत्यापित करें
+
+```typescript
+import { createHash } from "crypto";
+import * as secp256k1 from "@noble/curves/secp256k1";
+
+function verifyLnurlAuth(k1: string, sig: string, key: string): boolean {
+  try {
+    const msgHash = createHash("sha256").update(Buffer.from(k1, "hex")).digest();
+    return secp256k1.secp256k1.verify(sig, msgHash, key);
+  } catch {
+    return false;
+  }
+}
+```
+
+<Note>
+LNURL-auth के लिए कोई ईमेल, कोई पासवर्ड, कोई OAuth नहीं चाहिए। उपयोगकर्ता की पहचान उनकी Lightning pubkey है — वॉलेट के पार पोर्टेबल, सेंसरशिप-मुक्त, वैश्विक रूप से अद्वितीय।
+</Note>
+
+---
+
+## LNURL-pay — Lightning Address
+
+एक Lightning Address (`you@domain.com`) एक मानव-पठनीय उपनाम है जो LNURL-pay endpoint पर resolve होता है। l402-kit इसे यहाँ उजागर करता है:
+
+```
+GET /.well-known/lnurlp/{username}
+```
+
+इसका उपयोग split mechanism द्वारा आंतरिक रूप से किया जाता है — जब आप `ownerAddress: "you@blink.sv"` सेट करते हैं, तो Worker BOLT11 invoice प्राप्त करने के लिए `blink.sv/.well-known/lnurlp/you` resolve करता है।
+
+### अपना खुद का Lightning Address कैसे सेट करें
+
+1. `https://yourdomain.com/.well-known/lnurlp/{username}` पर एक LNURL-pay endpoint तैनात करें
+2. मानक LNURL-pay metadata प्रतिक्रिया लौटाएं:
+
+```json
+{
+  "callback": "https://yourdomain.com/lnurlp/pay",
+  "maxSendable": 100000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Pay you@yourdomain.com\"]]",
+  "tag": "payRequest"
+}
+```
+
+3. `callback` endpoint `?amount=<msats>` प्राप्त करता है और लौटाता है:
+
+```json
+{
+  "pr": "lnbc10n1p...",
+  "routes": []
+}
+```
+
+### BTCPay Server के साथ स्व-होस्टेड
+
+BTCPay Server LNURL-pay के साथ अंतर्निहित आता है — बस इसे अपनी store settings में सक्षम करें। आपका Lightning Address `you@yourbtcpay.com` बन जाता है।
+
+```typescript
+import { BTCPayProvider } from "l402-kit";
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,
+  process.env.BTCPAY_API_KEY!,
+  process.env.BTCPAY_STORE_ID!,
+);
+// Lightning Address: you@yourbtcpay.com — कोई मध्यस्थ नहीं, 0% शुल्क
+```
+
+---
+
+## API निर्देशिका के लिए स्वामित्व सत्यापन
+
+जब आप `POST /api/register` पर अपना API पंजीकृत करते हैं, तो l402-kit स्वचालित रूप से आपके API के डोमेन पर `/.well-known/l402.txt` फ़ाइल की जाँच करता है। यदि मिली और इसमें आपका Lightning Address है, तो आपकी लिस्टिंग को **verified** बैज मिलता है।
+
+**फ़ाइल बनाएं:**
+
+```
+# https://api.yourdomain.com/.well-known/l402.txt
+you@blink.sv
+```
+
+**फिर पंजीकृत करें:**
+
+```typescript
+ManagedProvider.fromAddress("you@blink.sv", {
+  registerDirectory: {
+    url: "https://api.yourdomain.com/v1/data",
+    name: "My Data API",
+    priceSats: 10,
+  },
+});
+// Response: { ok: true, id: "...", verified: true }
+```
+
+सत्यापित APIs निर्देशिका में उच्च रैंक करते हैं और ✓ बैज प्रदर्शित करते हैं।
+
+---
+
+## संगत वॉलेट
+
+| वॉलेट | LNURL-auth | LNURL-pay | स्व-अभिरक्षा |
+|---|---|---|---|
+| [Phoenix](https://phoenix.acinq.co) | ✅ | ✅ | ✅ |
+| [Blink](https://blink.sv) | ✅ | ✅ | ❌ custodial |
+| [Zeus](https://zeusln.app) | ✅ | ✅ | ✅ |
+| [Breez](https://breez.technology) | ✅ | ✅ | ✅ |
+| [Alby](https://getalby.com) | ✅ | ✅ | ✅ Hub |
+| [Mutiny](https://mutinywallet.com) | ✅ | ✅ | ✅ |

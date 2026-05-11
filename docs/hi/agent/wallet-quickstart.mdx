@@ -1,0 +1,89 @@
+---
+title: "Wallet Quickstart"
+description: "60 सेकंड में एक Lightning wallet पाएं। कोई बैंक नहीं। कोई KYC नहीं। 193 देशों में काम करता है।"
+---
+
+L402 APIs के भुगतान के लिए आपको एक Lightning wallet की आवश्यकता है। दो विकल्प — दोनों मुफ्त, दोनों वैश्विक स्तर पर काम करते हैं।
+
+---
+
+## विकल्प A — Blink (अनुशंसित)
+
+<Steps>
+  <Step title="खाता बनाएं">
+    [blink.sv](https://blink.sv) पर जाएं और फोन नंबर या ईमेल से साइन अप करें।
+  </Step>
+  <Step title="अपना Lightning Address कॉपी करें">
+    ऐप में: **Settings → Lightning Address**। यह `yourname@blink.sv` जैसा दिखता है।
+  </Step>
+  <Step title="अपनी API key प्राप्त करें">
+    [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → एक key बनाएं।
+  </Step>
+  <Step title="l402-kit में उपयोग करें">
+    ```typescript
+    import { ManagedProvider } from "l402-kit";
+
+    const provider = ManagedProvider.fromAddress("yourname@blink.sv");
+    ```
+
+    या Agent SDK के साथ:
+
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ BLINK_API_KEY: "your-key" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## विकल्प B — Alby
+
+<Steps>
+  <Step title="खाता बनाएं">
+    [getalby.com](https://getalby.com) पर जाएं और साइन अप करें।
+  </Step>
+  <Step title="अपना OAuth token प्राप्त करें">
+    [getalby.com/api-tokens](https://getalby.com/api-tokens) पर जाएं और `payments:send` स्कोप के साथ एक token बनाएं।
+  </Step>
+  <Step title="l402-kit में उपयोग करें">
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ ALBY_TOKEN: "your-token" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## एनवायरनमेंट वेरिएबल्स के माध्यम से Zero-config
+
+l402-kit env vars से आपके wallet को स्वतः पहचान लेता है। कोई कोड बदलाव आवश्यक नहीं:
+
+```bash
+# Blink
+export BLINK_API_KEY="your-key"
+
+# Alby
+export ALBY_TOKEN="your-token"
+```
+
+```typescript
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env); // Blink या Alby को स्वतः पहचानता है
+```
+
+---
+
+## अपना wallet फंड करें
+
+दोनों wallets आपको sats प्राप्त करने के लिए एक Lightning address देते हैं। परीक्षण के लिए:
+
+1. [coinfos.net](https://coinfos.net) या किसी भी faucet पर जाएं
+2. अपने Lightning address पर 1000 sats भेजें
+3. `npm install l402-kit && node -e "require('l402-kit/agent').healthCheck()"` चलाएं
+
+**कोई बैंक नहीं। कोई भारी KYC नहीं। 193 देशों में काम करता है।**

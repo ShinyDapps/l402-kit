@@ -1,0 +1,188 @@
+---
+title: "समस्या निवारण"
+description: "सामान्य त्रुटियाँ, उनके कारण, और उन्हें ठीक करने के तरीके।"
+---
+
+## टोकन त्रुटियाँ
+
+### `Token already used` (401)
+
+**कारण:** वही preimage दो बार सबमिट की गई — replay attack या आकस्मिक पुनः प्रयास।
+
+**समाधान:** प्रत्येक invoice भुगतान एक single-use टोकन उत्पन्न करता है। एक नया invoice बनाएँ और उसे फिर से भुगतान करें। क्लाइंट की तरफ, सुनिश्चित करें कि `L402Client` टोकन को endpoint URL के अनुसार कैश करता है (यह डिफ़ॉल्ट रूप से करता है)।
+
+---
+
+### `Token expired` (401 / `valid: false`)
+
+**कारण:** Invoices 1 घंटे के बाद समाप्त हो जाते हैं। टोकन का `exp` फ़ील्ड मिलीसेकंड में होता है।
+
+**समाधान:** एक नया invoice अनुरोध करें। यदि expiry बहुत जल्दी हो रही है, तो जाँचें कि आपकी सर्वर क्लॉक सटीक है (सर्वर पर `Date.now()` और क्लाइंट पर `time.time()` कुछ सेकंड के अंदर होने चाहिए)।
+
+---
+
+### `Invalid preimage format` (200 की जगह 402 वापस आई)
+
+**कारण:** Preimage ठीक 64 hex वर्णों (32 bytes) की नहीं है।
+
+**समाधान:** सुनिश्चित करें कि आपका वॉलेट raw preimage को 64-char hex string के रूप में लौटाता है। कुछ वॉलेट इसे base64 में लौटाते हैं — पहले उसे decode करें।
+
+---
+
+### `Webhook signature mismatch` (401)
+
+**कारण:** `l402-signature` हेडर secret से मेल नहीं खाता या body ट्रांजिट में बदल दी गई।
+
+**समाधान:**
+1. पुष्टि करें कि `L402_WEBHOOK_SECRET` sender और receiver दोनों पर मेल खाता है।
+2. raw body पढ़ने के लिए `express.raw({ type: 'application/json' })` उपयोग करें (`express.json()` नहीं) — JSON parsing string को पुनः format करता है और signature को अमान्य कर देता है।
+3. जाँचें कि आपका reverse proxy (nginx, Cloudflare) body को modify तो नहीं कर रहा।
+
+---
+
+## Provider त्रुटियाँ
+
+### `ManagedProvider: invoice creation failed` / HTTP 503
+
+**कारण:** `l402kit.com` अस्थायी रूप से अनुपलब्ध है या Blink API डाउन है।
+
+**समाधान:** exponential backoff के साथ पुनः प्रयास करें। [status.blink.sv](https://status.blink.sv) पर स्थिति जाँचें। शून्य downtime वाले production workloads के लिए, अपने स्वयं के credentials के साथ एक soberano provider (BlinkProvider, AlbyProvider, आदि) उपयोग करें।
+
+---
+
+### `Blink: INSUFFICIENT_CHANNEL_BALANCE`
+
+**कारण:** आपके Blink वॉलेट में split payment के लिए पर्याप्त outbound liquidity नहीं है।
+
+**समाधान:** अपने `shinydapps@blink.sv` वॉलेट में funds जोड़ें। split payments route करने के लिए platform को एक छोटा balance चाहिए। यह केवल ManagedProvider split को प्रभावित करता है — invoice creation अप्रभावित रहती है।
+
+---
+
+### split के दौरान `LNURL fetch failed`
+
+**कारण:** developer का Lightning Address resolve नहीं हो रहा। `/.well-known/lnurlp/` endpoint ने non-200 status लौटाई।
+
+**समाधान:** सत्यापित करें कि Lightning Address वैध है और domain का LNURL-pay endpoint पहुँच योग्य है। इससे परीक्षण करें:
+```bash
+curl https://<domain>/.well-known/lnurlp/<username>
+```
+
+---
+
+### `AlbyProvider: HTTP 401`
+
+**कारण:** Alby access token समाप्त हो गया या रद्द कर दिया गया।
+
+**समाधान:** Alby Hub → Settings → Access Tokens में टोकन पुनः उत्पन्न करें। सुनिश्चित करें कि scope में `invoices:create` शामिल है।
+
+---
+
+### `BTCPayProvider: HTTP 403`
+
+**कारण:** API key में आवश्यक अनुमति नहीं है।
+
+**समाधान:** BTCPay Server → Account → API Keys में, सुनिश्चित करें कि key में सही store के लिए `btcpay.store.cancreatelightninginvoice` scope है।
+
+---
+
+## Replay सुरक्षा
+
+### एकाधिक instances / replays नहीं पकड़े जा रहे
+
+**कारण:** डिफ़ॉल्ट `MemoryReplayAdapter` केवल in-process है। restart पर या एकाधिक instances में, यह reset हो जाता है।
+
+**समाधान:** multi-instance deployments के लिए `RedisReplayAdapter` उपयोग करें:
+
+<CodeGroup>
+
+```ts TypeScript
+import Redis from "ioredis";
+import { RedisReplayAdapter } from "l402-kit";
+
+const redis = new Redis(process.env.REDIS_URL!);
+app.get("/api", l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+```python Python
+from l402kit import RedisReplayAdapter
+import redis.asyncio as redis
+
+r = redis.from_url(os.environ["REDIS_URL"])
+# pass replayAdapter to l402_required (coming soon)
+```
+
+</CodeGroup>
+
+Supabase `payment_hash` unique constraint in-memory adapter की परवाह किए बिना एक durable दूसरी परत के रूप में कार्य करती है, इसलिए Redis के बिना भी replays हमेशा blocked रहते हैं।
+
+---
+
+## Rate Limits
+
+### `Too many requests. Max 20 invoices/minute per IP.` (429)
+
+**कारण:** ManagedProvider endpoint पर एक ही IP से प्रति मिनट 20 से अधिक invoice creation अनुरोध।
+
+**समाधान:** client-side caching लागू करें — हर page load पर नया invoice न बनाएँ। `L402Client` स्वचालित रूप से endpoint URL के अनुसार टोकन कैश करता है। कई invoices उत्पन्न करने वाले server-to-server flows के लिए, एक soberano provider उपयोग करें।
+
+---
+
+## Framework-विशिष्ट
+
+### Express: middleware trigger नहीं हो रहा
+
+**कारण:** Express route handler `l402()` middleware से पहले registered है, या middleware का क्रम गलत है।
+
+**समाधान:**
+```ts
+// ✅ सही — handler से पहले l402
+app.get("/api", l402({ priceSats: 10, lightning }), myHandler);
+
+// ❌ गलत — handler के बाद l402 registered
+app.get("/api", myHandler, l402(...));
+```
+
+---
+
+### FastAPI: 402 response पर `422 Unprocessable Entity`
+
+**कारण:** FastAPI response bodies को declared response model के विरुद्ध validate करता है। 402 body मेल नहीं खाती।
+
+**समाधान:** या तो 402 status को response validation से बाहर करें या decorated endpoints पर response model declare न करें:
+```python
+@app.get("/premium")  # यहाँ कोई response_model= नहीं
+@l402_required(price_sats=10, lightning=provider)
+async def premium():
+    return {"data": "paid content"}
+```
+
+---
+
+### Go: `panic: l402: no Lightning provider set`
+
+**कारण:** `Options.Lightning` nil है।
+
+**समाधान:** हमेशा एक provider सेट करें:
+```go
+// ✅
+l402kit.Middleware(l402kit.Options{
+    PriceSats: 10,
+    Lightning: l402kit.NewManagedProvider("you@blink.sv"),
+}, handler)
+
+// ❌ panic होगा
+l402kit.Middleware(l402kit.Options{PriceSats: 10}, handler)
+```
+
+---
+
+## अभी भी समस्या है?
+
+[github.com/ShinyDapps/l402-kit/issues](https://github.com/ShinyDapps/l402-kit/issues) पर इनके साथ एक issue खोलें:
+- SDK भाषा और version
+- न्यूनतम reproduction
+- त्रुटि संदेश और stack trace

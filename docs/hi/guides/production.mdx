@@ -1,0 +1,333 @@
+---
+title: प्रोडक्शन गाइड
+description: l402-kit APIs को प्रोडक्शन में deploy करें — परफॉर्मेंस, विश्वसनीयता, और स्केलिंग।
+---
+
+## लाइव जाने से पहले की चेकलिस्ट
+
+लाइव जाने से पहले इसे पूरा करें। प्रत्येक आइटम नीचे दिए गए संबंधित सेक्शन से लिंक करता है।
+
+<Steps>
+  <Step title="मल्टी-इंस्टेंस के लिए Replay protection कॉन्फ़िगर किया गया">
+    डिफ़ॉल्ट adapter केवल in-memory है। यदि आप एक से अधिक process चलाते हैं (Gunicorn workers, PM2 cluster, Kubernetes), तो `SUPABASE_URL` + `SUPABASE_ANON_KEY` सेट करें या `RedisReplayAdapter` उपयोग करें। [विवरण →](#critical-replay-protection-in-production)
+  </Step>
+  <Step title="Environment variables secrets manager में">
+    API keys को कभी hardcode न करें। locally `.env` उपयोग करें, prod में secrets manager। [विवरण →](#environment-variables)
+  </Step>
+  <Step title="Health check endpoint मौजूद है">
+    Monitoring pings से invoice creation trigger नहीं होनी चाहिए। अपने paid routes से पहले एक `/health` route जोड़ें। [विवरण →](#health-check-endpoint)
+  </Step>
+  <Step title="Error responses आंतरिक जानकारी leak नहीं करते">
+    Provider errors को catch करें और एक clean 503 return करें — stack trace नहीं। [विवरण →](#error-handling)
+  </Step>
+  <Step title="Price सोच-समझकर तय किया गया है">
+    `priceSats` वास्तविक मूल्य को दर्शाना चाहिए। 1 sat ≈ $0.0006 पर, एक premium endpoint के लिए 100 sats ≈ $0.06 उचित है। इसे गलती से 0 न सेट करें।
+  </Step>
+  <Step title="Invoice endpoint पर Uptime monitoring">
+    402 response को monitor करें (यह एक सामान्य response है, error नहीं)। UptimeRobot जैसे tools custom status code expectations को support करते हैं।
+  </Step>
+  <Step title="Invoice creation पर Rate limiting">
+    हर unauthenticated request एक Lightning invoice बनाती है। Rate limiting के बिना, कोई हमलावर आपके provider के invoice quota को मुफ्त में खत्म कर सकता है। publicly deploy करने से पहले `express-rate-limit` जोड़ें। [विवरण →](#rate-limiting)
+  </Step>
+</Steps>
+
+---
+
+## महत्वपूर्ण: प्रोडक्शन में replay protection
+
+<Warning>
+डिफ़ॉल्ट replay adapter **केवल in-memory** है — यह हर process restart पर reset होता है और कई server instances में काम नहीं करता। एक से अधिक process वाले production में (Gunicorn workers, Kubernetes pods, PM2 cluster), एक ही preimage दो बार accept हो सकता है।
+
+**समाधान:** अपने environment में `SUPABASE_URL` + `SUPABASE_ANON_KEY` सेट करें। Middleware स्वचालित रूप से Supabase को replay store के रूप में उपयोग करेगा, जो सभी instances में shared होता है।
+
+Redis के लिए: एक `RedisReplayAdapter` explicitly पास करें (देखें [TypeScript SDK](/sdk/typescript#replay-protection) या [Python SDK](/sdk/python#replay-protection))।
+</Warning>
+
+---
+
+## Environment variables
+
+Keys को कभी hardcode न करें। हमेशा environment variables उपयोग करें:
+
+```bash
+# .env (इसे कभी commit न करें)
+BLINK_API_KEY=blink_xxx
+BLINK_WALLET_ID=your-wallet-id
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=sb_publishable_xxx    # clients को expose करना सुरक्षित है
+SUPABASE_SERVICE_KEY=sb_secret_xxx      # केवल server-side — clients को कभी expose न करें
+```
+
+```typescript
+import 'dotenv/config';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+---
+
+## Payment logging (Supabase)
+
+VS Code extension dashboard और analytics के लिए हर payment को Supabase में log करें:
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!,
+);
+
+app.use(async (req, res, next) => {
+  const original = res.json.bind(res);
+  res.json = (body) => {
+    // सफल L402 payments log करें (middleware pass होने के बाद)
+    if (req.l402Paid && req.l402Preimage) {
+      supabase.from('payments').insert({
+        endpoint: req.path,
+        preimage: req.l402Preimage,
+        amount_sats: req.l402AmountSats,
+      }).then(() => {});
+    }
+    return original(body);
+  };
+  next();
+});
+```
+
+---
+
+## Cloudflare Workers deployment
+
+l402-kit API Cloudflare Workers (V8 isolates, zero cold start) पर चलती है। In-memory replay store प्रति isolate reset होता है — high-traffic APIs के लिए, replay protection हेतु Cloudflare KV या Durable Objects उपयोग करें।
+
+```typescript
+// api/data.ts
+import { l402 } from 'l402-kit';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+export default async function handler(req, res) {
+  await new Promise<void>((resolve, reject) => {
+    l402({ priceSats: 10, lightning: blink })(req, res, (err) => {
+      if (err) reject(err); else resolve();
+    });
+  });
+  res.json({ data: 'premium content' });
+}
+```
+
+---
+
+## Docker
+
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY dist ./dist
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
+```
+
+```yaml
+# docker-compose.yml
+services:
+  api:
+    build: .
+    environment:
+      BLINK_API_KEY: ${BLINK_API_KEY}
+      BLINK_WALLET_ID: ${BLINK_WALLET_ID}
+    ports:
+      - "3000:3000"
+```
+
+---
+
+## उपयोगकर्ता डेटा हटाना
+
+एक deletion endpoint expose करें ताकि उपयोगकर्ता अपना डेटा स्थायी रूप से हटा सकें। l402-kit backend में `/api/delete-data` पहले से शामिल है:
+
+```http
+POST /api/delete-data
+Content-Type: application/json
+
+{ "lightningAddress": "user@blink.sv" }
+```
+
+```json
+// 200 OK
+{ "deleted": { "payments": 42, "proAccess": true } }
+```
+
+VS Code extension इसे dashboard के नीचे एक **Danger Zone** panel के रूप में प्रदर्शित करती है — उपयोगकर्ताओं को confirm करने के लिए अपना Lightning address टाइप करना होगा, फिर सभी payment history और Pro access मिटा दी जाती है। यह operation server-side पर Supabase service key उपयोग करती है; anon key के पास DELETE permission नहीं होती।
+
+---
+
+## Error handling
+
+Provider errors को unformatted 500 के रूप में सामने आने से पहले catch करें:
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, L402Error } from 'l402-kit';
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), async (req, res) => {
+  try {
+    res.json({ data: await fetchData() });
+  } catch (err) {
+    if (err instanceof L402Error) {
+      // Token invalid, expired, या already used — middleware को handle करने दें
+      return res.status(err.status).json({ error: err.code });
+    }
+    console.error('[api/data]', err);
+    res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+});
+```
+
+```python Python
+from l402kit import l402_required, L402Error
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(L402Error)
+async def l402_exception_handler(request: Request, exc: L402Error):
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.code})
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=503, content={"error": "Service temporarily unavailable"})
+```
+</CodeGroup>
+
+**मुख्य नियम:**
+- Clients को कभी stack traces न return करें — उन्हें server-side log करें।
+- Provider timeouts (503) अस्थायी हैं — backoff के साथ retry करना सुरक्षित है।
+- Token errors (401) कभी अस्थायी नहीं होते — auto-retry न करें, नया invoice मांगें।
+- Rate limit errors (429) — caller को `retryAfter` field दिखाएं।
+
+structured error codes की पूरी सूची के लिए [Error Reference](/reference/errors) देखें।
+
+---
+
+## Rate limiting
+
+हर unauthenticated request आपके Lightning provider पर `createInvoice()` trigger करती है। Rate limiting के बिना, कोई भी आपके endpoint को flood कर सकता है और आपके provider का API quota मुफ्त में खत्म कर सकता है — बिना एक भी sat चुकाए।
+
+अपने L402 routes से पहले [`express-rate-limit`](https://www.npmjs.com/package/express-rate-limit) जोड़ें:
+
+```bash
+npm install express-rate-limit
+```
+
+```typescript
+import rateLimit from "express-rate-limit";
+import { l402 } from "l402-kit";
+
+// Invoice creation सीमित करें: प्रति IP 30 unauthenticated requests/minute
+const invoiceLimit = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  // केवल उन requests पर apply करें जो valid L402 header नहीं रखते
+  skip: (req) => req.headers.authorization?.startsWith("L402 ") ?? false,
+  message: { error: "Too many requests — slow down" },
+});
+
+app.get("/api/premium", invoiceLimit, l402({ priceSats: 10, lightning }), handler);
+```
+
+<Note>
+पहले से भुगतान करने वाले clients `skip` function द्वारा छोड़ दिए जाते हैं — यह सीमा केवल उन unauthenticated calls पर लागू होती है जो नया invoice trigger करती हैं। वैध payers कभी throttle नहीं होते।
+</Note>
+
+FastAPI के लिए:
+
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/api/premium")
+@limiter.limit("30/minute")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium(request: Request):
+    return {"data": "paid content"}
+```
+
+---
+
+## Health check endpoint
+
+Monitoring tools से invoice creation trigger न हो, इसके लिए हमेशा एक मुफ्त health check जोड़ें:
+
+```typescript
+app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// Paid endpoint
+app.get('/api/data', l402({ priceSats: 10, lightning: blink }), handler);
+```
+
+---
+
+## Monitoring
+
+ट्रैक करने के लिए मुख्य metrics:
+- **402 response rate** — स्वस्थ baseline उच्च होता है (अधिकांश callers को भुगतान करना होगा)
+- **Payment verification rate** — paid vs unpaid calls का अनुपात
+- **Provider latency** — `blink.createInvoice()` < 500ms होनी चाहिए
+- **Replay attempts** — spike token reuse attacks का संकेत देता है
+
+```typescript
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    console.log(JSON.stringify({
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      ms: Date.now() - start,
+      paid: res.statusCode !== 402,
+    }));
+  });
+  next();
+});
+```
+
+---
+
+## परफॉर्मेंस
+
+- Token verification **O(1)** है — pure crypto, कोई DB नहीं, कोई network नहीं
+- Invoice creation (402 path) आपके Lightning provider API को call करती है — यदि आप उम्मीद करते हैं कि payment से पहले एक ही endpoint बार-बार hit होगा तो cache जोड़ें
+- Replay store in-memory `Set` है — multi-instance deployments के लिए Redis से swap करें
+
+```typescript
+// Redis replay store उदाहरण
+import { Redis } from 'ioredis';
+const redis = new Redis(process.env.REDIS_URL!);
+
+// middleware को custom replay function पास करें
+app.get('/api', l402({
+  priceSats: 10,
+  lightning: blink,
+  checkReplay: async (preimage) => {
+    const set = await redis.set(`l402:${preimage}`, '1', 'NX', 'EX', 86400);
+    return set === 'OK';
+  },
+}), handler);
+```

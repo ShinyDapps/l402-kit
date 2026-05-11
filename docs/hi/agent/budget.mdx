@@ -1,0 +1,224 @@
+---
+title: बजट नियंत्रण
+description: खर्च सीमाएं निर्धारित करें, डोमेन के अनुसार भुगतान ट्रैक करें, और प्रत्येक लेनदेन से पहले कॉलबैक प्राप्त करें।
+---
+
+## बजट नियंत्रण क्यों महत्वपूर्ण है
+
+एक AI एजेंट जो लूप में पेड APIs को कॉल करता है, वह तेज़ी से लागत बढ़ा सकता है। बजट नियंत्रण आपको ये करने देता है:
+
+- प्रति सत्र कुल खर्च की सीमा तय करें
+- प्रति-डोमेन सीमाएं निर्धारित करें (जैसे, `api.weather.com` पर अधिकतम 100 sats/सत्र)
+- प्रत्येक भुगतान से पहले कॉलबैक प्राप्त करें
+- कभी भी पूरी खर्च रिपोर्ट प्राप्त करें
+
+---
+
+## वैश्विक बजट
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+      budgetSats: 500, // max 500 sats total this session
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=500,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+जब एक 402 रिस्पॉन्स में `priceSats` फ़ील्ड होती है और वह शेष बजट से अधिक होती है, तो क्लाइंट **भुगतान करने से पहले** `BudgetExceededError` थ्रो करता है — कोई satoshi खर्च नहीं होता।
+
+---
+
+## प्रति-डोमेन बजट
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 2000,
+      budgetPerDomain: {
+        "api.weather.com": 100,
+        "api.finance.com": 500,
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=2000,
+        budget_per_domain={
+            "api.weather.com": 100,
+            "api.finance.com": 500,
+        },
+    )
+    ```
+  </Tab>
+</Tabs>
+
+प्रति-डोमेन सीमाएं वैश्विक सीमा से स्वतंत्र रूप से जाँची जाती हैं — भुगतान आगे बढ़ने के लिए दोनों को पास होना आवश्यक है।
+
+---
+
+## कॉलबैक
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 1000,
+      onSpend: (sats, url) => {
+        console.log(`✓ Paid ${sats} sats → ${url}`);
+        // log to your telemetry, update a dashboard, etc.
+      },
+      onBudgetExceeded: (url, sats) => {
+        console.warn(`✗ Blocked: ${sats} sats requested by ${url} — budget exhausted`);
+        // alert, notify Slack, etc.
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    def on_spend(sats: int, url: str) -> None:
+        print(f"✓ Paid {sats} sats → {url}")
+
+    def on_budget_exceeded(url: str, sats: int) -> None:
+        print(f"✗ Blocked: {sats} sats requested by {url} — budget exhausted")
+
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=1000,
+        on_spend=on_spend,
+        on_budget_exceeded=on_budget_exceeded,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+`onBudgetExceeded` / `on_budget_exceeded` को `BudgetExceededError` थ्रो होने से ठीक पहले कॉल किया जाता है — लॉगिंग या अलर्ट के लिए उपयोगी।
+
+---
+
+## खर्च रिपोर्ट
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const report = client.spendingReport();
+
+    if (report) {
+      console.log(`Total spent: ${report.total} sats`);
+      console.log(`Remaining:   ${report.remaining} sats`);
+      console.log("By domain:", report.byDomain);
+      // { "api.weather.com": 42, "api.finance.com": 105 }
+
+      for (const tx of report.transactions) {
+        console.log(`  ${tx.ts}  ${tx.sats} sats  ${tx.url}`);
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    report = client.spending_report()
+
+    if report:
+        print(f"Total spent: {report.total} sats")
+        print(f"Remaining:   {report.remaining} sats")
+        print("By domain:", report.by_domain)
+        # {"api.weather.com": 42, "api.finance.com": 105}
+
+        for tx in report.transactions:
+            print(f"  {tx['ts']}  {tx['sats']} sats  {tx['url']}")
+    ```
+  </Tab>
+</Tabs>
+
+`spendingReport()` तब `null` / `None` लौटाता है जब कोई बजट कॉन्फ़िगर नहीं किया गया हो।
+
+---
+
+## BudgetExceededError को हैंडल करना
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { BudgetExceededError } from "l402-kit";
+
+    try {
+      const res = await client.fetch("https://api.example.com/premium");
+    } catch (err) {
+      if (err instanceof BudgetExceededError) {
+        console.log(`Need ${err.required} sats, only ${err.remaining} remaining`);
+        // gracefully degrade — return cached data, skip this step, etc.
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import BudgetExceededError
+
+    try:
+        r = client.get("https://api.example.com/premium")
+    except BudgetExceededError as e:
+        print(f"Need {e.required} sats, only {e.remaining} remaining")
+        # gracefully degrade
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## समवर्तिता संबंधी नोट्स
+
+<Warning>
+**जब बजट सीमाएं महत्वपूर्ण हों तो एक `L402Client` इंस्टेंस को समवर्ती `Promise.all` कॉल्स में साझा न करें।**
+
+`BudgetTracker.check()` और `record()` के बीच एक `await` (Lightning भुगतान) है। दो समवर्ती `client.fetch()` कॉल्स अलग-अलग एंडपॉइंट्स पर, दोनों बजट जाँच पास कर सकती हैं, इससे पहले कि कोई भी खर्च रिकॉर्ड करे — इसका मतलब है कि संयुक्त लागत अस्थायी रूप से आपकी बजट सीमा से एक भुगतान अधिक हो सकती है।
+
+**सुरक्षित पैटर्न — क्रमिक कॉल्स:**
+```typescript
+for (const url of urls) {
+  const res = await client.fetch(url); // awaited one at a time
+}
+```
+
+**जोखिम भरा पैटर्न — समानांतर कॉल्स:**
+```typescript
+// Both may pass budget.check() before either calls budget.record()
+const results = await Promise.all(urls.map(url => client.fetch(url)));
+```
+
+**समानांतर वर्कलोड के लिए समाधान:** अपना `budgetSats` सतर्कता से निर्धारित करें (जैसे, अपनी वास्तविक सीमा का 80%) ताकि एक समवर्ती भुगतान से अतिरिक्त खर्च को अवशोषित किया जा सके। सख्त प्रवर्तन के लिए, कॉल्स को क्रमिक रूप से प्रोसेस करें।
+</Warning>
+
+---
+
+## पूर्ण विकल्प संदर्भ
+
+| विकल्प | TypeScript | Python | डिफ़ॉल्ट | विवरण |
+|--------|-----------|--------|---------|-------------|
+| वैश्विक बजट | `budgetSats` | `budget_sats` | असीमित | सत्र के लिए अधिकतम sats |
+| प्रति-डोमेन | `budgetPerDomain` | `budget_per_domain` | `{}` | `domain → max sats` का मैप |
+| खर्च हुक | `onSpend` | `on_spend` | — | प्रत्येक भुगतान के बाद कॉल किया जाता है |
+| अधिकता हुक | `onBudgetExceeded` | `on_budget_exceeded` | — | थ्रो करने से पहले कॉल किया जाता है |
