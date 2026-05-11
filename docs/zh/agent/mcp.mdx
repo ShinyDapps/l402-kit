@@ -1,6 +1,6 @@
 ---
 title: MCP Server
-description: 将 l402-kit 作为 MCP 工具添加，使 Claude Desktop、Cursor 及任何兼容 MCP 的 AI 能够自动支付 Lightning API。
+description: 将 l402-kit 作为 MCP 工具添加，使 Claude Desktop、Cursor 以及任何兼容 MCP 的 AI 能够自动支付 Lightning API。
 ---
 
 ## 什么是 MCP？
@@ -11,24 +11,25 @@ description: 将 l402-kit 作为 MCP 工具添加，使 Claude Desktop、Cursor 
 
 | 工具 | 描述 |
 |------|-------------|
-| `l402_fetch` | 获取任意 URL —— 若返回 402 则自动付款 |
+| `l402_fetch` | 获取任意 URL — 若返回 402 则自动付款 |
 | `l402_balance` | 查看剩余 Lightning 预算 |
 | `l402_spending_report` | 本次会话的完整支付明细 |
 
-### VERITY 工具 —— 付费服务，自动支付
+### VERITY 工具 — 付费服务，自动付款
 
 | 工具 | 价格 | 描述 |
 |------|------:|-------------|
 | `verity_btc_price` | 10 sats | 实时 BTC 价格（USD、EUR、BRL） |
-| `verity_worldstate` | 80 sats | UTC 时间 + 地理位置 + 本地天气 |
+| `verity_worldstate` | 80 sats | UTC 时间 + 地理位置 + 当地天气 |
 | `verity_search` | 100 sats | 网页搜索，前 10 条自然结果 |
 | `verity_summarize` | 50 sats | AI 摘要，最多 50,000 字符 |
 | `verity_sentiment` | 30 sats | 情感评分 + 关键词 |
-| `verity_scrape` | 200 sats | 网页抓取并转换为简洁 markdown |
+| `verity_scrape` | 200 sats | 网页抓取并转换为干净的 markdown |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL 证书 |
+| `verity_translate` | 50 sats | AI 翻译，支持 11 种语言，兼容 MDX |
 | `verity_integration` | 10,000 sats | 为任意 GitHub 仓库完整集成 l402-kit |
 
-VERITY 工具自主完成支付 —— 无需手动处理发票。
+VERITY 工具自主付款 — 无需手动处理发票。
 
 ---
 
@@ -36,7 +37,7 @@ VERITY 工具自主完成支付 —— 无需手动处理发票。
 
 ### 1. 安装 Node.js ≥ 18
 
-### 2. 配置钱包
+### 2. 配置你的钱包
 
 <Tabs>
   <Tab title="Blink">
@@ -74,20 +75,20 @@ VERITY 工具自主完成支付 —— 无需手动处理发票。
     }
     ```
 
-    如需使用自托管的 Alby Hub，请添加：
+    若使用自托管的 Alby Hub，请添加：
     ```json
     "ALBY_HUB_URL": "https://your-hub.example.com"
     ```
   </Tab>
 </Tabs>
 
-**配置文件路径：**
-- macOS：`~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows：`%APPDATA%\Claude\claude_desktop_config.json`
+**配置文件位置：**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ### 3. 重启 Claude Desktop
 
-`l402_fetch`、`l402_balance` 和 `l402_spending_report` 工具将出现在 Claude 的工具列表中。
+工具 `l402_fetch`、`l402_balance` 和 `l402_spending_report` 将出现在 Claude 的工具列表中。
 
 ---
 
@@ -99,41 +100,41 @@ VERITY 工具自主完成支付 —— 无需手动处理发票。
 | `BLINK_WALLET_ID` | 仅 Blink | 你的 Blink 钱包 ID |
 | `ALBY_TOKEN` | 仅 Alby | Alby 访问令牌 |
 | `ALBY_HUB_URL` | 可选 | 自定义 Alby Hub 基础 URL |
-| `BUDGET_SATS` | 可选 | 每次会话最大消费额（默认：`2000`） |
+| `BUDGET_SATS` | 可选 | 每次会话最大支出（默认：`2000`） |
 
 ---
 
 ## 使用工具
 
-服务器运行后，Claude 可自主调用 VERITY 及任何受 L402 保护的 API：
+服务器运行后，Claude 可以自主调用 VERITY 及任何受 L402 保护的 API：
 
 ```
-You: What's the BTC price right now?
+你：现在 BTC 的价格是多少？
 
-Claude: [calls verity_btc_price]
-        [Paid 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
+Claude：[调用 verity_btc_price]
+        [已支付 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
 
-        Bitcoin is currently $97,500 USD (Cost: 10 sats)
-```
-
-```
-You: Summarize this article: <pastes 5,000 words>
-
-Claude: [calls verity_summarize with text="..."]
-        [Paid 50 sats] {"summary":"..."}
+        比特币当前价格为 $97,500 USD（费用：10 sats）
 ```
 
 ```
-You: Search for "lightning network adoption 2026"
+你：摘要这篇文章：<粘贴 5,000 字>
 
-Claude: [calls verity_search with q="lightning network adoption 2026"]
-        [Paid 100 sats] {"results":[...]}
+Claude：[调用 verity_summarize，text="..."]
+        [已支付 50 sats] {"summary":"..."}
 ```
 
 ```
-You: How much have I spent so far?
+你：搜索 "lightning network adoption 2026"
 
-Claude: [calls l402_spending_report]
+Claude：[调用 verity_search，q="lightning network adoption 2026"]
+        [已支付 100 sats] {"results":[...]}
+```
+
+```
+你：我目前总共花了多少？
+
+Claude：[调用 l402_spending_report]
         === L402 Spending Report ===
         Total spent:  160 sats
         Remaining:    1840 sats
@@ -144,9 +145,51 @@ Claude: [calls l402_spending_report]
 
 ---
 
+## HTTP MCP 端点
+
+除 stdio 包外，VERITY 还提供一个在线 **HTTP MCP 服务器** — 无需安装：
+
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+任何支持可流式 HTTP 传输的 MCP 客户端均可直接连接。通过请求头传入你的 Blink 凭证：
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**初始化：**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**列出工具：**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**调用工具：**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+该端点使用你的钱包凭证自动支付 Lightning 发票，并直接返回 VERITY 结果。
+
+---
+
 ## MCP 注册表
 
-l402-kit 已收录于 [Glama MCP 注册表](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit)。
+l402-kit 已收录于所有主流 MCP 注册表：
+
+| 注册表 | 链接 |
+|---|---|
+| Anthropic MCP Registry（官方） | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | 搜索 `l402-kit` |
 
 机器可读清单：`GET https://l402kit.com/.well-known/mcp.json`
 
@@ -154,25 +197,25 @@ l402-kit 已收录于 [Glama MCP 注册表](https://glama.ai/mcp/servers/@ShinyD
 
 ## 在 Cursor 中配置
 
-在 Cursor 的 **Settings → MCP Servers** 中添加相同的配置块即可。
+在 Cursor 的 **Settings → MCP Servers** 中添加相同的配置块。
 
 ---
 
 ## 在任意 MCP 客户端中配置
 
-服务器通过 `stdin` 读取、`stdout` 写出（stdio 传输方式）：
+服务器从 `stdin` 读取并写入 `stdout`（stdio 传输）：
 
 ```bash
 BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
 ```
 
-任何兼容 MCP 的客户端均可通过 stdio 传输方式进行连接。
+任何兼容 MCP 的客户端均可使用 stdio 传输进行连接。
 
 ---
 
 ## 构建自定义 MCP 服务器
 
-你也可以将 `L402Client` 直接嵌入到自己的 MCP 服务器中：
+你也可以直接在自己的 MCP 服务器中嵌入 `L402Client`：
 
 ```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -206,6 +249,6 @@ await server.connect(transport);
 
 ## 安全说明
 
-- 预算上限（`BUDGET_SATS`）是你的主要防护措施 —— 请保守设置
-- 每个 `npx l402-kit-mcp` 进程拥有独立的内存预算，重启后将重置
-- 在生产环境中，请通过 `onSpend` 回调将消费日志持久化到外部存储
+- 预算上限（`BUDGET_SATS`）是你的主要安全保障 — 请保守设置
+- 每个 `npx l402-kit-mcp` 进程拥有独立的内存预算，重启后重置
+- 对于生产环境的智能体，请通过 `onSpend` 回调将支出日志持久化到外部存储

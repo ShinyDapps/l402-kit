@@ -1,34 +1,35 @@
 ---
 title: MCP Server
-description: l402-kit को MCP टूल के रूप में जोड़ें ताकि Claude Desktop, Cursor, और कोई भी MCP-compatible AI स्वचालित रूप से Lightning APIs का भुगतान कर सके।
+description: l402-kit को एक MCP tool के रूप में जोड़ें ताकि Claude Desktop, Cursor, और कोई भी MCP-compatible AI स्वचालित रूप से Lightning APIs का भुगतान कर सके।
 ---
 
 ## MCP क्या है?
 
-[Model Context Protocol](https://modelcontextprotocol.io) Anthropic का open standard है जो LLMs को बाहरी टूल्स तक पहुँच देता है। l402-kit एक ready-made MCP server के साथ आता है जिसमें दो श्रेणियों के टूल होते हैं:
+[Model Context Protocol](https://modelcontextprotocol.io) Anthropic का open standard है जो LLMs को external tools तक पहुँच देता है। l402-kit दो श्रेणियों के tools के साथ एक ready-made MCP server प्रदान करता है:
 
-### Generic L402 टूल्स
+### Generic L402 tools
 
-| टूल | विवरण |
+| Tool | विवरण |
 |------|-------------|
-| `l402_fetch` | कोई भी URL fetch करें — अगर 402 मिले तो स्वचालित भुगतान करता है |
-| `l402_balance` | शेष Lightning बजट जाँचें |
-| `l402_spending_report` | इस session में भुगतानों का पूरा विवरण |
+| `l402_fetch` | कोई भी URL fetch करें — अगर 402 मिले तो स्वचालित रूप से भुगतान करता है |
+| `l402_balance` | शेष Lightning budget जाँचें |
+| `l402_spending_report` | इस session के भुगतानों का पूरा विवरण |
 
-### VERITY टूल्स — paid services, auto-pay शामिल
+### VERITY tools — paid services, auto-pay included
 
-| टूल | मूल्य | विवरण |
+| Tool | मूल्य | विवरण |
 |------|------:|-------------|
 | `verity_btc_price` | 10 sats | USD, EUR, BRL में real-time BTC मूल्य |
-| `verity_worldstate` | 80 sats | UTC समय + geolocation + स्थानीय मौसम |
+| `verity_worldstate` | 80 sats | UTC time + geolocation + स्थानीय मौसम |
 | `verity_search` | 100 sats | Web search, शीर्ष 10 organic परिणाम |
-| `verity_summarize` | 50 sats | 50,000 characters तक AI सारांश |
+| `verity_summarize` | 50 sats | 50,000 chars तक AI summarization |
 | `verity_sentiment` | 30 sats | Sentiment score + keywords |
 | `verity_scrape` | 200 sats | Web scraping से clean markdown |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL certificates |
-| `verity_integration` | 10,000 sats | किसी भी GitHub repo के लिए पूरी l402-kit integration |
+| `verity_translate` | 50 sats | 11 locales में AI translation, MDX-aware |
+| `verity_integration` | 10,000 sats | किसी भी GitHub repo के लिए complete l402-kit integration |
 
-VERITY टूल्स स्वायत्त रूप से भुगतान करते हैं — कोई manual invoice handling आवश्यक नहीं।
+VERITY tools स्वायत्त रूप से भुगतान करते हैं — कोई manual invoice handling की आवश्यकता नहीं।
 
 ---
 
@@ -36,7 +37,7 @@ VERITY टूल्स स्वायत्त रूप से भुगता
 
 ### 1. Node.js ≥ 18 इंस्टॉल करें
 
-### 2. अपना wallet कॉन्फ़िगर करें
+### 2. अपना wallet configure करें
 
 <Tabs>
   <Tab title="Blink">
@@ -81,13 +82,13 @@ VERITY टूल्स स्वायत्त रूप से भुगता
   </Tab>
 </Tabs>
 
-**Config फ़ाइल का स्थान:**
+**Config file का स्थान:**
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ### 3. Claude Desktop पुनः प्रारंभ करें
 
-टूल्स `l402_fetch`, `l402_balance`, और `l402_spending_report` Claude की टूल सूची में दिखाई देंगे।
+`l402_fetch`, `l402_balance`, और `l402_spending_report` tools Claude की tool list में दिखाई देंगे।
 
 ---
 
@@ -103,7 +104,7 @@ VERITY टूल्स स्वायत्त रूप से भुगता
 
 ---
 
-## टूल्स का उपयोग
+## Tools का उपयोग
 
 एक बार server चलने के बाद, Claude स्वायत्त रूप से VERITY और किसी भी L402-protected API को call कर सकता है:
 
@@ -144,9 +145,51 @@ Claude: [calls l402_spending_report]
 
 ---
 
-## MCP registry
+## HTTP MCP endpoint
 
-l402-kit को [Glama MCP registry](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) में सूचीबद्ध किया गया है।
+stdio package के अतिरिक्त, VERITY एक live **HTTP MCP server** प्रदान करता है — किसी installation की आवश्यकता नहीं:
+
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+कोई भी MCP client जो streamable HTTP transport को support करता है, सीधे connect कर सकता है। अपनी Blink credentials headers के रूप में दें:
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**Initialize:**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**Tools की सूची:**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**Tool call करें:**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+यह endpoint आपकी wallet credentials का उपयोग करके Lightning invoices का स्वचालित भुगतान करता है और VERITY का परिणाम सीधे वापस करता है।
+
+---
+
+## MCP registries
+
+l402-kit सभी प्रमुख MCP registries में सूचीबद्ध है:
+
+| Registry | लिंक |
+|---|---|
+| Anthropic MCP Registry (official) | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | `l402-kit` खोजें |
 
 Machine-readable manifest: `GET https://l402kit.com/.well-known/mcp.json`
 
@@ -154,7 +197,7 @@ Machine-readable manifest: `GET https://l402kit.com/.well-known/mcp.json`
 
 ## Cursor के साथ Setup
 
-**Settings → MCP Servers** के अंतर्गत Cursor की MCP settings में वही config block जोड़ें।
+वही config block **Settings → MCP Servers** के अंतर्गत Cursor की MCP settings में जोड़ें।
 
 ---
 
@@ -206,6 +249,6 @@ await server.connect(transport);
 
 ## सुरक्षा संबंधी नोट्स
 
-- बजट सीमा (`BUDGET_SATS`) आपका प्राथमिक सुरक्षा उपाय है — इसे सतर्कता से सेट करें
-- प्रत्येक `npx l402-kit-mcp` process का अपना in-memory बजट होता है; restart पर यह reset हो जाता है
+- Budget cap (`BUDGET_SATS`) आपकी प्राथमिक सुरक्षा है — इसे सावधानीपूर्वक कम रखें
+- प्रत्येक `npx l402-kit-mcp` process की अपनी in-memory budget होती है; restart पर यह reset हो जाती है
 - Production agents के लिए, spending log को `onSpend` callback के माध्यम से किसी external store में persist करें

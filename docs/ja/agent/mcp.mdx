@@ -1,38 +1,39 @@
 ---
 title: MCP Server
-description: l402-kit をMCPツールとして追加し、Claude Desktop、Cursor、およびMCP対応AIがLightning APIを自動的に支払えるようにします。
+description: l402-kit をMCPツールとして追加することで、Claude Desktop、Cursor、およびMCP対応AIがLightning APIに自動的に支払いを行えるようになります。
 ---
 
 ## MCPとは？
 
-[Model Context Protocol](https://modelcontextprotocol.io) は、LLMが外部ツールにアクセスできるようにするAnthropicのオープン標準です。l402-kit は2種類のツールを備えた既製のMCPサーバーを同梱しています。
+[Model Context Protocol](https://modelcontextprotocol.io) は、LLMが外部ツールにアクセスできるようにするAnthropicのオープン標準です。l402-kit には2つのカテゴリのツールを備えた既製のMCPサーバーが付属しています：
 
-### 汎用L402ツール
+### 汎用 L402 ツール
 
 | ツール | 説明 |
 |------|-------------|
-| `l402_fetch` | 任意のURLを取得 — 402が返された場合は自動的に支払います |
-| `l402_balance` | 残りのLightningの予算を確認します |
-| `l402_spending_report` | このセッションの支払いの完全な内訳 |
+| `l402_fetch` | 任意のURLを取得 — 402が返された場合は自動的に支払い |
+| `l402_balance` | Lightning の残余予算を確認 |
+| `l402_spending_report` | セッション中の支払いの完全な内訳 |
 
-### VERITYツール — 有料サービス、自動支払い対応
+### VERITY ツール — 有料サービス、自動支払い対応
 
 | ツール | 価格 | 説明 |
 |------|------:|-------------|
-| `verity_btc_price` | 10 sats | USD、EUR、BRL建てのリアルタイムBTC価格 |
-| `verity_worldstate` | 80 sats | UTC時刻 + ジオロケーション + 現地の天気 |
+| `verity_btc_price` | 10 sats | USD、EUR、BRL でのリアルタイム BTC 価格 |
+| `verity_worldstate` | 80 sats | UTC 時刻 + ジオロケーション + 現地の天気 |
 | `verity_search` | 100 sats | ウェブ検索、上位10件のオーガニック結果 |
 | `verity_summarize` | 50 sats | 最大50,000文字のAI要約 |
 | `verity_sentiment` | 30 sats | センチメントスコア + キーワード |
-| `verity_scrape` | 200 sats | クリーンなマークダウンへのウェブスクレイピング |
+| `verity_scrape` | 200 sats | ウェブスクレイピングによるクリーンなmarkdown生成 |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL証明書 |
+| `verity_translate` | 50 sats | 11ロケール対応のAI翻訳、MDX対応 |
 | `verity_integration` | 10,000 sats | 任意のGitHubリポジトリへの完全なl402-kit統合 |
 
-VERITYツールは自律的に支払いを行います — 手動での請求書処理は不要です。
+VERITY ツールは自律的に支払いを行います — 手動でのインボイス処理は不要です。
 
 ---
 
-## Claude Desktopでのセットアップ
+## Claude Desktop でのセットアップ
 
 ### 1. Node.js ≥ 18 をインストール
 
@@ -74,7 +75,7 @@ VERITYツールは自律的に支払いを行います — 手動での請求書
     }
     ```
 
-    セルフホストのAlby Hubの場合は、以下を追加します：
+    セルフホストの Alby Hub の場合は以下を追加します：
     ```json
     "ALBY_HUB_URL": "https://your-hub.example.com"
     ```
@@ -87,7 +88,7 @@ VERITYツールは自律的に支払いを行います — 手動での請求書
 
 ### 3. Claude Desktop を再起動する
 
-`l402_fetch`、`l402_balance`、`l402_spending_report` のツールがClaudeのツールリストに表示されます。
+`l402_fetch`、`l402_balance`、`l402_spending_report` のツールがClaudeのツール一覧に表示されます。
 
 ---
 
@@ -95,17 +96,17 @@ VERITYツールは自律的に支払いを行います — 手動での請求書
 
 | 変数 | 必須 | 説明 |
 |----------|:--------:|-------------|
-| `BLINK_API_KEY` | Blinkのみ | Blink APIキー |
-| `BLINK_WALLET_ID` | Blinkのみ | BlinkウォレットID |
-| `ALBY_TOKEN` | Albyのみ | Albyアクセストークン |
-| `ALBY_HUB_URL` | 任意 | カスタムAlby HubのベースURL |
-| `BUDGET_SATS` | 任意 | セッションあたりの最大支出（デフォルト: `2000`） |
+| `BLINK_API_KEY` | Blink のみ | Blink APIキー |
+| `BLINK_WALLET_ID` | Blink のみ | Blink ウォレットID |
+| `ALBY_TOKEN` | Alby のみ | Alby アクセストークン |
+| `ALBY_HUB_URL` | 任意 | カスタム Alby Hub のベースURL |
+| `BUDGET_SATS` | 任意 | セッションあたりの最大支出額（デフォルト：`2000`） |
 
 ---
 
 ## ツールの使い方
 
-サーバーが起動すると、ClaudeはVERITYおよびL402で保護された任意のAPIを自律的に呼び出すことができます：
+サーバーが起動すると、ClaudeはVERITYおよびL402で保護された任意のAPIを自律的に呼び出せます：
 
 ```
 You: What's the BTC price right now?
@@ -144,29 +145,71 @@ Claude: [calls l402_spending_report]
 
 ---
 
-## MCPレジストリ
+## HTTP MCP エンドポイント
 
-l402-kit は [Glama MCPレジストリ](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) に登録されています。
+stdioパッケージに加えて、VERITYはライブの **HTTP MCP サーバー** を公開しています — インストール不要です：
 
-マシンリーダブルなマニフェスト: `GET https://l402kit.com/.well-known/mcp.json`
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+ストリーム可能なHTTPトランスポートをサポートする任意のMCPクライアントが直接接続できます。Blinkの認証情報をヘッダーとして渡してください：
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**初期化：**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**ツール一覧の取得：**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**ツールの呼び出し：**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+このエンドポイントはウォレットの認証情報を使って Lightning インボイスを自動的に支払い、VERITY の結果を直接返します。
+
+---
+
+## MCP レジストリ
+
+l402-kit は主要なMCPレジストリすべてに登録されています：
+
+| レジストリ | リンク |
+|---|---|
+| Anthropic MCP Registry（公式） | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | `l402-kit` で検索 |
+
+マシンリーダブルなマニフェスト：`GET https://l402kit.com/.well-known/mcp.json`
 
 ---
 
 ## Cursor でのセットアップ
 
-**Settings → MCP Servers** のCursorのMCP設定に同じ設定ブロックを追加します。
+**Settings → MCP Servers** にある Cursor のMCP設定に同じ設定ブロックを追加してください。
 
 ---
 
 ## 任意のMCPクライアントでのセットアップ
 
-サーバーは `stdin` から読み込み / `stdout` に書き込みます（stdioトランスポート）：
+サーバーは `stdin` から読み取り、`stdout` に書き込みます（stdioトランスポート）：
 
 ```bash
 BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
 ```
 
-MCP対応のクライアントはstdioトランスポートを使用して接続できます。
+MCP対応の任意のクライアントがstdioトランスポートを使って接続できます。
 
 ---
 
@@ -206,6 +249,6 @@ await server.connect(transport);
 
 ## セキュリティに関する注意事項
 
-- 予算上限（`BUDGET_SATS`）が主要なセーフガードです — 保守的な値に設定してください
-- 各 `npx l402-kit-mcp` プロセスは独自のインメモリ予算を持ちます。再起動するとリセットされます
-- 本番環境のエージェントでは、`onSpend` コールバックを使用して支出ログを外部ストアに永続化してください
+- 予算の上限（`BUDGET_SATS`）が主要な安全策です — 保守的な値を設定してください
+- 各 `npx l402-kit-mcp` プロセスは独自のインメモリ予算を持ちます；再起動するとリセットされます
+- プロダクション環境のエージェントでは、`onSpend` コールバックを通じて支払いログを外部ストアに永続化してください

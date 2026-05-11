@@ -1,28 +1,29 @@
 ---
 title: "VERITY"
-description: "Agent IA autonome avec 8 services protégés par L402. Gagne des sats, paie en sats."
+description: "Agent IA autonome avec 9 services protégés par L402. Gagne des sats, paie en sats."
 ---
 
 # VERITY
 
-VERITY est un agent IA autonome construit sur l402-kit. Elle vend 8 services via le protocole L402, accumule un trésor Bitcoin et ajuste ses propres prix en fonction de la demande — sans intervention humaine.
+VERITY est un agent IA autonome construit sur l402-kit. Elle vend 9 services via le protocole L402, accumule un trésor Bitcoin, et ajuste ses propres prix en fonction de la demande — sans intervention humaine.
 
-**Endpoint de découverte :** `GET https://l402kit.com/api/verity`
+**Point de découverte :** `GET https://l402kit.com/api/verity`
 
 ---
 
-## Les 8 Services
+## Les 9 Services
 
-| Service | Endpoint | Prix | Requiert |
+| Service | Endpoint | Prix | Nécessite |
 |---|---|---|---|
 | Recherche Web | `/api/verity/search` | 100 sats | — |
-| Web Scraping | `/api/verity/scrape` | 200 sats | — |
+| Scraping Web | `/api/verity/scrape` | 200 sats | — |
 | Prix BTC | `/api/verity/btc-price` | 10 sats | — |
 | Résumé | `/api/verity/summarize` | 50 sats | — |
 | Sentiment | `/api/verity/sentiment` | 30 sats | — |
-| Intel Domaine | `/api/verity/domain-intel` | 500 sats | — |
+| Renseignement Domaine | `/api/verity/domain-intel` | 500 sats | — |
 | Intégration l402-kit | `/api/verity/integration` | 10 000 sats | — |
 | État du Monde | `/api/verity/worldstate` | 80 sats | — |
+| Traduction | `/api/verity/translate` | 50 sats | — |
 
 Les prix sont dynamiques — VERITY les ajuste toutes les 30 minutes en fonction de la demande.
 
@@ -103,8 +104,8 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### Web Scraping — 200 sats
-Retourne le contenu complet de la page en markdown.
+### Scraping Web — 200 sats
+Retourne le contenu complet d'une page en markdown.
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -134,7 +135,7 @@ curl -H "Authorization: L402 <token>" \
 ---
 
 ### Résumé — 50 sats
-Résumé par IA jusqu'à 50 000 caractères.
+Résumé IA jusqu'à 50 000 caractères.
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -169,8 +170,8 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### Intel Domaine — 500 sats
-WHOIS, enregistrements DNS et certificats SSL. Aucune clé API — utilise le RDAP public et crt.sh.
+### Renseignement Domaine — 500 sats
+WHOIS, enregistrements DNS et certificats SSL. Sans clé API — utilise les RDAP publics et crt.sh.
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -211,7 +212,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### État du Monde — 80 sats
-Heure UTC + géolocalisation de l'appelant + météo locale en un seul appel. Aucun coût d'API externe.
+Heure UTC + géolocalisation de l'appelant + météo locale en un seul appel. Zéro coût d'API externe.
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -240,14 +241,52 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
+### Traduction — 50 sats
+Traduit du texte ou de la documentation MDX vers l'une des 11 langues prises en charge. Lorsque `format` est `mdx`, les blocs de code, les composants MDX, les URLs et les termes techniques sont préservés exactement — seule la prose est traduite.
+
+**Locales prises en charge :** `pt`, `es`, `zh`, `ar`, `hi`, `fr`, `de`, `ru`, `ja`, `it`, `en`
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Pay once, access forever.", "locale": "pt", "format": "plain"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**Format MDX** (préserve les blocs de code et les composants) :
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "---\ntitle: Quickstart\n---\n\nPay with Lightning.", "locale": "ja", "format": "mdx"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**Réponse :**
+```json
+{
+  "agent": "VERITY",
+  "service": "translate",
+  "locale": "pt",
+  "language": "Brazilian Portuguese",
+  "format": "plain",
+  "translated": "Pague uma vez, acesse para sempre.",
+  "source_length": 26,
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+Entrée maximale : 100 000 caractères par appel.
+
+---
+
 ## Tarification Dynamique
 
 VERITY ajuste les prix toutes les 30 minutes :
 
 ```
-Forte demande (> seuil d'appels/heure) → prix × 1,1
-Demande nulle (2 heures consécutives)  → prix × 0,9
-Protection plancher                    → prix jamais en dessous du minimum
+Forte demande (> seuil appels/heure) → prix × 1,1
+Demande nulle (2 heures consécutives) → prix × 0,9
+Protection plancher                   → le prix ne descend jamais en dessous du minimum
 ```
 
 Consultez les prix actuels à tout moment :
@@ -257,13 +296,74 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+## API Opérateur
+
+Si vous forkez VERITY pour exécuter votre propre agent, ces endpoints vous permettent de modifier les prix et les budgets à l'exécution — sans redéploiement.
+
+Toutes les routes d'administration nécessitent l'en-tête `DASHBOARD_SECRET` :
+```
+Authorization: Bearer <DASHBOARD_SECRET>
+```
+
+### GET /api/verity/admin/config
+Retourne la configuration tarifaire actuelle et les dépenses des consommateurs pour tous les services.
+
+```bash
+curl -H "Authorization: Bearer <secret>" \
+  https://l402kit.com/api/verity/admin/config
+```
+
+**Réponse :**
+```json
+{
+  "configs": {
+    "search":  { "base": 100, "floor": 50, "surgeThreshold": 50, "cogs": 2 },
+    "translate": { "base": 50, "floor": 50, "surgeThreshold": 30, "cogs": 1 }
+  },
+  "prices": { "search": 100, "translate": 50 },
+  "consumer": { "spent_today": 340, "budget": 10000 }
+}
+```
+
+### POST /api/verity/admin/config
+Met à jour les paramètres tarifaires d'un service spécifique. Seuls les champs fournis sont modifiés.
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"service": "search", "base": 150, "floor": 80}' \
+  https://l402kit.com/api/verity/admin/config
+```
+
+| Champ | Description |
+|---|---|
+| `service` | Nom du service (obligatoire) |
+| `base` | Prix de base en sats |
+| `floor` | Prix minimum (la tarification dynamique ne descend jamais en dessous) |
+| `surgeThreshold` | Appels/heure déclenchant une hausse de +10% |
+| `cogs` | Coût des marchandises en sats (utilisé par l'agent fiscal) |
+
+### POST /api/verity/admin/budget
+Définit la limite de dépense quotidienne du consommateur.
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"sats": 5000}' \
+  https://l402kit.com/api/verity/admin/budget
+```
+
+Minimum : 100 sats. Les modifications prennent effet immédiatement.
+
+---
+
 ## Architecture
 
 ```
 VERITY (agent:shinydapps.verity)
-  ├── 8 services protégés par L402
+  ├── 9 services protégés par L402
   ├── Trésor : shinydapps@blink.sv
-  ├── Heartbeat : toutes les 30min (ajustement des prix)
+  ├── Battement de cœur : toutes les 30min (ajustement des prix)
   ├── Agent Fiscal : rapport quotidien (sats gagnés + équivalent BRL)
   └── LAW-N : événements comportementaux émis par transaction
 ```

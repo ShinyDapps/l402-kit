@@ -1,11 +1,11 @@
 ---
 title: "أمثلة VERITY"
-description: "أمثلة على الكود لجميع خدمات VERITY الثماني باستخدام L402Client."
+description: "أمثلة برمجية لجميع خدمات VERITY التسع باستخدام L402Client."
 ---
 
 # أمثلة VERITY
 
-VERITY هي وكيل ذاتي حي على `https://l402kit.com/api/verity`. تُظهر هذه الأمثلة كيفية استدعاء خدماتها برمجيًا باستخدام حزمة SDK الخاصة بالوكيل l402-kit.
+VERITY هي وكيل ذاتي مباشر على `https://l402kit.com/api/verity`. تُوضح هذه الأمثلة كيفية استدعاء جميع الخدمات التسع برمجيًا باستخدام حزمة SDK الخاصة بوكيل l402-kit.
 
 ---
 
@@ -38,7 +38,7 @@ for (const svc of verity.services) {
 
 ## حالة العالم — 80 sats
 
-احصل على التوقيت بالتنسيق UTC وموقعك والطقس المحلي في استدعاء واحد.
+احصل على وقت UTC وموقعك والطقس المحلي في استدعاء واحد.
 
 ```typescript
 const res = await client.fetch("https://l402kit.com/api/verity/worldstate");
@@ -122,7 +122,7 @@ console.log(`A records: ${dns.a_records.join(", ")}`);
 
 ---
 
-## استخراج محتوى الويب — 200 sats
+## استخراج بيانات الويب — 200 sats
 
 ```typescript
 const res = await client.fetch("https://l402kit.com/api/verity/scrape", {
@@ -133,6 +133,42 @@ const res = await client.fetch("https://l402kit.com/api/verity/scrape", {
 const { content, title } = await res.json();
 console.log(`${title}\n\n${content.slice(0, 500)}...`);
 ```
+
+---
+
+## الترجمة — 50 sats
+
+ترجمة أي نص إلى 11 لغة محلية. يحافظ وضع MDX على كتل الأكواد وعلامات المكونات وعناوين URL ومصطلحات L402.
+
+```typescript
+// Plain text
+const res = await client.fetch("https://l402kit.com/api/verity/translate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    text: "Pay per call with Bitcoin Lightning. No API keys needed.",
+    locale: "pt",
+  }),
+});
+const { translated } = await res.json();
+console.log(translated);
+// "Pague por chamada com Bitcoin Lightning. Nenhuma chave de API necessária."
+```
+
+```typescript
+// MDX-aware (preserves code blocks, <Components />, URLs)
+const mdxPage = `## Install\n\`\`\`bash\nnpm install l402-kit\n\`\`\`\nSee [docs](https://docs.l402kit.com).`;
+
+const res = await client.fetch("https://l402kit.com/api/verity/translate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: mdxPage, locale: "es", format: "mdx" }),
+});
+const { translated } = await res.json();
+// Code block and URL preserved intact; only prose translated
+```
+
+اللغات المحلية المدعومة: `pt` `es` `zh` `ar` `fr` `de` `ja` `ko` `hi` `ru` `it`
 
 ---
 
@@ -153,14 +189,14 @@ console.log(integration);
 ```
 
 <Note>
-تكلف خدمة التكامل 10,000 sats (~10$). بعد الدفع، ستحصل على كود middleware كامل مخصص لإطار العمل الخاص بك (Express, FastAPI, Gin, Axum, إلخ) — وتحصل VERITY على أول إحالة لواجهة API الجديدة المدعومة بـ l402-kit.
+تكلف خدمة التكامل 10,000 sats (~$10). بعد الدفع، ستحصل على كود middleware كامل مخصص لإطار العمل الخاص بك (Express، FastAPI، Gin، Axum، وغيرها) — وتكسب VERITY أول إحالة لواجهة API الجديدة المدعومة بـ l402-kit.
 </Note>
 
 ---
 
-## ربط الخدمات معًا
+## تسلسل الخدمات
 
-نمط شائع للوكلاء: بحث → استخراج → تلخيص.
+نمط شائع للوكيل: بحث → استخراج → تلخيص.
 
 ```typescript
 // 1. Search for a topic (100 sats)

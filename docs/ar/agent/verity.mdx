@@ -1,34 +1,35 @@
 ---
 title: "VERITY"
-description: "وكيل ذكاء اصطناعي مستقل مع 8 خدمات محمية بـ L402. يكسب sats، ويدفع بـ sats."
+description: "وكيل ذكاء اصطناعي مستقل مع 9 خدمات محمية بـ L402. يكسب sats، يدفع بـ sats."
 ---
 
 # VERITY
 
-VERITY هو وكيل ذكاء اصطناعي مستقل مبني على l402-kit. تبيع 8 خدمات عبر بروتوكول L402، وتجمع خزينة Bitcoin، وتضبط أسعارها بنفسها بناءً على الطلب — دون تدخل بشري.
+VERITY هو وكيل ذكاء اصطناعي مستقل مبني على l402-kit. تبيع 9 خدمات عبر بروتوكول L402، وتجمع خزينة Bitcoin، وتعدّل أسعارها بناءً على الطلب — دون تدخل بشري.
 
 **نقطة الاكتشاف:** `GET https://l402kit.com/api/verity`
 
 ---
 
-## الخدمات الـ 8
+## الخدمات التسع
 
-| الخدمة | نقطة الوصول | السعر | المتطلبات |
+| الخدمة | نقطة النهاية | السعر | المتطلبات |
 |---|---|---|---|
-| البحث على الويب | `/api/verity/search` | 100 sats | — |
-| استخراج صفحات الويب | `/api/verity/scrape` | 200 sats | — |
+| بحث الويب | `/api/verity/search` | 100 sats | — |
+| استخراج بيانات الويب | `/api/verity/scrape` | 200 sats | — |
 | سعر BTC | `/api/verity/btc-price` | 10 sats | — |
 | التلخيص | `/api/verity/summarize` | 50 sats | — |
 | تحليل المشاعر | `/api/verity/sentiment` | 30 sats | — |
 | معلومات النطاق | `/api/verity/domain-intel` | 500 sats | — |
 | تكامل l402-kit | `/api/verity/integration` | 10,000 sats | — |
 | حالة العالم | `/api/verity/worldstate` | 80 sats | — |
+| الترجمة | `/api/verity/translate` | 50 sats | — |
 
-الأسعار ديناميكية — تقوم VERITY بتعديلها كل 30 دقيقة بناءً على الطلب.
+الأسعار ديناميكية — تعدّلها VERITY كل 30 دقيقة بناءً على الطلب.
 
 ---
 
-## كيفية الدفع
+## طريقة الدفع
 
 كل خدمة تتبع معيار L402:
 
@@ -40,7 +41,7 @@ curl -i https://l402kit.com/api/verity/btc-price
 # WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
 
 # الخطوة 2 — ادفع الفاتورة بأي محفظة Lightning
-# الخطوة 3 — أعد المحاولة مع الإثبات
+# الخطوة 3 — أعد المحاولة مع إثبات الدفع
 curl -H "Authorization: L402 <macaroon>:<preimage>" \
   https://l402kit.com/api/verity/btc-price
 ```
@@ -58,12 +59,12 @@ const client = new L402Client({
   budget: { maxSats: 500 },
 });
 
-// BTC price — 10 sats
+// سعر BTC — 10 sats
 const price = await client.fetch("https://l402kit.com/api/verity/btc-price");
 const data = await price.json();
 console.log(data.bitcoin.usd);
 
-// World state — 80 sats
+// حالة العالم — 80 sats
 const world = await client.fetch("https://l402kit.com/api/verity/worldstate");
 const state = await world.json();
 console.log(state.time.utc, state.location.city, state.weather.temperature_c);
@@ -74,7 +75,7 @@ console.log(state.time.utc, state.location.city, state.weather.temperature_c);
 ## مرجع الخدمات
 
 ### البحث — 100 sats
-بحث على الويب يعيد أفضل 10 نتائج عضوية.
+بحث ويب يُعيد أفضل 10 نتائج عضوية.
 
 ```bash
 # GET
@@ -103,8 +104,8 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### استخراج صفحات الويب — 200 sats
-يعيد محتوى الصفحة الكاملة بصيغة markdown.
+### استخراج بيانات الويب — 200 sats
+يُعيد محتوى الصفحة الكاملة بصيغة markdown.
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -116,7 +117,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### سعر BTC — 10 sats
-سعر Bitcoin الآني بالدولار الأمريكي واليورو والريال البرازيلي.
+سعر Bitcoin الفوري بالدولار الأمريكي واليورو والريال البرازيلي.
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -134,7 +135,7 @@ curl -H "Authorization: L402 <token>" \
 ---
 
 ### التلخيص — 50 sats
-تلخيص بالذكاء الاصطناعي لنصوص تصل إلى 50,000 حرف.
+تلخيص بالذكاء الاصطناعي يستوعب حتى 50,000 حرف.
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -190,7 +191,7 @@ curl -H "Authorization: L402 <token>" \
 ---
 
 ### تكامل l402-kit — 10,000 sats
-أرسل رابط مستودع GitHub عام. تقوم VERITY بتحليل قاعدة الكود وتعيد كود تكامل l402-kit الكامل.
+أرسل رابط مستودع GitHub عام. تقوم VERITY بتحليل قاعدة الكود وتُعيد كود التكامل الكامل مع l402-kit.
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -211,7 +212,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### حالة العالم — 80 sats
-الوقت بتوقيت UTC + الموقع الجغرافي للمتصل + الطقس المحلي في استدعاء واحد. بدون أي تكلفة لواجهات API خارجية.
+التوقيت العالمي UTC + الموقع الجغرافي للمتصل + الطقس المحلي في استدعاء واحد. بدون أي تكلفة لواجهات API خارجية.
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -240,14 +241,52 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
+### الترجمة — 50 sats
+تترجم النصوص أو توثيق MDX إلى أي من 11 لغة مدعومة. عندما يكون `format` هو `mdx`، يتم الحفاظ على كتل الكود ومكونات MDX والروابط والمصطلحات التقنية كما هي — ويُترجم النص العادي فقط.
+
+**اللغات المدعومة:** `pt`، `es`، `zh`، `ar`، `hi`، `fr`، `de`، `ru`، `ja`، `it`، `en`
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Pay once, access forever.", "locale": "pt", "format": "plain"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**صيغة MDX** (تحافظ على كتل الكود والمكونات):
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "---\ntitle: Quickstart\n---\n\nPay with Lightning.", "locale": "ja", "format": "mdx"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**الاستجابة:**
+```json
+{
+  "agent": "VERITY",
+  "service": "translate",
+  "locale": "pt",
+  "language": "Brazilian Portuguese",
+  "format": "plain",
+  "translated": "Pague uma vez, acesse para sempre.",
+  "source_length": 26,
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+الحد الأقصى للإدخال: 100,000 حرف لكل استدعاء.
+
+---
+
 ## التسعير الديناميكي
 
-تضبط VERITY الأسعار كل 30 دقيقة:
+تعدّل VERITY الأسعار كل 30 دقيقة:
 
 ```
-طلب مرتفع (> حد الاستدعاءات/ساعة) → السعر × 1.1
-طلب صفري (ساعتان متتاليتان)        → السعر × 0.9
-حماية الحد الأدنى                   → السعر لا ينخفض أبداً عن الحد الأدنى
+طلب مرتفع (> عتبة الاستدعاءات/ساعة) → السعر × 1.1
+لا طلب (ساعتان متتاليتان)             → السعر × 0.9
+حماية الحد الأدنى                      → السعر لا ينخفض أبدًا عن الحد الأدنى
 ```
 
 تحقق من الأسعار الحالية في أي وقت:
@@ -257,15 +296,76 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+## واجهة برمجة المشغّل
+
+إذا قمت بتفريع VERITY لتشغيل وكيلك الخاص، تتيح لك هذه النقاط تغيير التسعير والميزانيات أثناء التشغيل — دون الحاجة إلى نشر جديد.
+
+جميع مسارات المشرف تتطلب رأس `DASHBOARD_SECRET`:
+```
+Authorization: Bearer <DASHBOARD_SECRET>
+```
+
+### GET /api/verity/admin/config
+يُعيد إعدادات التسعير الحالية وإنفاق المستهلك لجميع الخدمات.
+
+```bash
+curl -H "Authorization: Bearer <secret>" \
+  https://l402kit.com/api/verity/admin/config
+```
+
+**الاستجابة:**
+```json
+{
+  "configs": {
+    "search":  { "base": 100, "floor": 50, "surgeThreshold": 50, "cogs": 2 },
+    "translate": { "base": 50, "floor": 50, "surgeThreshold": 30, "cogs": 1 }
+  },
+  "prices": { "search": 100, "translate": 50 },
+  "consumer": { "spent_today": 340, "budget": 10000 }
+}
+```
+
+### POST /api/verity/admin/config
+يحدّث معاملات التسعير لخدمة محددة. يتم تغيير الحقول المُقدَّمة فقط.
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"service": "search", "base": 150, "floor": 80}' \
+  https://l402kit.com/api/verity/admin/config
+```
+
+| الحقل | الوصف |
+|---|---|
+| `service` | اسم الخدمة (مطلوب) |
+| `base` | السعر الأساسي بـ sats |
+| `floor` | الحد الأدنى للسعر (لا ينخفض عنه التسعير الديناميكي أبدًا) |
+| `surgeThreshold` | عدد الاستدعاءات/ساعة الذي يُفعّل زيادة 10% |
+| `cogs` | تكلفة البضائع بـ sats (يستخدمها الوكيل المالي) |
+
+### POST /api/verity/admin/budget
+يضبط حد الإنفاق اليومي للمستهلك.
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"sats": 5000}' \
+  https://l402kit.com/api/verity/admin/budget
+```
+
+الحد الأدنى: 100 sats. تسري التغييرات فورًا.
+
+---
+
 ## البنية المعمارية
 
 ```
 VERITY (agent:shinydapps.verity)
-  ├── 8 L402-protected services
-  ├── Treasury: shinydapps@blink.sv
-  ├── Heartbeat: every 30min (price adjustment)
-  ├── Fiscal Agent: daily report (sats earned + BRL equivalent)
-  └── LAW-N: behavioral events emitted per transaction
+  ├── 9 خدمات محمية بـ L402
+  ├── الخزينة: shinydapps@blink.sv
+  ├── النبضة: كل 30 دقيقة (تعديل الأسعار)
+  ├── الوكيل المالي: تقرير يومي (sats مكتسبة + ما يعادلها بالريال البرازيلي)
+  └── LAW-N: أحداث سلوكية تُصدَر مع كل معاملة
 ```
 
-VERITY مفتوحة المصدر — يمكن تفريع نفس البنية المعمارية لإنشاء وكيلك المستقل الخاص.
+VERITY مفتوحة المصدر — يمكن تفريع نفس البنية لإنشاء وكيلك المستقل الخاص.

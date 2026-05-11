@@ -1,34 +1,35 @@
 ---
 title: MCP Server
-description: Добавьте l402-kit как MCP-инструмент, чтобы Claude Desktop, Cursor и любой MCP-совместимый ИИ мог автоматически оплачивать Lightning API.
+description: Добавьте l402-kit как инструмент MCP, чтобы Claude Desktop, Cursor и любой MCP-совместимый ИИ автоматически оплачивал Lightning API.
 ---
 
 ## Что такое MCP?
 
 [Model Context Protocol](https://modelcontextprotocol.io) — открытый стандарт Anthropic для предоставления LLM доступа к внешним инструментам. l402-kit поставляется с готовым MCP-сервером с двумя категориями инструментов:
 
-### Универсальные L402-инструменты
+### Универсальные инструменты L402
 
 | Инструмент | Описание |
 |------|-------------|
-| `l402_fetch` | Запрос к любому URL — автоматически оплачивает, если возвращается 402 |
-| `l402_balance` | Проверка оставшегося Lightning-бюджета |
+| `l402_fetch` | Получить любой URL — оплачивает автоматически при ответе 402 |
+| `l402_balance` | Проверить оставшийся Lightning-бюджет |
 | `l402_spending_report` | Полная разбивка платежей за текущую сессию |
 
 ### Инструменты VERITY — платные сервисы с автоматической оплатой
 
 | Инструмент | Цена | Описание |
 |------|------:|-------------|
-| `verity_btc_price` | 10 sats | Цена BTC в реальном времени в USD, EUR, BRL |
+| `verity_btc_price` | 10 sats | Текущая цена BTC в USD, EUR, BRL |
 | `verity_worldstate` | 80 sats | Время UTC + геолокация + местная погода |
-| `verity_search` | 100 sats | Веб-поиск, топ 10 органических результатов |
+| `verity_search` | 100 sats | Поиск в интернете, топ-10 органических результатов |
 | `verity_summarize` | 50 sats | ИИ-суммаризация до 50 000 символов |
 | `verity_sentiment` | 30 sats | Оценка тональности + ключевые слова |
 | `verity_scrape` | 200 sats | Веб-скрапинг с преобразованием в чистый markdown |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL-сертификаты |
+| `verity_translate` | 50 sats | ИИ-перевод на 11 языков с поддержкой MDX |
 | `verity_integration` | 10 000 sats | Полная интеграция l402-kit для любого GitHub-репозитория |
 
-Инструменты VERITY оплачиваются автономно — ручная обработка инвойсов не требуется.
+Инструменты VERITY оплачиваются автономно — ручная обработка счетов не требуется.
 
 ---
 
@@ -93,13 +94,13 @@ description: Добавьте l402-kit как MCP-инструмент, чтоб
 
 ## Переменные окружения
 
-| Переменная | Обязательная | Описание |
+| Переменная | Обязательна | Описание |
 |----------|:--------:|-------------|
 | `BLINK_API_KEY` | только Blink | Ваш API-ключ Blink |
 | `BLINK_WALLET_ID` | только Blink | Идентификатор вашего кошелька Blink |
 | `ALBY_TOKEN` | только Alby | Токен доступа Alby |
-| `ALBY_HUB_URL` | необязательная | Базовый URL кастомного Alby Hub |
-| `BUDGET_SATS` | необязательная | Максимальные расходы за сессию (по умолчанию: `2000`) |
+| `ALBY_HUB_URL` | опционально | Базовый URL пользовательского Alby Hub |
+| `BUDGET_SATS` | опционально | Максимальная трата за сессию (по умолчанию: `2000`) |
 
 ---
 
@@ -108,32 +109,32 @@ description: Добавьте l402-kit как MCP-инструмент, чтоб
 После запуска сервера Claude может автономно вызывать VERITY и любой L402-защищённый API:
 
 ```
-Вы: Какова цена BTC прямо сейчас?
+You: What's the BTC price right now?
 
-Claude: [вызывает verity_btc_price]
-        [Оплачено 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
+Claude: [calls verity_btc_price]
+        [Paid 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
 
-        Биткоин сейчас стоит $97 500 USD (Стоимость: 10 sats)
+        Bitcoin is currently $97,500 USD (Cost: 10 sats)
 ```
 
 ```
-Вы: Кратко изложи эту статью: <вставляет 5 000 слов>
+You: Summarize this article: <pastes 5,000 words>
 
-Claude: [вызывает verity_summarize с text="..."]
-        [Оплачено 50 sats] {"summary":"..."}
+Claude: [calls verity_summarize with text="..."]
+        [Paid 50 sats] {"summary":"..."}
 ```
 
 ```
-Вы: Найди "lightning network adoption 2026"
+You: Search for "lightning network adoption 2026"
 
-Claude: [вызывает verity_search с q="lightning network adoption 2026"]
-        [Оплачено 100 sats] {"results":[...]}
+Claude: [calls verity_search with q="lightning network adoption 2026"]
+        [Paid 100 sats] {"results":[...]}
 ```
 
 ```
-Вы: Сколько я потратил за это время?
+You: How much have I spent so far?
 
-Claude: [вызывает l402_spending_report]
+Claude: [calls l402_spending_report]
         === L402 Spending Report ===
         Total spent:  160 sats
         Remaining:    1840 sats
@@ -144,17 +145,59 @@ Claude: [вызывает l402_spending_report]
 
 ---
 
-## Реестр MCP
+## HTTP MCP-эндпоинт
 
-l402-kit включён в [реестр Glama MCP](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit).
+Помимо пакета stdio, VERITY предоставляет живой **HTTP MCP-сервер** — установка не требуется:
+
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+Любой MCP-клиент с поддержкой потокового HTTP-транспорта может подключиться напрямую. Передайте учётные данные Blink в заголовках:
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**Инициализация:**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**Список инструментов:**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**Вызов инструмента:**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+Эндпоинт автоматически оплачивает Lightning-счета с использованием учётных данных вашего кошелька и возвращает результат VERITY напрямую.
+
+---
+
+## Реестры MCP
+
+l402-kit включён во все крупные реестры MCP:
+
+| Реестр | Ссылка |
+|---|---|
+| Anthropic MCP Registry (официальный) | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | поиск по запросу `l402-kit` |
 
 Машиночитаемый манифест: `GET https://l402kit.com/.well-known/mcp.json`
 
 ---
 
-## Настройка с Cursor
+## Настройка в Cursor
 
-Добавьте тот же блок конфигурации в настройки MCP в Cursor через **Settings → MCP Servers**.
+Добавьте тот же блок конфигурации в настройки MCP Cursor в разделе **Settings → MCP Servers**.
 
 ---
 
@@ -166,13 +209,13 @@ l402-kit включён в [реестр Glama MCP](https://glama.ai/mcp/servers
 BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
 ```
 
-Любой MCP-совместимый клиент может подключиться через stdio-транспорт.
+Любой MCP-совместимый клиент может подключиться с использованием stdio-транспорта.
 
 ---
 
-## Создание кастомного MCP-сервера
+## Создание собственного MCP-сервера
 
-Вы также можете встроить `L402Client` непосредственно в собственный MCP-сервер:
+Вы также можете встроить `L402Client` непосредственно в свой MCP-сервер:
 
 ```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -204,8 +247,8 @@ await server.connect(transport);
 
 ---
 
-## Примечания по безопасности
+## Замечания по безопасности
 
 - Ограничение бюджета (`BUDGET_SATS`) — ваша основная защита; устанавливайте его консервативно
-- Каждый процесс `npx l402-kit-mcp` имеет собственный бюджет в оперативной памяти; он сбрасывается при перезапуске
-- Для продакшн-агентов сохраняйте журнал расходов через коллбэк `onSpend` во внешнее хранилище
+- Каждый процесс `npx l402-kit-mcp` имеет собственный бюджет в памяти; он сбрасывается при перезапуске
+- Для продакшн-агентов сохраняйте журнал расходов через колбэк `onSpend` во внешнее хранилище

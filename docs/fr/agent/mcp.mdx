@@ -1,19 +1,19 @@
 ---
-title: Serveur MCP
-description: Ajoutez l402-kit comme outil MCP pour que Claude Desktop, Cursor, et tout AI compatible MCP puisse payer automatiquement les APIs Lightning.
+title: MCP Server
+description: Ajoutez l402-kit comme outil MCP pour que Claude Desktop, Cursor et tout agent IA compatible MCP puissent payer des API Lightning automatiquement.
 ---
 
 ## Qu'est-ce que MCP ?
 
-[Model Context Protocol](https://modelcontextprotocol.io) est le standard ouvert d'Anthropic pour donner aux LLMs accès à des outils externes. l402-kit embarque un serveur MCP prêt à l'emploi avec deux catégories d'outils :
+[Model Context Protocol](https://modelcontextprotocol.io) est le standard ouvert d'Anthropic pour donner aux LLM accès à des outils externes. l402-kit fournit un serveur MCP prêt à l'emploi avec deux catégories d'outils :
 
 ### Outils L402 génériques
 
 | Outil | Description |
 |------|-------------|
-| `l402_fetch` | Récupère n'importe quelle URL — paie automatiquement si elle retourne 402 |
+| `l402_fetch` | Récupère n'importe quelle URL — paye automatiquement si elle retourne 402 |
 | `l402_balance` | Vérifie le budget Lightning restant |
-| `l402_spending_report` | Détail complet des paiements de la session |
+| `l402_spending_report` | Récapitulatif complet des paiements de la session |
 
 ### Outils VERITY — services payants, paiement automatique inclus
 
@@ -24,11 +24,12 @@ description: Ajoutez l402-kit comme outil MCP pour que Claude Desktop, Cursor, e
 | `verity_search` | 100 sats | Recherche web, top 10 résultats organiques |
 | `verity_summarize` | 50 sats | Résumé par IA jusqu'à 50 000 caractères |
 | `verity_sentiment` | 30 sats | Score de sentiment + mots-clés |
-| `verity_scrape` | 200 sats | Scraping web vers markdown propre |
+| `verity_scrape` | 200 sats | Scraping web converti en markdown propre |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + certificats SSL |
+| `verity_translate` | 50 sats | Traduction par IA vers 11 langues, compatible MDX |
 | `verity_integration` | 10 000 sats | Intégration complète de l402-kit pour tout dépôt GitHub |
 
-Les outils VERITY paient de manière autonome — aucune gestion manuelle de facture requise.
+Les outils VERITY paient de manière autonome — aucune gestion manuelle de facture n'est nécessaire.
 
 ---
 
@@ -40,7 +41,7 @@ Les outils VERITY paient de manière autonome — aucune gestion manuelle de fac
 
 <Tabs>
   <Tab title="Blink">
-    Éditez `claude_desktop_config.json` :
+    Modifiez `claude_desktop_config.json` :
 
     ```json
     {
@@ -93,10 +94,10 @@ Les outils `l402_fetch`, `l402_balance` et `l402_spending_report` apparaîtront 
 
 ## Variables d'environnement
 
-| Variable | Requis | Description |
+| Variable | Obligatoire | Description |
 |----------|:--------:|-------------|
 | `BLINK_API_KEY` | Blink uniquement | Votre clé API Blink |
-| `BLINK_WALLET_ID` | Blink uniquement | Votre identifiant de portefeuille Blink |
+| `BLINK_WALLET_ID` | Blink uniquement | L'identifiant de votre portefeuille Blink |
 | `ALBY_TOKEN` | Alby uniquement | Jeton d'accès Alby |
 | `ALBY_HUB_URL` | optionnel | URL de base personnalisée pour Alby Hub |
 | `BUDGET_SATS` | optionnel | Dépense maximale par session (défaut : `2000`) |
@@ -144,9 +145,51 @@ Claude : [appelle l402_spending_report]
 
 ---
 
-## Registre MCP
+## Point de terminaison HTTP MCP
 
-l402-kit est référencé dans le [registre MCP Glama](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit).
+En plus du package stdio, VERITY expose un **serveur HTTP MCP** actif — aucune installation requise :
+
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+Tout client MCP supportant le transport HTTP streamable peut se connecter directement. Transmettez vos identifiants Blink dans les en-têtes :
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**Initialisation :**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**Lister les outils :**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**Appeler un outil :**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+Le point de terminaison paye automatiquement les factures Lightning grâce à vos identifiants de portefeuille et retourne directement le résultat VERITY.
+
+---
+
+## Registres MCP
+
+l402-kit est référencé dans tous les principaux registres MCP :
+
+| Registre | Lien |
+|---|---|
+| Anthropic MCP Registry (officiel) | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | rechercher `l402-kit` |
 
 Manifeste lisible par machine : `GET https://l402kit.com/.well-known/mcp.json`
 
@@ -154,23 +197,23 @@ Manifeste lisible par machine : `GET https://l402kit.com/.well-known/mcp.json`
 
 ## Configuration avec Cursor
 
-Ajoutez le même bloc de configuration dans les paramètres MCP de Cursor sous **Settings → MCP Servers**.
+Ajoutez le même bloc de configuration dans les paramètres MCP de Cursor sous **Paramètres → MCP Servers**.
 
 ---
 
 ## Configuration avec n'importe quel client MCP
 
-Le serveur lit depuis `stdin` / écrit vers `stdout` (transport stdio) :
+Le serveur lit depuis `stdin` et écrit vers `stdout` (transport stdio) :
 
 ```bash
 BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
 ```
 
-Tout client compatible MCP peut se connecter en utilisant le transport stdio.
+Tout client compatible MCP peut se connecter via le transport stdio.
 
 ---
 
-## Construire un serveur MCP personnalisé
+## Créer un serveur MCP personnalisé
 
 Vous pouvez également intégrer `L402Client` directement dans votre propre serveur MCP :
 
@@ -206,6 +249,6 @@ await server.connect(transport);
 
 ## Notes de sécurité
 
-- Le plafond de budget (`BUDGET_SATS`) est votre principale protection — définissez-le de manière conservatrice
-- Chaque processus `npx l402-kit-mcp` dispose de son propre budget en mémoire ; il se réinitialise au redémarrage
+- Le plafond budgétaire (`BUDGET_SATS`) est votre principale protection — définissez-le de manière conservative
+- Chaque processus `npx l402-kit-mcp` possède son propre budget en mémoire ; il se réinitialise au redémarrage
 - Pour les agents en production, persistez le journal des dépenses via le callback `onSpend` vers un stockage externe

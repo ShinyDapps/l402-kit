@@ -5,27 +5,28 @@ description: Füge l402-kit als MCP-Tool hinzu, damit Claude Desktop, Cursor und
 
 ## Was ist MCP?
 
-[Model Context Protocol](https://modelcontextprotocol.io) ist Anthropics offener Standard, um LLMs Zugang zu externen Tools zu geben. l402-kit enthält einen vorgefertigten MCP-Server mit zwei Kategorien von Tools:
+[Model Context Protocol](https://modelcontextprotocol.io) ist Anthropics offener Standard, um LLMs Zugang zu externen Tools zu geben. l402-kit liefert einen fertigen MCP-Server mit zwei Tool-Kategorien:
 
 ### Generische L402-Tools
 
 | Tool | Beschreibung |
 |------|-------------|
-| `l402_fetch` | Ruft beliebige URLs ab — zahlt automatisch, wenn sie 402 zurückgeben |
-| `l402_balance` | Prüft das verbleibende Lightning-Budget |
-| `l402_spending_report` | Vollständige Aufschlüsselung der Zahlungen in dieser Sitzung |
+| `l402_fetch` | Beliebige URL abrufen — zahlt automatisch, wenn sie 402 zurückgibt |
+| `l402_balance` | Verbleibendes Lightning-Budget prüfen |
+| `l402_spending_report` | Vollständige Aufschlüsselung der Zahlungen dieser Sitzung |
 
 ### VERITY-Tools — kostenpflichtige Dienste, automatische Zahlung inklusive
 
 | Tool | Preis | Beschreibung |
 |------|------:|-------------|
-| `verity_btc_price` | 10 sats | BTC-Echtzeitkurs in USD, EUR, BRL |
+| `verity_btc_price` | 10 sats | Echtzeit-BTC-Preis in USD, EUR, BRL |
 | `verity_worldstate` | 80 sats | UTC-Zeit + Geolokalisierung + lokales Wetter |
-| `verity_search` | 100 sats | Websuche, Top 10 organische Ergebnisse |
-| `verity_summarize` | 50 sats | KI-Zusammenfassung bis zu 50.000 Zeichen |
+| `verity_search` | 100 sats | Websuche, Top-10-Ergebnisse |
+| `verity_summarize` | 50 sats | KI-Zusammenfassung bis 50.000 Zeichen |
 | `verity_sentiment` | 30 sats | Sentiment-Score + Schlüsselwörter |
 | `verity_scrape` | 200 sats | Web-Scraping zu sauberem Markdown |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL-Zertifikate |
+| `verity_translate` | 50 sats | KI-Übersetzung in 11 Sprachen, MDX-fähig |
 | `verity_integration` | 10.000 sats | Vollständige l402-kit-Integration für beliebige GitHub-Repos |
 
 VERITY-Tools zahlen autonom — keine manuelle Rechnungsverarbeitung erforderlich.
@@ -74,7 +75,7 @@ VERITY-Tools zahlen autonom — keine manuelle Rechnungsverarbeitung erforderlic
     }
     ```
 
-    Für einen selbst gehosteten Alby Hub, folgendes hinzufügen:
+    Für einen selbst gehosteten Alby Hub ergänzen:
     ```json
     "ALBY_HUB_URL": "https://your-hub.example.com"
     ```
@@ -87,7 +88,7 @@ VERITY-Tools zahlen autonom — keine manuelle Rechnungsverarbeitung erforderlic
 
 ### 3. Claude Desktop neu starten
 
-Die Tools `l402_fetch`, `l402_balance` und `l402_spending_report` erscheinen in Claudes Tool-Liste.
+Die Tools `l402_fetch`, `l402_balance` und `l402_spending_report` erscheinen anschließend in Claudes Tool-Liste.
 
 ---
 
@@ -98,22 +99,22 @@ Die Tools `l402_fetch`, `l402_balance` und `l402_spending_report` erscheinen in 
 | `BLINK_API_KEY` | Nur Blink | Dein Blink-API-Schlüssel |
 | `BLINK_WALLET_ID` | Nur Blink | Deine Blink-Wallet-ID |
 | `ALBY_TOKEN` | Nur Alby | Alby-Zugriffstoken |
-| `ALBY_HUB_URL` | optional | Benutzerdefinierte Alby-Hub-Basis-URL |
+| `ALBY_HUB_URL` | optional | Benutzerdefinierte Alby Hub-Basis-URL |
 | `BUDGET_SATS` | optional | Maximale Ausgaben pro Sitzung (Standard: `2000`) |
 
 ---
 
-## Verwendung der Tools
+## Tools verwenden
 
-Sobald der Server läuft, kann Claude VERITY und beliebige L402-geschützte APIs autonom aufrufen:
+Sobald der Server läuft, kann Claude VERITY und jede L402-geschützte API autonom aufrufen:
 
 ```
-Du: Was ist der aktuelle BTC-Kurs?
+Du: Was ist der aktuelle BTC-Preis?
 
 Claude: [ruft verity_btc_price auf]
         [10 sats bezahlt] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
 
-        Bitcoin kostet aktuell 97.500 USD (Kosten: 10 sats)
+        Bitcoin steht aktuell bei $97.500 USD (Kosten: 10 sats)
 ```
 
 ```
@@ -144,9 +145,51 @@ Claude: [ruft l402_spending_report auf]
 
 ---
 
-## MCP-Verzeichnis
+## HTTP-MCP-Endpunkt
 
-l402-kit ist im [Glama MCP-Verzeichnis](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) gelistet.
+Zusätzlich zum stdio-Paket stellt VERITY einen live **HTTP-MCP-Server** bereit — keine Installation erforderlich:
+
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+Jeder MCP-Client, der streamable HTTP-Transport unterstützt, kann sich direkt verbinden. Übergib deine Blink-Zugangsdaten als Header:
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**Initialisieren:**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**Tools auflisten:**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**Tool aufrufen:**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+Der Endpunkt bezahlt Lightning-Rechnungen automatisch über deine Wallet-Zugangsdaten und gibt das VERITY-Ergebnis direkt zurück.
+
+---
+
+## MCP-Verzeichnisse
+
+l402-kit ist in allen wichtigen MCP-Verzeichnissen gelistet:
+
+| Verzeichnis | Link |
+|---|---|
+| Anthropic MCP Registry (offiziell) | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | `l402-kit` suchen |
 
 Maschinenlesbares Manifest: `GET https://l402kit.com/.well-known/mcp.json`
 
@@ -154,13 +197,13 @@ Maschinenlesbares Manifest: `GET https://l402kit.com/.well-known/mcp.json`
 
 ## Einrichtung mit Cursor
 
-Den gleichen Konfigurationsblock in Cursors MCP-Einstellungen unter **Einstellungen → MCP Servers** hinzufügen.
+Füge denselben Konfigurationsblock in Cursors MCP-Einstellungen unter **Einstellungen → MCP Servers** hinzu.
 
 ---
 
 ## Einrichtung mit einem beliebigen MCP-Client
 
-Der Server liest von `stdin` / schreibt nach `stdout` (stdio-Transport):
+Der Server liest von `stdin` und schreibt nach `stdout` (stdio-Transport):
 
 ```bash
 BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
@@ -170,7 +213,7 @@ Jeder MCP-kompatible Client kann sich über den stdio-Transport verbinden.
 
 ---
 
-## Einen eigenen MCP-Server erstellen
+## Eigenen MCP-Server erstellen
 
 Du kannst `L402Client` auch direkt in deinen eigenen MCP-Server einbetten:
 
@@ -206,6 +249,6 @@ await server.connect(transport);
 
 ## Sicherheitshinweise
 
-- Das Budget-Limit (`BUDGET_SATS`) ist deine wichtigste Schutzmaßnahme — setze es konservativ an
-- Jeder `npx l402-kit-mcp`-Prozess hat sein eigenes speicherinternes Budget; es wird beim Neustart zurückgesetzt
+- Die Budget-Obergrenze (`BUDGET_SATS`) ist deine wichtigste Schutzmaßnahme — setze sie konservativ
+- Jeder `npx l402-kit-mcp`-Prozess hat sein eigenes In-Memory-Budget; es wird beim Neustart zurückgesetzt
 - Für produktive Agenten das Ausgabenprotokoll über den `onSpend`-Callback in einem externen Speicher persistieren

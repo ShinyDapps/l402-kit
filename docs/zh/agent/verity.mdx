@@ -1,36 +1,37 @@
 ---
 title: "VERITY"
-description: "具备8个L402保护服务的自主AI代理。赚取sats，以sats支付。"
+description: "具有 9 个 L402 保护服务的自主 AI 代理。赚取 sats，以 sats 支付。"
 ---
 
 # VERITY
 
-VERITY 是一个基于 l402-kit 构建的自主AI代理。她通过 L402 协议销售8项服务，积累比特币国库，并根据需求自动调整价格——无需人工干预。
+VERITY 是一个基于 l402-kit 构建的自主 AI 代理。她通过 L402 协议销售 9 种服务，积累比特币国库，并根据需求自动调整价格——无需人工干预。
 
 **发现端点：** `GET https://l402kit.com/api/verity`
 
 ---
 
-## 8项服务
+## 9 种服务
 
-| 服务 | 端点 | 价格 | 依赖 |
+| 服务 | 端点 | 价格 | 要求 |
 |---|---|---|---|
 | 网页搜索 | `/api/verity/search` | 100 sats | — |
 | 网页抓取 | `/api/verity/scrape` | 200 sats | — |
 | BTC 价格 | `/api/verity/btc-price` | 10 sats | — |
-| 文本摘要 | `/api/verity/summarize` | 50 sats | — |
+| 摘要生成 | `/api/verity/summarize` | 50 sats | — |
 | 情感分析 | `/api/verity/sentiment` | 30 sats | — |
 | 域名情报 | `/api/verity/domain-intel` | 500 sats | — |
 | l402-kit 集成 | `/api/verity/integration` | 10,000 sats | — |
 | 世界状态 | `/api/verity/worldstate` | 80 sats | — |
+| 翻译 | `/api/verity/translate` | 50 sats | — |
 
-价格是动态的——VERITY 每30分钟根据需求调整一次价格。
+价格是动态的——VERITY 每 30 分钟根据需求调整一次。
 
 ---
 
 ## 如何支付
 
-每项服务均遵循标准 L402 流程：
+每个服务均遵循标准 L402 流程：
 
 ```bash
 # 第一步 — 请求服务（获取发票）
@@ -40,7 +41,7 @@ curl -i https://l402kit.com/api/verity/btc-price
 # WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
 
 # 第二步 — 使用任意 Lightning 钱包支付发票
-# 第三步 — 携带证明重试请求
+# 第三步 — 携带凭证重试
 curl -H "Authorization: L402 <macaroon>:<preimage>" \
   https://l402kit.com/api/verity/btc-price
 ```
@@ -74,7 +75,7 @@ console.log(state.time.utc, state.location.city, state.weather.temperature_c);
 ## 服务参考
 
 ### 搜索 — 100 sats
-网页搜索，返回前10条自然搜索结果。
+网页搜索，返回前 10 条有机结果。
 
 ```bash
 # GET
@@ -116,7 +117,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### BTC 价格 — 10 sats
-实时获取比特币以 USD、EUR 和 BRL 计价的价格。
+以美元、欧元和巴西雷亚尔报价的比特币实时价格。
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -133,8 +134,8 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
-### 文本摘要 — 50 sats
-AI 摘要，支持最多 50,000 个字符。
+### 摘要生成 — 50 sats
+支持最多 50,000 个字符的 AI 摘要生成。
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -146,7 +147,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### 情感分析 — 30 sats
-情感分析，包含分数、置信度和关键词。
+包含评分、置信度和关键词的情感分析。
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -170,7 +171,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### 域名情报 — 500 sats
-WHOIS、DNS 记录和 SSL 证书。无需 API 密钥——使用公共 RDAP 和 crt.sh。
+WHOIS、DNS 记录和 SSL 证书。无需 API 密钥——使用公开的 RDAP 和 crt.sh。
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -211,7 +212,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### 世界状态 — 80 sats
-单次调用返回 UTC 时间 + 调用方地理位置 + 当地天气。零外部 API 费用。
+通过单次调用获取 UTC 时间 + 调用者地理位置 + 当地天气。零外部 API 成本。
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -240,14 +241,52 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
+### 翻译 — 50 sats
+将文本或 MDX 文档翻译为 11 种支持语言之一。当 `format` 为 `mdx` 时，代码块、MDX 组件、URL 和技术术语将被完整保留——仅翻译散文内容。
+
+**支持的语言代码：** `pt`、`es`、`zh`、`ar`、`hi`、`fr`、`de`、`ru`、`ja`、`it`、`en`
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Pay once, access forever.", "locale": "pt", "format": "plain"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**MDX 格式**（保留代码块和组件）：
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "---\ntitle: Quickstart\n---\n\nPay with Lightning.", "locale": "ja", "format": "mdx"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**响应：**
+```json
+{
+  "agent": "VERITY",
+  "service": "translate",
+  "locale": "pt",
+  "language": "Brazilian Portuguese",
+  "format": "plain",
+  "translated": "Pague uma vez, acesse para sempre.",
+  "source_length": 26,
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+每次调用最大输入：100,000 个字符。
+
+---
+
 ## 动态定价
 
-VERITY 每30分钟调整一次价格：
+VERITY 每 30 分钟调整一次价格：
 
 ```
-高需求（每小时调用量 > 阈值） → 价格 × 1.1
-零需求（连续2小时无调用）     → 价格 × 0.9
-底价保护                       → 价格永不低于最低值
+高需求（> 阈值 次调用/小时） → 价格 × 1.1
+零需求（连续 2 小时）        → 价格 × 0.9
+底价保护                     → 价格永不低于最低值
 ```
 
 随时查看当前价格：
@@ -257,14 +296,75 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+## 运营者 API
+
+如果您 fork VERITY 来运行自己的代理，这些端点允许您在运行时更改定价和预算——无需重新部署。
+
+所有管理路由都需要 `DASHBOARD_SECRET` 请求头：
+```
+Authorization: Bearer <DASHBOARD_SECRET>
+```
+
+### GET /api/verity/admin/config
+返回所有服务的当前定价配置和消费者支出。
+
+```bash
+curl -H "Authorization: Bearer <secret>" \
+  https://l402kit.com/api/verity/admin/config
+```
+
+**响应：**
+```json
+{
+  "configs": {
+    "search":  { "base": 100, "floor": 50, "surgeThreshold": 50, "cogs": 2 },
+    "translate": { "base": 50, "floor": 50, "surgeThreshold": 30, "cogs": 1 }
+  },
+  "prices": { "search": 100, "translate": 50 },
+  "consumer": { "spent_today": 340, "budget": 10000 }
+}
+```
+
+### POST /api/verity/admin/config
+更新特定服务的定价参数。仅更改已提供的字段。
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"service": "search", "base": 150, "floor": 80}' \
+  https://l402kit.com/api/verity/admin/config
+```
+
+| 字段 | 描述 |
+|---|---|
+| `service` | 服务名称（必填） |
+| `base` | 基础价格（单位：sats） |
+| `floor` | 最低价格（动态定价永不低于此值） |
+| `surgeThreshold` | 触发 +10% 溢价的每小时调用次数 |
+| `cogs` | 商品成本（单位：sats，供财务代理使用） |
+
+### POST /api/verity/admin/budget
+设置消费者每日支出限额。
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"sats": 5000}' \
+  https://l402kit.com/api/verity/admin/budget
+```
+
+最低值：100 sats。更改立即生效。
+
+---
+
 ## 架构
 
 ```
 VERITY (agent:shinydapps.verity)
-  ├── 8 个 L402 保护服务
+  ├── 9 个 L402 保护服务
   ├── 国库：shinydapps@blink.sv
-  ├── 心跳：每30分钟（价格调整）
-  ├── 财务代理：每日报告（已赚取 sats + BRL 等值）
+  ├── 心跳：每 30 分钟（价格调整）
+  ├── 财务代理：每日报告（赚取的 sats + 巴西雷亚尔等值）
   └── LAW-N：每笔交易触发行为事件
 ```
 

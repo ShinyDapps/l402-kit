@@ -38,7 +38,7 @@ for (const svc of verity.services) {
 
 ## Stato del Mondo — 80 sats
 
-Ottieni l'ora UTC, la tua posizione e il meteo locale in una sola chiamata.
+Ottieni l'ora UTC, la tua posizione e il meteo locale in un'unica chiamata.
 
 ```typescript
 const res = await client.fetch("https://l402kit.com/api/verity/worldstate");
@@ -77,7 +77,7 @@ for (const r of results) {
 
 ---
 
-## Riepilogo — 50 sats
+## Riassumi — 50 sats
 
 ```typescript
 const longText = "..."; // fino a 50.000 caratteri
@@ -107,7 +107,7 @@ const { analysis } = await res.json();
 
 ---
 
-## Intelligence di Dominio — 500 sats
+## Domain Intel — 500 sats
 
 ```typescript
 const res = await client.fetch(
@@ -165,7 +165,7 @@ const res = await client.fetch("https://l402kit.com/api/verity/translate", {
   body: JSON.stringify({ text: mdxPage, locale: "es", format: "mdx" }),
 });
 const { translated } = await res.json();
-// Il blocco di codice e l'URL vengono preservati intatti; viene tradotto solo il testo in prosa
+// Il blocco di codice e l'URL vengono preservati intatti; viene tradotto solo il testo
 ```
 
 Lingue supportate: `pt` `es` `zh` `ar` `fr` `de` `ja` `ko` `hi` `ru` `it`
@@ -189,14 +189,14 @@ console.log(integration);
 ```
 
 <Note>
-Il servizio di integrazione costa 10.000 sats (~$10). Dopo il pagamento, ricevi il codice middleware completo specifico per il tuo framework (Express, FastAPI, Gin, Axum, ecc.) — e VERITY guadagna il primo riferimento alla tua nuova API basata su l402-kit.
+Il servizio di integrazione costa 10.000 sats (~$10). Dopo il pagamento, ricevi il codice middleware completo specifico per il tuo framework (Express, FastAPI, Gin, Axum, ecc.) — e VERITY ottiene il primo referral alla tua nuova API potenziata da l402-kit.
 </Note>
 
 ---
 
-## Concatenazione dei servizi
+## Concatenare i servizi
 
-Un pattern comune per gli agenti: cerca → scraping → riepilogo.
+Un pattern comune per agenti: ricerca → scraping → riassunto.
 
 ```typescript
 // 1. Cerca un argomento (100 sats)
@@ -206,7 +206,7 @@ const searchRes = await client.fetch(
 const { results } = await searchRes.json();
 const topUrl = results[0].link;
 
-// 2. Scraping del primo risultato (200 sats)
+// 2. Esegui lo scraping del primo risultato (200 sats)
 const scrapeRes = await client.fetch("https://l402kit.com/api/verity/scrape", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -214,7 +214,7 @@ const scrapeRes = await client.fetch("https://l402kit.com/api/verity/scrape", {
 });
 const { content } = await scrapeRes.json();
 
-// 3. Riepilogo dell'articolo (50 sats)
+// 3. Riassumi l'articolo (50 sats)
 const sumRes = await client.fetch("https://l402kit.com/api/verity/summarize", {
   method: "POST",
   headers: { "Content-Type": "application/json" },

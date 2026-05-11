@@ -1,34 +1,35 @@
 ---
 title: خادم MCP
-description: أضف l402-kit كأداة MCP حتى يتمكن Claude Desktop وCursor وأي ذكاء اصطناعي متوافق مع MCP من الدفع لواجهات برمجة Lightning تلقائيًا.
+description: أضف l402-kit كأداة MCP حتى يتمكن Claude Desktop وCursor وأي ذكاء اصطناعي متوافق مع MCP من الدفع لـ Lightning APIs تلقائيًا.
 ---
 
 ## ما هو MCP؟
 
-[بروتوكول سياق النموذج](https://modelcontextprotocol.io) هو المعيار المفتوح من Anthropic لمنح نماذج اللغة الكبيرة إمكانية الوصول إلى الأدوات الخارجية. يأتي l402-kit مزوَّدًا بخادم MCP جاهز للاستخدام يحتوي على فئتين من الأدوات:
+[Model Context Protocol](https://modelcontextprotocol.io) هو المعيار المفتوح من Anthropic لمنح نماذج اللغة الكبيرة إمكانية الوصول إلى الأدوات الخارجية. يأتي l402-kit مزودًا بخادم MCP جاهز للاستخدام يحتوي على فئتين من الأدوات:
 
 ### أدوات L402 العامة
 
 | الأداة | الوصف |
 |------|-------------|
-| `l402_fetch` | جلب أي رابط — يدفع تلقائيًا إذا أعاد استجابة 402 |
-| `l402_balance` | التحقق من الميزانية المتبقية في Lightning |
-| `l402_spending_report` | تفصيل كامل للمدفوعات في الجلسة الحالية |
+| `l402_fetch` | جلب أي URL — يدفع تلقائيًا إذا أعاد 402 |
+| `l402_balance` | التحقق من الرصيد المتبقي في Lightning |
+| `l402_spending_report` | تفصيل كامل للمدفوعات في هذه الجلسة |
 
-### أدوات VERITY — خدمات مدفوعة مع دفع تلقائي
+### أدوات VERITY — خدمات مدفوعة، تدفع تلقائيًا
 
 | الأداة | السعر | الوصف |
 |------|------:|-------------|
-| `verity_btc_price` | 10 sats | سعر BTC الفوري بالدولار الأمريكي واليورو والريال البرازيلي |
-| `verity_worldstate` | 80 sats | التوقيت العالمي UTC + الموقع الجغرافي + الطقس المحلي |
+| `verity_btc_price` | 10 sats | سعر BTC الحي بالدولار واليورو والريال البرازيلي |
+| `verity_worldstate` | 80 sats | التوقيت UTC + الموقع الجغرافي + الطقس المحلي |
 | `verity_search` | 100 sats | بحث على الويب، أفضل 10 نتائج عضوية |
 | `verity_summarize` | 50 sats | تلخيص بالذكاء الاصطناعي لما يصل إلى 50,000 حرف |
 | `verity_sentiment` | 30 sats | درجة المشاعر + الكلمات المفتاحية |
-| `verity_scrape` | 200 sats | استخراج محتوى الويب بتنسيق markdown نظيف |
+| `verity_scrape` | 200 sats | استخراج بيانات الويب إلى markdown نظيف |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + شهادات SSL |
-| `verity_integration` | 10,000 sats | تكامل l402-kit الكامل لأي مستودع GitHub |
+| `verity_translate` | 50 sats | ترجمة بالذكاء الاصطناعي إلى 11 لغة، يدعم MDX |
+| `verity_integration` | 10,000 sats | تكامل l402-kit كامل لأي مستودع GitHub |
 
-تدفع أدوات VERITY بشكل مستقل — لا حاجة لمعالجة الفواتير يدويًا.
+تدفع أدوات VERITY باستقلالية — لا حاجة للتعامل اليدوي مع الفواتير.
 
 ---
 
@@ -36,11 +37,11 @@ description: أضف l402-kit كأداة MCP حتى يتمكن Claude Desktop وC
 
 ### 1. تثبيت Node.js ≥ 18
 
-### 2. ضبط إعدادات المحفظة
+### 2. إعداد محفظتك
 
 <Tabs>
   <Tab title="Blink">
-    عدِّل ملف `claude_desktop_config.json`:
+    عدّل ملف `claude_desktop_config.json`:
 
     ```json
     {
@@ -96,7 +97,7 @@ description: أضف l402-kit كأداة MCP حتى يتمكن Claude Desktop وC
 | المتغير | مطلوب | الوصف |
 |----------|:--------:|-------------|
 | `BLINK_API_KEY` | Blink فقط | مفتاح Blink API الخاص بك |
-| `BLINK_WALLET_ID` | Blink فقط | معرف محفظة Blink الخاصة بك |
+| `BLINK_WALLET_ID` | Blink فقط | معرّف محفظة Blink الخاصة بك |
 | `ALBY_TOKEN` | Alby فقط | رمز وصول Alby |
 | `ALBY_HUB_URL` | اختياري | عنوان URL مخصص لـ Alby Hub |
 | `BUDGET_SATS` | اختياري | الحد الأقصى للإنفاق لكل جلسة (الافتراضي: `2000`) |
@@ -105,35 +106,35 @@ description: أضف l402-kit كأداة MCP حتى يتمكن Claude Desktop وC
 
 ## استخدام الأدوات
 
-بمجرد تشغيل الخادم، يمكن لـ Claude استدعاء VERITY وأي واجهة برمجة محمية بـ L402 بشكل مستقل:
+بمجرد تشغيل الخادم، يمكن لـ Claude استدعاء VERITY وأي API محمي بـ L402 باستقلالية:
 
 ```
-أنت: ما سعر BTC الآن؟
+You: What's the BTC price right now?
 
-Claude: [يستدعي verity_btc_price]
-        [تم الدفع 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
+Claude: [calls verity_btc_price]
+        [Paid 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
 
-        سعر Bitcoin حاليًا 97,500 دولار أمريكي (التكلفة: 10 sats)
-```
-
-```
-أنت: لخّص هذا المقال: <يلصق 5,000 كلمة>
-
-Claude: [يستدعي verity_summarize مع text="..."]
-        [تم الدفع 50 sats] {"summary":"..."}
+        Bitcoin is currently $97,500 USD (Cost: 10 sats)
 ```
 
 ```
-أنت: ابحث عن "lightning network adoption 2026"
+You: Summarize this article: <pastes 5,000 words>
 
-Claude: [يستدعي verity_search مع q="lightning network adoption 2026"]
-        [تم الدفع 100 sats] {"results":[...]}
+Claude: [calls verity_summarize with text="..."]
+        [Paid 50 sats] {"summary":"..."}
 ```
 
 ```
-أنت: كم أنفقت حتى الآن؟
+You: Search for "lightning network adoption 2026"
 
-Claude: [يستدعي l402_spending_report]
+Claude: [calls verity_search with q="lightning network adoption 2026"]
+        [Paid 100 sats] {"results":[...]}
+```
+
+```
+You: How much have I spent so far?
+
+Claude: [calls l402_spending_report]
         === L402 Spending Report ===
         Total spent:  160 sats
         Remaining:    1840 sats
@@ -144,17 +145,59 @@ Claude: [يستدعي l402_spending_report]
 
 ---
 
-## سجل MCP
+## نقطة نهاية HTTP MCP
 
-يُدرج l402-kit في [سجل Glama MCP](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit).
+بالإضافة إلى حزمة stdio، تُتيح VERITY **خادم HTTP MCP** مباشرًا — لا يلزم أي تثبيت:
 
-البيان القابل للقراءة آليًا: `GET https://l402kit.com/.well-known/mcp.json`
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+يمكن لأي عميل MCP يدعم نقل HTTP القابل للبث الاتصال مباشرةً. مرّر بيانات اعتماد Blink كترويسات:
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**التهيئة:**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**سرد الأدوات:**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**استدعاء أداة:**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+تدفع نقطة النهاية فواتير Lightning تلقائيًا باستخدام بيانات اعتماد محفظتك وتُعيد نتيجة VERITY مباشرةً.
+
+---
+
+## سجلات MCP
+
+يُدرج l402-kit في جميع سجلات MCP الرئيسية:
+
+| السجل | الرابط |
+|---|---|
+| Anthropic MCP Registry (الرسمي) | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | ابحث عن `l402-kit` |
+
+ملف البيان القابل للقراءة آليًا: `GET https://l402kit.com/.well-known/mcp.json`
 
 ---
 
 ## الإعداد مع Cursor
 
-أضف نفس كتلة الإعداد إلى إعدادات MCP في Cursor تحت **Settings → MCP Servers**.
+أضف نفس كتلة الإعداد إلى إعدادات MCP في Cursor ضمن **Settings → MCP Servers**.
 
 ---
 
@@ -206,6 +249,6 @@ await server.connect(transport);
 
 ## ملاحظات الأمان
 
-- سقف الميزانية (`BUDGET_SATS`) هو ضمانتك الأساسية — اضبطه بشكل محافظ
-- كل عملية `npx l402-kit-mcp` لها ميزانيتها الخاصة في الذاكرة؛ تُعاد تهيئتها عند إعادة التشغيل
-- للوكلاء في بيئة الإنتاج، احفظ سجل الإنفاق عبر استدعاء `onSpend` إلى مخزن خارجي
+- سقف الميزانية (`BUDGET_SATS`) هو ضمانتك الأساسية — اضبطه بتحفظ
+- لكل عملية `npx l402-kit-mcp` ميزانيتها الخاصة في الذاكرة؛ تُعاد تهيئتها عند إعادة التشغيل
+- للوكلاء في بيئات الإنتاج، احفظ سجل الإنفاق عبر دالة رد النداء `onSpend` في مخزن خارجي
