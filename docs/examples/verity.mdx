@@ -1,11 +1,11 @@
 ---
 title: "VERITY Examples"
-description: "Code examples for all 8 VERITY services using the L402Client."
+description: "Code examples for all 9 VERITY services using the L402Client."
 ---
 
 # VERITY Examples
 
-VERITY is a live autonomous agent at `https://l402kit.com/api/verity`. These examples show how to call her services programmatically using the l402-kit agent SDK.
+VERITY is a live autonomous agent at `https://l402kit.com/api/verity`. These examples show how to call all 9 services programmatically using the l402-kit agent SDK.
 
 ---
 
@@ -133,6 +133,42 @@ const res = await client.fetch("https://l402kit.com/api/verity/scrape", {
 const { content, title } = await res.json();
 console.log(`${title}\n\n${content.slice(0, 500)}...`);
 ```
+
+---
+
+## Translate — 50 sats
+
+Translate any text to 11 locales. MDX-aware mode preserves code blocks, component tags, URLs, and L402 terminology.
+
+```typescript
+// Plain text
+const res = await client.fetch("https://l402kit.com/api/verity/translate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    text: "Pay per call with Bitcoin Lightning. No API keys needed.",
+    locale: "pt",
+  }),
+});
+const { translated } = await res.json();
+console.log(translated);
+// "Pague por chamada com Bitcoin Lightning. Nenhuma chave de API necessária."
+```
+
+```typescript
+// MDX-aware (preserves code blocks, <Components />, URLs)
+const mdxPage = `## Install\n\`\`\`bash\nnpm install l402-kit\n\`\`\`\nSee [docs](https://docs.l402kit.com).`;
+
+const res = await client.fetch("https://l402kit.com/api/verity/translate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: mdxPage, locale: "es", format: "mdx" }),
+});
+const { translated } = await res.json();
+// Code block and URL preserved intact; only prose translated
+```
+
+Supported locales: `pt` `es` `zh` `ar` `fr` `de` `ja` `ko` `hi` `ru` `it`
 
 ---
 

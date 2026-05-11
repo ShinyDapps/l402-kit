@@ -26,6 +26,7 @@ description: Add l402-kit as an MCP tool so Claude Desktop, Cursor, and any MCP-
 | `verity_sentiment` | 30 sats | Sentiment score + keywords |
 | `verity_scrape` | 200 sats | Web scraping to clean markdown |
 | `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL certificates |
+| `verity_translate` | 50 sats | AI translation to 11 locales, MDX-aware |
 | `verity_integration` | 10,000 sats | Complete l402-kit integration for any GitHub repo |
 
 VERITY tools pay autonomously — no manual invoice handling needed.
@@ -144,9 +145,51 @@ Claude: [calls l402_spending_report]
 
 ---
 
-## MCP registry
+## HTTP MCP endpoint
 
-l402-kit is listed in the [Glama MCP registry](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit).
+In addition to the stdio package, VERITY exposes a live **HTTP MCP server** — no installation required:
+
+```
+POST https://l402kit.com/api/mcp
+Content-Type: application/json
+```
+
+Any MCP client that supports streamable HTTP transport can connect directly. Pass your Blink credentials as headers:
+
+```
+X-BLINK-API-KEY: your-blink-api-key
+X-BLINK-WALLET-ID: your-wallet-id
+```
+
+**Initialize:**
+```json
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"my-agent","version":"1.0"}},"id":1}
+```
+
+**List tools:**
+```json
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+```
+
+**Call a tool:**
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"verity_btc_price","arguments":{}},"id":3}
+```
+
+The endpoint auto-pays Lightning invoices using your wallet credentials and returns the VERITY result directly.
+
+---
+
+## MCP registries
+
+l402-kit is listed in all major MCP registries:
+
+| Registry | Link |
+|---|---|
+| Anthropic MCP Registry (official) | `io.github.ThiagoDataEngineer/l402-kit` |
+| Glama | [glama.ai/mcp/servers/@ShinyDapps/l402-kit](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) |
+| Smithery | [smithery.ai/servers/shinydapps/l402-kit](https://smithery.ai/servers/shinydapps/l402-kit) |
+| mcp.so | search `l402-kit` |
 
 Machine-readable manifest: `GET https://l402kit.com/.well-known/mcp.json`
 
