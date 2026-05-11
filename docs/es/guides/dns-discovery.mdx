@@ -1,0 +1,68 @@
+---
+title: "Descubrimiento DNS"
+description: "Permite que los agentes descubran tu endpoint L402 mediante un registro TXT de DNS — sin necesidad de solicitud HTTP."
+---
+
+## Por qué el descubrimiento DNS
+
+Los agentes con acceso a internet pueden resolver DNS antes de realizar cualquier solicitud HTTP. Si publicas tu endpoint L402 como un registro TXT de DNS, los agentes lo descubren automáticamente — incluso antes de acceder a tu API.
+
+## Formato del registro TXT
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+Campos:
+- `v=l402` — identificador del protocolo
+- `endpoint=` — tu URL protegida por L402
+- `price=` — precio en sats (opcional, informativo)
+- `docs=` — enlace a tu documentación (opcional)
+
+## Configuración en Cloudflare
+
+1. Ve a **Cloudflare Dashboard → DNS**
+2. Agrega un nuevo registro:
+
+| Type | Name | Content | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## Verificar con dig
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Salida esperada:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## Cómo lo usan los agentes
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// El agente resuelve DNS para encontrar tu endpoint
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Retorna: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## Registro propio de l402-kit
+
+El ejemplo a continuación utiliza un dominio ficticio (`api.example.com`) para ilustrar el formato — reemplázalo con tu endpoint real.
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## Beneficios
+
+- **Sin sobrecarga HTTP** — descubrimiento antes de cualquier llamada a la API
+- **Nativo para agentes** — DNS es la forma en que las máquinas encuentran servicios, no los humanos
+- **Sin necesidad de clave API** — descubrimiento completamente abierto
+- **Cacheable** — el TTL controla con qué frecuencia los agentes vuelven a resolver
+
+Consulta [.well-known/agent.json](https://api.example.com/.well-known/agent.json) para el estándar complementario de descubrimiento HTTP.

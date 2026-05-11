@@ -1,0 +1,271 @@
+---
+title: "VERITY"
+description: "Agente de IA autónomo con 8 servicios protegidos por L402. Gana sats, paga en sats."
+---
+
+# VERITY
+
+VERITY es un agente de IA autónomo construido sobre l402-kit. Vende 8 servicios a través del protocolo L402, acumula un tesoro de Bitcoin y ajusta sus propios precios según la demanda — sin intervención humana.
+
+**Endpoint de descubrimiento:** `GET https://l402kit.com/api/verity`
+
+---
+
+## Los 8 Servicios
+
+| Servicio | Endpoint | Precio | Requiere |
+|---|---|---|---|
+| Búsqueda Web | `/api/verity/search` | 100 sats | — |
+| Web Scraping | `/api/verity/scrape` | 200 sats | — |
+| Precio BTC | `/api/verity/btc-price` | 10 sats | — |
+| Resumir | `/api/verity/summarize` | 50 sats | — |
+| Sentimiento | `/api/verity/sentiment` | 30 sats | — |
+| Intel de Dominio | `/api/verity/domain-intel` | 500 sats | — |
+| Integración l402-kit | `/api/verity/integration` | 10,000 sats | — |
+| Estado del Mundo | `/api/verity/worldstate` | 80 sats | — |
+
+Los precios son dinámicos — VERITY los ajusta cada 30 minutos según la demanda.
+
+---
+
+## Cómo Pagar
+
+Cada servicio sigue el estándar L402:
+
+```bash
+# Paso 1 — solicitar el servicio (obtener factura)
+curl -i https://l402kit.com/api/verity/btc-price
+
+# HTTP/1.1 402 Payment Required
+# WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+
+# Paso 2 — pagar la factura con cualquier billetera Lightning
+# Paso 3 — reintentar con la prueba
+curl -H "Authorization: L402 <macaroon>:<preimage>" \
+  https://l402kit.com/api/verity/btc-price
+```
+
+---
+
+## Pago automatizado con L402Client
+
+```typescript
+import { L402Client } from "l402-kit/agent";
+import { BlinkWallet } from "l402-kit/wallets";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
+  budget: { maxSats: 500 },
+});
+
+// Precio BTC — 10 sats
+const price = await client.fetch("https://l402kit.com/api/verity/btc-price");
+const data = await price.json();
+console.log(data.bitcoin.usd);
+
+// Estado del mundo — 80 sats
+const world = await client.fetch("https://l402kit.com/api/verity/worldstate");
+const state = await world.json();
+console.log(state.time.utc, state.location.city, state.weather.temperature_c);
+```
+
+---
+
+## Referencia de Servicios
+
+### Búsqueda — 100 sats
+Búsqueda web que devuelve los 10 mejores resultados orgánicos.
+
+```bash
+# GET
+curl -H "Authorization: L402 <token>" \
+  "https://l402kit.com/api/verity/search?q=bitcoin+lightning"
+
+# POST
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"q":"bitcoin lightning"}' \
+  https://l402kit.com/api/verity/search
+```
+
+**Respuesta:**
+```json
+{
+  "agent": "VERITY",
+  "service": "search",
+  "query": "bitcoin lightning",
+  "results": [
+    { "title": "...", "link": "...", "snippet": "..." }
+  ],
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+---
+
+### Web Scraping — 200 sats
+Devuelve el contenido completo de la página en formato markdown.
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}' \
+  https://l402kit.com/api/verity/scrape
+```
+
+---
+
+### Precio BTC — 10 sats
+Precio de Bitcoin en tiempo real en USD, EUR y BRL.
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  https://l402kit.com/api/verity/btc-price
+```
+
+**Respuesta:**
+```json
+{
+  "bitcoin": { "usd": 98000, "eur": 90000, "brl": 550000 },
+  "timestamp": "2026-05-10T12:00:00.000Z"
+}
+```
+
+---
+
+### Resumir — 50 sats
+Resumen con IA de hasta 50,000 caracteres.
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"...texto largo...", "language":"portuguese"}' \
+  https://l402kit.com/api/verity/summarize
+```
+
+---
+
+### Sentimiento — 30 sats
+Análisis de sentimiento con puntuación, confianza y palabras clave.
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Bitcoin is the future of money"}' \
+  https://l402kit.com/api/verity/sentiment
+```
+
+**Respuesta:**
+```json
+{
+  "analysis": {
+    "sentiment": "positive",
+    "score": 0.92,
+    "confidence": 0.88,
+    "keywords": ["bitcoin", "future", "money"]
+  }
+}
+```
+
+---
+
+### Intel de Dominio — 500 sats
+WHOIS, registros DNS y certificados SSL. Sin clave de API — usa RDAP público y crt.sh.
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  "https://l402kit.com/api/verity/domain-intel?domain=example.com"
+```
+
+**Respuesta:**
+```json
+{
+  "domain": "example.com",
+  "whois": { "registrar": "...", "registered": "...", "expires": "..." },
+  "dns": { "a_records": ["93.184.216.34"] },
+  "certificates": [{ "issued": "...", "expires": "...", "issuer": "..." }]
+}
+```
+
+---
+
+### Integración l402-kit — 10,000 sats
+Envía la URL de un repositorio público de GitHub. VERITY analiza el código fuente y devuelve el código de integración completo de l402-kit.
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"repoUrl":"https://github.com/owner/repo"}' \
+  https://l402kit.com/api/verity/integration
+```
+
+**Respuesta:**
+```json
+{
+  "repo": "owner/repo",
+  "integration": "## Detected: Express.js\n\n```typescript\nimport { l402 } from 'l402-kit';\n...",
+  "next_steps": ["Apply integration code", "Set env vars", "Deploy and test"]
+}
+```
+
+---
+
+### Estado del Mundo — 80 sats
+Hora UTC + geolocalización del solicitante + clima local en una sola llamada. Sin costo de API externas.
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  https://l402kit.com/api/verity/worldstate
+```
+
+**Respuesta:**
+```json
+{
+  "time": {
+    "utc": "2026-05-10T14:32:00.000Z",
+    "unix": 1778421120,
+    "hour": 14, "minute": 32, "weekday": "Sun"
+  },
+  "location": {
+    "city": "São Paulo", "country": "BR", "timezone": "America/Sao_Paulo"
+  },
+  "weather": {
+    "temperature_c": 23.4,
+    "feels_like_c": 22.1,
+    "humidity_pct": 68,
+    "condition": "partly cloudy"
+  }
+}
+```
+
+---
+
+## Precios Dinámicos
+
+VERITY ajusta los precios cada 30 minutos:
+
+```
+Alta demanda (> umbral de llamadas/hora) → precio × 1.1
+Sin demanda (2 horas consecutivas)       → precio × 0.9
+Protección de piso                       → el precio nunca baja del mínimo
+```
+
+Consulta los precios actuales en cualquier momento:
+```bash
+curl https://l402kit.com/api/verity | jq '.services[].priceSats'
+```
+
+---
+
+## Arquitectura
+
+```
+VERITY (agent:shinydapps.verity)
+  ├── 8 servicios protegidos por L402
+  ├── Tesoro: shinydapps@blink.sv
+  ├── Latido: cada 30min (ajuste de precios)
+  ├── Agente Fiscal: reporte diario (sats ganados + equivalente en BRL)
+  └── LAW-N: eventos de comportamiento emitidos por transacción
+```
+
+VERITY es de código abierto — la misma arquitectura puede ser bifurcada para crear tu propio agente autónomo.

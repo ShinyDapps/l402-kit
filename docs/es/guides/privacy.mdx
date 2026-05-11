@@ -1,0 +1,153 @@
+---
+title: Arquitectura de Privacidad
+description: Cómo l402-kit almacena cero PII, autentica por billetera y mantiene las claves distribuidas — un modelo de privacidad digno de Bitcoin.
+---
+
+## El problema con las APIs de pago tradicionales
+
+Stripe, LemonSqueezy, Paddle — todo proveedor de pago convencional requiere:
+
+- Una dirección de email (PII, responsabilidad bajo GDPR)
+- Una cuenta y contraseña (susceptible a phishing y brechas)
+- Almacenamiento centralizado de claves (punto único de fallo)
+- Confiar en que el proveedor no vende tus datos
+
+Lightning cambia el modelo por completo. **Tu billetera es prueba criptográfica de identidad.** l402-kit está construido sobre esa premisa.
+
+---
+
+## Qué almacenamos — y qué no
+
+| Dato | Almacenado | Por qué |
+|---|---|---|
+| `payment_hash` | ✅ Sí | SHA-256 del preimage — ya es público en la factura BOLT11 |
+| Dirección Lightning | ✅ Sí (solo propietario) | Necesaria para enrutar la división del 99.7% |
+| Endpoint llamado | ✅ Sí | Requerido para tus analíticas |
+| `preimage` (secreto de pago) | ❌ Nunca | Expondría la clave de pago |
+| Email | ❌ Nunca | No es necesario — la billetera es la identidad |
+| Nombre / IP / dispositivo | ❌ Nunca | No se recopila en ninguna capa |
+| Cookies / rastreo | ❌ Nunca | Sin SDKs de analíticas, sin fingerprinting |
+
+### Por qué `payment_hash` es seguro de almacenar
+
+El preimage es el secreto de 32 bytes que prueba el pago. Su hash SHA-256 (`payment_hash`) ya se transmite públicamente en la factura BOLT11 en el momento en que la creas. Almacenar el hash no revela nada — el preimage nunca toca nuestra base de datos.
+
+```
+preimage  →  SHA-256  →  payment_hash  (público, en BOLT11)
+   ↑
+nunca almacenado
+```
+
+---
+
+## Autenticación: tu billetera, no una contraseña
+
+### Panel de desarrollador
+
+El panel de analíticas se autentica mediante **LNURL-auth** — el mismo flujo secp256k1 utilizado por las billeteras Lightning:
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+Sin contraseña que robar mediante phishing. Sin token de sesión que interceptar desde el edge. El JWT está limitado por Row Level Security — otras claves públicas no ven nada.
+
+### Eliminación de datos
+
+Solo tu billetera puede autorizar la eliminación de tus datos. El flujo:
+
+1. El cliente llama a `/api/lnurl-auth?lightningAddress=tu@tudominio.com`
+2. El servidor devuelve un desafío k1 de un solo uso + LNURL
+3. Tu billetera firma k1 con su clave privada secp256k1
+4. El servidor verifica la firma — emite un token de 64 caracteres de un solo uso
+5. El cliente hace POST a `/api/delete-data` con `{ lightningAddress, token }`
+6. El servidor revoca el token inmediatamente (evita repetición), elimina todas las filas
+7. Los datos desaparecen — sin ticket de soporte, sin confirmación por email
+
+**Por qué esto es sólido:** Un atacante que conoce tu Dirección Lightning no puede eliminar tus datos sin tu clave privada. El token es de un solo uso y expira en 10 minutos.
+
+---
+
+## Distribución de claves
+
+SaaS tradicional: una brecha → todo expuesto.
+
+l402-kit distribuye la confianza entre capas:
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+Ninguna capa individual tiene suficiente para suplantarte, leer tu identidad o vaciar tu billetera.
+
+---
+
+## Cumplimiento de LGPD / GDPR por diseño
+
+Como almacenamos cero PII, la mayoría de las obligaciones de LGPD/GDPR no aplican:
+
+- **Sin solicitudes de titulares de datos** — no hay identidad que buscar
+- **Sin notificación de brecha de datos personales** — el payment_hash no es dato personal
+- **Sin consentimiento de cookies** — sin rastreo, sin cookies
+- **Derecho al olvido** — cumplido criptográficamente mediante eliminación por LNURL-auth
+
+Esto no es una opinión legal. Pero "no lo recopilamos" es una posición más sólida que "lo recopilamos y lo protegemos."
+
+---
+
+## Los pagos Lightning son privados por defecto
+
+Los pagos Lightning no identifican al pagador en la cadena:
+
+- Sin nombre, sin dirección, sin cuenta bancaria
+- La ruta de pago está cifrada en cebolla (como Tor)
+- Solo el emisor de la factura sabe que el pago fue liquidado
+- La identidad del pagador nunca se revela al receptor
+
+Tus usuarios finales pagan tu API de forma anónima. Tú sabes que la factura fue pagada. Eso es todo lo que cualquiera de las partes necesita.
+
+---
+
+## Comparación
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| Email requerido | ❌ | ✅ | ✅ |
+| Cuenta requerida | ❌ | ✅ | ✅ |
+| KYC / identidad | ❌ | ✅ | ✅ |
+| PII almacenada | ❌ | ✅ | ✅ |
+| Método de autenticación | billetera secp256k1 | email + contraseña | email + contraseña |
+| Mecanismo de eliminación | prueba criptográfica | solicitud por email | solicitud por email |
+| Carga LGPD/GDPR | mínima | alta | alta |
+| Pagador anónimo | ✅ | ❌ | ❌ |
+
+---
+
+## Qué significa esto para tus usuarios
+
+Si construyes sobre l402-kit:
+
+- Tus usuarios nunca te dan su email
+- Una brecha en tu base de datos no expone nada personal
+- Cualquier agente de IA puede pagar tu API sin cuenta ni identidad
+- Los usuarios que quieren eliminar sus datos lo hacen ellos mismos, al instante, con su billetera
+
+Esta es la capa de pagos que Bitcoin merece.
