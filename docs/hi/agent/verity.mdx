@@ -1,20 +1,19 @@
-```mdx
 ---
 title: "VERITY"
-description: "9 L402-संरक्षित सेवाओं वाला स्वायत्त AI एजेंट। sats कमाता है, sats में भुगतान करता है।"
+description: "10 L402-संरक्षित सेवाओं वाला स्वायत्त AI एजेंट। sats कमाता है, sats में भुगतान करता है।"
 ---
 
 # VERITY
 
-VERITY एक स्वायत्त AI एजेंट है जो l402-kit पर निर्मित है। वह L402 प्रोटोकॉल के माध्यम से 9 सेवाएं बेचती है, एक Bitcoin treasury संचित करती है, और मांग के आधार पर अपनी कीमतें स्वयं समायोजित करती है — बिना किसी मानवीय हस्तक्षेप के।
+VERITY एक स्वायत्त AI एजेंट है जो l402-kit पर बनाया गया है। वह L402 प्रोटोकॉल के माध्यम से 10 सेवाएं बेचती है, एक Bitcoin खजाना संचित करती है, और मांग के आधार पर अपनी कीमतें स्वयं समायोजित करती है — बिना किसी मानवीय हस्तक्षेप के।
 
 **डिस्कवरी एंडपॉइंट:** `GET https://l402kit.com/api/verity`
 
 ---
 
-## 9 सेवाएं
+## 10 सेवाएं
 
-| सेवा | एंडपॉइंट | मूल्य | आवश्यकता |
+| सेवा | एंडपॉइंट | कीमत | आवश्यकता |
 |---|---|---|---|
 | वेब सर्च | `/api/verity/search` | 100 sats | — |
 | वेब स्क्रेपिंग | `/api/verity/scrape` | 200 sats | — |
@@ -22,11 +21,12 @@ VERITY एक स्वायत्त AI एजेंट है जो l402-kit
 | सारांश | `/api/verity/summarize` | 50 sats | — |
 | भावना विश्लेषण | `/api/verity/sentiment` | 30 sats | — |
 | डोमेन इंटेल | `/api/verity/domain-intel` | 500 sats | — |
-| l402-kit इंटीग्रेशन | `/api/verity/integration` | 10,000 sats | — |
-| वर्ल्ड स्टेट | `/api/verity/worldstate` | 80 sats | — |
+| l402-kit एकीकरण | `/api/verity/integration` | 10,000 sats | — |
+| विश्व स्थिति | `/api/verity/worldstate` | 80 sats | — |
 | अनुवाद | `/api/verity/translate` | 50 sats | — |
+| शोध | `/api/verity/research` | 300 sats | — |
 
-मूल्य गतिशील हैं — VERITY हर 30 मिनट में मांग के आधार पर उन्हें समायोजित करती है।
+कीमतें गतिशील हैं — VERITY हर 30 मिनट में मांग के आधार पर उन्हें समायोजित करती है।
 
 ---
 
@@ -65,7 +65,7 @@ const price = await client.fetch("https://l402kit.com/api/verity/btc-price");
 const data = await price.json();
 console.log(data.bitcoin.usd);
 
-// वर्ल्ड स्टेट — 80 sats
+// विश्व स्थिति — 80 sats
 const world = await client.fetch("https://l402kit.com/api/verity/worldstate");
 const state = await world.json();
 console.log(state.time.utc, state.location.city, state.weather.temperature_c);
@@ -106,7 +106,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### वेब स्क्रेपिंग — 200 sats
-पूरे पृष्ठ की सामग्री को markdown के रूप में लौटाता है।
+पूरे पृष्ठ की सामग्री को markdown के रूप में लौटाती है।
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -118,7 +118,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### BTC मूल्य — 10 sats
-USD, EUR और BRL में रियल-टाइम Bitcoin मूल्य।
+USD, EUR और BRL में Bitcoin का वास्तविक समय मूल्य।
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -136,7 +136,7 @@ curl -H "Authorization: L402 <token>" \
 ---
 
 ### सारांश — 50 sats
-50,000 वर्णों तक AI सारांशीकरण।
+50,000 अक्षरों तक AI सारांशीकरण।
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -172,7 +172,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### डोमेन इंटेल — 500 sats
-WHOIS, DNS रिकॉर्ड और SSL सर्टिफिकेट। कोई API कुंजी नहीं — सार्वजनिक RDAP और crt.sh का उपयोग करता है।
+WHOIS, DNS रिकॉर्ड और SSL प्रमाणपत्र। कोई API कुंजी नहीं — सार्वजनिक RDAP और crt.sh का उपयोग करता है।
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -191,8 +191,8 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
-### l402-kit इंटीग्रेशन — 10,000 sats
-एक सार्वजनिक GitHub रेपो URL भेजें। VERITY कोडबेस का विश्लेषण करती है और पूर्ण l402-kit इंटीग्रेशन कोड लौटाती है।
+### l402-kit एकीकरण — 10,000 sats
+एक सार्वजनिक GitHub रेपो URL भेजें। VERITY कोडबेस का विश्लेषण करती है और पूर्ण l402-kit एकीकरण कोड लौटाती है।
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -212,8 +212,8 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### वर्ल्ड स्टेट — 80 sats
-एक ही कॉल में UTC समय + कॉलर जियोलोकेशन + स्थानीय मौसम। शून्य बाहरी API लागत।
+### विश्व स्थिति — 80 sats
+एक ही कॉल में UTC समय + कॉलर का भू-स्थान + स्थानीय मौसम। शून्य बाहरी API लागत।
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -242,8 +242,38 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
+### शोध — 300 sats
+गहन शोध बंडल: एक ही कॉल में सर्च + स्क्रेप + AI सारांशीकरण। 3 अलग भुगतान और 3 गुना राउंडट्रिप विलंबता की बचत करता है।
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "bitcoin lightning network adoption 2026"}' \
+  https://l402kit.com/api/verity/research
+```
+
+**प्रतिक्रिया:**
+```json
+{
+  "agent": "VERITY",
+  "service": "research",
+  "query": "bitcoin lightning network adoption 2026",
+  "summary": "Lightning Network adoption has accelerated significantly in 2026...",
+  "scraped_url": "https://example.com/article",
+  "sources": [
+    { "title": "...", "link": "...", "snippet": "..." }
+  ],
+  "provider": "serper",
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+**सेवाओं को अलग-अलग कॉल करने की तुलना में:** सर्च (100 sats) + स्क्रेप (200 sats) + सारांश (50 sats) = कुल 350 sats। शोध की लागत 300 sats है — सस्ता और एक भुगतान।
+
+---
+
 ### अनुवाद — 50 sats
-टेक्स्ट या MDX दस्तावेज़ को 11 समर्थित भाषाओं में से किसी में भी अनुवादित करता है। जब `format` `mdx` हो, तो कोड ब्लॉक, MDX कंपोनेंट, URL और तकनीकी शब्द बिल्कुल वैसे ही संरक्षित रहते हैं — केवल गद्य का अनुवाद किया जाता है।
+पाठ या MDX दस्तावेज़ीकरण को 11 समर्थित भाषाओं में से किसी में अनुवाद करता है। जब `format` `mdx` हो, तो कोड ब्लॉक, MDX कॉम्पोनेंट, URL और तकनीकी शब्द बिल्कुल सुरक्षित रहते हैं — केवल गद्य का अनुवाद होता है।
 
 **समर्थित लोकेल:** `pt`, `es`, `zh`, `ar`, `hi`, `fr`, `de`, `ru`, `ja`, `it`, `en`
 
@@ -254,7 +284,7 @@ curl -X POST -H "Authorization: L402 <token>" \
   https://l402kit.com/api/verity/translate
 ```
 
-**MDX फॉर्मेट** (कोड ब्लॉक और कंपोनेंट संरक्षित रखता है):
+**MDX फ़ॉर्मेट** (कोड ब्लॉक और कॉम्पोनेंट सुरक्षित रखता है):
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
   -H "Content-Type: application/json" \
@@ -276,21 +306,21 @@ curl -X POST -H "Authorization: L402 <token>" \
 }
 ```
 
-अधिकतम इनपुट: प्रति कॉल 100,000 वर्ण।
+अधिकतम इनपुट: प्रति कॉल 100,000 अक्षर।
 
 ---
 
 ## गतिशील मूल्य निर्धारण
 
-VERITY हर 30 मिनट में मूल्य समायोजित करती है:
+VERITY हर 30 मिनट में कीमतें समायोजित करती है:
 
 ```
-उच्च मांग (> threshold कॉल/घंटा) → मूल्य × 1.1
-शून्य मांग (2 लगातार घंटे)        → मूल्य × 0.9
-न्यूनतम सुरक्षा                    → मूल्य कभी न्यूनतम से नीचे नहीं जाता
+उच्च मांग (> सीमा कॉल/घंटा) → कीमत × 1.1
+शून्य मांग (2 लगातार घंटे)   → कीमत × 0.9
+न्यूनतम सुरक्षा               → कीमत कभी न्यूनतम से नीचे नहीं जाती
 ```
 
-किसी भी समय वर्तमान मूल्य जांचें:
+किसी भी समय वर्तमान कीमतें जांचें:
 ```bash
 curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 ```
@@ -299,7 +329,7 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ## ऑपरेटर API
 
-यदि आप अपना स्वयं का एजेंट चलाने के लिए VERITY को फोर्क करते हैं, तो ये एंडपॉइंट आपको रनटाइम पर मूल्य निर्धारण और बजट बदलने देते हैं — बिना किसी डिप्लॉय के।
+यदि आप अपना एजेंट चलाने के लिए VERITY को फोर्क करते हैं, तो ये एंडपॉइंट आपको रनटाइम पर मूल्य निर्धारण और बजट बदलने देते हैं — बिना किसी डिप्लॉय के।
 
 सभी एडमिन रूट के लिए `DASHBOARD_SECRET` हेडर आवश्यक है:
 ```
@@ -341,8 +371,8 @@ curl -X POST -H "Authorization: Bearer <secret>" \
 | `service` | सेवा का नाम (आवश्यक) |
 | `base` | sats में आधार मूल्य |
 | `floor` | न्यूनतम मूल्य (गतिशील मूल्य निर्धारण इससे नीचे कभी नहीं जाता) |
-| `surgeThreshold` | कॉल/घंटा जो +10% surge ट्रिगर करता है |
-| `cogs` | sats में माल की लागत (fiscal एजेंट द्वारा उपयोग की जाती है) |
+| `surgeThreshold` | कॉल/घंटा जो +10% वृद्धि को ट्रिगर करता है |
+| `cogs` | sats में माल की लागत (वित्तीय एजेंट द्वारा उपयोग) |
 
 ### POST /api/verity/admin/budget
 उपभोक्ता की दैनिक खर्च सीमा निर्धारित करता है।
@@ -362,12 +392,12 @@ curl -X POST -H "Authorization: Bearer <secret>" \
 
 ```
 VERITY (agent:shinydapps.verity)
-  ├── 9 L402-संरक्षित सेवाएं
-  ├── Treasury: shinydapps@blink.sv
-  ├── Heartbeat: हर 30 मिनट (मूल्य समायोजन)
-  ├── Fiscal Agent: दैनिक रिपोर्ट (अर्जित sats + BRL समकक्ष)
-  └── LAW-N: प्रत्येक लेनदेन पर उत्सर्जित व्यवहार संबंधी इवेंट
+  ├── 10 L402-संरक्षित सेवाएं
+  ├── खजाना: shinydapps@blink.sv
+  ├── हार्टबीट: हर 30 मिनट (मूल्य समायोजन + Satring मार्केट स्कैन)
+  ├── क्वेरी कैश: KV-समर्थित, प्रति-सेवा TTL (5 मिनट–24 घंटे)
+  ├── वित्तीय एजेंट: दैनिक रिपोर्ट (sats अर्जित + BRL समकक्ष + राजस्व अलर्ट)
+  └── LAW-N: प्रति लेनदेन व्यवहार संबंधी इवेंट उत्सर्जित
 ```
 
 VERITY ओपन-सोर्स है — इसी आर्किटेक्चर को फोर्क करके आप अपना स्वायत्त एजेंट बना सकते हैं।
-```

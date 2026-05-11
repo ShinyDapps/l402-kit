@@ -1,29 +1,30 @@
 ---
 title: "VERITY"
-description: "9つのL402保護サービスを持つ自律型AIエージェント。satsを稼ぎ、satsで支払う。"
+description: "10個のL402保護サービスを持つ自律型AIエージェント。satsを稼ぎ、satsで支払う。"
 ---
 
 # VERITY
 
-VERITYはl402-kit上に構築された自律型AIエージェントです。L402プロトコルを通じて9つのサービスを販売し、Bitcoinの資産を蓄積し、人間の介入なしに需要に基づいて自身の価格を調整します。
+VERITYはl402-kit上に構築された自律型AIエージェントです。L402プロトコルを通じて10のサービスを販売し、Bitcoinのトレジャリーを蓄積し、人間の介入なしに需要に基づいて自身の価格を調整します。
 
 **ディスカバリーエンドポイント:** `GET https://l402kit.com/api/verity`
 
 ---
 
-## 9つのサービス
+## 10のサービス
 
 | サービス | エンドポイント | 価格 | 必要条件 |
 |---|---|---|---|
 | ウェブ検索 | `/api/verity/search` | 100 sats | — |
 | ウェブスクレイピング | `/api/verity/scrape` | 200 sats | — |
-| BTCPrice | `/api/verity/btc-price` | 10 sats | — |
+| BTC価格 | `/api/verity/btc-price` | 10 sats | — |
 | 要約 | `/api/verity/summarize` | 50 sats | — |
 | センチメント分析 | `/api/verity/sentiment` | 30 sats | — |
 | ドメインインテル | `/api/verity/domain-intel` | 500 sats | — |
 | l402-kit インテグレーション | `/api/verity/integration` | 10,000 sats | — |
 | ワールドステート | `/api/verity/worldstate` | 80 sats | — |
 | 翻訳 | `/api/verity/translate` | 50 sats | — |
+| リサーチ | `/api/verity/research` | 300 sats | — |
 
 価格は動的です — VERITYは需要に基づいて30分ごとに価格を調整します。
 
@@ -34,14 +35,14 @@ VERITYはl402-kit上に構築された自律型AIエージェントです。L402
 すべてのサービスは標準的なL402に従います：
 
 ```bash
-# ステップ1 — サービスをリクエストする（インボイスを取得）
+# ステップ1 — サービスをリクエストする（インボイスを取得する）
 curl -i https://l402kit.com/api/verity/btc-price
 
 # HTTP/1.1 402 Payment Required
 # WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
 
-# ステップ2 — 任意のLightningウォレットでインボイスを支払う
-# ステップ3 — 支払い証明と共に再試行する
+# ステップ2 — 任意のLightning Networkウォレットでインボイスを支払う
+# ステップ3 — 証明を付けて再試行する
 curl -H "Authorization: L402 <macaroon>:<preimage>" \
   https://l402kit.com/api/verity/btc-price
 ```
@@ -59,7 +60,7 @@ const client = new L402Client({
   budget: { maxSats: 500 },
 });
 
-// BTCPrice — 10 sats
+// BTC価格 — 10 sats
 const price = await client.fetch("https://l402kit.com/api/verity/btc-price");
 const data = await price.json();
 console.log(data.bitcoin.usd);
@@ -105,7 +106,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### ウェブスクレイピング — 200 sats
-ページの全コンテンツをmarkdown形式で返します。
+ページの全コンテンツをmarkdownとして返します。
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -116,8 +117,8 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### BTCPrice — 10 sats
-USD、EUR、BRLでのリアルタイムBitcoin価格。
+### BTC価格 — 10 sats
+USD、EUR、BRLによるリアルタイムのBitcoin価格。
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -191,7 +192,7 @@ curl -H "Authorization: L402 <token>" \
 ---
 
 ### l402-kit インテグレーション — 10,000 sats
-公開GitHubリポジトリのURLを送信します。VERITYがコードベースを分析し、完全なl402-kitインテグレーションコードを返します。
+公開GitHubリポジトリのURLを送信します。VERITYはコードベースを解析し、完全なl402-kitインテグレーションコードを返します。
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -212,7 +213,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 ---
 
 ### ワールドステート — 80 sats
-UTC時刻＋発信者のジオロケーション＋現地の天気を1回のコールで取得。外部APIコストはゼロ。
+1回の呼び出しでUTC時刻 + 発信者のジオロケーション + 現地の天気を取得。外部APIコストはゼロ。
 
 ```bash
 curl -H "Authorization: L402 <token>" \
@@ -241,8 +242,38 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
+### リサーチ — 300 sats
+ディープリサーチバンドル：検索 + スクレイピング + AIによる要約を1回の呼び出しで実行。3回の個別支払いと3倍のラウンドトリップレイテンシを節約できます。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "bitcoin lightning network adoption 2026"}' \
+  https://l402kit.com/api/verity/research
+```
+
+**レスポンス:**
+```json
+{
+  "agent": "VERITY",
+  "service": "research",
+  "query": "bitcoin lightning network adoption 2026",
+  "summary": "Lightning Network adoption has accelerated significantly in 2026...",
+  "scraped_url": "https://example.com/article",
+  "sources": [
+    { "title": "...", "link": "...", "snippet": "..." }
+  ],
+  "provider": "serper",
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+**各サービスを個別に呼び出す場合との比較:** 検索（100 sats）+ スクレイピング（200 sats）+ 要約（50 sats）= 合計350 sats。リサーチは300 sats — より安く、支払いも1回。
+
+---
+
 ### 翻訳 — 50 sats
-テキストまたはMDXドキュメントを11のサポート言語のいずれかに翻訳します。`format`が`mdx`の場合、コードブロック、MDXコンポーネント、URL、および技術用語は完全に保持され、散文のみが翻訳されます。
+テキストまたはMDXドキュメントを11のサポート言語のいずれかに翻訳します。`format`が`mdx`の場合、コードブロック、MDXコンポーネント、URL、技術用語はそのまま保持され、散文のみが翻訳されます。
 
 **サポートロケール:** `pt`, `es`, `zh`, `ar`, `hi`, `fr`, `de`, `ru`, `ja`, `it`, `en`
 
@@ -253,7 +284,7 @@ curl -X POST -H "Authorization: L402 <token>" \
   https://l402kit.com/api/verity/translate
 ```
 
-**MDX形式**（コードブロックとコンポーネントを保持）:
+**MDXフォーマット**（コードブロックとコンポーネントを保持）:
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
   -H "Content-Type: application/json" \
@@ -275,18 +306,18 @@ curl -X POST -H "Authorization: L402 <token>" \
 }
 ```
 
-1回のコールあたりの最大入力: 100,000文字。
+最大入力: 1回の呼び出しにつき100,000文字。
 
 ---
 
-## 動的価格設定
+## ダイナミックプライシング
 
 VERITYは30分ごとに価格を調整します：
 
 ```
-高需要（> しきい値コール/時間） → 価格 × 1.1
-需要ゼロ（2時間連続）           → 価格 × 0.9
-下限保護                         → 価格は最低値を下回らない
+高需要（閾値を超える呼び出し/時間）→ 価格 × 1.1
+需要ゼロ（2時間連続）              → 価格 × 0.9
+フロア保護                         → 価格が最低値を下回ることはない
 ```
 
 現在の価格はいつでも確認できます：
@@ -298,7 +329,7 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ## オペレーターAPI
 
-VERITYをフォークして独自のエージェントを実行する場合、これらのエンドポイントを使用すると、デプロイなしで実行時に価格とバジェットを変更できます。
+VERITYをフォークして独自のエージェントを運用する場合、これらのエンドポイントによりデプロイ不要でランタイム中に価格やバジェットを変更できます。
 
 すべての管理者ルートには`DASHBOARD_SECRET`ヘッダーが必要です：
 ```
@@ -326,7 +357,7 @@ curl -H "Authorization: Bearer <secret>" \
 ```
 
 ### POST /api/verity/admin/config
-特定のサービスの価格パラメーターを更新します。提供されたフィールドのみが変更されます。
+特定のサービスの価格パラメーターを更新します。指定されたフィールドのみ変更されます。
 
 ```bash
 curl -X POST -H "Authorization: Bearer <secret>" \
@@ -338,13 +369,13 @@ curl -X POST -H "Authorization: Bearer <secret>" \
 | フィールド | 説明 |
 |---|---|
 | `service` | サービス名（必須） |
-| `base` | satsでの基本価格 |
-| `floor` | 最低価格（動的価格設定はこの値を下回らない） |
-| `surgeThreshold` | +10%のサージをトリガーするコール/時間数 |
-| `cogs` | satsでの商品コスト（財務エージェントが使用） |
+| `base` | satsによる基本価格 |
+| `floor` | 最低価格（ダイナミックプライシングはこれを下回らない） |
+| `surgeThreshold` | +10%のサージをトリガーする呼び出し/時間数 |
+| `cogs` | satsによる原価（財務エージェントが使用） |
 
 ### POST /api/verity/admin/budget
-コンシューマーの1日の支出上限を設定します。
+コンシューマーの日次支出上限を設定します。
 
 ```bash
 curl -X POST -H "Authorization: Bearer <secret>" \
@@ -353,7 +384,7 @@ curl -X POST -H "Authorization: Bearer <secret>" \
   https://l402kit.com/api/verity/admin/budget
 ```
 
-最低: 100 sats。変更は即時に反映されます。
+最小: 100 sats。変更は即座に有効になります。
 
 ---
 
@@ -361,10 +392,11 @@ curl -X POST -H "Authorization: Bearer <secret>" \
 
 ```
 VERITY (agent:shinydapps.verity)
-  ├── 9 L402-protected services
+  ├── 10 L402-protected services
   ├── Treasury: shinydapps@blink.sv
-  ├── Heartbeat: every 30min (price adjustment)
-  ├── Fiscal Agent: daily report (sats earned + BRL equivalent)
+  ├── Heartbeat: every 30min (price adjustment + Satring market scan)
+  ├── Query cache: KV-backed, per-service TTL (5min–24h)
+  ├── Fiscal Agent: daily report (sats earned + BRL equivalent + revenue alerts)
   └── LAW-N: behavioral events emitted per transaction
 ```
 
