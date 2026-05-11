@@ -18,6 +18,11 @@ let lastKnownCount = -1;
 const I18N: Record<string, Record<string, string>> = {
   en: {
     title: "⚡ ShinyDapps Payments", totalPayments: "Total Payments",
+    tabPayments: "Payments", tabVerity: "VERITY", tabActivity: "Activity",
+    verityTitle: "VERITY Services", veritySubtitle: "9 autonomous services · paid in sats · dynamic pricing",
+    verityCallBtn: "Call →", verityDocsBtn: "Docs",
+    activityTitle: "LAW-N Activity", activityEmpty: "No activity yet.",
+    activityAgent: "Agent", activityEvent: "Event", activitySats: "Sats", activityTime: "Time",
     totalSats: "Total Sats", lightningAddr: "Lightning Address", notSet: "Not configured",
     when: "When", endpoint: "Endpoint", sats: "Sats",
     noPayments: "No payments yet — share your API!",
@@ -33,6 +38,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   pt: {
     title: "⚡ Pagamentos ShinyDapps", totalPayments: "Total de Pagamentos",
+    tabPayments: "Pagamentos", tabVerity: "VERITY", tabActivity: "Atividade",
+    verityTitle: "Serviços VERITY", veritySubtitle: "9 serviços autônomos · pagos em sats · preço dinâmico",
+    verityCallBtn: "Chamar →", verityDocsBtn: "Docs",
+    activityTitle: "Atividade LAW-N", activityEmpty: "Sem atividade ainda.",
+    activityAgent: "Agente", activityEvent: "Evento", activitySats: "Sats", activityTime: "Hora",
     totalSats: "Total de Sats", lightningAddr: "Endereço Lightning", notSet: "Não configurado",
     when: "Quando", endpoint: "Endpoint", sats: "Sats",
     noPayments: "Nenhum pagamento ainda — compartilhe sua API!",
@@ -48,6 +58,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   es: {
     title: "⚡ Pagos ShinyDapps", totalPayments: "Total de Pagos",
+    tabPayments: "Pagos", tabVerity: "VERITY", tabActivity: "Actividad",
+    verityTitle: "Servicios VERITY", veritySubtitle: "9 servicios autónomos · pago en sats · precio dinámico",
+    verityCallBtn: "Llamar →", verityDocsBtn: "Docs",
+    activityTitle: "Actividad LAW-N", activityEmpty: "Sin actividad aún.",
+    activityAgent: "Agente", activityEvent: "Evento", activitySats: "Sats", activityTime: "Hora",
     totalSats: "Total de Sats", lightningAddr: "Dirección Lightning", notSet: "No configurado",
     when: "Cuándo", endpoint: "Endpoint", sats: "Sats",
     noPayments: "Sin pagos aún — ¡comparte tu API!",
@@ -63,6 +78,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   zh: {
     title: "⚡ ShinyDapps 收款", totalPayments: "总付款次数",
+    tabPayments: "收款", tabVerity: "VERITY", tabActivity: "活动",
+    verityTitle: "VERITY 服务", veritySubtitle: "9个自主服务 · 以sats支付 · 动态定价",
+    verityCallBtn: "调用 →", verityDocsBtn: "文档",
+    activityTitle: "LAW-N 活动", activityEmpty: "暂无活动。",
+    activityAgent: "代理", activityEvent: "事件", activitySats: "Sats", activityTime: "时间",
     totalSats: "总 Sats", lightningAddr: "闪电地址", notSet: "未配置",
     when: "时间", endpoint: "接口", sats: "Sats",
     noPayments: "暂无付款 — 分享您的 API！",
@@ -78,6 +98,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   ja: {
     title: "⚡ ShinyDapps 支払い", totalPayments: "総支払い数",
+    tabPayments: "支払い", tabVerity: "VERITY", tabActivity: "アクティビティ",
+    verityTitle: "VERITYサービス", veritySubtitle: "9つの自律サービス · satsで支払い · 動的価格",
+    verityCallBtn: "呼び出す →", verityDocsBtn: "ドキュメント",
+    activityTitle: "LAW-Nアクティビティ", activityEmpty: "まだアクティビティなし。",
+    activityAgent: "エージェント", activityEvent: "イベント", activitySats: "Sats", activityTime: "時刻",
     totalSats: "総 Sats", lightningAddr: "Lightning アドレス", notSet: "未設定",
     when: "日時", endpoint: "エンドポイント", sats: "Sats",
     noPayments: "まだ支払いなし — APIをシェアしよう！",
@@ -93,6 +118,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   fr: {
     title: "⚡ Paiements ShinyDapps", totalPayments: "Total Paiements",
+    tabPayments: "Paiements", tabVerity: "VERITY", tabActivity: "Activité",
+    verityTitle: "Services VERITY", veritySubtitle: "9 services autonomes · payés en sats · prix dynamique",
+    verityCallBtn: "Appeler →", verityDocsBtn: "Docs",
+    activityTitle: "Activité LAW-N", activityEmpty: "Aucune activité pour l'instant.",
+    activityAgent: "Agent", activityEvent: "Événement", activitySats: "Sats", activityTime: "Heure",
     totalSats: "Total Sats", lightningAddr: "Adresse Lightning", notSet: "Non configuré",
     when: "Quand", endpoint: "Endpoint", sats: "Sats",
     noPayments: "Aucun paiement — partagez votre API !",
@@ -108,6 +138,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   de: {
     title: "⚡ ShinyDapps Zahlungen", totalPayments: "Zahlungen gesamt",
+    tabPayments: "Zahlungen", tabVerity: "VERITY", tabActivity: "Aktivität",
+    verityTitle: "VERITY-Dienste", veritySubtitle: "9 autonome Dienste · in Sats bezahlt · dynamische Preise",
+    verityCallBtn: "Aufrufen →", verityDocsBtn: "Docs",
+    activityTitle: "LAW-N-Aktivität", activityEmpty: "Noch keine Aktivität.",
+    activityAgent: "Agent", activityEvent: "Ereignis", activitySats: "Sats", activityTime: "Zeit",
     totalSats: "Sats gesamt", lightningAddr: "Lightning-Adresse", notSet: "Nicht konfiguriert",
     when: "Wann", endpoint: "Endpunkt", sats: "Sats",
     noPayments: "Noch keine Zahlungen — teilen Sie Ihre API!",
@@ -123,6 +158,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   ru: {
     title: "⚡ Платежи ShinyDapps", totalPayments: "Всего платежей",
+    tabPayments: "Платежи", tabVerity: "VERITY", tabActivity: "Активность",
+    verityTitle: "Сервисы VERITY", veritySubtitle: "9 автономных сервисов · оплата в сатошах · динамические цены",
+    verityCallBtn: "Вызвать →", verityDocsBtn: "Доки",
+    activityTitle: "Активность LAW-N", activityEmpty: "Активности пока нет.",
+    activityAgent: "Агент", activityEvent: "Событие", activitySats: "Сат.", activityTime: "Время",
     totalSats: "Всего сатошей", lightningAddr: "Lightning-адрес", notSet: "Не настроено",
     when: "Когда", endpoint: "Эндпоинт", sats: "Сат.",
     noPayments: "Платежей ещё нет — поделитесь API!",
@@ -138,6 +178,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   hi: {
     title: "⚡ ShinyDapps भुगतान", totalPayments: "कुल भुगतान",
+    tabPayments: "भुगतान", tabVerity: "VERITY", tabActivity: "गतिविधि",
+    verityTitle: "VERITY सेवाएं", veritySubtitle: "9 स्वायत्त सेवाएं · sats में भुगतान · गतिशील मूल्य",
+    verityCallBtn: "कॉल करें →", verityDocsBtn: "डॉक्स",
+    activityTitle: "LAW-N गतिविधि", activityEmpty: "अभी कोई गतिविधि नहीं।",
+    activityAgent: "एजेंट", activityEvent: "इवेंट", activitySats: "Sats", activityTime: "समय",
     totalSats: "कुल Sats", lightningAddr: "Lightning पता", notSet: "कॉन्फ़िगर नहीं",
     when: "कब", endpoint: "एंडपॉइंट", sats: "Sats",
     noPayments: "अभी कोई भुगतान नहीं — अपना API शेयर करें!",
@@ -153,6 +198,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   ar: {
     title: "⚡ مدفوعات ShinyDapps", totalPayments: "إجمالي المدفوعات",
+    tabPayments: "المدفوعات", tabVerity: "VERITY", tabActivity: "النشاط",
+    verityTitle: "خدمات VERITY", veritySubtitle: "9 خدمات مستقلة · الدفع بـ sats · تسعير ديناميكي",
+    verityCallBtn: "استدعاء →", verityDocsBtn: "وثائق",
+    activityTitle: "نشاط LAW-N", activityEmpty: "لا يوجد نشاط بعد.",
+    activityAgent: "وكيل", activityEvent: "حدث", activitySats: "Sats", activityTime: "وقت",
     totalSats: "إجمالي Sats", lightningAddr: "عنوان Lightning", notSet: "غير مُهيَّأ",
     when: "وقت", endpoint: "نقطة النهاية", sats: "Sats",
     noPayments: "لا مدفوعات بعد — شارك واجهة API الخاصة بك!",
@@ -168,6 +218,11 @@ const I18N: Record<string, Record<string, string>> = {
   },
   it: {
     title: "⚡ Pagamenti ShinyDapps", totalPayments: "Pagamenti Totali",
+    tabPayments: "Pagamenti", tabVerity: "VERITY", tabActivity: "Attività",
+    verityTitle: "Servizi VERITY", veritySubtitle: "9 servizi autonomi · pagati in sats · prezzi dinamici",
+    verityCallBtn: "Chiama →", verityDocsBtn: "Docs",
+    activityTitle: "Attività LAW-N", activityEmpty: "Nessuna attività ancora.",
+    activityAgent: "Agente", activityEvent: "Evento", activitySats: "Sats", activityTime: "Ora",
     totalSats: "Sats Totali", lightningAddr: "Indirizzo Lightning", notSet: "Non configurato",
     when: "Quando", endpoint: "Endpoint", sats: "Sats",
     noPayments: "Nessun pagamento ancora — condividi la tua API!",
@@ -522,6 +577,12 @@ td { padding: 5px 4px; border-bottom: 1px solid #181818; font-size: 11px; color:
   <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Lang</span>
   <select id="langSelect"></select>
   <button id="refreshBtn" title="Refresh">↺</button>
+</div>
+
+<div id="tabs" style="display:flex;border-bottom:1px solid #1e1e1e;background:#111">
+  <button class="tab-btn active" data-tab="payments" style="flex:1;padding:6px 4px;background:none;border:none;border-bottom:2px solid #f7931a;color:#f7931a;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.3px">PAY</button>
+  <button class="tab-btn" data-tab="verity" style="flex:1;padding:6px 4px;background:none;border:none;border-bottom:2px solid transparent;color:#555;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.3px">VERITY</button>
+  <button class="tab-btn" data-tab="activity" style="flex:1;padding:6px 4px;background:none;border:none;border-bottom:2px solid transparent;color:#555;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.3px">LAW-N</button>
 </div>
 
 <div id="ticker"></div>
@@ -979,6 +1040,89 @@ async function load() {
     renderContent(Array.isArray(rows) ? rows : []);
   } catch(e) {
     renderError(e && e.message ? e.message : 'Network error');
+  }
+}
+
+// ── tab switching ──────────────────────────────────────────────────────
+let activeTab = 'payments';
+
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    activeTab = btn.getAttribute('data-tab') || 'payments';
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      const isActive = b.getAttribute('data-tab') === activeTab;
+      (b as HTMLElement).style.color = isActive ? '#f7931a' : '#555';
+      (b as HTMLElement).style.borderBottom = isActive ? '2px solid #f7931a' : '2px solid transparent';
+    });
+    if (activeTab === 'payments') load();
+    else if (activeTab === 'verity') loadVerity();
+    else if (activeTab === 'activity') loadActivity();
+  });
+});
+
+// ── VERITY tab ─────────────────────────────────────────────────────────
+async function loadVerity() {
+  setContent('<div class="loading">⚡ ' + t('loading') + '</div>');
+  try {
+    const r = await fetch('https://l402kit.com/api/verity');
+    const d = await r.json() as { services?: { id: string; endpoint: string; priceSats: number; description: string }[] };
+    const services = d.services || [];
+    let html = '<div style="padding:12px">';
+    html += '<div class="section-title">' + t('verityTitle') + '</div>';
+    html += '<div style="font-size:10px;color:#555;margin-bottom:14px">' + t('veritySubtitle') + '</div>';
+    services.forEach(function(s) {
+      html += '<div class="card" style="margin-bottom:8px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+      html += '<span style="font-size:12px;font-weight:700;color:#f7931a">' + esc(s.id) + '</span>';
+      html += '<span style="font-size:11px;color:#f7931a;font-weight:600">' + s.priceSats + ' sats</span>';
+      html += '</div>';
+      html += '<div style="font-size:10px;color:#666;margin-bottom:6px">' + esc(s.description) + '</div>';
+      html += '<div style="display:flex;gap:6px">';
+      html += '<a href="https://l402kit.com/docs/agent/verity" target="_blank" style="font-size:10px;color:#555;text-decoration:none;border:1px solid #2a2a2a;border-radius:4px;padding:2px 8px">' + t('verityDocsBtn') + '</a>';
+      html += '<span style="font-size:10px;color:#333;font-family:monospace;padding:2px 6px;background:#0d0d0d;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">' + esc(s.endpoint) + '</span>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    setContent(html);
+  } catch(e) {
+    renderError('VERITY unreachable');
+  }
+}
+
+// ── Activity (LAW-N) tab ───────────────────────────────────────────────
+async function loadActivity() {
+  setContent('<div class="loading">⚡ ' + t('loading') + '</div>');
+  try {
+    const r = await fetch('https://l402kit.com/api/activity');
+    const events = await r.json() as { agent_id?: string; event_type?: string; amount_sats?: number; created_at?: string }[];
+    let html = '<div style="padding:12px">';
+    html += '<div class="section-title">' + t('activityTitle') + '</div>';
+    if (!Array.isArray(events) || events.length === 0) {
+      html += '<div style="color:#555;font-size:11px;padding:20px 0;text-align:center">' + t('activityEmpty') + '</div>';
+    } else {
+      html += '<table><tr>';
+      html += '<th>' + t('activityAgent') + '</th>';
+      html += '<th>' + t('activityEvent') + '</th>';
+      html += '<th>' + t('activitySats') + '</th>';
+      html += '<th>' + t('activityTime') + '</th>';
+      html += '</tr>';
+      events.slice(0, 50).forEach(function(ev) {
+        const agentShort = (ev.agent_id || '—').replace('agent:', '');
+        const time = ev.created_at ? new Date(ev.created_at).toLocaleTimeString() : '—';
+        html += '<tr>';
+        html += '<td style="color:#c0c0c0;font-size:10px">' + esc(agentShort) + '</td>';
+        html += '<td style="font-size:10px">' + esc(ev.event_type || '—') + '</td>';
+        html += '<td class="sats">' + (ev.amount_sats || '—') + '</td>';
+        html += '<td style="color:#555;font-size:10px">' + esc(time) + '</td>';
+        html += '</tr>';
+      });
+      html += '</table>';
+    }
+    html += '</div>';
+    setContent(html);
+  } catch(e) {
+    renderError('Activity feed unreachable');
   }
 }
 
