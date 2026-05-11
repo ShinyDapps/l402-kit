@@ -848,7 +848,36 @@
             "it/agent/langchain",
             "it/agent/system-prompt",
             "it/agent/wallet-quickstart",
-            "it/agent/delegation"
+            "it/agent/delegation",
+            "it/agent/verity",
+            "it/agent/lawn-n"
+          ]
+        },
+        {
+          "group": "Agent Integrations",
+          "pages": [
+            "it/agent/crewai",
+            "it/agent/openai-agents",
+            "it/agent/vercel-ai",
+            "it/agent/autogpt"
+          ]
+        },
+        {
+          "group": "Guides",
+          "pages": [
+            "it/guides/pricing",
+            "it/guides/testing",
+            "it/guides/dashboard",
+            "it/guides/vscode",
+            "it/guides/privacy",
+            "it/guides/flows",
+            "it/guides/ai-agents",
+            "it/guides/lnurl",
+            "it/guides/security",
+            "it/guides/production",
+            "it/guides/migration",
+            "it/guides/troubleshooting",
+            "it/guides/dns-discovery"
           ]
         },
         {
@@ -859,6 +888,13 @@
             "it/reference/errors",
             "it/competitive",
             "it/payment-layer"
+          ]
+        },
+        {
+          "group": "Examples",
+          "pages": [
+            "it/examples/diagram-forge",
+            "it/examples/verity"
           ]
         }
       ]

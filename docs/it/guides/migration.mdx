@@ -1,0 +1,180 @@
+---
+title: Guida alla Migrazione
+description: Passa dalla modalità Managed a quella Soberano, aggiorna tra versioni o cambia provider Lightning — senza interruzioni del servizio.
+---
+
+## Managed → Soberano (0% commissioni, custodia completa)
+
+Hai iniziato con `ManagedProvider` perché è il modo più veloce per avviarsi. Quando sei pronto per la custodia completa e le commissioni allo 0%, la migrazione è di una sola riga.
+
+<Steps>
+  <Step title="Configura il tuo provider Lightning">
+    Scegli un provider soberano. [Blink](https://dashboard.blink.sv) è gratuito, senza KYC, configurazione immediata.
+
+    ```bash
+    # Blink: crea account → API Keys → copia chiave + wallet ID
+    BLINK_API_KEY=blink_xxxxxxxxxxxxxxxxxxxxxxxx
+    BLINK_WALLET_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    ```
+  </Step>
+  <Step title="Sostituisci il provider — una sola riga">
+    ```typescript
+    // Prima
+    import { ManagedProvider } from 'l402-kit';
+    const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+    // Dopo
+    import { BlinkProvider } from 'l402-kit';
+    const lightning = new BlinkProvider(
+      process.env.BLINK_API_KEY!,
+      process.env.BLINK_WALLET_ID!,
+    );
+    ```
+
+    ```python
+    # Prima
+    from l402kit import ManagedProvider
+    lightning = ManagedProvider.from_address("you@yourdomain.com")
+
+    # Dopo
+    from l402kit.providers.blink import BlinkProvider
+    lightning = BlinkProvider(
+        api_key=os.environ["BLINK_API_KEY"],
+        wallet_id=os.environ["BLINK_WALLET_ID"],
+    )
+    ```
+
+    Tutto il resto — configurazione del middleware, verifica dei token, codice degli endpoint — rimane esattamente lo stesso.
+  </Step>
+  <Step title="Distribuisci">
+    I token emessi dal provider gestito **continuano a funzionare** dopo la migrazione. La verifica è pura crittografia (`SHA256(preimage) == paymentHash`) — non dipende da quale provider ha creato la fattura.
+
+    Non esiste finestra di migrazione, nessuna interruzione del servizio, nessun database da aggiornare.
+  </Step>
+</Steps>
+
+<Note>
+I token già pagati emessi con ManagedProvider rimangono validi dopo il cambio di provider. Il macaroon contiene solo un hash e una scadenza — nessun dato specifico del provider.
+</Note>
+
+---
+
+## Passa tra provider soberano
+
+Stesso schema — sostituisci l'istanza del provider, nient'altro cambia.
+
+```typescript
+// Blink → LNbits
+import { LNbitsProvider } from 'l402-kit';
+const lightning = new LNbitsProvider(
+  process.env.LNBITS_KEY!,
+  process.env.LNBITS_URL ?? 'https://legend.lnbits.com',
+);
+
+// Blink → OpenNode
+import { OpenNodeProvider } from 'l402-kit';
+const lightning = new OpenNodeProvider(process.env.OPENNODE_KEY!, false);
+```
+
+---
+
+## v1.x → v1.8 (attuale)
+
+Nessuna modifica incompatibile. L'SDK è additivo — nuovi provider, nuove utility per agenti, nuovi adapter di replay. Aggiorna con:
+
+```bash
+npm install l402-kit@latest
+pip install --upgrade l402kit
+cargo update l402kit
+go get github.com/shinydapps/l402-kit/go@latest
+```
+
+Se hai fissato una versione specifica, consulta il [changelog](https://github.com/ShinyDapps/l402-kit/releases) per le novità.
+
+---
+
+## Migrazione del framework
+
+### Express → Fastify
+
+```typescript
+// Express
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+
+// Fastify
+import { l402Fastify } from 'l402-kit/fastify';
+
+fastify.get('/api', {
+  preHandler: l402Fastify({ priceSats: 10, lightning }),
+}, handler);
+```
+
+### Express → Hono (Cloudflare Workers)
+
+```typescript
+import { Hono } from 'hono';
+import { l402Hono } from 'l402-kit/hono';
+
+const app = new Hono();
+app.use('/api/*', l402Hono({ priceSats: 10, lightning }));
+app.get('/api/data', (c) => c.json({ data: 'paid' }));
+```
+
+### Flask → FastAPI
+
+```python
+# Flask
+from l402kit.flask import l402_required
+
+@app.route('/api')
+@l402_required(price_sats=10, lightning=provider)
+def handler():
+    return jsonify({'data': 'paid'})
+
+# FastAPI
+from l402kit import l402_required
+
+@app.get('/api')
+@l402_required(price_sats=10, lightning=provider)
+async def handler():
+    return {'data': 'paid'}
+```
+
+---
+
+## Migrazione del replay store
+
+### In-memory → Supabase
+
+Imposta le variabili d'ambiente — il middleware le rileva automaticamente e si adatta:
+
+```bash
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+```
+
+I token in corso continuano a funzionare. Il store Supabase inizia a registrare dal momento in cui è attivo — non ci sono dati storici da migrare.
+
+### In-memory → Redis
+
+```typescript
+import { Redis } from 'ioredis';
+import { RedisReplayAdapter } from 'l402-kit';
+
+const redis = new Redis(process.env.REDIS_URL!);
+
+app.get('/api', l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+<CardGroup cols={2}>
+  <Card title="Providers" icon="plug" href="/providers">
+    Tutte le opzioni e la configurazione dei provider
+  </Card>
+  <Card title="Production Guide" icon="rocket" href="/guides/production">
+    Checklist per il deployment
+  </Card>
+</CardGroup>

@@ -1,0 +1,153 @@
+---
+title: Architettura della Privacy
+description: Come l402-kit non memorizza alcun dato PII, autentica tramite wallet e mantiene le chiavi distribuite — un modello di privacy degno di Bitcoin.
+---
+
+## Il problema con le API di pagamento tradizionali
+
+Stripe, LemonSqueezy, Paddle — ogni provider di pagamento convenzionale richiede:
+
+- Un indirizzo email (PII, responsabilità GDPR)
+- Un account e una password (vulnerabile al phishing, a violazioni)
+- Archiviazione centralizzata delle chiavi (singolo punto di guasto)
+- Fiducia che il provider non venda i tuoi dati
+
+Lightning cambia completamente il modello. **Il tuo wallet è una prova crittografica dell'identità.** l402-kit è costruito attorno a questo principio.
+
+---
+
+## Cosa memorizziamo — e cosa no
+
+| Dato | Memorizzato | Perché |
+|---|---|---|
+| `payment_hash` | ✅ Sì | SHA-256 del preimage — già pubblico nell'invoice BOLT11 |
+| Indirizzo Lightning | ✅ Sì (solo proprietario) | Necessario per instradare la divisione del 99,7% |
+| Endpoint chiamato | ✅ Sì | Richiesto per le tue analitiche |
+| `preimage` (segreto di pagamento) | ❌ Mai | Esporrebbe la chiave di pagamento |
+| Email | ❌ Mai | Non necessaria — il wallet è l'identità |
+| Nome / IP / dispositivo | ❌ Mai | Non raccolto a nessun livello |
+| Cookie / tracciamento | ❌ Mai | Nessun SDK di analitiche, nessun fingerprinting |
+
+### Perché `payment_hash` è sicuro da memorizzare
+
+Il preimage è il segreto di 32 byte che prova il pagamento. Il suo hash SHA-256 (`payment_hash`) viene già trasmesso pubblicamente nell'invoice BOLT11 nel momento in cui lo si crea. Memorizzare l'hash non rivela nulla — il preimage non tocca mai il nostro database.
+
+```
+preimage  →  SHA-256  →  payment_hash  (pubblico, in BOLT11)
+   ↑
+mai memorizzato
+```
+
+---
+
+## Autenticazione: il tuo wallet, non una password
+
+### Dashboard sviluppatore
+
+La dashboard di analitiche si autentica tramite **LNURL-auth** — lo stesso flusso secp256k1 utilizzato dai wallet Lightning:
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+Nessuna password da sottrarre con phishing. Nessun token di sessione da rubare dall'edge. Il JWT è limitato tramite Row Level Security — le altre pubkey non vedono nulla.
+
+### Eliminazione dei dati
+
+Solo il tuo wallet può autorizzare l'eliminazione dei tuoi dati. Il flusso:
+
+1. Il client chiama `/api/lnurl-auth?lightningAddress=tu@tuodominio.com`
+2. Il server restituisce una sfida k1 monouso + LNURL
+3. Il tuo wallet firma k1 con la sua chiave privata secp256k1
+4. Il server verifica la firma — emette un token monouso da 64 caratteri
+5. Il client invia una POST a `/api/delete-data` con `{ lightningAddress, token }`
+6. Il server revoca immediatamente il token (previene il replay), elimina tutte le righe
+7. I dati sono eliminati — nessun ticket di supporto, nessuna conferma via email
+
+**Perché questo è sicuro:** Un attaccante che conosce il tuo Indirizzo Lightning non può eliminare i tuoi dati senza la tua chiave privata. Il token è monouso e scade in 10 minuti.
+
+---
+
+## Distribuzione delle chiavi
+
+SaaS tradizionale: una violazione → tutto esposto.
+
+l402-kit distribuisce la fiducia tra i livelli:
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+Nessun singolo livello è sufficiente per impersonarti, leggere la tua identità o svuotare il tuo wallet.
+
+---
+
+## Conformità LGPD / GDPR by design
+
+Poiché non memorizziamo alcun dato PII, la maggior parte degli obblighi LGPD/GDPR non si applica:
+
+- **Nessuna richiesta dell'interessato** — non c'è alcuna identità da ricercare
+- **Nessuna notifica di violazione per dati personali** — il payment_hash non è un dato personale
+- **Nessun consenso ai cookie** — nessun tracciamento, nessun cookie
+- **Diritto alla cancellazione** — soddisfatto crittograficamente tramite LNURL-auth delete
+
+Questa non è un'opinione legale. Ma "non lo raccogliamo" è una posizione più solida di "lo raccogliamo e lo proteggiamo."
+
+---
+
+## I pagamenti Lightning sono privati per impostazione predefinita
+
+I pagamenti Lightning non identificano il pagante on-chain:
+
+- Nessun nome, nessun indirizzo, nessun conto bancario
+- Il percorso di pagamento è cifrato con onion routing (come Tor)
+- Solo chi ha emesso l'invoice sa che il pagamento è stato completato
+- L'identità del pagante non viene mai rivelata al beneficiario
+
+I tuoi utenti finali pagano la tua API in modo anonimo. Tu sai che l'invoice è stata pagata. È tutto ciò di cui entrambe le parti hanno bisogno.
+
+---
+
+## Confronto
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| Email richiesta | ❌ | ✅ | ✅ |
+| Account richiesto | ❌ | ✅ | ✅ |
+| KYC / identità | ❌ | ✅ | ✅ |
+| PII memorizzato | ❌ | ✅ | ✅ |
+| Metodo di autenticazione | wallet secp256k1 | email + password | email + password |
+| Meccanismo di eliminazione | prova crittografica | richiesta via email | richiesta via email |
+| Onere LGPD/GDPR | minimo | elevato | elevato |
+| Pagante anonimo | ✅ | ❌ | ❌ |
+
+---
+
+## Cosa significa per i tuoi utenti
+
+Se costruisci su l402-kit:
+
+- I tuoi utenti non ti forniscono mai la loro email
+- Una violazione del tuo database non espone nulla di personale
+- Qualsiasi agente AI può pagare la tua API senza un account o un'identità
+- Gli utenti che desiderano eliminare i propri dati lo fanno autonomamente, istantaneamente, con il loro wallet
+
+Questo è il livello di pagamento che Bitcoin merita.

@@ -1,0 +1,68 @@
+---
+title: "DNS Discovery"
+description: "Permetti agli agenti di scoprire il tuo endpoint L402 tramite record DNS TXT — nessuna richiesta HTTP necessaria."
+---
+
+## Perché il DNS discovery
+
+Gli agenti con accesso a Internet possono risolvere il DNS prima di effettuare qualsiasi richiesta HTTP. Se pubblichi il tuo endpoint L402 come record DNS TXT, gli agenti lo scoprono automaticamente — anche prima di raggiungere la tua API.
+
+## Formato del record TXT
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+Campi:
+- `v=l402` — identificatore del protocollo
+- `endpoint=` — il tuo URL protetto da L402
+- `price=` — prezzo in sats (opzionale, informativo)
+- `docs=` — link alla tua documentazione (opzionale)
+
+## Configurazione su Cloudflare
+
+1. Vai su **Cloudflare Dashboard → DNS**
+2. Aggiungi un nuovo record:
+
+| Type | Name | Content | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## Verifica con dig
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Output atteso:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## Come lo usano gli agenti
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// L'agente risolve il DNS per trovare il tuo endpoint
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Restituisce: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## Il record di l402-kit
+
+L'esempio seguente utilizza un dominio fittizio (`api.example.com`) per illustrare il formato — sostituiscilo con il tuo endpoint reale.
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## Vantaggi
+
+- **Zero overhead HTTP** — scoperta prima di qualsiasi chiamata API
+- **Nativo per gli agenti** — il DNS è il modo in cui le macchine trovano i servizi, non gli esseri umani
+- **Nessuna chiave API necessaria** — scoperta completamente aperta
+- **Memorizzabile nella cache** — il TTL controlla la frequenza con cui gli agenti ri-risolvono
+
+Consulta [.well-known/agent.json](https://api.example.com/.well-known/agent.json) per lo standard di scoperta HTTP complementare.

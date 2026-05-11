@@ -1,0 +1,109 @@
+---
+title: "Integrazione AutoGPT"
+description: "Usa l402-kit come plugin o skill in AutoGPT per l'accesso autonomo ad API a pagamento."
+---
+
+## Concetto
+
+AutoGPT e agenti autonomi simili eseguono cicli su attività e chiamano strumenti. l402-kit racchiude qualsiasi API a pagamento come strumento richiamabile — l'agente paga, riprova e continua senza intervento umano.
+
+## Installazione
+
+```bash
+pip install l402kit
+```
+
+## L402Client come comando compatibile con AutoGPT
+
+```python
+import os
+import asyncio
+from l402kit import L402Client
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=2000)
+
+# AutoGPT-style command definition
+COMMANDS = {
+    "l402_fetch": {
+        "description": "Fetch data from a paid API using Bitcoin Lightning micropayment",
+        "signature": '("url": "<string>")',
+        "example": '("url": "https://api.example.com/data")',
+    }
+}
+
+def execute_command(command: str, args: dict) -> str:
+    if command == "l402_fetch":
+        url = args.get("url", "")
+        try:
+            response = asyncio.run(client.get(url))
+            return f"Success: {response.text[:500]}"
+        except Exception as e:
+            return f"Error: {str(e)}"
+    return f"Unknown command: {command}"
+```
+
+## Aggiunta al prompt di sistema
+
+Aggiungi al prompt di sistema del tuo agente AutoGPT:
+
+```
+COMMANDS:
+- l402_fetch: Fetch data from a paid API using Bitcoin Lightning
+  Args: url (string) — the API endpoint
+  Cost: varies per endpoint (typically 1-100 sats)
+  Use when: the API returns HTTP 402 Payment Required
+
+BUDGET: {BUDGET_SATS} sats total for this session.
+Track spending and stop if budget is exceeded.
+```
+
+## Esempio di ciclo autonomo completo
+
+```python
+import asyncio
+from l402kit import L402Client, BudgetExceededError
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+async def autonomous_data_collector(urls: list[str]) -> list[dict]:
+    results = []
+    for url in urls:
+        try:
+            response = await client.get(url)
+            results.append({
+                "url": url,
+                "status": "success",
+                "data": response.json(),
+                "cost_sats": client.last_payment_sats
+            })
+        except BudgetExceededError:
+            results.append({"url": url, "status": "budget_exceeded"})
+            break
+        except Exception as e:
+            results.append({"url": url, "status": "error", "error": str(e)})
+
+    print(f"Total spent: {client.spent_sats} sats")
+    return results
+
+# Run
+results = asyncio.run(autonomous_data_collector([
+    "https://l402kit.com/api/demo",
+    "https://api.example.com/data",
+]))
+```
+
+## Monitoraggio del budget
+
+```python
+# Check remaining budget before each call
+if client.spent_sats + 100 > client.budget_sats:
+    print("Approaching budget limit, stopping.")
+else:
+    response = await client.get(url)
+```
+
+Consulta [Controllo del Budget](/agent/budget) per i limiti avanzati di sessione e [Avvio Rapido del Wallet](/agent/wallet-quickstart) per configurare un wallet.

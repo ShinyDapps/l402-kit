@@ -1,0 +1,266 @@
+---
+title: Flussi di Sistema
+description: Diagrammi visivi di ogni flusso nella piattaforma l402-kit — pagamento, autenticazione, abbonamento e infrastruttura.
+---
+
+Questa pagina documenta ogni flusso principale nella piattaforma l402-kit come diagrammi di sequenza e diagrammi di flusso. Ogni sezione abbina un elemento visivo a una spiegazione concisa di cosa accade e perché funziona in quel modo. Inizia con il Flusso 1 (L402 di base) per comprendere i fondamenti crittografici, poi leggi i flussi rilevanti per la tua integrazione.
+
+---
+
+## 1. Flusso di Pagamento L402 di Base
+
+Il ciclo di richiesta fondamentale. Nessun account, nessuna password — solo una ricevuta crittografica.
+
+Quando un client raggiunge per la prima volta un endpoint protetto, riceve una risposta HTTP 402 contenente due elementi: una fattura BOLT11 Lightning e un macaroon. Il client paga la fattura attraverso la Lightning Network (tipicamente in meno di un secondo), riceve un preimage di 32 byte come prova, e riprova la richiesta con `Authorization: L402 <macaroon>:<preimage>`. Il server verifica il token localmente usando `SHA256(preimage) === macaroon.hash` — nessuna chiamata al database, nessun round trip di rete, latenza inferiore al millisecondo. Una volta verificato, il token è valido fino alla sua scadenza. Le richieste successive riutilizzano lo stesso header.
+
+```mermaid
+sequenceDiagram
+    participant C as Client / AI Agent
+    participant S as Your API Server
+    participant L as Lightning Network
+    participant B as Blink (provider)
+
+    C->>S: GET /api/data (no token)
+    S-->>C: 402 Payment Required<br/>WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+
+    Note over C,L: Client pays the Lightning invoice
+    C->>L: pay(invoice)
+    L-->>C: preimage (32-byte proof of payment)
+
+    C->>S: GET /api/data<br/>Authorization: L402 <macaroon>:<preimage>
+    Note over S: SHA256(preimage) === macaroon.hash?<br/>Verified in <1ms locally. No DB call.
+    S-->>C: 200 OK + data
+```
+
+**Proprietà chiave:**
+- La verifica è completamente locale — nessuna chiamata di rete, nessuna consultazione del database
+- `preimage` = prova crittografica del pagamento (ricevuta Lightning)
+- `macaroon` = JSON base64 `{hash, exp}` firmato con SHA-256
+
+---
+
+## 2. Anatomia del Token
+
+L'header `Authorization` contiene due componenti separati da due punti. Il **macaroon** è un oggetto JSON codificato in base64 `{hash, exp}` — indica al server quale hash di pagamento aspettarsi e quando scade il token. Il **preimage** è il segreto di 32 byte restituito dalla Lightning Network al pagante. Insieme formano una credenziale non falsificabile e autonoma che qualsiasi server può verificare offline.
+
+```mermaid
+flowchart LR
+    T["Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;"]
+    T --> M["macaroon\nbase64({ hash, exp })\nSigned by SHA-256"]
+    T --> P["preimage\n32-byte hex secret\nSHA256(preimage) = hash"]
+    M --> V["Server verifies:\nSHA256(preimage) === hash\nexp > now()"]
+```
+
+---
+
+## 3. Modalità Gestita — Flusso di Divisione delle Commissioni
+
+Quando usi `ManagedProvider`, l402kit.com crea la fattura, riceve il pagamento e inoltra il 99,7% al tuo Lightning Address automaticamente. La commissione di piattaforma dello 0,3% copre il routing Lightning e l'infrastruttura API. Il tuo wallet non tocca mai il Cloudflare Worker — la divisione è un pagamento Lightning lato server eseguito dopo che la richiesta del client è verificata, utilizzando il tuo Lightning Address per generare una nuova fattura BOLT11 al volo.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant V as Cloudflare Worker<br/>/api/invoice
+    participant B as Blink API<br/>(ShinyDapps wallet)
+    participant S as Supabase
+    participant O as Owner wallet<br/>(you@yourdomain.com)
+
+    C->>V: POST /api/invoice<br/>{priceSats, ownerAddress}
+    V->>B: lnInvoiceCreate(priceSats)
+    B-->>V: {paymentRequest, paymentHash}
+    V-->>C: 402 + invoice
+
+    Note over C,B: Client pays invoice
+    C->>B: pay(invoice)
+    B-->>C: preimage
+
+    C->>V: GET /api/data + L402 token
+    V->>S: INSERT payments<br/>{payment_hash, endpoint, amount_sats}
+    V->>V: POST /api/split<br/>(fire-and-forget)
+    V->>B: sendPayment(owner, 99.7%)
+    B-->>O: ⚡ sats received
+    V-->>C: 200 OK + data
+```
+
+---
+
+## 4. Flusso di Abbonamento Pro
+
+Gli abbonamenti Pro seguono un pattern L402 simile ma aggiungono uno stato persistente. Il client paga una fattura una tantum e riceve un record di abbonamento di 30 giorni in Supabase. La conferma del pagamento arriva tramite webhook Blink (percorso veloce, ~2 secondi) o tramite polling (fallback per i wallet che non attivano webhook). Le successive chiamate a `/api/pro-check` verificano il timestamp `expires_at` senza un altro pagamento.
+
+```mermaid
+sequenceDiagram
+    participant U as User (VS Code)
+    participant V as Cloudflare Worker
+    participant B as Blink API
+    participant S as Supabase
+    participant W as Blink Webhook
+
+    U->>V: POST /api/pro-subscribe<br/>{lightningAddress, tier}
+    V->>B: lnInvoiceCreate(amountSats)
+    B-->>V: {paymentRequest, paymentHash}
+    V->>S: INSERT pro_access<br/>{address, payment_hash, expires_at: null}
+    V-->>U: {paymentRequest, paymentHash}
+
+    Note over U,B: User pays invoice in their wallet
+    U->>B: pay(invoice)
+
+    alt Webhook path (fast)
+        B->>W: POST /api/blink-webhook<br/>{type: "transaction.ln.invoice.paid"}
+        W->>S: PATCH pro_access<br/>SET expires_at = now + 30d
+    else Poll path (fallback)
+        U->>V: GET /api/pro-poll?paymentHash=...
+        V->>B: lnInvoice(paymentHash) → status
+        V->>S: PATCH pro_access SET expires_at
+        V-->>U: {active: true, expires_at}
+    end
+
+    U->>V: GET /api/pro-check?address=...
+    V->>S: SELECT expires_at WHERE address=?
+    V-->>U: {active: true, tier: "pro"}
+```
+
+---
+
+## 5. LNURL-auth — Prova di Proprietà del Wallet (Eliminazione Dati)
+
+Dimostra che possiedi un Lightning wallet senza una password. Richiesto prima di eliminare i dati dell'account.
+
+```mermaid
+sequenceDiagram
+    participant U as User (VS Code)
+    participant V as Cloudflare<br/>/api/lnurl-auth
+    participant W as Lightning Wallet<br/>(Phoenix, Blink…)
+    participant S as Supabase<br/>lnurl_challenges
+    participant D as Cloudflare<br/>/api/delete-data
+
+    U->>V: GET /api/lnurl-auth<br/>?lightningAddress=you@yourdomain.com
+    V->>V: k1 = randomBytes(32)
+    V->>S: INSERT {k1, lightning_address, expires_at: +5min}
+    V-->>U: {k1, lnurl} — show as QR code
+
+    Note over U,W: User scans QR with Lightning wallet
+    W->>W: Sign k1 with secp256k1<br/>key derived for this domain
+    W->>V: GET /api/lnurl-auth<br/>?tag=login&k1=…&sig=…&key=…
+    V->>V: secp256k1.verify(sig, k1, pubkey)
+    V->>V: token = randomBytes(32), TTL 10min
+    V->>S: PATCH {verified: true, pubkey, token}
+    V-->>W: {status: "OK"}
+
+    loop Poll every 2s
+        U->>V: GET /api/lnurl-auth?poll=<k1>
+        V->>S: SELECT verified, token WHERE k1=?
+        V-->>U: {verified: true, token: "abc…"}
+    end
+
+    U->>D: POST /api/delete-data<br/>{lightningAddress, token}
+    D->>S: SELECT WHERE token=? → verified? expired?
+    D->>S: PATCH token = null (revoke — single use)
+    D->>S: DELETE payments WHERE owner_address=?
+    D->>S: DELETE pro_access WHERE address=?
+    D-->>U: {deleted: {payments: N, proAccess: true}}
+```
+
+---
+
+## 6. Flusso di Login Dashboard LNURL-auth
+
+Autenticazione dashboard solo per il proprietario — DASHBOARD_SECRET memorizzato nei segreti di Cloudflare Workers.
+
+```mermaid
+sequenceDiagram
+    participant O as Owner browser
+    participant V as Cloudflare<br/>/api/lnurl-auth
+    participant W as Owner Lightning Wallet
+    participant S as Supabase<br/>lnurl_challenges
+    participant D as Cloudflare<br/>/api/stats
+
+    O->>V: GET /api/lnurl-auth?dashboard=1
+    V->>V: k1 = randomBytes(32)
+    V->>S: INSERT {k1, lightning_address: "__dashboard__", expires_at: +5min}
+    V-->>O: {k1, lnurl} — show QR code
+
+    Note over O,W: Owner scans QR with their Lightning wallet
+    W->>W: Sign k1 with secp256k1 key
+    W->>V: GET /api/lnurl-auth<br/>?tag=login&k1=…&sig=…&key=…
+    V->>V: key === OWNER_PUBKEY? ✓
+    V->>V: secp256k1.verify(sig, k1, key)
+    V->>V: token = randomBytes(32), TTL 24h
+    V->>S: PATCH {verified: true, pubkey, token, token_expires_at}
+    V-->>W: {status: "OK"}
+
+    loop Poll every 2s
+        O->>V: GET /api/lnurl-auth?poll=<k1>
+        V->>S: SELECT verified, token WHERE k1=?
+        V-->>O: {verified: true, token: "abc…"}
+    end
+
+    O->>D: GET /api/stats<br/>x-lnurl-token: <token>
+    D->>S: SELECT verified, pubkey, token_expires_at WHERE token=?
+    D->>D: pubkey === OWNER_PUBKEY? ✓ not expired? ✓
+    D-->>O: {totalPayments, totalSats, byDay, trend, recent…}
+```
+
+---
+
+## 7. Panoramica dell'Infrastruttura
+
+```mermaid
+flowchart TB
+    subgraph CF["Cloudflare DNS (l402kit.com)"]
+        DNS["l402kit.com\nCNAME → l402kit-pages.pages.dev"]
+    end
+
+    subgraph VCL["Cloudflare (Workers + Pages)"]
+        LAND["Landing Page\nbackend/index.html"]
+        API["Backend API\n/api/invoice → Edge Function\n/api/delete-data\n/api/lnurl-auth\n/api/pro-subscribe\n/api/stats (LNURL-auth)"]
+        HOOK["Webhooks\n/api/blink-webhook"]
+    end
+
+    subgraph SB["Supabase (PostgreSQL + Edge Functions)"]
+        PAY["payments\npayment_hash · amount_sats\nowner_address · endpoint"]
+        PRO["pro_access\naddress · tier\nexpires_at · payment_hash"]
+        LNURL["lnurl_challenges\nk1 · verified · token\ntoken_expires_at · pubkey"]
+        EF["Edge Function: create-invoice\nBLINK_API_KEY (Supabase Secret)\nBLINK_WALLET_ID (Supabase Secret)"]
+    end
+
+    subgraph EXT["Servizi Esterni"]
+        BLINK["Blink Lightning\napi.blink.sv"]
+    end
+
+    CF --> VCL
+    API --> SB
+    HOOK --> SB
+    EF --> BLINK
+    BLINK --> HOOK
+```
+
+---
+
+## 8. Sicurezza del Preimage SHA-256
+
+Perché memorizziamo `SHA256(preimage)` invece del preimage grezzo:
+
+```mermaid
+flowchart LR
+    subgraph Lightning["Lightning Network (public)"]
+        INV["BOLT11 Invoice\ncontains payment_hash = SHA256(preimage)"]
+    end
+
+    subgraph Client["Client (private)"]
+        PRE["preimage\n32-byte secret\nproof of payment"]
+    end
+
+    subgraph DB["Supabase payments table"]
+        STORED["payment_hash\n= SHA256(preimage)\nsafe to store"]
+    end
+
+    PRE -->|"SHA256()"| STORED
+    INV -->|"already public"| STORED
+    PRE -.->|"❌ never store raw"| DB
+
+    style PRE fill:#ff4444,color:#fff
+    style STORED fill:#22c55e,color:#fff
+```
+
+**Perché è sicuro:** Il `payment_hash` è già incorporato in ogni fattura BOLT11 — è pubblico per design. Solo il `preimage` è segreto. Memorizzare l'hash fornisce protezione contro i replay senza alcuna esposizione aggiuntiva.

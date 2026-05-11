@@ -1,0 +1,221 @@
+---
+title: Testing
+description: Testa la tua integrazione L402 end-to-end — localmente, in CI e con pagamenti reali.
+---
+
+## Panoramica
+
+Testare un'API L402 ha due livelli:
+1. **Test unitari / di integrazione** — verificano la logica del middleware senza pagamenti Lightning reali
+2. **Test end-to-end** — verificano il flusso completo con un wallet reale e sats reali
+
+---
+
+## Test unitari — mock del provider
+
+Passa un `LightningProvider` mock per bypassare completamente Lightning:
+
+```typescript
+import { l402, LightningProvider, Invoice } from "l402-kit";
+import request from "supertest";
+import express from "express";
+
+const mockProvider: LightningProvider = {
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    const hash = "abc123def456abc123def456abc123def456abc123def456abc123def456abc1";
+    const macaroon = Buffer.from(
+      JSON.stringify({ hash, exp: Date.now() + 3_600_000 })
+    ).toString("base64");
+    return { paymentRequest: "lnbc1...", paymentHash: hash, macaroon, amountSats };
+  },
+  async checkPayment(paymentHash: string): Promise<boolean> {
+    return true; // always paid in tests
+  },
+};
+
+const app = express();
+app.get("/premium", l402({ priceSats: 10, lightning: mockProvider }), (_req, res) => {
+  res.json({ data: "ok" });
+});
+
+// Test 1 — no auth → 402
+const res402 = await request(app).get("/premium");
+assert(res402.status === 402);
+assert(res402.body.invoice === "lnbc1...");
+
+// Test 2 — valid token → 200
+// SHA256("correct-preimage") must equal the paymentHash above, or use a real hash pair
+const macaroon = res402.body.macaroon;
+const preimage = "correct-preimage-hex"; // must satisfy SHA256(preimage) == paymentHash
+const res200 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${macaroon}:${preimage}`);
+assert(res200.status === 200);
+```
+
+### Generare un preimage valido per i test
+
+```typescript
+import { createHash, randomBytes } from "crypto";
+
+// Generate a real hash/preimage pair
+const preimage = randomBytes(32).toString("hex");
+const paymentHash = createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
+
+// Use these in your mock provider
+const mockProvider: LightningProvider = {
+  async createInvoice(amountSats: number): Promise<Invoice> {
+    const macaroon = Buffer.from(
+      JSON.stringify({ hash: paymentHash, exp: Date.now() + 3_600_000 })
+    ).toString("base64");
+    return { paymentRequest: "lnbc1...", paymentHash, macaroon, amountSats };
+  },
+  async checkPayment(): Promise<boolean> { return true; },
+};
+
+// In your test:
+// Authorization: L402 <macaroon>:<preimage>
+// This satisfies SHA256(preimage) == paymentHash ✓
+```
+
+---
+
+## Python — pytest con mock provider
+
+```python
+import pytest
+import hashlib
+import secrets
+import base64
+import json
+from fastapi.testclient import TestClient
+from l402kit.types import LightningProvider, Invoice
+from your_app import app
+
+class MockProvider(LightningProvider):
+    def __init__(self):
+        self.preimage = secrets.token_hex(32)
+        self.payment_hash = hashlib.sha256(bytes.fromhex(self.preimage)).hexdigest()
+
+    async def create_invoice(self, amount_sats: int) -> Invoice:
+        exp = int((__import__("time").time() + 3600) * 1000)
+        macaroon = base64.b64encode(
+            json.dumps({"hash": self.payment_hash, "exp": exp}).encode()
+        ).decode()
+        return Invoice(
+            payment_request="lnbc1...",
+            payment_hash=self.payment_hash,
+            macaroon=macaroon,
+            amount_sats=amount_sats,
+        )
+
+    async def check_payment(self, payment_hash: str) -> bool:
+        return True
+
+def test_402_then_200(monkeypatch):
+    provider = MockProvider()
+    monkeypatch.setattr("your_app.lightning", provider)
+    client = TestClient(app)
+
+    # Step 1: no auth → 402
+    res = client.get("/premium")
+    assert res.status_code == 402
+    macaroon = res.json()["macaroon"]
+
+    # Step 2: valid L402 token → 200
+    auth = f"L402 {macaroon}:{provider.preimage}"
+    res = client.get("/premium", headers={"Authorization": auth})
+    assert res.status_code == 200
+```
+
+---
+
+## Test della protezione dal replay
+
+Verifica che un preimage non possa essere riutilizzato:
+
+```typescript
+const res1 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${macaroon}:${preimage}`);
+assert(res1.status === 200); // first use — ok
+
+const res2 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${macaroon}:${preimage}`);
+assert(res2.status === 401); // replay — rejected
+assert(res2.body.error === "Token already used");
+```
+
+---
+
+## Pipeline CI
+
+Usa il mock provider in CI — non è necessario alcun nodo Lightning o chiave API:
+
+```yaml
+# .github/workflows/test.yml
+- name: Run tests
+  run: npm test
+  env:
+    NODE_ENV: test
+    # No BLINK_API_KEY needed — mock provider is used in test env
+```
+
+Gestisci la selezione del provider in base all'ambiente:
+
+```typescript
+const lightning = process.env.NODE_ENV === "test"
+  ? mockProvider
+  : ManagedProvider.fromAddress(process.env.LIGHTNING_ADDRESS!);
+```
+
+---
+
+## Test end-to-end con sats reali
+
+Per un test completo del flusso di pagamento (staging/pre-lancio):
+
+1. Imposta `priceSats: 1` — costa circa $0.0008 per esecuzione del test
+2. Usa [OpenNode sandbox](https://app.opennode.com) (`testMode: true`) per pagare senza denaro reale:
+   ```typescript
+   const lightning = new OpenNodeProvider(process.env.OPENNODE_KEY!, true); // testMode
+   ```
+3. Oppure usa il tuo wallet Blink — i pagamenti da 1 sat sono praticamente gratuiti
+
+### E2E automatizzato con un wallet di test
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+// Use a dedicated test wallet with a small budget
+const wallet = new BlinkWallet(
+  process.env.TEST_BLINK_API_KEY!,
+  process.env.TEST_BLINK_WALLET_ID!,
+);
+const client = new L402Client({ wallet, budgetSats: 100 });
+
+const res = await client.fetch("http://localhost:3000/premium");
+assert(res.ok);
+const data = await res.json();
+assert(data.data !== undefined);
+```
+
+---
+
+## Checklist prima della produzione
+
+<Steps>
+  <Step title="I test unitari passano con il mock provider">
+    Flusso 402 → pagamento → 200 verificato. Protezione dal replay verificata (il secondo utilizzo restituisce 401).
+  </Step>
+  <Step title="Scadenza del token testata">
+    Imposta `exp: Date.now() - 1` nel tuo macaroon mock — verifica che il middleware restituisca 401.
+  </Step>
+  <Step title="E2E completo con pagamento reale a priceSats: 1">
+    Wallet reale, pagamento reale, 200 OK reale. Usa Wallet of Satoshi o Blink sul tuo telefono.
+  </Step>
+  <Step title="Protezione dal replay corretta per il tuo deployment">
+    Processo singolo: l'adattatore in-memory predefinito va bene. Multi-processo (Kubernetes, PM2 cluster): usa l'adattatore Supabase o Redis. Vedi [Guida alla Produzione](/guides/production).
+  </Step>
+</Steps>
