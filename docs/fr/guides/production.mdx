@@ -1,0 +1,333 @@
+---
+title: Guide de production
+description: Déployer les APIs l402-kit en production — performance, fiabilité et mise à l'échelle.
+---
+
+## Liste de contrôle pré-lancement
+
+Parcourez cette liste avant la mise en production. Chaque élément renvoie à la section correspondante ci-dessous.
+
+<Steps>
+  <Step title="Protection contre la réutilisation configurée pour les instances multiples">
+    L'adaptateur par défaut est uniquement en mémoire. Si vous exécutez plus d'un processus (workers Gunicorn, cluster PM2, Kubernetes), définissez `SUPABASE_URL` + `SUPABASE_ANON_KEY` ou utilisez `RedisReplayAdapter`. [Détails →](#critical-replay-protection-in-production)
+  </Step>
+  <Step title="Variables d'environnement dans un gestionnaire de secrets">
+    Ne codez jamais les clés API en dur. Utilisez `.env` en local, un gestionnaire de secrets en production. [Détails →](#environment-variables)
+  </Step>
+  <Step title="Un endpoint de vérification de santé existe">
+    Les pings de surveillance ne doivent pas déclencher la création de factures. Ajoutez une route `/health` avant vos routes payantes. [Détails →](#health-check-endpoint)
+  </Step>
+  <Step title="Les réponses d'erreur ne divulguent pas d'informations internes">
+    Interceptez les erreurs du fournisseur et retournez un 503 propre — pas une trace de pile. [Détails →](#error-handling)
+  </Step>
+  <Step title="Le prix est intentionnel">
+    `priceSats` doit refléter une valeur réelle. À 1 sat ≈ 0,0006 $, 100 sats ≈ 0,06 $ pour un endpoint premium est raisonnable. Ne le mettez pas à 0 par accident.
+  </Step>
+  <Step title="Surveillance de la disponibilité sur l'endpoint de facturation">
+    Surveillez la réponse 402 (c'est une réponse normale, pas une erreur). Des outils comme UptimeRobot prennent en charge les attentes de codes de statut personnalisés.
+  </Step>
+  <Step title="Limitation du débit sur la création de factures">
+    Chaque requête non authentifiée crée une facture Lightning. Sans limitation du débit, un attaquant peut épuiser le quota de factures de votre fournisseur gratuitement. Ajoutez `express-rate-limit` avant de déployer publiquement. [Détails →](#rate-limiting)
+  </Step>
+</Steps>
+
+---
+
+## Critique : protection contre la réutilisation en production
+
+<Warning>
+L'adaptateur de réutilisation par défaut est **uniquement en mémoire** — il se réinitialise à chaque redémarrage de processus et ne fonctionne pas sur plusieurs instances de serveur. En production avec plus d'un processus (workers Gunicorn, pods Kubernetes, cluster PM2), le même preimage peut être accepté deux fois.
+
+**Correction :** Définissez `SUPABASE_URL` + `SUPABASE_ANON_KEY` dans votre environnement. Le middleware utilisera automatiquement Supabase comme magasin de réutilisation, partagé entre toutes les instances.
+
+Pour Redis : passez un `RedisReplayAdapter` explicitement (voir [SDK TypeScript](/sdk/typescript#replay-protection) ou [SDK Python](/sdk/python#replay-protection)).
+</Warning>
+
+---
+
+## Variables d'environnement
+
+Ne codez jamais les clés en dur. Utilisez toujours des variables d'environnement :
+
+```bash
+# .env (ne jamais commiter ce fichier)
+BLINK_API_KEY=blink_xxx
+BLINK_WALLET_ID=your-wallet-id
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=sb_publishable_xxx    # sûr à exposer aux clients
+SUPABASE_SERVICE_KEY=sb_secret_xxx      # côté serveur uniquement — ne jamais exposer aux clients
+```
+
+```typescript
+import 'dotenv/config';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+---
+
+## Journalisation des paiements (Supabase)
+
+Enregistrez chaque paiement dans Supabase pour le tableau de bord de l'extension VS Code et les analyses :
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!,
+);
+
+app.use(async (req, res, next) => {
+  const original = res.json.bind(res);
+  res.json = (body) => {
+    // Journaliser les paiements L402 réussis (après le passage du middleware)
+    if (req.l402Paid && req.l402Preimage) {
+      supabase.from('payments').insert({
+        endpoint: req.path,
+        preimage: req.l402Preimage,
+        amount_sats: req.l402AmountSats,
+      }).then(() => {});
+    }
+    return original(body);
+  };
+  next();
+});
+```
+
+---
+
+## Déploiement sur Cloudflare Workers
+
+L'API l402-kit fonctionne sur Cloudflare Workers (isolats V8, démarrage à froid nul). Le magasin de réutilisation en mémoire se réinitialise par isolat — pour les APIs à fort trafic, utilisez Cloudflare KV ou Durable Objects pour la protection contre la réutilisation.
+
+```typescript
+// api/data.ts
+import { l402 } from 'l402-kit';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+export default async function handler(req, res) {
+  await new Promise<void>((resolve, reject) => {
+    l402({ priceSats: 10, lightning: blink })(req, res, (err) => {
+      if (err) reject(err); else resolve();
+    });
+  });
+  res.json({ data: 'premium content' });
+}
+```
+
+---
+
+## Docker
+
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY dist ./dist
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
+```
+
+```yaml
+# docker-compose.yml
+services:
+  api:
+    build: .
+    environment:
+      BLINK_API_KEY: ${BLINK_API_KEY}
+      BLINK_WALLET_ID: ${BLINK_WALLET_ID}
+    ports:
+      - "3000:3000"
+```
+
+---
+
+## Suppression des données utilisateur
+
+Exposez un endpoint de suppression pour que les utilisateurs puissent supprimer définitivement leurs données. Le backend l402-kit inclut `/api/delete-data` par défaut :
+
+```http
+POST /api/delete-data
+Content-Type: application/json
+
+{ "lightningAddress": "user@blink.sv" }
+```
+
+```json
+// 200 OK
+{ "deleted": { "payments": 42, "proAccess": true } }
+```
+
+L'extension VS Code affiche cela sous la forme d'un panneau **Zone de danger** en bas du tableau de bord — les utilisateurs doivent saisir leur adresse Lightning pour confirmer, puis tout l'historique des paiements et l'accès Pro sont supprimés. L'opération utilise la clé de service Supabase côté serveur ; la clé anon n'a pas de permission DELETE.
+
+---
+
+## Gestion des erreurs
+
+Interceptez les erreurs du fournisseur avant qu'elles n'apparaissent sous forme de 500 non formatés :
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, L402Error } from 'l402-kit';
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), async (req, res) => {
+  try {
+    res.json({ data: await fetchData() });
+  } catch (err) {
+    if (err instanceof L402Error) {
+      // Jeton invalide, expiré ou déjà utilisé — laisser le middleware le gérer
+      return res.status(err.status).json({ error: err.code });
+    }
+    console.error('[api/data]', err);
+    res.status(503).json({ error: 'Service temporairement indisponible' });
+  }
+});
+```
+
+```python Python
+from l402kit import l402_required, L402Error
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(L402Error)
+async def l402_exception_handler(request: Request, exc: L402Error):
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.code})
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=503, content={"error": "Service temporairement indisponible"})
+```
+</CodeGroup>
+
+**Règles générales :**
+- Ne retournez jamais de traces de pile aux clients — enregistrez-les côté serveur.
+- Les délais d'attente du fournisseur (503) sont transitoires — il est prudent de réessayer avec un délai exponentiel.
+- Les erreurs de jeton (401) ne sont jamais transitoires — ne réessayez pas automatiquement, exigez une nouvelle facture.
+- Les erreurs de limitation du débit (429) — transmettez le champ `retryAfter` à l'appelant.
+
+Consultez la [Référence des erreurs](/reference/errors) pour la liste complète des codes d'erreur structurés.
+
+---
+
+## Limitation du débit
+
+Chaque requête non authentifiée déclenche `createInvoice()` sur votre fournisseur Lightning. Sans limitation du débit, n'importe qui peut saturer votre endpoint et épuiser le quota API de votre fournisseur gratuitement — sans payer un seul sat.
+
+Ajoutez [`express-rate-limit`](https://www.npmjs.com/package/express-rate-limit) avant vos routes L402 :
+
+```bash
+npm install express-rate-limit
+```
+
+```typescript
+import rateLimit from "express-rate-limit";
+import { l402 } from "l402-kit";
+
+// Limiter la création de factures : 30 requêtes non authentifiées/minute par IP
+const invoiceLimit = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  // Appliquer uniquement aux requêtes qui ne portent pas déjà un en-tête L402 valide
+  skip: (req) => req.headers.authorization?.startsWith("L402 ") ?? false,
+  message: { error: "Trop de requêtes — ralentissez" },
+});
+
+app.get("/api/premium", invoiceLimit, l402({ priceSats: 10, lightning }), handler);
+```
+
+<Note>
+Les clients déjà payants sont ignorés par la fonction `skip` — la limite s'applique uniquement aux appels non authentifiés qui déclenchent une nouvelle facture. Les payeurs légitimes ne sont jamais limités.
+</Note>
+
+Pour FastAPI :
+
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/api/premium")
+@limiter.limit("30/minute")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium(request: Request):
+    return {"data": "paid content"}
+```
+
+---
+
+## Endpoint de vérification de santé
+
+Ajoutez toujours une vérification de santé gratuite pour que les outils de surveillance ne déclenchent pas la création de factures :
+
+```typescript
+app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// Endpoint payant
+app.get('/api/data', l402({ priceSats: 10, lightning: blink }), handler);
+```
+
+---
+
+## Surveillance
+
+Métriques clés à suivre :
+- **Taux de réponse 402** — la valeur de référence saine est élevée (la plupart des appelants doivent payer)
+- **Taux de vérification des paiements** — ratio des appels payés par rapport aux non payés
+- **Latence du fournisseur** — `blink.createInvoice()` devrait être < 500 ms
+- **Tentatives de réutilisation** — un pic indique des attaques de réutilisation de jeton
+
+```typescript
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    console.log(JSON.stringify({
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      ms: Date.now() - start,
+      paid: res.statusCode !== 402,
+    }));
+  });
+  next();
+});
+```
+
+---
+
+## Performance
+
+- La vérification des jetons est **O(1)** — cryptographie pure, sans base de données, sans réseau
+- La création de factures (chemin 402) appelle l'API de votre fournisseur Lightning — ajoutez un cache si vous prévoyez que le même endpoint sera sollicité à plusieurs reprises avant le paiement
+- Le magasin de réutilisation est un `Set` en mémoire — pour les déploiements multi-instances, remplacez-le par Redis
+
+```typescript
+// Exemple de magasin de réutilisation Redis
+import { Redis } from 'ioredis';
+const redis = new Redis(process.env.REDIS_URL!);
+
+// Passer une fonction de réutilisation personnalisée au middleware
+app.get('/api', l402({
+  priceSats: 10,
+  lightning: blink,
+  checkReplay: async (preimage) => {
+    const set = await redis.set(`l402:${preimage}`, '1', 'NX', 'EX', 86400);
+    return set === 'OK';
+  },
+}), handler);
+```

@@ -1,0 +1,113 @@
+---
+title: "Délégation Agent-à-Agent"
+description: "Permettre à un orchestrateur de payer une fois et de partager le credential avec des sous-agents."
+---
+
+## Concept
+
+Un token L402 (`macaroon:preimage`) est une chaîne portable — une fois payé, il peut être transmis à n'importe quel sous-agent ayant besoin d'accéder à la même ressource. L'orchestrateur détient le portefeuille ; les sous-agents ne reçoivent qu'un token.
+
+```
+Orchestrator (has wallet)
+   │
+   ├── pays invoice → receives token (macaroon:preimage)
+   │
+   ├── passes token string to SubAgent A
+   └── passes token string to SubAgent B
+
+SubAgent A — calls /api/data with token  ✓  (no wallet needed)
+SubAgent B — calls /api/data with token  ✓  (no wallet needed)
+```
+
+<Note>
+Les tokens expirent après 1 heure. Chaque preimage ne peut être utilisé qu'une seule fois par serveur (protection contre le rejeu). Pour des sous-agents parallèles accédant au même endpoint, chacun a besoin de son propre paiement.
+</Note>
+
+## Quand partager un token ou payer indépendamment
+
+Il existe deux schémas de délégation, chacun avec des compromis différents :
+
+**Le partage de token** fonctionne lorsque les sous-agents accèdent au **même endpoint de manière séquentielle**. L'orchestrateur paie une fois, extrait la valeur de l'en-tête `Authorization` et la transmet sous forme de chaîne. Les sous-agents appellent l'endpoint avec cet en-tête directement — aucun portefeuille requis. Cela minimise le coût (un seul paiement) mais n'est **pas sûr pour un accès concurrent** — un seul agent peut détenir un preimage donné, et les serveurs rejettent les replays.
+
+**Le paiement indépendant** (chaque sous-agent possède son propre `L402Client` partageant le portefeuille de l'orchestrateur) fonctionne pour un **accès parallèle ou concurrent**. Chaque agent paie sa propre invoice et met en cache son propre token. Cela coûte plus de sats mais est plus simple à raisonner et sûr à n'importe quel niveau de concurrence.
+
+**Règle empirique :** Si vos sous-agents s'exécutent en parallèle, donnez à chacun son propre `L402Client`. S'ils s'exécutent séquentiellement et accèdent au même endpoint, partagez la chaîne de token.
+
+## Considérations de sécurité
+
+- **Ne transmettez jamais les credentials du portefeuille aux sous-agents.** Transmettez uniquement la chaîne de token (`L402 <macaroon>:<preimage>`). Un token peut appeler un endpoint pendant une heure au maximum — une clé privée peut vider un portefeuille.
+- **Les tokens sont à usage unique par serveur.** Après la première requête acceptée, le serveur enregistre le hash du preimage. Une seconde requête avec le même preimage renvoie 402. Cela empêche les attaques par rejeu mais signifie que vous ne pouvez pas partager un token entre deux sous-agents concurrents accédant au même serveur.
+- **Le contrôle du budget est au niveau du portefeuille.** Définissez `budgetSats` sur le `L402Client` de l'orchestrateur pour plafonner les dépenses totales de tous les sous-agents partageant ce portefeuille. Voir [Contrôle du Budget](/agent/budget).
+
+## TypeScript — l'orchestrateur paie, le sous-agent utilise le token
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+// Orchestrator: has wallet, pays invoice
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+const orchestrator = new L402Client({ wallet, budgetSats: 5000 });
+
+// Fetch triggers payment; token is cached inside orchestrator
+const res = await orchestrator.fetch("https://api.example.com/data");
+const data = await res.json();
+
+// Build the delegation header from the macaroon + preimage the Lightning Network returned.
+// In practice, retrieve these from the payment result or the client's token cache.
+// Format is always: "L402 <base64-macaroon>:<hex-preimage>"
+const tokenHeader = `L402 ${macaroon}:${preimage}`; // substitute values from payment result
+
+// Sub-agent: no wallet, passes the header directly
+const subRes = await fetch("https://api.example.com/data", {
+  headers: { Authorization: tokenHeader },
+});
+```
+
+## Python — l'orchestrateur paie, le sous-agent utilise le token
+
+```python
+from l402kit import L402Client
+from l402kit.wallets.blink import BlinkWallet
+
+# Orchestrator pays
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+orchestrator = L402Client(wallet=wallet, budget_sats=5000)
+
+async with orchestrator:
+    response = await orchestrator.fetch("https://api.example.com/data")
+
+# Sub-agents: pass the Authorization header directly
+# Authorization: L402 <macaroon>:<preimage>
+```
+
+## Schéma multi-agent : un seul paiement, lectures parallèles
+
+Si plusieurs sous-agents ont besoin de la **même ressource de manière concurrente**, le schéma le plus propre est que chaque sous-agent paie indépendamment en utilisant son propre `L402Client` avec un portefeuille partagé :
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+
+// Each sub-agent gets its own L402Client — independent payment + token cache
+const agents = Array.from({ length: 3 }, () => new L402Client({ wallet }));
+
+const results = await Promise.all(
+  agents.map((agent) => agent.fetch("https://api.example.com/data"))
+);
+```
+
+## Propriétés de sécurité
+
+| Propriété | Fonctionnement actuel |
+|----------|--------------------|
+| Isolation du portefeuille | Les sous-agents reçoivent une chaîne de token, jamais de clés privées |
+| Limité dans le temps | Les macaroons expirent après 1 heure |
+| Protégé contre le rejeu | Chaque preimage ne peut être accepté qu'une seule fois par le serveur |
+| Contrôle du budget | Définir `budgetSats` sur l'orchestrateur `L402Client` |
+
+## Prévu dans une version future
+
+La délégation complète par caveat de macaroon (portée des endpoints, tokens à usage unique, limites d'utilisation maximale) est planifiée. Suivez la progression sur [GitHub](https://github.com/ShinyDapps/l402-kit).
+
+Voir [Contrôle du Budget](/agent/budget) pour les limites de dépenses au niveau de la session.

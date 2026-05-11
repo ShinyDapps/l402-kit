@@ -1,0 +1,136 @@
+---
+title: Extension VS Code
+description: Surveillez vos paiements Lightning en temps réel, directement dans VS Code — barre d'état, graphiques, export CSV et abonnement Pro payé en Bitcoin.
+---
+
+L'extension **ShinyDapps Payments** affiche vos données de paiement l402-kit sans quitter votre éditeur. Installez-la une fois, configurez votre adresse Lightning, et regardez les sats arriver dans la barre d'état.
+
+<Card title="Installer depuis le Marketplace" icon="download" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402">
+  ShinyDapps.shinydapps-l402 — compatible avec VS Code 1.85+
+</Card>
+
+---
+
+## Configuration rapide
+
+1. Installez l'extension depuis le [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402).
+2. Ouvrez la palette de commandes (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+3. Exécutez **ShinyDapps: Configure Lightning Address**.
+4. Saisissez votre adresse Lightning (ex. `you@blink.sv`).
+
+L'élément de barre d'état `⚡ 0 sats (0)` s'allume immédiatement. Il interroge le serveur toutes les 30 secondes et se met à jour automatiquement.
+
+Vous pouvez également le définir manuellement dans vos paramètres VS Code :
+
+```json
+{
+  "shinydapps.lightningAddress": "you@blink.sv"
+}
+```
+
+---
+
+## Ce que vous voyez
+
+### Barre d'état
+
+`⚡ 1,234 sats (42)` — total des sats gagnés et nombre de paiements, toujours visible.
+Survolez l'élément pour afficher une infobulle avec un récapitulatif. Si vous êtes sur le plan gratuit, l'infobulle vous rappelle également que le plan Pro débloque l'historique complet.
+
+### Panneau de tableau de bord
+
+Cliquez sur l'élément de la barre d'état ou exécutez **ShinyDapps: Open Dashboard** pour ouvrir le panneau complet. Il contient :
+
+| Section | Description |
+|---------|-------------|
+| Cartes de statistiques | Total des paiements, total des sats, estimation en USD, prix BTC en direct |
+| Graphique en barres | Sats gagnés au fil du temps (voir les plages ci-dessous) |
+| Tableau des paiements | Les 50 dernières transactions : horodatage, endpoint, sats |
+| Ticker BTC | Prix en direct depuis mempool.space, affiché en sat par dollar |
+
+Le panneau apparaît également dans la barre latérale (Barre d'activité → icône ⚡).
+
+### Support des langues
+
+11 langues intégrées : English, Português, Español, 中文, 日本語, Français, Deutsch, Русский, हिन्दी, العربية, Italiano. Changez via le menu déroulant en haut du tableau de bord.
+
+---
+
+## Gratuit vs Pro
+
+| Fonctionnalité | Gratuit | Pro |
+|----------------|---------|-----|
+| Historique des paiements | 30 derniers jours | Depuis toujours |
+| Plages du graphique | 1J · 7J | 1J · 7J · 30J · 1A · TOUT |
+| Export CSV | — | ✓ |
+| Barre d'état + interrogation en direct | ✓ | ✓ |
+| Ticker prix BTC | ✓ | ✓ |
+| Langues | 11 | 11 |
+
+### Passer à Pro
+
+Le plan Pro coûte **9 $ / mois**, payé en Bitcoin via Lightning — pas de carte de crédit, pas de compte.
+
+Cliquez sur **Upgrade with Bitcoin →** dans le tableau de bord, ou accédez directement à :
+
+```
+https://l402kit.com/api/checkout?address=YOU@DOMAIN.COM&tier=pro
+```
+
+La page de paiement génère une facture BOLT11, affiche un QR code et vérifie le paiement. Une fois confirmé, le plan Pro s'active immédiatement — aucun redémarrage nécessaire.
+
+<Note>
+L'extension vérifie le statut Pro au démarrage. Si vous venez de payer, cliquez sur le bouton **↺** d'actualisation dans le tableau de bord pour activer immédiatement.
+</Note>
+
+---
+
+## Notifications
+
+L'extension déclenche une notification VS Code lorsque votre **premier paiement arrive** pendant que l'éditeur est ouvert :
+
+> ⚡ Premier paiement reçu ! Ouvrez votre tableau de bord pour le consulter.
+
+Cliquez sur **Open Dashboard** dans la notification pour accéder directement au panneau.
+
+---
+
+## Confidentialité et données
+
+- L'extension lit les données de paiement depuis Supabase en utilisant une clé **publiable (lecture seule)** limitée à votre adresse Lightning.
+- Aucun jeton d'authentification n'est stocké localement — seule votre adresse Lightning est enregistrée dans les paramètres VS Code.
+- Vous pouvez supprimer toutes vos données à tout moment via **Danger Zone → Delete all my data** dans le tableau de bord. Cela supprime l'historique des paiements et l'abonnement Pro de Supabase.
+
+---
+
+## Zone dangereuse
+
+Le tableau de bord inclut un flux de suppression de données en libre-service :
+
+1. Développez **Danger Zone** en bas du tableau de bord.
+2. Saisissez votre adresse Lightning pour confirmer.
+3. Cliquez sur **Delete my data**.
+
+Tout l'historique des paiements et l'accès Pro associés à cette adresse sont définitivement supprimés.
+
+---
+
+## Dépannage
+
+<AccordionGroup>
+  <Accordion title="La barre d'état affiche ⚡ — (offline)">
+    L'extension n'a pas pu atteindre Supabase. Vérifiez votre connexion internet et essayez de cliquer sur **↺** pour actualiser.
+  </Accordion>
+
+  <Accordion title="Les paiements n'apparaissent pas après une transaction réussie">
+    L'extension interroge le serveur toutes les 30 secondes. Cliquez sur **↺** pour forcer une actualisation immédiate. Si les paiements n'apparaissent toujours pas, vérifiez que votre adresse Lightning dans les paramètres VS Code correspond exactement à celle enregistrée avec l402-kit (sensible à la casse).
+  </Accordion>
+
+  <Accordion title="Pro activé mais le graphique affiche toujours 🔒">
+    Cliquez sur **↺** pour actualiser. Le statut Pro est vérifié au chargement — une actualisation manuelle le revalide immédiatement.
+  </Accordion>
+
+  <Accordion title="Je vois des paiements mais le nombre semble faible">
+    Avec le plan gratuit, seuls les **30 derniers jours** d'historique sont chargés. Passez au plan Pro pour voir toutes les données depuis le début. La bannière Pro indique le nombre de paiements masqués si vous avez des enregistrements plus anciens.
+  </Accordion>
+</AccordionGroup>

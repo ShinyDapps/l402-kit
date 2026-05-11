@@ -1,0 +1,224 @@
+---
+title: Contrôle du budget
+description: Définissez des limites de dépenses, suivez les paiements par domaine et recevez des callbacks avant chaque transaction.
+---
+
+## Pourquoi le contrôle du budget est important
+
+Un agent IA qui appelle des API payantes en boucle peut accumuler des coûts rapidement. Le contrôle du budget vous permet de :
+
+- Plafonner les dépenses totales par session
+- Définir des limites par domaine (ex. : max 100 sats/session sur `api.weather.com`)
+- Recevoir un callback avant chaque paiement
+- Obtenir un rapport de dépenses complet à tout moment
+
+---
+
+## Budget global
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+      budgetSats: 500, // max 500 sats total this session
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=500,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+Lorsqu'une réponse 402 inclut un champ `priceSats` et que celui-ci dépasserait le budget restant, le client lève une `BudgetExceededError` **avant de payer** — aucun satoshi n'est dépensé.
+
+---
+
+## Budget par domaine
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 2000,
+      budgetPerDomain: {
+        "api.weather.com": 100,
+        "api.finance.com": 500,
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=2000,
+        budget_per_domain={
+            "api.weather.com": 100,
+            "api.finance.com": 500,
+        },
+    )
+    ```
+  </Tab>
+</Tabs>
+
+Les limites par domaine sont vérifiées indépendamment de la limite globale — les deux doivent être respectées pour que le paiement soit effectué.
+
+---
+
+## Callbacks
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 1000,
+      onSpend: (sats, url) => {
+        console.log(`✓ Paid ${sats} sats → ${url}`);
+        // log to your telemetry, update a dashboard, etc.
+      },
+      onBudgetExceeded: (url, sats) => {
+        console.warn(`✗ Blocked: ${sats} sats requested by ${url} — budget exhausted`);
+        // alert, notify Slack, etc.
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    def on_spend(sats: int, url: str) -> None:
+        print(f"✓ Paid {sats} sats → {url}")
+
+    def on_budget_exceeded(url: str, sats: int) -> None:
+        print(f"✗ Blocked: {sats} sats requested by {url} — budget exhausted")
+
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=1000,
+        on_spend=on_spend,
+        on_budget_exceeded=on_budget_exceeded,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+`onBudgetExceeded` / `on_budget_exceeded` est appelé juste avant que `BudgetExceededError` soit levée — utile pour la journalisation ou les alertes.
+
+---
+
+## Rapport de dépenses
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const report = client.spendingReport();
+
+    if (report) {
+      console.log(`Total spent: ${report.total} sats`);
+      console.log(`Remaining:   ${report.remaining} sats`);
+      console.log("By domain:", report.byDomain);
+      // { "api.weather.com": 42, "api.finance.com": 105 }
+
+      for (const tx of report.transactions) {
+        console.log(`  ${tx.ts}  ${tx.sats} sats  ${tx.url}`);
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    report = client.spending_report()
+
+    if report:
+        print(f"Total spent: {report.total} sats")
+        print(f"Remaining:   {report.remaining} sats")
+        print("By domain:", report.by_domain)
+        # {"api.weather.com": 42, "api.finance.com": 105}
+
+        for tx in report.transactions:
+            print(f"  {tx['ts']}  {tx['sats']} sats  {tx['url']}")
+    ```
+  </Tab>
+</Tabs>
+
+`spendingReport()` retourne `null` / `None` lorsqu'aucun budget n'est configuré.
+
+---
+
+## Gestion de BudgetExceededError
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { BudgetExceededError } from "l402-kit";
+
+    try {
+      const res = await client.fetch("https://api.example.com/premium");
+    } catch (err) {
+      if (err instanceof BudgetExceededError) {
+        console.log(`Need ${err.required} sats, only ${err.remaining} remaining`);
+        // gracefully degrade — return cached data, skip this step, etc.
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import BudgetExceededError
+
+    try:
+        r = client.get("https://api.example.com/premium")
+    except BudgetExceededError as e:
+        print(f"Need {e.required} sats, only {e.remaining} remaining")
+        # gracefully degrade
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Notes sur la concurrence
+
+<Warning>
+**Ne partagez pas une seule instance de `L402Client` entre des appels `Promise.all` concurrents lorsque les limites de budget sont importantes.**
+
+`BudgetTracker.check()` et `record()` sont séparés par un `await` (le paiement Lightning). Deux appels `client.fetch()` concurrents vers des endpoints différents peuvent tous les deux passer la vérification du budget avant que l'un ou l'autre n'enregistre la dépense — ce qui signifie que le coût combiné peut temporairement dépasser votre plafond budgétaire d'un paiement.
+
+**Modèle sûr — appels séquentiels :**
+```typescript
+for (const url of urls) {
+  const res = await client.fetch(url); // awaited one at a time
+}
+```
+
+**Modèle risqué — appels parallèles :**
+```typescript
+// Both may pass budget.check() before either calls budget.record()
+const results = await Promise.all(urls.map(url => client.fetch(url)));
+```
+
+**Atténuation pour les charges de travail parallèles :** définissez votre `budgetSats` de manière conservative (ex. : 80 % de votre limite réelle) pour absorber le dépassement provenant d'un paiement concurrent. Pour une application stricte, traitez les appels de manière séquentielle.
+</Warning>
+
+---
+
+## Référence complète des options
+
+| Option | TypeScript | Python | Défaut | Description |
+|--------|-----------|--------|---------|-------------|
+| Budget global | `budgetSats` | `budget_sats` | illimité | Nombre maximum de sats pour la session |
+| Par domaine | `budgetPerDomain` | `budget_per_domain` | `{}` | Correspondance `domaine → sats maximum` |
+| Hook de dépense | `onSpend` | `on_spend` | — | Appelé après chaque paiement |
+| Hook de dépassement | `onBudgetExceeded` | `on_budget_exceeded` | — | Appelé avant le lancement de l'exception |

@@ -1,0 +1,153 @@
+---
+title: Architecture de Confidentialité
+description: Comment l402-kit ne stocke aucune PII, authentifie par portefeuille et maintient les clés distribuées — un modèle de confidentialité digne de Bitcoin.
+---
+
+## Le problème avec les APIs de paiement traditionnelles
+
+Stripe, LemonSqueezy, Paddle — chaque fournisseur de paiement conventionnel exige :
+
+- Une adresse email (PII, responsabilité RGPD)
+- Un compte et un mot de passe (phishable, piratable)
+- Un stockage centralisé des clés (point de défaillance unique)
+- Faire confiance que le fournisseur ne vend pas vos données
+
+Lightning change entièrement le modèle. **Votre portefeuille est une preuve cryptographique d'identité.** l402-kit est construit autour de cette prémisse.
+
+---
+
+## Ce que nous stockons — et ce que nous ne stockons pas
+
+| Donnée | Stockée | Pourquoi |
+|---|---|---|
+| `payment_hash` | ✅ Oui | SHA-256 du preimage — déjà public dans la facture BOLT11 |
+| Adresse Lightning | ✅ Oui (propriétaire uniquement) | Nécessaire pour acheminer la répartition 99,7 % |
+| Endpoint appelé | ✅ Oui | Requis pour vos analyses |
+| `preimage` (secret de paiement) | ❌ Jamais | Exposerait la clé de paiement |
+| Email | ❌ Jamais | Pas nécessaire — le portefeuille est l'identité |
+| Nom / IP / appareil | ❌ Jamais | Non collecté à aucune couche |
+| Cookies / tracking | ❌ Jamais | Aucun SDK d'analyse, pas de fingerprinting |
+
+### Pourquoi le `payment_hash` est sûr à stocker
+
+Le preimage est le secret de 32 octets qui prouve le paiement. Son hash SHA-256 (`payment_hash`) est déjà diffusé publiquement dans la facture BOLT11 au moment où vous la créez. Stocker le hash ne révèle rien — le preimage ne touche jamais notre base de données.
+
+```
+preimage  →  SHA-256  →  payment_hash  (public, dans BOLT11)
+   ↑
+jamais stocké
+```
+
+---
+
+## Authentification : votre portefeuille, pas un mot de passe
+
+### Tableau de bord développeur
+
+Le tableau de bord d'analyse s'authentifie via **LNURL-auth** — le même flux secp256k1 utilisé par les portefeuilles Lightning :
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+Aucun mot de passe à phisher. Aucun jeton de session à voler depuis la périphérie. Le JWT est limité par la sécurité au niveau des lignes (Row Level Security) — les autres pubkeys ne voient rien.
+
+### Suppression des données
+
+Seul votre portefeuille peut autoriser la suppression de vos données. Le flux :
+
+1. Le client appelle `/api/lnurl-auth?lightningAddress=you@yourdomain.com`
+2. Le serveur retourne un challenge k1 à usage unique + LNURL
+3. Votre portefeuille signe k1 avec sa clé privée secp256k1
+4. Le serveur vérifie la signature — émet un token à usage unique de 64 caractères
+5. Le client envoie un POST à `/api/delete-data` avec `{ lightningAddress, token }`
+6. Le serveur révoque le token immédiatement (empêche le rejeu), supprime toutes les lignes
+7. Les données sont effacées — aucun ticket de support, aucune confirmation par email
+
+**Pourquoi c'est robuste :** Un attaquant qui connaît votre adresse Lightning ne peut pas supprimer vos données sans votre clé privée. Le token est à usage unique et expire en 10 minutes.
+
+---
+
+## Distribution des clés
+
+SaaS traditionnel : une seule violation → tout est exposé.
+
+l402-kit distribue la confiance à travers plusieurs couches :
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+Aucune couche seule n'a suffisamment de données pour vous usurper l'identité, lire votre identité ou vider votre portefeuille.
+
+---
+
+## Conformité LGPD / RGPD par conception
+
+Parce que nous ne stockons aucune PII, la plupart des obligations LGPD/RGPD ne s'appliquent pas :
+
+- **Aucune demande de droit d'accès** — il n'y a aucune identité à rechercher
+- **Aucune notification de violation pour les données personnelles** — payment_hash n'est pas une donnée personnelle
+- **Aucun consentement aux cookies** — pas de tracking, pas de cookies
+- **Droit à l'effacement** — satisfait de manière cryptographique via la suppression LNURL-auth
+
+Ceci n'est pas un avis juridique. Mais « nous ne le collectons pas » est une position plus solide que « nous le collectons et le protégeons ».
+
+---
+
+## Les paiements Lightning sont privés par défaut
+
+Les paiements Lightning n'identifient pas le payeur on-chain :
+
+- Aucun nom, aucune adresse, aucun compte bancaire
+- La route de paiement est chiffrée en oignon (comme Tor)
+- Seul l'émetteur de la facture sait que le paiement a été réglé
+- L'identité du payeur n'est jamais révélée au bénéficiaire
+
+Vos utilisateurs finaux paient votre API de manière anonyme. Vous savez que la facture a été payée. C'est tout ce dont les deux parties ont besoin.
+
+---
+
+## Comparaison
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| Email requis | ❌ | ✅ | ✅ |
+| Compte requis | ❌ | ✅ | ✅ |
+| KYC / identité | ❌ | ✅ | ✅ |
+| PII stockée | ❌ | ✅ | ✅ |
+| Méthode d'authentification | portefeuille secp256k1 | email + mot de passe | email + mot de passe |
+| Mécanisme de suppression | preuve cryptographique | demande par email | demande par email |
+| Overhead LGPD/RGPD | minimal | élevé | élevé |
+| Payeur anonyme | ✅ | ❌ | ❌ |
+
+---
+
+## Ce que cela signifie pour vos utilisateurs
+
+Si vous construisez sur l402-kit :
+
+- Vos utilisateurs ne vous communiquent jamais leur email
+- Une violation de votre base de données n'expose rien de personnel
+- Tout agent IA peut payer votre API sans compte ni identité
+- Les utilisateurs qui souhaitent supprimer leurs données le font eux-mêmes, instantanément, avec leur portefeuille
+
+C'est la couche de paiement que Bitcoin mérite.

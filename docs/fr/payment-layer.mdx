@@ -1,0 +1,158 @@
+---
+title: "Couche de Paiement"
+description: "Comment l402-kit traite les paiements Bitcoin Lightning — BOLT11, protocole L402, et vérification cryptographique."
+---
+
+# Couche de Paiement
+
+l402-kit est un **middleware souverain** qui ajoute un paywall Bitcoin Lightning à n'importe quel endpoint HTTP en 3 lignes de code. Vous apportez votre propre fournisseur Lightning — les fonds vont directement dans votre portefeuille, sans intermédiaire requis.
+
+---
+
+## Protocole : L402
+
+L402 est un standard ouvert qui étend HTTP/1.1 avec une négociation de paiement native :
+
+```
+Client → GET /api/data
+Server ← 402 Payment Required
+         WWW-Authenticate: L402 <macaroon>, invoice="<BOLT11>"
+
+Client pays invoice via Lightning wallet
+Client → GET /api/data
+         Authorization: L402 <macaroon>:<preimage>
+Server ← 200 OK + data
+```
+
+Le **macaroon** est un jeton de capacité lié au `paymentHash` de la facture. Le **preimage** est le secret cryptographique libéré par le nœud Lightning lorsque le paiement est réglé. Le serveur vérifie :
+
+```
+SHA256(preimage) == paymentHash ✓
+```
+
+Pas de compte, pas de session, pas de JWT — le preimage **est** la preuve de paiement.
+
+---
+
+## Flux de Création de Facture
+
+```
+Your API receives a request without valid Authorization
+     │
+     ▼
+l402-kit middleware calls lightning.createInvoice(priceSats)
+     │  (your provider: Blink, Alby, OpenNode, BTCPay, LNbits…)
+     ▼
+Provider returns BOLT11 invoice + paymentHash
+     │
+     ▼
+Middleware builds macaroon: base64({ hash: paymentHash, exp: now+1h })
+     │
+     ▼
+Your API returns 402 + invoice + macaroon to client
+```
+
+---
+
+## Flux de Vérification de Paiement
+
+```
+Client pays BOLT11 invoice via any Lightning wallet
+     │
+     ▼
+Lightning node releases preimage (32-byte secret)
+     │
+     ▼
+Client sends Authorization: L402 <macaroon>:<preimage>
+     │
+     ▼
+Middleware verifies locally — no network call:
+  1. Decode macaroon (base64 → JSON { hash, exp })
+  2. Check exp > now()
+  3. SHA256(preimage) === hash ✓
+     │
+     ▼
+Request passes through to your API handler → 200 OK
+```
+
+La vérification est **O(1)** — cryptographie pure, sans consultation de base de données sur le chemin critique. La protection contre les rejeux (journalisation `payment_hash` dans Supabase) s'exécute de manière asynchrone et ne bloque pas la requête.
+
+### Format du macaroon
+
+l402-kit utilise un macaroon personnalisé léger — pas libmacaroon. Le jeton est un objet JSON encodé en `base64url` :
+
+```json
+{ "hash": "<paymentHash hex>", "exp": <unix timestamp> }
+```
+
+C'est plus simple et auditable sans aucune bibliothèque externe. Le format de l'en-tête `Authorization` est :
+
+```
+Authorization: L402 <base64url-macaroon>:<preimage-hex>
+```
+
+---
+
+## Modèle de Frais
+
+| Mode | Frais | Configuration |
+|---|---|---|
+| **Souverain** (tout fournisseur) | **0%** — vous conservez 100% | Apportez vos propres identifiants de fournisseur |
+| **Géré** (`ManagedProvider`) | 0,3% vers l402kit.com | Pas de nœud Lightning — fonctionne immédiatement |
+
+Le mode souverain est le mode par défaut. Le mode géré est une activation explicite :
+
+```typescript
+// Soberano — 0% fee, you keep 100%
+import { AlbyProvider } from 'l402-kit';
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+
+// Managed — 0.3% fee, no Lightning node needed
+import { ManagedProvider } from 'l402-kit';
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+```
+
+---
+
+## Stockage des Données (optionnel — Supabase)
+
+Définissez `SUPABASE_URL` + `SUPABASE_ANON_KEY` pour journaliser les paiements automatiquement :
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — safe to store
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+**Pourquoi `payment_hash` plutôt que `preimage` ?** Le `payment_hash` est déjà intégré dans chaque facture BOLT11 — il est public par conception. Seul le `preimage` est secret. Stocker le hash offre une protection contre les rejeux sans exposition supplémentaire.
+
+---
+
+## Fournisseurs Lightning
+
+l402-kit est agnostique quant au fournisseur. Tout backend qui implémente `LightningProvider` fonctionne :
+
+| Fournisseur | Notes |
+|---|---|
+| [Alby Hub](https://hub.getalby.com) | Auto-custodial, 0% de frais |
+| [Blink](https://blink.sv) | Custodial gratuit, pas de KYC pour les petits montants |
+| [BTCPay Server](https://btcpayserver.org) | Auto-hébergé, souveraineté totale |
+| [OpenNode](https://opennode.com) | Custodial, sans configuration |
+| [LNbits](https://lnbits.com) | Auto-hébergé ou cloud |
+
+Consultez le [SDK TypeScript](/sdk/typescript) ou le [SDK Python](/sdk/python) pour la configuration des fournisseurs.
+
+---
+
+## Garanties de Sécurité
+
+| Menace | Atténuation |
+|---|---|
+| Attaque par rejeu | Le preimage est marqué comme utilisé après la première vérification — adaptateur en mémoire ou Redis |
+| Faux preimage | `SHA256(preimage) === paymentHash` est cryptographiquement infalsifiable |
+| Expiration du jeton | Le macaroon intègre un horodatage `exp` — vérifié à chaque requête |
+| Falsification de webhook | `HMAC-SHA256(secret, body)` vérifié avant traitement |

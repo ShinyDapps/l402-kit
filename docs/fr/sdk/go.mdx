@@ -1,0 +1,183 @@
+---
+title: Go SDK
+description: Référence complète pour le SDK Go l402-kit — middleware net/http pour les APIs Bitcoin Lightning à facturation par appel.
+---
+
+## Installation
+
+```bash
+go get github.com/shinydapps/l402-kit/go@v1.8.2
+```
+
+**Prérequis** : Go 1.21+
+
+---
+
+## Démarrage rapide
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+    "os"
+
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    lightning := l402.NewBlinkProvider(
+        os.Getenv("BLINK_API_KEY"),
+        os.Getenv("BLINK_WALLET_ID"),
+    )
+
+    mux := http.NewServeMux()
+    mux.Handle("/api/data", l402.Middleware(l402.Options{
+        PriceSats: 10,
+        Lightning: lightning,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
+    })))
+
+    http.ListenAndServe(":8080", mux)
+}
+```
+
+Obtenez des identifiants Blink gratuitement sur [dashboard.blink.sv](https://dashboard.blink.sv). Les paiements sont envoyés directement à votre portefeuille.
+
+---
+
+## Mode auto-hébergé (utilisez votre propre fournisseur)
+
+```go
+import l402 "github.com/shinydapps/l402-kit/go"
+
+type MyProvider struct{}
+
+func (p *MyProvider) CreateInvoice(ctx context.Context, amountSats int) (l402.Invoice, error) {
+    // create invoice with your Lightning node
+    // return l402.Invoice{PaymentRequest: "lnbc...", PaymentHash: "...", Macaroon: "..."}
+}
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: &MyProvider{},
+}, handler))
+```
+
+---
+
+## `l402.Options`
+
+| Champ | Type | Défaut | Description |
+|---|---|---|---|
+| `PriceSats` | `int` | **requis** | Prix par appel en satoshis |
+| `Lightning` | `LightningProvider` | **requis** | Votre backend Lightning (utilisez `NewBlinkProvider`) |
+| `OnPayment` | `func(L402Token, int)` | — | Callback déclenché après chaque paiement vérifié |
+
+---
+
+## `l402.Middleware(opts Options, next http.Handler) http.Handler`
+
+Retourne un `http.Handler` compatible avec `net/http`, Chi, Gorilla Mux, et tout framework HTTP Go standard.
+
+### Comportement
+
+| Requête | Réponse |
+|---|---|
+| Pas d'en-tête `Authorization` | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| `L402 <macaroon>:<preimage>` valide | `next.ServeHTTP(w, r)` |
+| Jeton invalide ou expiré | `401 Unauthorized` |
+| preimage déjà utilisée | `401 Token already used` |
+
+### Corps de la réponse 402
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## Interface `LightningProvider`
+
+```go
+type LightningProvider interface {
+    CreateInvoice(ctx context.Context, amountSats int) (Invoice, error)
+}
+```
+
+---
+
+## Callback `OnPayment`
+
+```go
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+    OnPayment: func(token l402.L402Token, amountSats int) {
+        log.Printf("payment: %d sats, preimage: %s", amountSats, token.Preimage)
+    },
+}, handler))
+```
+
+---
+
+## Vérification
+
+`SHA256(preimage) == paymentHash` est vérifié localement en mémoire — **sous la milliseconde, sans appel réseau** sur le chemin critique. L'expiration du jeton (champ `exp` dans le macaroon) est vérifiée lors de la même opération.
+
+La protection contre la réutilisation utilise une map en mémoire par défaut (sûre pour un processus unique). Pour les déploiements multi-instances, utilisez un store partagé (Redis ou similaire) — ce qui ajoute un aller-retour de **5 à 50 ms** par requête vérifiée.
+
+---
+
+## Exemple avec le routeur Chi
+
+`l402.Middleware` retourne un `http.Handler` standard, il fonctionne donc directement avec le `r.Handle` de Chi :
+
+```go
+import (
+    "github.com/go-chi/chi/v5"
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+r := chi.NewRouter()
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+r.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+}, http.HandlerFunc(handler)))
+```
+
+---
+
+## Codes d'erreur
+
+| Statut | Signification |
+|---|---|
+| `402` | Aucun jeton de paiement — payez la facture |
+| `401` | Jeton invalide ou macaroon expiré |
+| `401` | Jeton rejoué (preimage déjà utilisée) |
+
+---
+
+## Exécution
+
+```bash
+go run main.go
+
+# Test — déclenche un 402
+curl http://localhost:8080/api/data
+
+# Payez la facture, puis :
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:8080/api/data
+```

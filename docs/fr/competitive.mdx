@@ -1,0 +1,190 @@
+---
+title: vs. Concurrence
+description: Comment l402-kit se compare à Stripe, MPP (Tempo), x402, ln.bot, BTCPay, et tous les autres outils de monétisation d'API.
+---
+
+<Note>Dernière mise à jour : mai 2026. Le paysage concurrentiel évolue vite — notamment x402/Coinbase et MPP/Tempo. Vérifiez avant de citer.</Note>
+
+## En résumé
+
+| | Stripe / MPP | x402 (Coinbase) | ln.bot | BTCPay Server | **l402-kit** |
+|---|---|---|---|---|---|
+| Frais min par appel | 0,30 $ | ~0 sats | ~0 sats | ~0 sats | **~0 sats** |
+| Délai de règlement | 2–7 jours | < 1s | < 1s | < 1s | **< 1 seconde** |
+| Rétrofacturations | Oui | Impossible | Impossible | Impossible | **Impossible** |
+| Support agents IA | ❌ | ✅ | ❌ | ❌ | **✅** |
+| Intégration en 3 lignes | ❌ | ❌ (manuel) | ❌ | ❌ | **✅** |
+| SDK middleware L402 | ❌ | ❌ (pas de SDK) | ❌ | ❌ | **✅** |
+| SDK Python | ❌ | ❌ | ❌ | ❌ | **✅** |
+| SDK Go | ❌ | ❌ | ❌ | ❌ | **✅** |
+| SDK Rust | ❌ | ❌ | ❌ | ❌ | **✅** |
+| Mode géré sans nœud | ❌ | ❌ | ✅ (hébergé) | ❌ | **✅ (0,3% fixe)** |
+| Pays bloqués | ~50 | 0 | variable | 0 | **0** |
+| Open source | ❌ | partiel | ❌ | ✅ | **✅ MIT** |
+| Coût mensuel | 0–centaines $ | 0 | % de frais | coût auto-hébergé | **0 $** |
+
+---
+
+## vs. Stripe
+
+**Stripe excelle dans** : la KYC, la facturation récurrente, l'UX carte bancaire, la détection de fraude, les contrats entreprise.
+
+**l402-kit excelle dans** : les micropaiements (< 0,01 $), les agents IA, la portée mondiale, zéro rétrofacturation, zéro configuration, règlement instantané.
+
+Le frais minimum de Stripe est de 0,30 $ + 2,9 %. Un paiement de 1 sat (0,0006 $) sur Stripe coûterait 50 000 % en frais. l402-kit facture 0,3 % fixe — rien d'autre.
+
+**Verdict** : Pas des concurrents. Stripe est fait pour les abonnements. l402-kit est fait pour les micropaiements à la demande. De nombreux projets utiliseront les deux.
+
+---
+
+## vs. MPP (Stripe + Tempo) — nouveau, mars 2026
+
+Les paiements multi-parties (MPP) est un nouveau protocole annoncé par Stripe et Tempo en mars 2026. Il permet à deux parties de partager un paiement Stripe au moment du règlement — par exemple, une place de marché prenant 10 % et un vendeur prenant 90 %, réglés en une seule transaction.
+
+**Points forts du MPP** :
+- Soutien institutionnel (l'ensemble du réseau marchand de Stripe)
+- UX carte bancaire familière
+- KYC et conformité intégrés
+- Partage des revenus géré automatiquement
+
+**Limites du MPP pour la monétisation d'API** :
+- **Le frais minimum est toujours de 0,30 $** — MPP ne change pas l'économie par transaction de Stripe. Un micropaiement de 1 sat reste économiquement impossible.
+- **Aucun support pour les agents IA** — nécessite un humain avec une carte bancaire et un navigateur. Un agent autonome ne peut pas effectuer un paiement MPP.
+- **Nécessite que les deux parties soient clientes de Stripe** — pas d'accès sans permission.
+- **Le règlement prend toujours 2–7 jours** — pas de règlement en temps réel.
+- **Aucune preuve cryptographique** — le payeur peut encore contester/rétrofacturer.
+
+MPP résout le problème du **partage des revenus** pour les paiements sur places de marché. L402 résout le problème du **micropaiement + autorisation lisible par machine** pour l'accès aux API. Ce sont des problèmes différents.
+
+**Verdict** : MPP n'est pas un concurrent direct pour la monétisation d'API. Si votre cas d'usage consiste à partager des revenus Stripe entre une plateforme et ses créateurs, utilisez MPP. Si votre cas d'usage est de facturer par appel API, notamment depuis des agents IA, utilisez l402-kit.
+
+---
+
+## vs. Paddle / Lemon Squeezy
+
+Même catégorie que Stripe — services marchands construits autour des abonnements et des cartes bancaires. Même problème de frais, même risque de rétrofacturation, même incompatibilité avec les agents IA.
+
+**Verdict** : Identique à Stripe. Aucun chevauchement réel avec le cas d'usage de l402-kit.
+
+---
+
+## vs. x402 (Coinbase / Anthropic)
+
+C'est notre concurrent le plus proche. x402 est une proposition de protocole (pas un SDK) pour standardiser les paiements HTTP 402, soutenue par Coinbase et partiellement adoptée par Anthropic pour l'utilisation informatique de Claude.
+
+**Points forts de x402** :
+- Soutien institutionnel (Coinbase)
+- Intérêt de l'écosystème Claude/Anthropic
+- Support USDC (stablecoin, pas uniquement Bitcoin)
+
+**Points forts de l402-kit** :
+- **Livre du code, pas des specs** — x402 est un protocole en cours de rédaction ; l402-kit est un SDK fonctionnel que vous installez aujourd'hui
+- **SDK en 4 langages** — TypeScript, Python, Go, Rust. x402 n'a aucun SDK publié dans quelque langage que ce soit (en mai 2026)
+- **Mode géré** — `ManagedProvider` signifie zéro configuration de nœud Lightning ; x402 nécessite de gérer votre propre infrastructure
+- **Docs en 11 langues** — x402 ne dispose que de docs en anglais
+- **Open source + MIT** — la spec x402 est ouverte mais aucune implémentation de référence n'est publiée
+
+**Le risque** : Coinbase livre un SDK x402 complet. **Notre avantage** : nous serons la bibliothèque compatible x402 — `l402-kit` peut adopter la spec x402 lorsqu'elle sera finalisée. Le protocole est compatible.
+
+**Verdict** : À surveiller de près. Préparez-vous à ajouter la compatibilité x402. Livrez plus vite.
+
+---
+
+## vs. BTCPay Server
+
+BTCPay est un processeur de paiement Bitcoin auto-hébergé — factures, pages de paiement, terminaux de point de vente.
+
+**BTCPay** : solution marchande complète, orientée interface, nécessite une configuration serveur, pas de SDK middleware pour développeurs.
+
+**l402-kit** : orienté code, 3 lignes, pas de serveur à gérer, conçu pour les API et non pour les pages de paiement.
+
+**Verdict** : Des produits différents. Les utilisateurs de BTCPay qui souhaitent monétiser des API sont un public naturel pour l402-kit.
+
+---
+
+## vs. ln.bot
+
+[ln.bot](https://ln.bot) est un service hébergé qui permet aux développeurs de monétiser des endpoints API avec des paiements Lightning. C'est le produit le plus proche de l402-kit sur le marché.
+
+**Points forts de ln.bot** :
+- Hébergé — aucun nœud Lightning requis
+- Tableau de bord simple pour enregistrer les endpoints
+- Gère la création de factures et la vérification des paiements
+
+**Points forts de l402-kit** :
+- **Orienté code, pas tableau de bord** — 3 lignes de middleware contre l'enregistrement d'endpoints dans une interface. S'intègre naturellement dans les pipelines CI/CD.
+- **Multi-langages** — ln.bot cible Node.js. l402-kit propose TypeScript, Python, Go et Rust.
+- **Protocole L402 standard** — interopérable avec tout client compatible L402 (Claude, agents personnalisés, futurs portefeuilles). ln.bot utilise un flux propriétaire.
+- **Mode souverain** — connectez votre propre nœud Lightning à 0 % de frais. ln.bot est toujours hébergé.
+- **SDK pour agents IA** — contrôles de budget, serveur MCP, outil LangChain. ln.bot n'a pas de primitives pour agents.
+- **Open source (MIT)** — ln.bot est en source fermée.
+
+**Verdict** : Si vous voulez un tableau de bord rapide pour monétiser un ou deux endpoints, ln.bot fonctionne. Si vous construisez un produit, déployez dans plusieurs langages, ou avez besoin du support pour les agents IA, l402-kit est le bon choix.
+
+---
+
+## vs. OpenNode / Strike API / Lightspark
+
+Ce sont des fournisseurs d'infrastructure Lightning — ils proposent des API de création de factures.
+
+**Ce sont des fournisseurs, pas des concurrents** — l402-kit les utilise (OpenNodeProvider, BlinkProvider). Un développeur qui utilise l'API d'OpenNode a toujours besoin de l402-kit pour gérer la logique middleware L402.
+
+**Verdict** : Ce sont nos partenaires d'écosystème.
+
+---
+
+## Nos avantages uniques (ce que personne d'autre ne possède)
+
+### 1. Middleware full-stack (pas seulement un protocole)
+Chaque concurrent est soit un processeur de paiement (Stripe) soit une spec de protocole (x402). Nous sommes le seul SDK middleware prêt à l'emploi pour TypeScript et Python.
+
+### 2. Trois lignes, n'importe quel backend Lightning
+
+**Mode géré** (pas de nœud Lightning — 0,3 % fixe) :
+```typescript
+import { ManagedProvider } from "l402-kit";
+const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
+app.get("/premium", l402({ priceSats: 100, lightning }), handler);
+```
+
+**Mode souverain** (votre propre nœud — 0 % de frais) :
+```typescript
+import { BlinkProvider } from "l402-kit";
+const lightning = new BlinkProvider(process.env.BLINK_KEY!, process.env.BLINK_WALLET_ID!);
+app.get("/premium", l402({ priceSats: 100, lightning }), handler);
+```
+
+Fonctionne en **secondes** — pendant que Stripe nécessite 30 minutes de formulaires, KYC et vérification bancaire.
+
+### 3. Support Python
+Aucune autre solution L402/x402 ne dispose d'un SDK Python. L'ensemble de l'écosystème FastAPI/Flask (~40 % des développeurs d'API) n'a aucune autre option.
+
+### 4. Natif pour les agents IA
+Le flux L402 est exactement ce dont les agents IA ont besoin : basé sur HTTP, sans navigateur, sans OAuth, preuve de paiement dans l'en-tête. Stripe nécessite un humain avec une carte bancaire. l402-kit ne nécessite rien — l'agent paie de manière programmatique.
+
+### 5. Protection anti-rejeu intégrée
+Vérification cryptographique SHA256 + protection anti-rejeu en mémoire prête à l'emploi. Les autres outils n'existent pas depuis assez longtemps pour avoir résolu ce problème.
+
+### 6. Expérience développeur en 11 langues
+Docs, interface d'extension et READMEs en EN/PT/ES/ZH/JA/FR/DE/RU/HI/AR/IT — ciblant la communauté mondiale des développeurs, pas seulement les développeurs anglophones.
+
+---
+
+## Risques et mitigations
+
+| Risque | Probabilité | Mitigation |
+|---|---|---|
+| Coinbase livre un SDK x402 complet | Moyenne | Ajouter la compatibilité spec x402, devenir l'implémentation de référence x402 |
+| L'adoption de Lightning stagne | Faible | Ajouter le support USDC/USDT via le même protocole |
+| Stripe ajoute les micropaiements | Très faible | Ils ont eu 15 ans et ne l'ont pas fait — structurellement incompatible avec leur modèle |
+| Bug de sécurité majeur | Faible | 409 tests automatisés sur 5 environnements d'exécution, vérification SHA256, anti-rejeu |
+| Le fournisseur (Blink) tombe en panne | Moyenne | Agnostique au fournisseur — passer à OpenNode/LNbits en 1 ligne |
+
+<CardGroup cols={2}>
+  <Card title="Démarrage rapide" icon="bolt" href="/quickstart">
+    Essayez-le en 5 minutes
+  </Card>
+  <Card title="Guide Agents IA" icon="robot" href="/guides/ai-agents">
+    Le cas d'usage décisif
+  </Card>
+</CardGroup>
