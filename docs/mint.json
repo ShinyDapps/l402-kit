@@ -12,77 +12,262 @@
     "dark": "#C97400"
   },
   "topbarLinks": [
-    { "name": "npm", "url": "https://npmjs.com/package/l402-kit" },
-    { "name": "PyPI", "url": "https://pypi.org/project/l402kit" }
+    {
+      "name": "npm",
+      "url": "https://npmjs.com/package/l402-kit"
+    },
+    {
+      "name": "PyPI",
+      "url": "https://pypi.org/project/l402kit"
+    }
   ],
   "navigation": [
     {
       "group": "Getting Started",
-      "pages": ["introduction", "quickstart"]
+      "pages": [
+        "introduction",
+        "quickstart"
+      ]
     },
     {
       "group": "SDKs",
-      "pages": ["sdk/typescript", "sdk/python", "sdk/go", "sdk/rust"]
+      "pages": [
+        "sdk/typescript",
+        "sdk/python",
+        "sdk/go",
+        "sdk/rust"
+      ]
     },
     {
       "group": "Agent SDK",
-      "pages": ["agent/quickstart", "agent/wallets", "agent/budget", "agent/mcp", "agent/langchain", "agent/system-prompt", "agent/wallet-quickstart", "agent/delegation", "agent/verity", "agent/lawn-n"]
+      "pages": [
+        "agent/quickstart",
+        "agent/wallets",
+        "agent/budget",
+        "agent/mcp",
+        "agent/langchain",
+        "agent/system-prompt",
+        "agent/wallet-quickstart",
+        "agent/delegation",
+        "agent/verity",
+        "agent/lawn-n"
+      ]
     },
     {
       "group": "Agent Integrations",
-      "pages": ["agent/crewai", "agent/openai-agents", "agent/vercel-ai", "agent/autogpt"]
+      "pages": [
+        "agent/crewai",
+        "agent/openai-agents",
+        "agent/vercel-ai",
+        "agent/autogpt"
+      ]
     },
     {
       "group": "Guides",
-      "pages": ["guides/pricing", "guides/testing", "guides/dashboard", "guides/vscode", "guides/privacy", "guides/flows", "guides/ai-agents", "guides/lnurl", "guides/security", "guides/production", "guides/migration", "guides/troubleshooting", "guides/dns-discovery"]
+      "pages": [
+        "guides/pricing",
+        "guides/testing",
+        "guides/dashboard",
+        "guides/vscode",
+        "guides/privacy",
+        "guides/flows",
+        "guides/ai-agents",
+        "guides/lnurl",
+        "guides/security",
+        "guides/production",
+        "guides/migration",
+        "guides/troubleshooting",
+        "guides/dns-discovery"
+      ]
     },
     {
       "group": "Reference",
-      "pages": ["providers", "api-reference", "reference/errors", "competitive", "payment-layer", "whitepaper", "whitepaper-extended"]
+      "pages": [
+        "providers",
+        "api-reference",
+        "reference/errors",
+        "competitive",
+        "payment-layer",
+        "whitepaper",
+        "whitepaper-extended"
+      ]
     },
     {
       "group": "Built with l402-kit",
-      "pages": ["examples/diagram-forge", "examples/verity"]
+      "pages": [
+        "examples/diagram-forge",
+        "examples/verity"
+      ]
     },
     {
       "group": "🇧🇷 Português",
-      "pages": ["pt/introduction"]
+      "pages": [
+        {
+          "group": "Getting Started",
+          "pages": [
+            "pt/introduction",
+            "pt/quickstart"
+          ]
+        },
+        {
+          "group": "SDKs",
+          "pages": [
+            "pt/sdk/typescript",
+            "pt/sdk/python",
+            "pt/sdk/go",
+            "pt/sdk/rust"
+          ]
+        },
+        {
+          "group": "Agent SDK",
+          "pages": [
+            "pt/agent/quickstart",
+            "pt/agent/wallets",
+            "pt/agent/budget",
+            "pt/agent/mcp",
+            "pt/agent/langchain",
+            "pt/agent/system-prompt",
+            "pt/agent/wallet-quickstart",
+            "pt/agent/delegation",
+            "pt/agent/verity",
+            "pt/agent/lawn-n"
+          ]
+        },
+        {
+          "group": "Agent Integrations",
+          "pages": [
+            "pt/agent/crewai",
+            "pt/agent/openai-agents",
+            "pt/agent/vercel-ai",
+            "pt/agent/autogpt"
+          ]
+        },
+        {
+          "group": "Guides",
+          "pages": [
+            "pt/guides/pricing",
+            "pt/guides/testing",
+            "pt/guides/dashboard",
+            "pt/guides/vscode",
+            "pt/guides/privacy",
+            "pt/guides/flows",
+            "pt/guides/ai-agents",
+            "pt/guides/lnurl",
+            "pt/guides/security",
+            "pt/guides/production",
+            "pt/guides/migration",
+            "pt/guides/troubleshooting",
+            "pt/guides/dns-discovery"
+          ]
+        },
+        {
+          "group": "Reference",
+          "pages": [
+            "pt/providers",
+            "pt/api-reference",
+            "pt/reference/errors",
+            "pt/competitive",
+            "pt/payment-layer"
+          ]
+        },
+        {
+          "group": "Examples",
+          "pages": [
+            "pt/examples/diagram-forge",
+            "pt/examples/verity"
+          ]
+        }
+      ]
     },
     {
       "group": "🇪🇸 Español",
-      "pages": ["es/introduction"]
+      "pages": [
+        {
+          "group": "Getting Started",
+          "pages": [
+            "es/introduction",
+            "es/quickstart"
+          ]
+        },
+        "es/sdk/typescript",
+        {
+          "group": "Reference",
+          "pages": [
+            "es/providers",
+            "es/api-reference",
+            "es/reference/errors",
+            "es/competitive",
+            "es/payment-layer"
+          ]
+        }
+      ]
     },
     {
       "group": "🇨🇳 中文",
-      "pages": ["zh/introduction"]
+      "pages": [
+        {
+          "group": "Getting Started",
+          "pages": [
+            "zh/introduction",
+            "zh/quickstart"
+          ]
+        },
+        "zh/providers"
+      ]
     },
     {
       "group": "🇸🇦 العربية",
-      "pages": ["ar/introduction"]
+      "pages": [
+        {
+          "group": "Getting Started",
+          "pages": [
+            "ar/introduction",
+            "ar/quickstart"
+          ]
+        }
+      ]
     },
     {
       "group": "🇮🇳 हिंदी",
-      "pages": ["hi/introduction"]
+      "pages": [
+        {
+          "group": "Getting Started",
+          "pages": [
+            "hi/introduction",
+            "hi/quickstart"
+          ]
+        }
+      ]
     },
     {
       "group": "🇫🇷 Français",
-      "pages": ["fr/introduction"]
+      "pages": [
+        "fr/introduction"
+      ]
     },
     {
       "group": "🇩🇪 Deutsch",
-      "pages": ["de/introduction"]
+      "pages": [
+        "de/introduction"
+      ]
     },
     {
       "group": "🇷🇺 Русский",
-      "pages": ["ru/introduction"]
+      "pages": [
+        "ru/introduction"
+      ]
     },
     {
       "group": "🇯🇵 日本語",
-      "pages": ["ja/introduction"]
+      "pages": [
+        "ja/introduction"
+      ]
     },
     {
       "group": "🇮🇹 Italiano",
-      "pages": ["it/introduction"]
+      "pages": [
+        "it/introduction"
+      ]
     }
   ],
   "anchors": [
@@ -106,4 +291,3 @@
     "twitter": "https://twitter.com/shinydapps"
   }
 }
-

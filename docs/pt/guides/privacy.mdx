@@ -1,0 +1,153 @@
+---
+title: Arquitetura de Privacidade
+description: Como o l402-kit armazena zero PII, autentica por carteira e mantém as chaves distribuídas — um modelo de privacidade digno do Bitcoin.
+---
+
+## O problema com as APIs de pagamento tradicionais
+
+Stripe, LemonSqueezy, Paddle — todo provedor de pagamento convencional exige:
+
+- Um endereço de e-mail (PII, responsabilidade sob LGPD/GDPR)
+- Uma conta e senha (sujeita a phishing e vazamentos)
+- Armazenamento centralizado de chaves (ponto único de falha)
+- Confiança de que o provedor não vende seus dados
+
+O Lightning Network muda o modelo completamente. **Sua carteira é prova criptográfica de identidade.** O l402-kit é construído em torno dessa premissa.
+
+---
+
+## O que armazenamos — e o que não armazenamos
+
+| Dado | Armazenado | Por quê |
+|---|---|---|
+| `payment_hash` | ✅ Sim | SHA-256 do preimage — já público na fatura BOLT11 |
+| Endereço Lightning | ✅ Sim (somente proprietário) | Necessário para rotear a divisão de 99,7% |
+| Endpoint chamado | ✅ Sim | Necessário para seus analytics |
+| `preimage` (segredo do pagamento) | ❌ Nunca | Exporia a chave do pagamento |
+| E-mail | ❌ Nunca | Não é necessário — a carteira é a identidade |
+| Nome / IP / dispositivo | ❌ Nunca | Não coletado em nenhuma camada |
+| Cookies / rastreamento | ❌ Nunca | Nenhum SDK de analytics, sem fingerprinting |
+
+### Por que o `payment_hash` é seguro para armazenar
+
+O preimage é o segredo de 32 bytes que prova o pagamento. Seu hash SHA-256 (`payment_hash`) já é transmitido publicamente na fatura BOLT11 no momento em que você a cria. Armazenar o hash não revela nada — o preimage nunca toca nosso banco de dados.
+
+```
+preimage  →  SHA-256  →  payment_hash  (público, no BOLT11)
+   ↑
+nunca armazenado
+```
+
+---
+
+## Autenticação: sua carteira, não uma senha
+
+### Painel do desenvolvedor
+
+O painel de analytics autentica via **LNURL-auth** — o mesmo fluxo secp256k1 usado pelas carteiras Lightning:
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+Nenhuma senha para sofrer phishing. Nenhum token de sessão para ser roubado na edge. O JWT tem escopo definido por Row Level Security — outras pubkeys não veem nada.
+
+### Exclusão de dados
+
+Somente sua carteira pode autorizar a exclusão dos seus dados. O fluxo:
+
+1. O cliente chama `/api/lnurl-auth?lightningAddress=voce@seudominio.com`
+2. O servidor retorna um desafio k1 único + LNURL
+3. Sua carteira assina o k1 com sua chave privada secp256k1
+4. O servidor verifica a assinatura — emite um token único de 64 caracteres
+5. O cliente faz POST para `/api/delete-data` com `{ lightningAddress, token }`
+6. O servidor revoga o token imediatamente (previne replay), deleta todas as linhas
+7. Os dados são removidos — sem ticket de suporte, sem confirmação por e-mail
+
+**Por que isso é seguro:** Um atacante que conhece seu Endereço Lightning não consegue deletar seus dados sem sua chave privada. O token é de uso único e expira em 10 minutos.
+
+---
+
+## Distribuição de chaves
+
+SaaS tradicional: uma única violação → tudo exposto.
+
+O l402-kit distribui a confiança entre camadas:
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+Nenhuma camada isolada tem o suficiente para se passar por você, ler sua identidade ou esvaziar sua carteira.
+
+---
+
+## Conformidade com LGPD / GDPR por design
+
+Como armazenamos zero PII, a maioria das obrigações da LGPD/GDPR não se aplica:
+
+- **Sem solicitações de titulares de dados** — não há identidade para consultar
+- **Sem notificação de violação de dados pessoais** — payment_hash não é dado pessoal
+- **Sem consentimento de cookies** — sem rastreamento, sem cookies
+- **Direito ao apagamento** — cumprido criptograficamente via exclusão por LNURL-auth
+
+Isso não é uma opinião jurídica. Mas "não coletamos" é uma posição mais sólida do que "coletamos e protegemos."
+
+---
+
+## Pagamentos Lightning são privados por padrão
+
+Os pagamentos Lightning não identificam o pagador on-chain:
+
+- Sem nome, sem endereço, sem conta bancária
+- A rota de pagamento é criptografada com onion (como o Tor)
+- Somente o emissor da fatura sabe que o pagamento foi liquidado
+- A identidade do pagador nunca é revelada ao beneficiário
+
+Seus usuários finais pagam sua API anonimamente. Você sabe que a fatura foi paga. É tudo que qualquer uma das partes precisa.
+
+---
+
+## Comparação
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| E-mail obrigatório | ❌ | ✅ | ✅ |
+| Conta obrigatória | ❌ | ✅ | ✅ |
+| KYC / identidade | ❌ | ✅ | ✅ |
+| PII armazenado | ❌ | ✅ | ✅ |
+| Método de autenticação | carteira secp256k1 | e-mail + senha | e-mail + senha |
+| Mecanismo de exclusão | prova criptográfica | solicitação por e-mail | solicitação por e-mail |
+| Sobrecarga LGPD/GDPR | mínima | alta | alta |
+| Pagador anônimo | ✅ | ❌ | ❌ |
+
+---
+
+## O que isso significa para seus usuários
+
+Se você constrói sobre o l402-kit:
+
+- Seus usuários nunca precisam fornecer o e-mail a você
+- Uma violação do seu banco de dados não expõe nada pessoal
+- Qualquer agente de IA pode pagar sua API sem conta ou identidade
+- Usuários que desejam excluir seus dados fazem isso por conta própria, instantaneamente, com sua carteira
+
+Esta é a camada de pagamento que o Bitcoin merece.

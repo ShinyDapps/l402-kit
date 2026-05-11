@@ -1,0 +1,393 @@
+---
+title: TypeScript SDK
+description: Referência completa para o SDK TypeScript/Node.js l402-kit — middleware Express para APIs Bitcoin Lightning com pagamento por chamada.
+---
+
+## Instalação
+
+```bash
+npm install l402-kit
+```
+
+**Requisitos**: Node.js 18+, Express 4+
+
+---
+
+## Início rápido
+
+<Tabs>
+  <Tab title="Sua carteira (0% de taxa)">
+```typescript
+import express from 'express';
+import { l402, BlinkProvider } from 'l402-kit';
+
+const app = express();
+
+// Pagamentos vão diretamente para sua carteira Blink — 0% de taxa
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+  <Tab title="Gerenciado (sem nó próprio)">
+```typescript
+import express from 'express';
+import { l402, ManagedProvider } from 'l402-kit';
+
+const app = express();
+
+// l402kit.com hospeda o nó. Você recebe 99,7% de cada pagamento.
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+</Tabs>
+
+---
+
+## `l402(options)` — middleware
+
+Retorna um `RequestHandler` do Express que aplica pagamento L402 na rota.
+
+### Opções
+
+| Opção | Tipo | Padrão | Descrição |
+|---|---|---|---|
+| `priceSats` | `number` | **obrigatório** | Preço por chamada em satoshis |
+| `lightning` | `LightningProvider` | **obrigatório** | Seu backend Lightning |
+| `supabaseUrl` | `string` | env `SUPABASE_URL` | URL do Supabase para registro de pagamentos |
+| `supabaseKey` | `string` | env `SUPABASE_ANON_KEY` | Chave do Supabase para registro de pagamentos |
+| `onPayment` | `(token, amountSats) => void` | — | Callback disparado após cada pagamento verificado |
+| `webhookUrl` | `string` | — | Seu endpoint para receber eventos de pagamento assinados |
+| `webhookSecret` | `string` | — | Segredo HMAC-SHA256 para assinatura de webhook |
+| `replayAdapter` | `ReplayAdapter` | em memória | Backend plugável de proteção contra replay |
+
+### Comportamento
+
+| Requisição | Resposta |
+|---|---|
+| Sem cabeçalho `Authorization` | `402 Payment Required` com fatura BOLT11 + macaroon |
+| `L402 <macaroon>:<preimage>` válido | `next()` — handler é executado |
+| Token inválido ou expirado | `401 Unauthorized` |
+| preimage repetido | `401 Token already used` |
+
+### Corpo da resposta 402
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1p...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "priceSats": 10
+}
+```
+
+### Cabeçalho WWW-Authenticate
+
+```
+WWW-Authenticate: L402 macaroon="eyJ...", invoice="lnbc..."
+```
+
+---
+
+## Provedores
+
+### `AlbyProvider` — recomendado para modo soberano
+
+[Alby](https://getalby.com) — carteira autocustodial. Você controla as chaves.
+
+```typescript
+import { AlbyProvider } from 'l402-kit';
+
+// 1. Crie um Alby Hub em hub.getalby.com (ou hospede você mesmo)
+// 2. Configurações → Access Tokens → criar token (escopos: invoices:create, invoices:read)
+const lightning = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!, // Token de acesso do Hub
+  process.env.ALBY_HUB_URL!,      // ex.: "https://your-name.getalby.com"
+);
+```
+
+### `BTCPayProvider` — auto-hospedado, sem necessidade de confiança
+
+Execute seu próprio [BTCPay Server](https://btcpaystore.com). Soberania total.
+
+```typescript
+import { BTCPayProvider } from 'l402-kit';
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,         // https://your-btcpay.com
+  process.env.BTCPAY_API_KEY!,     // chave de API da loja
+  process.env.BTCPAY_STORE_ID!,    // ID da loja
+);
+```
+
+### `BlinkProvider` — custodial, início mais fácil
+
+[Blink](https://blink.sv) — gratuito, sem KYC para pequenos valores.
+
+```typescript
+import { BlinkProvider } from 'l402-kit';
+
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // dashboard.blink.sv → API Keys
+  process.env.BLINK_WALLET_ID!,  // seu ID de carteira BTC
+);
+```
+
+### `LNbitsProvider`
+
+Auto-hospedado ou [legend.lnbits.com](https://legend.lnbits.com).
+
+```typescript
+import { LNbitsProvider } from 'l402-kit';
+
+const lightning = new LNbitsProvider(
+  process.env.LNBITS_API_KEY!,
+  'https://your-lnbits-instance.com', // opcional, padrão é legend.lnbits.com
+);
+```
+
+### `OpenNodeProvider`
+
+```typescript
+import { OpenNodeProvider } from 'l402-kit';
+
+const lightning = new OpenNodeProvider(
+  process.env.OPENNODE_API_KEY!,
+  false, // testMode — defina como true para sandbox
+);
+```
+
+### `ManagedProvider` — modo cloud (0,3% de taxa)
+
+l402kit.com hospeda o nó Lightning. Você recebe 99,7% de cada pagamento. Opt-in explícito.
+
+```typescript
+import { ManagedProvider } from 'l402-kit';
+
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+// Opcional: registrar automaticamente no diretório público de APIs
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com', {
+  registerDirectory: {
+    url: 'https://api.you.com/v1/data',
+    name: 'My Data API',
+    priceSats: 10,
+    category: 'data',          // data | ai | finance | weather | compute | storage | other
+    description: 'Optional',
+  },
+});
+```
+
+O registro ocorre uma vez na inicialização (fire-and-forget, erros são silenciosos). A API aparece em `l402kit.com/apis.json` para que agentes possam descobri-la automaticamente.
+
+---
+
+## Proteção contra replay
+
+### Padrão — em memória (desenvolvimento)
+
+Integrado. Reinicia ao reiniciar o processo. Adequado para implantações de processo único.
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+```
+
+### Redis (produção — múltiplas instâncias)
+
+```typescript
+import Redis from 'ioredis';
+import { l402, RedisReplayAdapter } from 'l402-kit';
+
+const replay = new RedisReplayAdapter(
+  new Redis(process.env.REDIS_URL!),
+  86400, // TTL em segundos (24h)
+);
+
+app.get('/api', l402({ priceSats: 10, lightning, replayAdapter: replay }), handler);
+```
+
+`RedisReplayAdapter` usa `SET key 1 NX EX ttl` — atômico, sem condições de corrida.
+
+---
+
+## Webhooks de pagamento
+
+Receba um evento assinado após cada pagamento.
+
+```typescript
+import { l402, verifyWebhook } from 'l402-kit';
+
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  webhookUrl: 'https://yourapi.com/webhooks/l402',
+  webhookSecret: process.env.L402_WEBHOOK_SECRET!,
+}), handler);
+
+// Receptor do webhook
+app.post('/webhooks/l402', express.raw({ type: '*/*' }), (req, res) => {
+  const valid = verifyWebhook(
+    process.env.L402_WEBHOOK_SECRET!,
+    req.body.toString(),
+    req.headers['l402-signature'] as string,
+  );
+  if (!valid) return res.status(401).end();
+
+  const event = JSON.parse(req.body.toString());
+  console.log('Payment:', event.data.paymentHash, event.data.amountSats);
+  res.json({ ok: true });
+});
+```
+
+**Payload do webhook:**
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "payment.received",
+  "created": 1700000000,
+  "data": {
+    "endpoint": "/api/data",
+    "amountSats": 10,
+    "paymentHash": "sha256-of-preimage"
+  }
+}
+```
+
+---
+
+## Callback `onPayment`
+
+Hook síncrono chamado após cada pagamento verificado, antes de `next()`:
+
+```typescript
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  onPayment: async ({ macaroon, preimage }, amountSats) => {
+    await myAnalytics.track('payment', { amountSats });
+  },
+}), handler);
+```
+
+---
+
+## Registro de pagamentos com Supabase
+
+Defina `SUPABASE_URL` + `SUPABASE_ANON_KEY` em seu ambiente para registrar pagamentos automaticamente.
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+// SUPABASE_URL e SUPABASE_ANON_KEY são lidos de process.env automaticamente
+```
+
+**Schema da tabela de pagamentos** (`payments`):
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — seguro para armazenar
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+<Note>
+`payment_hash` armazena `SHA256(preimage)`, não o preimage bruto. O preimage é o segredo de pagamento Lightning de 32 bytes — seu hash já é público na fatura BOLT11.
+</Note>
+
+---
+
+## Utilitários independentes
+
+```typescript
+import { verifyToken, parseToken, checkAndMarkPreimage } from 'l402-kit';
+
+// Verificar um token (retorna true/false)
+const isValid = await verifyToken('eyJoYXNoIjoi...:deadbeef...');
+
+// Analisar partes do token
+const { macaroon, preimage } = parseToken(token);
+
+// Verificação de replay personalizada (retorna true = primeiro uso, false = replay)
+const isFirstUse = await checkAndMarkPreimage(preimage);
+```
+
+---
+
+## Tipos
+
+```typescript
+import type { L402Options, LightningProvider, Invoice, L402Token } from 'l402-kit';
+
+interface L402Options {
+  priceSats: number;
+  lightning: LightningProvider;
+  supabaseUrl?: string;
+  supabaseKey?: string;
+  onPayment?: (token: L402Token, amountSats: number) => void | Promise<void>;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  replayAdapter?: ReplayAdapter;
+}
+
+interface Invoice {
+  paymentRequest: string;
+  paymentHash: string;
+  macaroon: string;
+  amountSats: number;
+  expiresAt: number;        // Unix ms
+}
+
+interface LightningProvider {
+  createInvoice(amountSats: number): Promise<Invoice>;
+  checkPayment(paymentHash: string): Promise<boolean>;
+}
+```
+
+---
+
+## Tempo de verificação
+
+A verificação do token executa `SHA256(preimage) == paymentHash` em memória — **sub-milissegundo, sem chamada de rede** no caminho crítico.
+
+O `ReplayAdapter` em memória (padrão) também é executado de forma síncrona. Se você usar `RedisReplayAdapter`, adicione uma ida e volta ao Redis de **5–50 ms** por requisição. Planeje a capacidade adequadamente para endpoints de alta frequência.
+
+---
+
+## Compatibilidade com x402 (cabeçalho `X-Payment`)
+
+O middleware aceita silenciosamente o cabeçalho `X-Payment` (usado pelo [protocolo x402](https://x402.org) da Coinbase) além do cabeçalho padrão `Authorization: L402 …`. Ambos são tratados de forma idêntica — útil se você quiser atender clientes que utilizam qualquer um dos protocolos.
+
+```typescript
+// Cliente usando cabeçalho x402 — tratado de forma transparente
+// X-Payment: <macaroon>:<preimage>
+```
+
+Nenhuma configuração é necessária; está sempre habilitado.
+
+---
+
+## Guia de migração
+
+### v1.1 → v1.2
+
+Renomeie a coluna em sua tabela `payments`:
+
+```sql
+ALTER TABLE payments RENAME COLUMN preimage TO payment_hash;
+```

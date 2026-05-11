@@ -1,0 +1,107 @@
+---
+title: Precificando Sua API
+description: Como pensar sobre precificação — o que cobrar, como sats se traduzem em dólares, e estratégias para diferentes casos de uso.
+---
+
+## Tabela de referência de Satoshi
+
+1 sat = 1/100.000.000 de um Bitcoin. Em pontos de preço comuns:
+
+| Preço do BTC | 1 sat | 10 sats | 100 sats | 1.000 sats |
+|---|---|---|---|---|
+| $50.000 | $0,0005 | $0,005 | $0,05 | $0,50 |
+| $80.000 | $0,0008 | $0,008 | $0,08 | $0,80 |
+| $100.000 | $0,001 | $0,01 | $0,10 | $1,00 |
+
+Pagamentos Lightning não têm taxa mínima. Um pagamento de 1 sat custa ao remetente ~$0,0005 — impossível com Stripe (mínimo de $0,30).
+
+---
+
+## Precificação por caso de uso
+
+| Caso de uso | Preço sugerido | Raciocínio |
+|---|---|---|
+| Consulta de dados simples (clima, taxa de câmbio) | 1–10 sats | Barato o suficiente para ser invisível, ainda assim significativo |
+| Chamada de API premium (inferência LLM, busca) | 10–100 sats | Cobre o custo de computação, filtra abusos |
+| Acesso por documento / por arquivo | 50–500 sats | Reflete o valor do conteúdo |
+| Relatório ou conjunto de dados de alto valor | 500–5.000 sats | Compete com micro-transações de $0,50–$5 |
+| Streaming em tempo real (por chunk) | 1–5 sats | Acumula naturalmente ao longo de um stream |
+
+Estes são pontos de partida. O preço certo é aquele que seus usuários pagarão sem fricção.
+
+---
+
+## Comece baixo, aumente depois
+
+Como alterar as taxas é uma linha de código, prefira preços baixos no lançamento:
+
+```typescript
+l402({ priceSats: 10, lightning }) // comece aqui
+l402({ priceSats: 100, lightning }) // aumente se a demanda se mantiver
+```
+
+Os dados de pagamento no painel do VS Code mostram o volume de chamadas e a receita — use-os para calibrar.
+
+---
+
+## Managed vs Soberano em escala
+
+A taxa gerenciada de 0,3% só importa em volume:
+
+| Volume mensal | Taxa gerenciada | Economia com Soberano |
+|---|---|---|
+| 1.000 sats | 3 sats | Insignificante |
+| 100.000 sats | 300 sats (~$0,24) | Pequena |
+| 10.000.000 sats | 30.000 sats (~$24) | Vale a pena migrar |
+
+**Regra geral:** se você está processando menos de 1M sats/mês (~$800 a $80k/BTC), a taxa de 0,3% é irrelevante. Fique no Managed e foque em construir. Mude para Soberano quando o volume justificar — é uma linha de código.
+
+---
+
+## Precificação para agentes de IA
+
+Agentes são insensíveis ao preço de uma forma diferente dos humanos — eles não sentem a dor de um pagamento, mas têm limites de orçamento definidos por seus operadores.
+
+**Orientação prática:**
+- Mantenha os preços abaixo de 100 sats por chamada para uso geral de agentes — isso se encaixa nos orçamentos típicos por sessão
+- Para ferramentas de agente de alto valor (execução de código, análise de documentos), 100–1.000 sats é aceitável
+- Use `priceSats` dinamicamente se seu custo variar conforme o tamanho da entrada:
+
+```typescript
+app.post("/analyze", (req, res, next) => {
+  const sats = Math.ceil(req.body.text.length / 100); // 1 sat por 100 chars
+  l402({ priceSats: sats, lightning })(req, res, next);
+}, handler);
+```
+
+---
+
+## Acesso em camadas com múltiplos endpoints
+
+Precifique diferentes camadas roteando para endpoints distintos:
+
+```typescript
+// Camada gratuita — dados básicos
+app.get("/data/basic", handler);
+
+// Camada paga — conjunto de dados completo, 10 sats
+app.get("/data/premium", l402({ priceSats: 10, lightning }), handler);
+
+// Camada de alto valor — feed em tempo real, 100 sats
+app.get("/data/realtime", l402({ priceSats: 100, lightning }), handler);
+```
+
+Cada endpoint gera sua própria fatura. Os usuários pagam por chamada — sem gerenciamento de assinaturas.
+
+---
+
+## Testando sua precificação
+
+Antes de entrar em produção, teste o fluxo completo de pagamento com uma carteira real:
+
+1. Defina `priceSats: 1` (1 sat ≈ $0,0008 — barato o suficiente para testar livremente)
+2. Use [Wallet of Satoshi](https://walletofsatoshi.com) ou [Blink](https://dashboard.blink.sv) no seu celular
+3. Chame seu endpoint, escaneie o QR da fatura, verifique o 200 OK
+4. Verifique o [painel do VS Code](https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402) ou sua carteira Lightning para confirmar o recebimento
+
+Após confirmado, defina seu preço real e faça o deploy.

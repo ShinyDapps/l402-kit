@@ -1,0 +1,199 @@
+---
+title: "Diagram Forge"
+description: "Diagramas de arquitetura vivos gerados por IA a partir de qualquer repositório GitHub — pagos via Lightning L402"
+icon: "circle-nodes"
+---
+
+## O que é o Diagram Forge?
+
+[Diagram Forge](https://forge.l402kit.com) analisa qualquer repositório GitHub com Claude AI e gera um **diagrama de arquitetura interativo e animado** — completo com logos oficiais de tecnologias, fluxos de partículas animados, inspetor de nós e exportação para SVG/PNG/Markdown.
+
+O pagamento é feito via Lightning Network usando o protocolo L402 — sem contas, sem cartões de crédito, sem assinaturas. Pague por análise.
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/docs/demo-viewer.gif" alt="Diagram Forge interactive viewer demo" />
+</Frame>
+
+---
+
+## Primeiros Passos
+
+### Opção 1 — Aplicativo web (mais rápido)
+
+1. Acesse **[forge.l402kit.com](https://forge.l402kit.com)**
+2. Cole qualquer URL público do GitHub (ex.: `https://github.com/vercel/next.js`)
+3. Escolha um nível: **Basic** (100 sats), **Full** (500 sats) ou **Live ✦** (1000 sats)
+4. Clique em **Analyze & Generate Diagram**
+5. Pague a fatura Lightning com qualquer carteira — ou insira um código promocional para acesso gratuito
+6. Seu diagrama interativo abre automaticamente
+
+### Opção 2 — Extensão do VS Code
+
+Instale pelo Marketplace:
+
+```bash
+code --install-extension ShinyDapps.diagram-forge
+```
+
+Ou pesquise **"Diagram Forge"** no painel de Extensões (`Ctrl+Shift+X`).
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/vscode-extension/media/demo-extension.gif" alt="Diagram Forge VS Code extension — idle, confirming, analyzing, done" />
+</Frame>
+
+**Uso:**
+1. Abra qualquer projeto com um remote do GitHub
+2. Clique no **ícone do Diagram Forge** na Barra de Atividades (barra lateral esquerda)
+3. Clique em **Analyze Repo** — a URL do GitHub é detectada automaticamente
+4. Escolha o nível + insira o código promocional (opcional)
+5. Pague com Lightning ou use um código promocional
+6. O diagrama abre no navegador
+
+### Opção 3 — Conectar GitHub (aplicativo web)
+
+Clique em **Connect GitHub** na navegação superior do aplicativo web para autorizar e obter um menu suspenso com todos os seus repositórios — sem precisar copiar e colar URLs.
+
+---
+
+## Níveis de Análise
+
+| Nível | Preço | O que você recebe |
+|-------|-------|------------------|
+| **Basic** | 100 sats (~$0,10) | Varredura rápida — top 10 arquivos, principais serviços detectados |
+| **Full** | 500 sats (~$0,50) | Repositório completo — todos os serviços, conexões, monorepos |
+| **Live ✦** | 1000 sats (~$1,00) | Análise completa + SVG animado com fluxos de partículas |
+
+<Info>
+  Os preços via Lightning são significativamente menores do que os preços com cartão porque não há taxas de processamento de pagamento.
+</Info>
+
+---
+
+## Não tem uma carteira Lightning?
+
+Comece em menos de 2 minutos:
+
+<CardGroup cols={3}>
+  <Card title="Wallet of Satoshi" icon="mobile" href="https://www.walletofsatoshi.com/">
+    Carteira mobile mais simples — custodial, configuração instantânea
+  </Card>
+  <Card title="Phoenix" icon="mobile" href="https://phoenix.acinq.co/">
+    Mobile, auto-custodial, sem KYC
+  </Card>
+  <Card title="Alby" icon="browser" href="https://getalby.com/">
+    Extensão de navegador — funciona diretamente no VS Code
+  </Card>
+</CardGroup>
+
+Após instalar, compre uma pequena quantidade de Bitcoin (até $1 cobre dezenas de análises) e escaneie o QR code quando o Diagram Forge exibir a fatura.
+
+---
+
+## Códigos Promocionais
+
+Tem um código promocional? Insira-o no campo **"Promo code (optional)"** antes de clicar em Analyze — a análise é executada completamente de graça, sem necessidade de carteira.
+
+Os códigos promocionais têm limite de tempo e de uso. Acesse [forge.l402kit.com](https://forge.l402kit.com) ou siga [@ShinyDapps](https://github.com/ShinyDapps) para obter os códigos atuais.
+
+---
+
+## O que o diagrama mostra
+
+Cada diagrama inclui:
+
+- **Nós** — serviços, bancos de dados, filas, APIs, modelos de ML, CDNs detectados no seu código
+- **Arestas** — conexões entre componentes com rótulos de protocolo (HTTP, SQL, gRPC, WebSocket, AMQP…)
+- **Logos** — identidade visual oficial do Simple Icons para mais de 80 tecnologias
+- **Fluxos animados** — partículas se movendo ao longo das arestas, coloridas por tipo de protocolo (amarelo = Lightning, azul = HTTP, verde = SQL…)
+
+**Recursos do visualizador interativo:**
+- Panorâmica e zoom (scroll para zoom, arrastar para panorâmica)
+- Clique em qualquer nó para inspecionar suas conexões e descrição
+- Minimapa para diagramas grandes
+- Pesquise nós por nome ou tipo
+- Exportar: SVG, PNG, Markdown, Draw.io
+- Link de compartilhamento: `/g/:id` — URL permanente e compartilhável para cada diagrama
+
+---
+
+## Importar a partir de imagem
+
+Não tem um repositório GitHub? Faça upload de uma foto de quadro branco, captura de tela, arquivo Visio ou PDF — o Claude extrai a arquitetura e gera o mesmo diagrama interativo.
+
+Formatos suportados: JPG, PNG, WEBP, GIF, PDF
+
+---
+
+## Benchmark de Arquitetura
+
+Após gerar um diagrama, clique em **Benchmark** no visualizador para obter uma pontuação de qualidade em 6 dimensões:
+
+| Dimensão | O que mede |
+|---|---|
+| Escalabilidade | Potencial de escalonamento horizontal, gargalos |
+| Confiabilidade | Pontos únicos de falha, redundância |
+| Segurança | Autenticação, criptografia, superfície de exposição |
+| Observabilidade | Cobertura de logs, métricas e rastreamento |
+| Manutenibilidade | Acoplamento, complexidade, modularidade |
+| Eficiência de Custo | Opcionalmente — custo por serviço vs. valor |
+
+---
+
+## Privacidade
+
+- Seu código é **clonado temporariamente** em um servidor seguro, analisado e então excluído imediatamente
+- Apenas os **metadados do grafo** (rótulos dos nós, conexões das arestas — sem código-fonte) são armazenados se você usar links de compartilhamento
+- Nenhuma conta necessária, sem retenção de dados além do diagrama
+
+---
+
+## Como ele usa o l402-kit
+
+O Diagram Forge é construído sobre o **Managed Mode** do `l402-kit` — a forma mais simples de aceitar pagamentos Lightning sem operar um nó:
+
+```typescript
+import { l402, ManagedProvider } from "l402-kit";
+
+const provider = ManagedProvider.fromAddress("pinkfalcon21@primal.net", {
+  registerDirectory: {
+    url: "https://forge.l402kit.com/analyze",
+    name: "Diagram Forge — Architecture Analysis",
+    priceSats: 500,
+    description: "AI-powered living architecture diagrams from any repo",
+    category: "ai",
+  },
+});
+
+// Gate the /analyze endpoint — returns 402 until paid
+app.post("/analyze", l402({ priceSats: 500, lightning: provider }), handler);
+```
+
+Quando um cliente chama `POST /analyze` sem um preimage válido:
+
+```
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+O cliente paga a fatura e tenta novamente com `Authorization: L402 <macaroon>:<preimage>`.
+
+Quer construir algo semelhante? Veja o [quickstart do l402-kit](/quickstart).
+
+---
+
+## Links
+
+<CardGroup cols={2}>
+  <Card title="Aplicativo Web" icon="globe" href="https://forge.l402kit.com">
+    Analise qualquer repositório público do GitHub no seu navegador
+  </Card>
+  <Card title="Extensão VS Code" icon="code" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.diagram-forge">
+    Experiência completa de barra lateral dentro do VS Code
+  </Card>
+  <Card title="Código-Fonte" icon="github" href="https://github.com/shinydapps-creator/diagram-forge">
+    Licença MIT — faça um fork, estenda, construa sobre ele
+  </Card>
+  <Card title="Quickstart do l402-kit" icon="bolt" href="/quickstart">
+    Construa seu próprio serviço protegido por L402 em minutos
+  </Card>
+</CardGroup>

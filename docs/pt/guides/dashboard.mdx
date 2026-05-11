@@ -1,0 +1,110 @@
+---
+title: Painel de Analytics
+description: Acesse seu painel de analytics de pagamentos em l402kit.com/dashboard — sem necessidade de conta, protegido por um token secreto.
+---
+
+O painel de analytics em [l402kit.com/dashboard](https://l402kit.com/dashboard) exibe estatísticas em tempo real de todos os pagamentos que fluem pela sua API: total de sats recebidos, detalhamento por endpoint, tendência de 7 dias e transações recentes.
+
+## Configuração
+
+O painel é protegido por um token secreto — **`DASHBOARD_SECRET`**. Você o gera uma vez e armazena onde guarda seus outros segredos.
+
+### 1. Gerar um segredo
+
+```bash
+openssl rand -hex 32
+# → shdp_dash_a1b2c3d4e5f6...
+```
+
+Ou use qualquer gerenciador de senhas para gerar uma string aleatória forte.
+
+### 2. Definir no seu provider
+
+**Cloudflare Workers:**
+
+```bash
+cd cloudflare/
+wrangler secret put DASHBOARD_SECRET
+# cole seu segredo quando solicitado
+```
+
+**Node.js / outros:**
+
+```bash
+# .env
+DASHBOARD_SECRET=shdp_dash_a1b2c3d4e5f6...
+```
+
+### 3. Fazer login
+
+Acesse [l402kit.com/dashboard](https://l402kit.com/dashboard), insira seu segredo e pronto. Sem e-mail, sem OAuth, sem cookie — o segredo é enviado como `x-dashboard-secret` em cada requisição de estatísticas.
+
+---
+
+## O que você vê
+
+| Métrica | Descrição |
+|--------|-------------|
+| Total de pagamentos | Contagem geral de pagamentos L402 verificados |
+| Total de sats | Soma de todos os `amount_sats` dos pagamentos |
+| Tendência de 7 dias | Pagamentos e sats em comparação com a janela anterior de 7 dias |
+| Por endpoint | Detalhamento de quais rotas geraram quanto |
+| Últimos 20 | Pagamentos mais recentes com hash, endpoint, valor e timestamp |
+
+---
+
+## API
+
+Os mesmos dados estão disponíveis diretamente via API — útil para construir seu próprio painel ou integrar ao Grafana.
+
+```bash
+curl https://l402kit.com/api/stats \
+  -H "x-dashboard-secret: YOUR_SECRET"
+```
+
+```json
+{
+  "totalPayments": 142,
+  "totalSats": 14200,
+  "shinydappsFee": 42,
+  "trend": {
+    "payments7d": 38,
+    "payments7dPrev": 21,
+    "sats7d": 3800,
+    "sats7dPrev": 2100
+  },
+  "byOwner": {
+    "you@blink.sv": { "count": 142, "sats": 14200 }
+  },
+  "recent": [...]
+}
+```
+
+---
+
+## Modelo de segurança
+
+- O segredo nunca sai do seu ambiente — ele é comparado no lado do servidor no Cloudflare Worker usando igualdade estrita
+- Nenhum token de sessão é emitido — cada requisição revalida o segredo
+- O segredo possui acesso somente leitura — ele só pode chamar `/api/stats`, sem permissão para gravar ou excluir dados
+- Gere um novo segredo a qualquer momento atualizando o `DASHBOARD_SECRET` via `wrangler secret put`
+
+<Note>
+Nunca faça commit do `DASHBOARD_SECRET` no git. Adicione-o ao seu `.gitignore` e use `wrangler secret put` ou o gerenciador de segredos do seu CI/CD.
+</Note>
+
+---
+
+## Rotacionar o segredo
+
+```bash
+# Gerar novo segredo
+openssl rand -hex 32
+
+# Atualizar no Cloudflare Workers
+wrangler secret put DASHBOARD_SECRET
+
+# Pronto — o segredo antigo é imediatamente invalidado
+```
+
+Sem entradas de banco de dados para atualizar. O Worker lê o segredo do ambiente a cada requisição.

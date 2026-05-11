@@ -1,0 +1,201 @@
+---
+title: LangChain Tool
+description: Ferramenta LangChain plug-and-play que permite ao seu agente Python chamar APIs protegidas por L402 com pagamento Lightning automático.
+---
+
+## Instalação
+
+```bash
+pip install l402kit langchain langchain-community
+```
+
+---
+
+## Uso básico
+
+```python
+import os
+from l402kit.langchain import L402Tool
+from l402kit.wallets import BlinkWallet
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain_openai import ChatOpenAI
+from langchain import hub
+
+# 1. Crie a ferramenta
+tools = [
+    L402Tool(
+        wallet=BlinkWallet(
+            os.environ["BLINK_API_KEY"],
+            os.environ["BLINK_WALLET_ID"],
+        ),
+        budget_sats=1000,
+    )
+]
+
+# 2. Conecte ao agente LangChain
+llm = ChatOpenAI(model="gpt-4o")
+prompt = hub.pull("hwchase17/react")
+agent = create_react_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+# 3. Execute — o agente paga automaticamente quando necessário
+result = agent_executor.invoke({
+    "input": "What is the BTC price from https://api.example.com/btc-price?"
+})
+print(result["output"])
+```
+
+---
+
+## Com Alby
+
+```python
+from l402kit.wallets import AlbyWallet
+
+tools = [
+    L402Tool(
+        wallet=AlbyWallet(os.environ["ALBY_TOKEN"]),
+        budget_sats=500,
+    )
+]
+```
+
+---
+
+## Referência da ferramenta
+
+### Construtor
+
+```python
+L402Tool(
+    wallet: L402Wallet,
+    budget_sats: int | None = None,
+    budget_per_domain: dict[str, int] | None = None,
+    on_spend: Callable[[int, str], None] | None = None,
+)
+```
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `wallet` | `L402Wallet` | Carteira utilizada para pagar as faturas |
+| `budget_sats` | `int` | Máximo de sats a gastar nesta sessão |
+| `budget_per_domain` | `dict` | Limites de gasto por domínio |
+| `on_spend` | `callable` | Chamado após cada pagamento |
+
+### Schema da ferramenta (visto pelo LLM)
+
+```
+name: "l402_fetch"
+description: "Fetch data from an L402-protected API that requires a Lightning micropayment.
+              Handles the payment automatically.
+              Input: a URL (and optionally method/body).
+              Output: the API response as text."
+
+inputs:
+  url:    string  — The URL to fetch
+  method: string  — HTTP method: GET, POST, PUT, DELETE (default: GET)
+  body:   string  — Request body as JSON string (for POST/PUT)
+```
+
+### Métodos
+
+```python
+tool._run(url, method="GET", body=None)     # sync
+await tool._arun(url, method="GET", body=None)  # async
+
+tool.spending_report()  # → SpendingReport | None
+```
+
+---
+
+## Formato de resposta
+
+A ferramenta retorna uma string que o LLM pode ler diretamente:
+
+```
+# Endpoint gratuito
+HTTP 200
+{"price": 97500, "currency": "USD"}
+
+# Endpoint pago (priceSats estava na resposta 402)
+[Paid 10 sats] HTTP 200
+{"price": 97500, "currency": "USD"}
+
+# Orçamento excedido
+[BLOCKED] Budget exceeded: need 50 sats but only 10 remaining (https://...)
+
+# Erro de rede / carteira
+[ERROR] Connection refused
+```
+
+---
+
+## Exemplo com POST
+
+```python
+result = agent_executor.invoke({
+    "input": "Submit this query to https://api.example.com/search: {\"q\": \"bitcoin\"}"
+})
+# O agente chama l402_fetch com method=POST e body='{"q":"bitcoin"}'
+```
+
+---
+
+## Relatório de gastos
+
+```python
+tool = L402Tool(wallet=wallet, budget_sats=1000)
+# ... agente executa ...
+
+report = tool.spending_report()
+if report:
+    print(f"Spent {report.total} sats across {len(report.transactions)} calls")
+    for tx in report.transactions:
+        print(f"  {tx['sats']} sats → {tx['url']}")
+```
+
+---
+
+## Frameworks de agentes personalizados
+
+`L402Tool` é uma subclasse de `langchain.tools.BaseTool` — funciona com qualquer framework que aceite ferramentas LangChain: LangGraph, CrewAI, AutoGen (via adaptador) e outros.
+
+```python
+# Exemplo com LangGraph
+from langgraph.prebuilt import create_react_agent
+
+app = create_react_agent(llm, tools=[L402Tool(wallet=wallet, budget_sats=500)])
+result = app.invoke({"messages": [("user", "fetch https://api.example.com/data")]})
+```
+
+---
+
+## Tratamento de erros
+
+`BudgetExceededError` é capturado internamente — a ferramenta retorna uma string `[BLOCKED]` em vez de lançar uma exceção, para que o agente possa tratá-la de forma adequada em seu loop de raciocínio.
+
+Todas as outras exceções (erros de rede, falhas na carteira) são retornadas como `[ERROR] <mensagem>`.
+
+Se você precisar de acesso programático:
+
+```python
+from l402kit import BudgetExceededError
+
+class MyL402Tool(L402Tool):
+    def _run(self, url, method="GET", body=None, run_manager=None):
+        result = super()._run(url, method, body, run_manager)
+        if result.startswith("[BLOCKED]"):
+            raise BudgetExceededError(url, 0, 0)  # relança para o handler externo
+        return result
+```
+
+---
+
+## Sem LangChain instalado
+
+Se `langchain` não estiver instalado, a importação de `L402Tool` ocorre com sucesso no nível do módulo (fallback gracioso), mas ao instanciá-la é lançado:
+
+```
+ImportError: langchain is required to use L402Tool.
+Install it with: pip install langchain langchain-community
+```

@@ -1,0 +1,319 @@
+---
+title: "Referência da API"
+description: "Referência de todos os endpoints REST do l402kit.com usados pelo ManagedProvider e pela extensão do VS Code."
+---
+
+URL base: `https://l402kit.com`
+
+Todas as respostas são `application/json`. CORS está habilitado para todas as origens.
+
+---
+
+## Faturas
+
+### Criar Fatura
+
+`POST /api/invoice`
+
+Cria uma fatura Lightning BOLT11. Chamada automaticamente pelo `ManagedProvider` — raramente você precisará chamar isso diretamente.
+
+**Corpo da requisição**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `amountSats` | number | ✅ | Valor em satoshis (mín. 1) |
+| `ownerAddress` | string | — | Seu Lightning Address. Obrigatório para a divisão ser executada. |
+
+**Resposta 200**
+
+```json
+{
+  "paymentRequest": "lnbc10n1p...",
+  "paymentHash":    "a1b2c3...",
+  "macaroon":       "eyJoYXNoIjoiYTFiMm..."
+}
+```
+
+**Erros**
+
+| Código | Motivo |
+|---|---|
+| 400 | `amountSats` ausente ou inválido |
+| 429 | Limite de requisições excedido (20 requisições/min por IP) |
+| 503 | Provedor Lightning temporariamente indisponível |
+
+---
+
+### Verificar Token
+
+`POST /api/verify`
+
+Valida um token L402 no servidor sem o SDK.
+
+**Corpo da requisição**
+
+```json
+{ "token": "<macaroon>:<preimage>" }
+```
+
+**Resposta 200**
+
+```json
+{ "valid": true }
+```
+
+```json
+{ "valid": false, "error": "Token expired" }
+```
+
+---
+
+## Divisão & Pagamentos
+
+### Executar Divisão
+
+`POST /api/split`
+
+Aciona manualmente um pagamento com divisão de 99,7/0,3% para um Lightning Address. Requer o cabeçalho `x-split-secret`.
+
+<Note>
+Na maioria dos casos, a divisão é acionada automaticamente via webhook do Blink. Use este endpoint apenas para recuperação manual ou integrações personalizadas.
+</Note>
+
+**Cabeçalhos**
+
+| Cabeçalho | Valor |
+|---|---|
+| `x-split-secret` | Sua variável de ambiente `SPLIT_SECRET` |
+
+**Corpo da requisição**
+
+```json
+{
+  "amountSats":   1000,
+  "ownerAddress": "you@blink.sv"
+}
+```
+
+**Resposta 200**
+
+```json
+{ "ok": true, "ownerSats": 997 }
+```
+
+**Resposta 200 (ignorado — abaixo do mínimo)**
+
+```json
+{ "ok": true, "skipped": true }
+```
+
+---
+
+## Painel & Estatísticas
+
+### Obter Estatísticas
+
+`GET /api/stats`
+
+Retorna análises de pagamentos. Requer token de sessão LNURL-auth no cabeçalho `Authorization`.
+
+**Resposta 200**
+
+```json
+{
+  "totalPayments": 42,
+  "totalSats":     8400,
+  "shinydappsFee": 25,
+  "walletSats":    12345,
+  "walletUsdCents": 456789,
+  "byOwner": {
+    "dev@blink.sv": { "count": 42, "sats": 8400 }
+  },
+  "byDay": {
+    "2026-04-24": { "count": 5, "sats": 1000 }
+  },
+  "trend": {
+    "payments7d": 12,
+    "sats7d": 2400
+  },
+  "recent": [
+    {
+      "id": "uuid",
+      "endpoint": "/api/data",
+      "payment_hash": "a1b2...",
+      "amount_sats": 100,
+      "owner_address": "dev@blink.sv",
+      "paid_at": "2026-04-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Nível Pro
+
+### Verificar Acesso Pro
+
+`GET /api/pro-check?address=you@blink.sv`
+
+Retorna se um Lightning Address possui uma assinatura Pro ativa.
+
+**Resposta 200**
+
+```json
+{ "active": true,  "expiresAt": "2026-05-24T10:00:00Z" }
+{ "active": false }
+```
+
+### Assinar o Pro
+
+`GET /api/dev-token?address=you@blink.sv`
+
+Retorna uma fatura Lightning para adquirir uma assinatura Pro de 30 dias (~9.000 sats).
+
+**Resposta 200**
+
+```json
+{
+  "priceSats": 9000,
+  "invoice":   "lnbc90n1p...",
+  "macaroon":  "eyJoYXNoIjoiY..."
+}
+```
+
+`POST /api/dev-token`
+
+Ativa o Pro após pagar a fatura.
+
+**Corpo da requisição**
+
+```json
+{ "macaroon": "...", "preimage": "..." }
+```
+
+**Resposta 200**
+
+```json
+{ "access": true, "expiresAt": "2026-05-24T10:00:00Z" }
+```
+
+---
+
+## Autenticação (LNURL-auth)
+
+### Iniciar Login
+
+`GET /api/lnurl-auth`
+
+Retorna um desafio LNURL-auth para login no painel. Escaneie o QR code no painel.
+
+### Endpoint LNURL-pay
+
+`GET /.well-known/lnurlp/:username`
+
+Metadados LNURL-pay padrão para resolução de Lightning Address. Usado internamente pelo mecanismo de divisão.
+
+---
+
+## Demo
+
+### Índice da Demo
+
+`GET /api/demo`
+
+Retorna informações sobre os endpoints de demonstração disponíveis.
+
+### Preço do BTC (pago)
+
+`GET /api/demo/btc-price`
+
+Retorna o preço do BTC em tempo real. Requer um token L402 válido (1 sat).
+
+Retorna **402** com fatura + macaroon na primeira chamada. Tente novamente com `Authorization: L402 <macaroon>:<preimage>`.
+
+### Revelar Preimage
+
+`GET /api/demo/preimage?hash=<paymentHash>`
+
+Após pagar a fatura de demonstração, chame este endpoint com o `paymentHash` para recuperar seu preimage e construir o token L402.
+
+---
+
+## Webhooks
+
+### Receptor de Webhook do Blink
+
+`POST /api/blink-webhook`
+
+Endpoint interno. Recebe confirmações de pagamento assinadas do Blink (Svix HMAC-SHA256). Aciona a divisão e registra o pagamento. Não destinado ao uso direto.
+
+---
+
+## Diretório de APIs
+
+### Registrar uma API
+
+`POST /api/register`
+
+Registre sua API protegida por L402 no diretório público. Chamado automaticamente por `ManagedProvider.fromAddress()` quando `registerDirectory` é fornecido. Idempotente — seguro para chamar a cada inicialização do servidor.
+
+**Corpo da requisição**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `url` | string | ✅ | URL pública do seu endpoint L402 |
+| `name` | string | ✅ | Nome de exibição |
+| `price_sats` | number | ✅ | Preço por chamada em satoshis (mín. 1) |
+| `lightning_address` | string | ✅ | Seu Lightning Address |
+| `description` | string | — | Descrição curta |
+| `category` | string | — | `data`, `ai`, `finance`, `weather`, `compute`, `storage` ou `other` |
+
+**Resposta 200**
+
+```json
+{ "ok": true, "id": "uuid" }
+```
+
+---
+
+### Listar APIs
+
+`GET /api/apis.json`
+
+Retorna todas as APIs registradas. Legível por máquina — projetado para que agentes descubram APIs pagas.
+
+**Parâmetros de consulta**
+
+| Parâmetro | Descrição |
+|---|---|
+| `category` | Filtrar por categoria (`data`, `ai`, `finance`, `weather`, `compute`, `storage`, `other`) |
+
+**Resposta 200**
+
+```json
+{
+  "version": "1",
+  "count": 3,
+  "apis": [
+    {
+      "url": "https://api.example.com/weather",
+      "name": "Weather API",
+      "description": "Live weather data, 1 sat per query",
+      "price_sats": 1,
+      "category": "weather",
+      "created_at": "2026-04-26T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Privacidade de Dados
+
+### Excluir Meus Dados
+
+`POST /api/delete-data`
+
+Inicia um desafio LNURL-auth. Após a verificação pela carteira, todos os registros de pagamento associados à chave pública autenticada são permanentemente excluídos (direito ao apagamento do GDPR).

@@ -1,0 +1,188 @@
+---
+title: "Solução de Problemas"
+description: "Erros comuns, suas causas e como corrigi-los."
+---
+
+## Erros de Token
+
+### `Token already used` (401)
+
+**Causa:** O mesmo preimage foi enviado duas vezes — ataque de replay ou nova tentativa acidental.
+
+**Correção:** Cada pagamento de fatura produz um token de uso único. Gere uma nova fatura e pague novamente. No lado do cliente, certifique-se de que o `L402Client` armazena tokens em cache por URL de endpoint (o comportamento padrão já faz isso).
+
+---
+
+### `Token expired` (401 / `valid: false`)
+
+**Causa:** Faturas expiram após 1 hora. O campo `exp` do token está em milissegundos.
+
+**Correção:** Solicite uma nova fatura. Se a expiração estiver ocorrendo rápido demais, verifique se o relógio do servidor está correto (`Date.now()` no servidor vs `time.time()` no cliente devem estar com diferença de apenas alguns segundos).
+
+---
+
+### `Invalid preimage format` (402 retornado em vez de 200)
+
+**Causa:** O preimage não possui exatamente 64 caracteres hexadecimais (32 bytes).
+
+**Correção:** Certifique-se de que sua carteira retorna o preimage bruto como uma string hexadecimal de 64 caracteres. Algumas carteiras retornam em base64 — decodifique-o primeiro.
+
+---
+
+### `Webhook signature mismatch` (401)
+
+**Causa:** O cabeçalho `l402-signature` não corresponde ao segredo ou o corpo foi modificado durante o trânsito.
+
+**Correção:**
+1. Confirme que `L402_WEBHOOK_SECRET` é igual tanto no remetente quanto no receptor.
+2. Use `express.raw({ type: 'application/json' })` (não `express.json()`) para ler o corpo bruto antes da verificação — o parse de JSON reformata a string e invalida a assinatura.
+3. Verifique se seu proxy reverso (nginx, Cloudflare) não está modificando o corpo.
+
+---
+
+## Erros de Provider
+
+### `ManagedProvider: invoice creation failed` / HTTP 503
+
+**Causa:** `l402kit.com` está temporariamente indisponível ou a API do Blink está fora do ar.
+
+**Correção:** Tente novamente com backoff exponencial. Verifique o status em [status.blink.sv](https://status.blink.sv). Para cargas de produção que exigem zero tempo de inatividade, use um provider soberano (BlinkProvider, AlbyProvider, etc.) com suas próprias credenciais.
+
+---
+
+### `Blink: INSUFFICIENT_CHANNEL_BALANCE`
+
+**Causa:** Sua carteira Blink não possui liquidez de saída suficiente para o pagamento dividido.
+
+**Correção:** Adicione fundos à sua carteira `shinydapps@blink.sv`. A plataforma precisa de um pequeno saldo para rotear os pagamentos divididos. Isso afeta apenas o split do ManagedProvider — a criação de faturas não é afetada.
+
+---
+
+### `LNURL fetch failed` durante o split
+
+**Causa:** O Lightning Address do desenvolvedor não resolve. O endpoint `/.well-known/lnurlp/` retornou um status diferente de 200.
+
+**Correção:** Verifique se o Lightning Address é válido e se o endpoint LNURL-pay do domínio está acessível. Teste com:
+```bash
+curl https://<domain>/.well-known/lnurlp/<username>
+```
+
+---
+
+### `AlbyProvider: HTTP 401`
+
+**Causa:** Token de acesso do Alby expirado ou revogado.
+
+**Correção:** Gere um novo token em Alby Hub → Settings → Access Tokens. Certifique-se de que o escopo inclui `invoices:create`.
+
+---
+
+### `BTCPayProvider: HTTP 403`
+
+**Causa:** Chave de API sem a permissão necessária.
+
+**Correção:** Em BTCPay Server → Account → API Keys, certifique-se de que a chave possui o escopo `btcpay.store.cancreatelightninginvoice` para a loja correta.
+
+---
+
+## Proteção contra Replay
+
+### Múltiplas instâncias / replays não detectados
+
+**Causa:** O `MemoryReplayAdapter` padrão opera apenas dentro do processo. Ao reiniciar ou com múltiplas instâncias, ele é reiniciado.
+
+**Correção:** Use `RedisReplayAdapter` para implantações com múltiplas instâncias:
+
+<CodeGroup>
+
+```ts TypeScript
+import Redis from "ioredis";
+import { RedisReplayAdapter } from "l402-kit";
+
+const redis = new Redis(process.env.REDIS_URL!);
+app.get("/api", l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+```python Python
+from l402kit import RedisReplayAdapter
+import redis.asyncio as redis
+
+r = redis.from_url(os.environ["REDIS_URL"])
+# pass replayAdapter to l402_required (coming soon)
+```
+
+</CodeGroup>
+
+A restrição de unicidade `payment_hash` do Supabase atua como uma segunda camada durável independentemente do adaptador em memória, garantindo que replays sejam sempre bloqueados mesmo sem Redis.
+
+---
+
+## Limites de Taxa
+
+### `Too many requests. Max 20 invoices/minute per IP.` (429)
+
+**Causa:** Mais de 20 requisições de criação de fatura por minuto a partir do mesmo IP, atingindo o endpoint do ManagedProvider.
+
+**Correção:** Implemente cache no lado do cliente — não crie uma nova fatura a cada carregamento de página. O `L402Client` armazena tokens em cache por URL de endpoint automaticamente. Para fluxos de servidor para servidor que geram muitas faturas, use um provider soberano.
+
+---
+
+## Específico por Framework
+
+### Express: middleware não sendo acionado
+
+**Causa:** O handler de rota do Express foi registrado antes do middleware `l402()`, ou a ordem dos middlewares está incorreta.
+
+**Correção:**
+```ts
+// ✅ Correto — l402 antes do handler
+app.get("/api", l402({ priceSats: 10, lightning }), myHandler);
+
+// ❌ Incorreto — l402 registrado após o handler
+app.get("/api", myHandler, l402(...));
+```
+
+---
+
+### FastAPI: `422 Unprocessable Entity` na resposta 402
+
+**Causa:** O FastAPI valida os corpos de resposta com base no modelo de resposta declarado. O corpo 402 não corresponde ao modelo.
+
+**Correção:** Exclua o status 402 da validação de resposta ou não declare um modelo de resposta nos endpoints decorados:
+```python
+@app.get("/premium")  # sem response_model= aqui
+@l402_required(price_sats=10, lightning=provider)
+async def premium():
+    return {"data": "paid content"}
+```
+
+---
+
+### Go: `panic: l402: no Lightning provider set`
+
+**Causa:** `Options.Lightning` é nil.
+
+**Correção:** Sempre defina um provider:
+```go
+// ✅
+l402kit.Middleware(l402kit.Options{
+    PriceSats: 10,
+    Lightning: l402kit.NewManagedProvider("you@blink.sv"),
+}, handler)
+
+// ❌ causa panic
+l402kit.Middleware(l402kit.Options{PriceSats: 10}, handler)
+```
+
+---
+
+## Ainda com dificuldades?
+
+Abra uma issue em [github.com/ShinyDapps/l402-kit/issues](https://github.com/ShinyDapps/l402-kit/issues) com:
+- Linguagem e versão do SDK
+- Reprodução mínima
+- Mensagem de erro e stack trace
