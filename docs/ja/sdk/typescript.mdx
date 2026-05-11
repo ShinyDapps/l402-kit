@@ -1,0 +1,393 @@
+---
+title: TypeScript SDK
+description: l402-kit TypeScript/Node.js SDK の完全なリファレンス — Bitcoin Lightning ペイ・パー・コール API 向け Express ミドルウェア。
+---
+
+## インストール
+
+```bash
+npm install l402-kit
+```
+
+**必要環境**: Node.js 18+、Express 4+
+
+---
+
+## クイックスタート
+
+<Tabs>
+  <Tab title="自分のウォレット（手数料0%）">
+```typescript
+import express from 'express';
+import { l402, BlinkProvider } from 'l402-kit';
+
+const app = express();
+
+// 支払いは直接あなたの Blink ウォレットへ — 手数料0%
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+  <Tab title="マネージド（ノード不要）">
+```typescript
+import express from 'express';
+import { l402, ManagedProvider } from 'l402-kit';
+
+const app = express();
+
+// l402kit.com がノードをホスト。各支払いの99.7%を受け取れます。
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), (req, res) => {
+  res.json({ data: 'premium content' });
+});
+
+app.listen(3000);
+```
+  </Tab>
+</Tabs>
+
+---
+
+## `l402(options)` — ミドルウェア
+
+ルートに L402 支払いを強制する Express `RequestHandler` を返します。
+
+### オプション
+
+| オプション | 型 | デフォルト | 説明 |
+|---|---|---|---|
+| `priceSats` | `number` | **必須** | 1回の呼び出しあたりの価格（satoshi単位） |
+| `lightning` | `LightningProvider` | **必須** | Lightning バックエンド |
+| `supabaseUrl` | `string` | `SUPABASE_URL` 環境変数 | 支払いログ用の Supabase URL |
+| `supabaseKey` | `string` | `SUPABASE_ANON_KEY` 環境変数 | 支払いログ用の Supabase キー |
+| `onPayment` | `(token, amountSats) => void` | — | 検証済み支払いごとに発火するコールバック |
+| `webhookUrl` | `string` | — | 署名付き支払いイベントを受け取るエンドポイント |
+| `webhookSecret` | `string` | — | Webhook 署名用の HMAC-SHA256 シークレット |
+| `replayAdapter` | `ReplayAdapter` | インメモリ | プラグイン可能なリプレイ防止バックエンド |
+
+### 動作
+
+| リクエスト | レスポンス |
+|---|---|
+| `Authorization` ヘッダーなし | BOLT11 インボイス + macaroon を含む `402 Payment Required` |
+| 有効な `L402 <macaroon>:<preimage>` | `next()` — ハンドラーが実行される |
+| 無効または期限切れのトークン | `401 Unauthorized` |
+| リプレイされた preimage | `401 Token already used` |
+
+### 402 レスポンスボディ
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1p...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "priceSats": 10
+}
+```
+
+### WWW-Authenticate ヘッダー
+
+```
+WWW-Authenticate: L402 macaroon="eyJ...", invoice="lnbc..."
+```
+
+---
+
+## プロバイダー
+
+### `AlbyProvider` — ソブリンモードに推奨
+
+[Alby](https://getalby.com) — セルフカストディアルウォレット。鍵はあなたが管理します。
+
+```typescript
+import { AlbyProvider } from 'l402-kit';
+
+// 1. hub.getalby.com で Alby Hub を作成（またはセルフホスト）
+// 2. 設定 → アクセストークン → トークンを作成（スコープ: invoices:create, invoices:read）
+const lightning = new AlbyProvider(
+  process.env.ALBY_ACCESS_TOKEN!, // Hub アクセストークン
+  process.env.ALBY_HUB_URL!,      // 例: "https://your-name.getalby.com"
+);
+```
+
+### `BTCPayProvider` — セルフホスト、ゼロトラスト
+
+自分の [BTCPay Server](https://btcpaystore.com) を運用。完全な主権を持てます。
+
+```typescript
+import { BTCPayProvider } from 'l402-kit';
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,         // https://your-btcpay.com
+  process.env.BTCPAY_API_KEY!,     // ストア API キー
+  process.env.BTCPAY_STORE_ID!,    // ストア ID
+);
+```
+
+### `BlinkProvider` — カストディアル、最も簡単な始め方
+
+[Blink](https://blink.sv) — 無料、少額なら KYC 不要。
+
+```typescript
+import { BlinkProvider } from 'l402-kit';
+
+const lightning = new BlinkProvider(
+  process.env.BLINK_API_KEY!,    // dashboard.blink.sv → API Keys
+  process.env.BLINK_WALLET_ID!,  // あなたの BTC ウォレット ID
+);
+```
+
+### `LNbitsProvider`
+
+セルフホストまたは [legend.lnbits.com](https://legend.lnbits.com)。
+
+```typescript
+import { LNbitsProvider } from 'l402-kit';
+
+const lightning = new LNbitsProvider(
+  process.env.LNBITS_API_KEY!,
+  'https://your-lnbits-instance.com', // 省略可、デフォルトは legend.lnbits.com
+);
+```
+
+### `OpenNodeProvider`
+
+```typescript
+import { OpenNodeProvider } from 'l402-kit';
+
+const lightning = new OpenNodeProvider(
+  process.env.OPENNODE_API_KEY!,
+  false, // testMode — サンドボックスの場合は true に設定
+);
+```
+
+### `ManagedProvider` — クラウドモード（手数料0.3%）
+
+l402kit.com が Lightning ノードをホスト。各支払いの99.7%を受け取れます。明示的なオプトインが必要です。
+
+```typescript
+import { ManagedProvider } from 'l402-kit';
+
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+
+// オプション: パブリック API ディレクトリに自動登録
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com', {
+  registerDirectory: {
+    url: 'https://api.you.com/v1/data',
+    name: 'My Data API',
+    priceSats: 10,
+    category: 'data',          // data | ai | finance | weather | compute | storage | other
+    description: 'Optional',
+  },
+});
+```
+
+登録は起動時に一度だけ実行されます（ファイア・アンド・フォーゲット、エラーはサイレント）。API は `l402kit.com/apis.json` に掲載され、エージェントが自動的に発見できるようになります。
+
+---
+
+## リプレイ防止
+
+### デフォルト — インメモリ（開発環境）
+
+組み込み済み。再起動でリセットされます。シングルプロセスのデプロイに適しています。
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+```
+
+### Redis（本番環境 — マルチインスタンス）
+
+```typescript
+import Redis from 'ioredis';
+import { l402, RedisReplayAdapter } from 'l402-kit';
+
+const replay = new RedisReplayAdapter(
+  new Redis(process.env.REDIS_URL!),
+  86400, // TTL（秒単位、24時間）
+);
+
+app.get('/api', l402({ priceSats: 10, lightning, replayAdapter: replay }), handler);
+```
+
+`RedisReplayAdapter` は `SET key 1 NX EX ttl` を使用 — アトミックでレースコンディションがありません。
+
+---
+
+## 支払い Webhook
+
+各支払い後に署名付きイベントを受け取ります。
+
+```typescript
+import { l402, verifyWebhook } from 'l402-kit';
+
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  webhookUrl: 'https://yourapi.com/webhooks/l402',
+  webhookSecret: process.env.L402_WEBHOOK_SECRET!,
+}), handler);
+
+// Webhook レシーバー
+app.post('/webhooks/l402', express.raw({ type: '*/*' }), (req, res) => {
+  const valid = verifyWebhook(
+    process.env.L402_WEBHOOK_SECRET!,
+    req.body.toString(),
+    req.headers['l402-signature'] as string,
+  );
+  if (!valid) return res.status(401).end();
+
+  const event = JSON.parse(req.body.toString());
+  console.log('Payment:', event.data.paymentHash, event.data.amountSats);
+  res.json({ ok: true });
+});
+```
+
+**Webhook ペイロード:**
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "payment.received",
+  "created": 1700000000,
+  "data": {
+    "endpoint": "/api/data",
+    "amountSats": 10,
+    "paymentHash": "sha256-of-preimage"
+  }
+}
+```
+
+---
+
+## `onPayment` コールバック
+
+検証済みの支払いごとに `next()` の前に呼び出される同期フック:
+
+```typescript
+app.get('/api/data', l402({
+  priceSats: 10,
+  lightning,
+  onPayment: async ({ macaroon, preimage }, amountSats) => {
+    await myAnalytics.track('payment', { amountSats });
+  },
+}), handler);
+```
+
+---
+
+## Supabase 支払いログ
+
+環境変数に `SUPABASE_URL` と `SUPABASE_ANON_KEY` を設定すると、支払いが自動的にログに記録されます。
+
+```typescript
+app.get('/api', l402({ priceSats: 10, lightning }), handler);
+// SUPABASE_URL と SUPABASE_ANON_KEY は process.env から自動的に読み取られます
+```
+
+**payments テーブルスキーマ** (`payments`):
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — 保存しても安全
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+<Note>
+`payment_hash` には `SHA256(preimage)` が格納されており、生の preimage は格納されません。preimage は32バイトの Lightning 支払いシークレットですが、そのハッシュは BOLT11 インボイスにすでに公開されています。
+</Note>
+
+---
+
+## スタンドアロンユーティリティ
+
+```typescript
+import { verifyToken, parseToken, checkAndMarkPreimage } from 'l402-kit';
+
+// トークンを検証（true/false を返す）
+const isValid = await verifyToken('eyJoYXNoIjoi...:deadbeef...');
+
+// トークンのパーツを解析
+const { macaroon, preimage } = parseToken(token);
+
+// カスタムリプレイチェック（true = 初回使用、false = リプレイ）
+const isFirstUse = await checkAndMarkPreimage(preimage);
+```
+
+---
+
+## 型
+
+```typescript
+import type { L402Options, LightningProvider, Invoice, L402Token } from 'l402-kit';
+
+interface L402Options {
+  priceSats: number;
+  lightning: LightningProvider;
+  supabaseUrl?: string;
+  supabaseKey?: string;
+  onPayment?: (token: L402Token, amountSats: number) => void | Promise<void>;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  replayAdapter?: ReplayAdapter;
+}
+
+interface Invoice {
+  paymentRequest: string;
+  paymentHash: string;
+  macaroon: string;
+  amountSats: number;
+  expiresAt: number;        // Unix ms
+}
+
+interface LightningProvider {
+  createInvoice(amountSats: number): Promise<Invoice>;
+  checkPayment(paymentHash: string): Promise<boolean>;
+}
+```
+
+---
+
+## 検証タイミング
+
+トークン検証はメモリ内で `SHA256(preimage) == paymentHash` を実行します — **サブミリ秒、ホットパスでのネットワーク呼び出しなし**。
+
+インメモリの `ReplayAdapter`（デフォルト）も同期的に実行されます。`RedisReplayAdapter` を使用する場合、リクエストごとに **5〜50 ms** の Redis ラウンドトリップが加わります。高頻度エンドポイントに対してはキャパシティを適切に計画してください。
+
+---
+
+## x402 互換性（`X-Payment` ヘッダー）
+
+このミドルウェアは、標準の `Authorization: L402 …` ヘッダーに加えて、Coinbase の [x402 protocol](https://x402.org) で使用される `X-Payment` ヘッダーも透過的に受け入れます。両方とも同一に扱われます — どちらのプロトコルを話すクライアントにも対応したい場合に便利です。
+
+```typescript
+// x402 ヘッダーを使用するクライアント — 透過的に処理されます
+// X-Payment: <macaroon>:<preimage>
+```
+
+設定は不要です。常に有効になっています。
+
+---
+
+## マイグレーションガイド
+
+### v1.1 → v1.2
+
+`payments` テーブルのカラム名を変更してください:
+
+```sql
+ALTER TABLE payments RENAME COLUMN preimage TO payment_hash;
+```

@@ -1,0 +1,199 @@
+---
+title: "Diagram Forge"
+description: "GitHubリポジトリからAIが生成するライブアーキテクチャ図 — Lightning L402で支払い"
+icon: "circle-nodes"
+---
+
+## Diagram Forgeとは？
+
+[Diagram Forge](https://forge.l402kit.com)は、Claude AIを使用して任意のGitHubリポジトリを解析し、**インタラクティブなアニメーションアーキテクチャ図**を生成します — 公式テックロゴ、アニメーションパーティクルフロー、ノードインスペクター、SVG/PNG/Markdownへのエクスポート機能を完備。
+
+支払いはL402プロトコルを使用したLightning Networkで処理されます — アカウント不要、クレジットカード不要、サブスクリプション不要。解析ごとに支払うだけです。
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/docs/demo-viewer.gif" alt="Diagram Forge interactive viewer demo" />
+</Frame>
+
+---
+
+## はじめに
+
+### オプション1 — Webアプリ（最速）
+
+1. **[forge.l402kit.com](https://forge.l402kit.com)** にアクセス
+2. 任意の公開GitHub URLを貼り付け（例：`https://github.com/vercel/next.js`）
+3. ティアを選択：**Basic**（100 sats）、**Full**（500 sats）、または **Live ✦**（1000 sats）
+4. **Analyze & Generate Diagram** をクリック
+5. 任意のウォレットでLightningインボイスを支払う — または無料アクセス用のプロモコードを入力
+6. インタラクティブな図が自動的に開きます
+
+### オプション2 — VS Code拡張機能
+
+マーケットプレイスからインストール：
+
+```bash
+code --install-extension ShinyDapps.diagram-forge
+```
+
+または拡張機能パネル（`Ctrl+Shift+X`）で **"Diagram Forge"** を検索してください。
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/shinydapps-creator/diagram-forge/main/vscode-extension/media/demo-extension.gif" alt="Diagram Forge VS Code extension — idle, confirming, analyzing, done" />
+</Frame>
+
+**使い方：**
+1. GitHubリモートを持つプロジェクトを開く
+2. アクティビティバー（左サイドバー）の **Diagram Forgeアイコン** をクリック
+3. **Analyze Repo** をクリック — GitHub URLが自動的に検出されます
+4. ティアを選択し、プロモコードを入力（任意）
+5. Lightningで支払うか、プロモコードを使用
+6. ブラウザで図が開きます
+
+### オプション3 — GitHubを連携（Webアプリ）
+
+Webアプリのトップナビゲーションにある **Connect GitHub** をクリックして認可し、すべてのリポジトリのドロップダウンを取得 — URLをコピー＆ペーストする必要はありません。
+
+---
+
+## 解析ティア
+
+| ティア | 価格 | 内容 |
+|------|-------|-------------|
+| **Basic** | 100 sats（約$0.10） | クイックスキャン — 上位10ファイル、主要サービスを検出 |
+| **Full** | 500 sats（約$0.50） | リポジトリ全体 — すべてのサービス、接続、モノレポに対応 |
+| **Live ✦** | 1000 sats（約$1.00） | 完全解析 + パーティクルフロー付きアニメーションSVG |
+
+<Info>
+  Lightningの価格は、支払い処理手数料がかからないため、カード決済よりも大幅に低くなっています。
+</Info>
+
+---
+
+## Lightningウォレットをお持ちでない方へ
+
+2分以内に始められます：
+
+<CardGroup cols={3}>
+  <Card title="Wallet of Satoshi" icon="mobile" href="https://www.walletofsatoshi.com/">
+    最もシンプルなモバイルウォレット — カストディアル、即時セットアップ
+  </Card>
+  <Card title="Phoenix" icon="mobile" href="https://phoenix.acinq.co/">
+    モバイル、セルフカストディアル、KYC不要
+  </Card>
+  <Card title="Alby" icon="browser" href="https://getalby.com/">
+    ブラウザ拡張機能 — VS Codeで直接動作
+  </Card>
+</CardGroup>
+
+インストール後、少量のBitcoinを購入し（$1相当でも数十回の解析に対応）、Diagram Forgeがインボイスを表示したらQRコードをスキャンしてください。
+
+---
+
+## プロモコード
+
+プロモコードをお持ちの場合は、Analyzeをクリックする前に **「Promo code (optional)」** フィールドに入力してください — ウォレット不要で完全無料で解析が実行されます。
+
+プロモコードには有効期限と使用回数制限があります。最新のコードは[forge.l402kit.com](https://forge.l402kit.com)を確認するか、[@ShinyDapps](https://github.com/ShinyDapps)をフォローしてください。
+
+---
+
+## 図に表示される内容
+
+すべての図には以下が含まれます：
+
+- **ノード** — コードから検出されたサービス、データベース、キュー、API、MLモデル、CDN
+- **エッジ** — プロトコルラベル付きのコンポーネント間の接続（HTTP、SQL、gRPC、WebSocket、AMQP…）
+- **ロゴ** — 80以上の技術に対応した公式Simple Iconsブランディング
+- **アニメーションフロー** — エッジに沿って移動するパーティクル、プロトコルタイプ別に色分け（黄色 = Lightning、青 = HTTP、緑 = SQL…）
+
+**インタラクティブビューアの機能：**
+- パン＆ズーム（スクロールでズーム、ドラッグでパン）
+- 任意のノードをクリックして接続と説明を確認
+- 大きな図用のミニマップ
+- 名前またはタイプでノードを検索
+- エクスポート：SVG、PNG、Markdown、Draw.io
+- 共有リンク：`/g/:id` — 各図の永続的な共有可能URL
+
+---
+
+## 画像からのインポート
+
+GitHubリポジトリをお持ちでない方でも大丈夫です。ホワイトボードの写真、スクリーンショット、Visioファイル、またはPDFをアップロードすると、Claudeがアーキテクチャを抽出し、同じインタラクティブな図を生成します。
+
+対応フォーマット：JPG、PNG、WEBP、GIF、PDF
+
+---
+
+## アーキテクチャベンチマーク
+
+図を生成した後、ビューアで **Benchmark** をクリックすると、6次元の品質スコアを取得できます：
+
+| 次元 | 測定内容 |
+|---|---|
+| スケーラビリティ | 水平スケーリングの可能性、ボトルネック |
+| 信頼性 | 単一障害点、冗長性 |
+| セキュリティ | 認証、暗号化、露出面 |
+| オブザーバビリティ | ログ、メトリクス、トレースのカバレッジ |
+| 保守性 | 結合度、複雑さ、モジュール性 |
+| コスト効率 | オプション — サービスごとのコスト対価値 |
+
+---
+
+## プライバシー
+
+- コードはセキュアなサーバー上に**一時的にクローン**され、解析後すぐに削除されます
+- 共有リンクを使用する場合、**グラフメタデータ**（ノードラベル、エッジ接続 — ソースコードは含まない）のみが保存されます
+- アカウント不要、図以外のデータは保持されません
+
+---
+
+## l402-kitの使用方法
+
+Diagram Forgeは`l402-kit`の**Managed Mode** — ノードを運用せずにLightning支払いを受け付ける最もシンプルな方法 — の上に構築されています：
+
+```typescript
+import { l402, ManagedProvider } from "l402-kit";
+
+const provider = ManagedProvider.fromAddress("pinkfalcon21@primal.net", {
+  registerDirectory: {
+    url: "https://forge.l402kit.com/analyze",
+    name: "Diagram Forge — Architecture Analysis",
+    priceSats: 500,
+    description: "AI-powered living architecture diagrams from any repo",
+    category: "ai",
+  },
+});
+
+// Gate the /analyze endpoint — returns 402 until paid
+app.post("/analyze", l402({ priceSats: 500, lightning: provider }), handler);
+```
+
+クライアントが有効なpreimageなしで`POST /analyze`を呼び出すと：
+
+```
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+```
+
+クライアントはインボイスを支払い、`Authorization: L402 <macaroon>:<preimage>`とともに再試行します。
+
+同様のものを構築したい場合は、[l402-kitクイックスタート](/quickstart)をご覧ください。
+
+---
+
+## リンク
+
+<CardGroup cols={2}>
+  <Card title="Webアプリ" icon="globe" href="https://forge.l402kit.com">
+    ブラウザで任意の公開GitHubリポジトリを解析
+  </Card>
+  <Card title="VS Code拡張機能" icon="code" href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.diagram-forge">
+    VS Code内でのフルサイドバー体験
+  </Card>
+  <Card title="ソースコード" icon="github" href="https://github.com/shinydapps-creator/diagram-forge">
+    MITライセンス — フォーク、拡張、構築が自由
+  </Card>
+  <Card title="l402-kitクイックスタート" icon="bolt" href="/quickstart">
+    数分で独自のL402ゲートサービスを構築
+  </Card>
+</CardGroup>

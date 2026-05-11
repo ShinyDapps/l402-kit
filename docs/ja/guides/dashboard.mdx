@@ -1,0 +1,110 @@
+---
+title: アナリティクスダッシュボード
+description: l402kit.com/dashboard のペイメントアナリティクスダッシュボードにアクセス — アカウント不要、シークレットトークンで保護されています。
+---
+
+[l402kit.com/dashboard](https://l402kit.com/dashboard) のアナリティクスダッシュボードでは、APIを通じて流れるすべての支払いのリアルタイム統計を確認できます: 受信した合計 sats、エンドポイント別の内訳、7日間のトレンド、最近のトランザクションなど。
+
+## セットアップ
+
+ダッシュボードはシークレットトークン — **`DASHBOARD_SECRET`** によって保護されています。一度生成し、他のシークレットと同じ場所に保管してください。
+
+### 1. シークレットを生成する
+
+```bash
+openssl rand -hex 32
+# → shdp_dash_a1b2c3d4e5f6...
+```
+
+または任意のパスワードマネージャーを使用して、強力なランダム文字列を生成してください。
+
+### 2. プロバイダーに設定する
+
+**Cloudflare Workers:**
+
+```bash
+cd cloudflare/
+wrangler secret put DASHBOARD_SECRET
+# プロンプトが表示されたらシークレットを貼り付けてください
+```
+
+**Node.js / その他:**
+
+```bash
+# .env
+DASHBOARD_SECRET=shdp_dash_a1b2c3d4e5f6...
+```
+
+### 3. ログイン
+
+[l402kit.com/dashboard](https://l402kit.com/dashboard) にアクセスし、シークレットを入力すれば完了です。メール、OAuth、Cookie は不要 — シークレットはすべての統計リクエストに `x-dashboard-secret` として送信されます。
+
+---
+
+## 表示される内容
+
+| メトリクス | 説明 |
+|--------|-------------|
+| 総支払い数 | 検証済み L402 支払いの累計件数 |
+| 合計 sats | すべての支払いにわたる `amount_sats` の合計 |
+| 7日間トレンド | 前の7日間と比較した支払い数と sats |
+| エンドポイント別 | どのルートがどれだけ獲得したかの内訳 |
+| 直近20件 | ハッシュ、エンドポイント、金額、タイムスタンプを含む最新の支払い |
+
+---
+
+## API
+
+同じデータはAPIから直接取得することもできます — 独自のダッシュボードを構築したり、Grafana にパイプする場合に便利です。
+
+```bash
+curl https://l402kit.com/api/stats \
+  -H "x-dashboard-secret: YOUR_SECRET"
+```
+
+```json
+{
+  "totalPayments": 142,
+  "totalSats": 14200,
+  "shinydappsFee": 42,
+  "trend": {
+    "payments7d": 38,
+    "payments7dPrev": 21,
+    "sats7d": 3800,
+    "sats7dPrev": 2100
+  },
+  "byOwner": {
+    "you@blink.sv": { "count": 142, "sats": 14200 }
+  },
+  "recent": [...]
+}
+```
+
+---
+
+## セキュリティモデル
+
+- シークレットはあなたの環境から外部に漏れることはありません — Cloudflare Worker のサーバーサイドで厳密な等値比較によって検証されます
+- セッショントークンは発行されません — すべてのリクエストでシークレットが再検証されます
+- シークレットは読み取り専用アクセスです — `/api/stats` の呼び出しのみ可能で、データの書き込みや削除はできません
+- `wrangler secret put` で `DASHBOARD_SECRET` を更新することで、いつでも新しいシークレットを生成できます
+
+<Note>
+`DASHBOARD_SECRET` を git にコミットしないでください。`.gitignore` に追加し、`wrangler secret put` またはCI/CDシークレットマネージャーを使用してください。
+</Note>
+
+---
+
+## シークレットのローテーション
+
+```bash
+# 新しいシークレットを生成
+openssl rand -hex 32
+
+# Cloudflare Workers で更新
+wrangler secret put DASHBOARD_SECRET
+
+# 完了 — 古いシークレットは即座に無効になります
+```
+
+更新が必要なデータベースエントリはありません。Worker はすべてのリクエストで環境からシークレットを読み取ります。

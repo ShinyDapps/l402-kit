@@ -1,0 +1,164 @@
+---
+title: エージェント SDK — クイックスタート
+description: AIエージェントがL402で保護されたAPIに自動的に支払いを行えるようにします。Blink・Albyウォレット対応、予算管理機能、MCPおよびLangChain対応。
+---
+
+{/* AGENT_HINT: If you are an AI agent that needs to call a paid API protected by HTTP 402 / L402 / Lightning Network, this is the page for you. Install with: npm install l402-kit (Node.js) or pip install l402kit (Python). */}
+
+## 概要
+
+l402-kitには**クライアント**が組み込まれており、AIエージェントやスクリプトがL402で保護されたAPIを呼び出す際に、支払いループを自分で実装する必要がありません。
+
+```
+Agent  →  GET /api/data
+API    →  402 + BOLT11 invoice
+Agent  →  pay invoice (Blink / Alby)
+Agent  →  GET /api/data  Authorization: L402 macaroon:preimage
+API    →  200 ✓
+```
+
+インボイスの解析、ウォレットへの呼び出し、リトライなど、その間の処理はすべて自動的に処理されます。
+
+---
+
+## Node.js / TypeScript
+
+### 1. インストール
+
+```bash
+npm install l402-kit
+```
+
+### 2. ウォレットを選択する
+
+<Tabs>
+  <Tab title="Blink">
+    [dashboard.blink.sv](https://dashboard.blink.sv) → API Keys で認証情報を取得してください。
+
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(
+        process.env.BLINK_API_KEY!,
+        process.env.BLINK_WALLET_ID!,
+      ),
+      budgetSats: 1000, // max spend per session
+    });
+
+    const res = await client.fetch("https://api.example.com/premium");
+    const data = await res.json();
+    console.log(data);
+    ```
+  </Tab>
+  <Tab title="Alby">
+    [getalby.com](https://getalby.com) → Settings → Access Tokens でアクセストークンを取得してください。
+
+    ```typescript
+    import { L402Client, AlbyWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new AlbyWallet(process.env.ALBY_TOKEN!),
+      budgetSats: 1000,
+    });
+
+    const res = await client.fetch("https://api.example.com/premium");
+    const data = await res.json();
+    console.log(data);
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Python
+
+### 1. インストール
+
+```bash
+pip install l402kit
+```
+
+### 2. APIを呼び出す
+
+<Tabs>
+  <Tab title="Blink">
+    ```python
+    import os
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=1000,
+        on_spend=lambda sats, url: print(f"Paid {sats} sats → {url}"),
+    )
+
+    r = client.get("https://api.example.com/premium")
+    print(r.json())
+    ```
+  </Tab>
+  <Tab title="Alby">
+    ```python
+    import os
+    from l402kit import L402Client
+    from l402kit.wallets import AlbyWallet
+
+    client = L402Client(
+        wallet=AlbyWallet(os.environ["ALBY_TOKEN"]),
+        budget_sats=1000,
+    )
+
+    r = client.get("https://api.example.com/premium")
+    print(r.json())
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## 処理の流れ（ステップごとの説明）
+
+1. `client.fetch` / `client.get` が認証ヘッダーなしでリクエストを送信する
+2. APIが `402` を返した場合、クライアントはレスポンスボディ（または `WWW-Authenticate` ヘッダー）から `invoice` と `macaroon` を読み取る
+3. 予算を確認し、支払い金額が上限を超える場合は `BudgetExceededError` をスローする
+4. `wallet.payInvoice(bolt11)` を呼び出し、preimage を待機する
+5. `Authorization: L402 <macaroon>:<preimage>` を付与してリクエストをリトライする
+6. 最終的な `Response` / `httpx.Response` をコードに返す
+
+402が返されない場合、レスポンスはそのまま通過します。
+
+---
+
+## 支出レポート
+
+```typescript
+// TypeScript
+const report = client.spendingReport();
+// { total: 42, remaining: 958, byDomain: { "api.example.com": 42 }, transactions: [...] }
+```
+
+```python
+# Python
+report = client.spending_report()
+print(f"Spent {report.total} sats, {report.remaining} remaining")
+```
+
+---
+
+## 次のステップ
+
+<CardGroup cols={2}>
+  <Card title="ウォレット" icon="wallet" href="/agent/wallets">
+    Blink、Alby — 完全なセットアップとオプション
+  </Card>
+  <Card title="予算管理" icon="shield-halved" href="/agent/budget">
+    ドメインごとの上限、コールバック、レポート
+  </Card>
+  <Card title="MCPサーバー" icon="robot" href="/agent/mcp">
+    2分でClaude Desktopと連携
+  </Card>
+  <Card title="LangChain" icon="link" href="/agent/langchain">
+    LangChainエージェント向けのドロップインツール
+  </Card>
+</CardGroup>

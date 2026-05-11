@@ -1,0 +1,188 @@
+---
+title: "トラブルシューティング"
+description: "よくあるエラー、その原因、および修正方法。"
+---
+
+## トークンエラー
+
+### `Token already used` (401)
+
+**原因:** 同じ preimage が2回送信された — リプレイアタックまたは誤った再試行。
+
+**修正:** 各インボイスの支払いは単一使用トークンを生成します。新しいインボイスを生成して再度支払ってください。クライアント側では、`L402Client` がエンドポイント URL ごとにトークンをキャッシュすることを確認してください（デフォルトでそのように動作します）。
+
+---
+
+### `Token expired` (401 / `valid: false`)
+
+**原因:** インボイスは1時間後に期限切れになります。トークンの `exp` フィールドはミリ秒単位です。
+
+**修正:** 新しいインボイスをリクエストしてください。期限切れが早すぎる場合は、サーバーの時計が正確であることを確認してください（サーバー側の `Date.now()` とクライアント側の `time.time()` は数秒以内に収まっている必要があります）。
+
+---
+
+### `Invalid preimage format` (200の代わりに402が返される)
+
+**原因:** preimage がちょうど64桁の16進数文字（32バイト）ではありません。
+
+**修正:** ウォレットが raw preimage を64文字の16進数文字列として返すことを確認してください。一部のウォレットはbase64で返します — その場合は先にデコードしてください。
+
+---
+
+### `Webhook signature mismatch` (401)
+
+**原因:** `l402-signature` ヘッダーがシークレットと一致しないか、ボディが転送中に変更されました。
+
+**修正:**
+1. `L402_WEBHOOK_SECRET` が送信側と受信側で一致していることを確認してください。
+2. 検証前に raw ボディを読み取るために `express.raw({ type: 'application/json' })` を使用してください（`express.json()` ではなく）— JSON パースは文字列を再フォーマットしてシグネチャを無効にします。
+3. リバースプロキシ（nginx、Cloudflare）がボディを変更していないか確認してください。
+
+---
+
+## プロバイダーエラー
+
+### `ManagedProvider: invoice creation failed` / HTTP 503
+
+**原因:** `l402kit.com` が一時的に利用できないか、Blink API がダウンしています。
+
+**修正:** 指数バックオフで再試行してください。[status.blink.sv](https://status.blink.sv) でステータスを確認してください。ゼロダウンタイムが必要な本番ワークロードには、独自の認証情報を持つソベラノプロバイダー（BlinkProvider、AlbyProvider など）を使用してください。
+
+---
+
+### `Blink: INSUFFICIENT_CHANNEL_BALANCE`
+
+**原因:** Blink ウォレットにスプリット支払いのための十分なアウトバウンド流動性がありません。
+
+**修正:** `shinydapps@blink.sv` ウォレットに資金を追加してください。プラットフォームはスプリット支払いをルーティングするために少額の残高が必要です。これは ManagedProvider のスプリットにのみ影響し、インボイスの作成には影響しません。
+
+---
+
+### スプリット中の `LNURL fetch failed`
+
+**原因:** 開発者の Lightning Address が解決されません。`/.well-known/lnurlp/` エンドポイントが200以外のステータスを返しました。
+
+**修正:** Lightning Address が有効で、ドメインの LNURL-pay エンドポイントにアクセスできることを確認してください。以下でテストしてください:
+```bash
+curl https://<domain>/.well-known/lnurlp/<username>
+```
+
+---
+
+### `AlbyProvider: HTTP 401`
+
+**原因:** Alby アクセストークンの期限切れまたは失効。
+
+**修正:** Alby Hub → 設定 → アクセストークン でトークンを再生成してください。スコープに `invoices:create` が含まれていることを確認してください。
+
+---
+
+### `BTCPayProvider: HTTP 403`
+
+**原因:** API キーに必要な権限がありません。
+
+**修正:** BTCPay Server → アカウント → API キー で、キーが正しいストアに対して `btcpay.store.cancreatelightninginvoice` スコープを持っていることを確認してください。
+
+---
+
+## リプレイ保護
+
+### 複数インスタンス / リプレイが検出されない
+
+**原因:** デフォルトの `MemoryReplayAdapter` はプロセス内のみです。再起動時または複数インスタンスをまたぐ場合にリセットされます。
+
+**修正:** マルチインスタンスデプロイには `RedisReplayAdapter` を使用してください:
+
+<CodeGroup>
+
+```ts TypeScript
+import Redis from "ioredis";
+import { RedisReplayAdapter } from "l402-kit";
+
+const redis = new Redis(process.env.REDIS_URL!);
+app.get("/api", l402({
+  priceSats: 10,
+  lightning,
+  replayAdapter: new RedisReplayAdapter(redis),
+}), handler);
+```
+
+```python Python
+from l402kit import RedisReplayAdapter
+import redis.asyncio as redis
+
+r = redis.from_url(os.environ["REDIS_URL"])
+# pass replayAdapter to l402_required (coming soon)
+```
+
+</CodeGroup>
+
+Supabase の `payment_hash` ユニーク制約は、インメモリアダプターに関係なく永続的なセカンドレイヤーとして機能するため、Redis がなくてもリプレイは常にブロックされます。
+
+---
+
+## レート制限
+
+### `Too many requests. Max 20 invoices/minute per IP.` (429)
+
+**原因:** 同じ IP から1分間に20回を超えるインボイス作成リクエストが、ManagedProvider エンドポイントに到達しています。
+
+**修正:** クライアント側のキャッシュを実装してください — ページロードのたびに新しいインボイスを作成しないようにしてください。`L402Client` はエンドポイント URL ごとに自動的にトークンをキャッシュします。多数のインボイスを生成するサーバー間フローには、ソベラノプロバイダーを使用してください。
+
+---
+
+## フレームワーク固有の問題
+
+### Express: ミドルウェアがトリガーされない
+
+**原因:** `l402()` ミドルウェアより前に Express ルートハンドラーが登録されているか、ミドルウェアの順序が間違っています。
+
+**修正:**
+```ts
+// ✅ 正しい — l402 をハンドラーの前に
+app.get("/api", l402({ priceSats: 10, lightning }), myHandler);
+
+// ❌ 間違い — l402 がハンドラーの後に登録されている
+app.get("/api", myHandler, l402(...));
+```
+
+---
+
+### FastAPI: 402 レスポンスで `422 Unprocessable Entity`
+
+**原因:** FastAPI は宣言されたレスポンスモデルに対してレスポンスボディを検証します。402 ボディが一致しません。
+
+**修正:** レスポンス検証から402ステータスを除外するか、デコレートされたエンドポイントにレスポンスモデルを宣言しないようにしてください:
+```python
+@app.get("/premium")  # response_model= を指定しない
+@l402_required(price_sats=10, lightning=provider)
+async def premium():
+    return {"data": "paid content"}
+```
+
+---
+
+### Go: `panic: l402: no Lightning provider set`
+
+**原因:** `Options.Lightning` が nil です。
+
+**修正:** 常にプロバイダーを設定してください:
+```go
+// ✅
+l402kit.Middleware(l402kit.Options{
+    PriceSats: 10,
+    Lightning: l402kit.NewManagedProvider("you@blink.sv"),
+}, handler)
+
+// ❌ パニックになる
+l402kit.Middleware(l402kit.Options{PriceSats: 10}, handler)
+```
+
+---
+
+## まだ解決しない場合は?
+
+以下の情報とともに [github.com/ShinyDapps/l402-kit/issues](https://github.com/ShinyDapps/l402-kit/issues) に Issue を開いてください:
+- SDK の言語とバージョン
+- 最小限の再現手順
+- エラーメッセージとスタックトレース

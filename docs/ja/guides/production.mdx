@@ -1,0 +1,333 @@
+---
+title: 本番環境ガイド
+description: l402-kit APIを本番環境にデプロイする — パフォーマンス、信頼性、スケーリング。
+---
+
+## ローンチ前チェックリスト
+
+公開前にこれを実行してください。各項目は以下の関連セクションにリンクしています。
+
+<Steps>
+  <Step title="マルチインスタンス向けリプレイ保護の設定">
+    デフォルトのアダプターはインメモリのみです。複数のプロセス（Gunicornワーカー、PM2クラスター、Kubernetes）を実行する場合は、`SUPABASE_URL` + `SUPABASE_ANON_KEY` を設定するか、`RedisReplayAdapter` を使用してください。[詳細 →](#critical-replay-protection-in-production)
+  </Step>
+  <Step title="シークレットマネージャーへの環境変数の格納">
+    APIキーをハードコードしないでください。ローカルでは `.env` を使用し、本番環境ではシークレットマネージャーを使用してください。[詳細 →](#environment-variables)
+  </Step>
+  <Step title="ヘルスチェックエンドポイントの存在">
+    モニタリングのpingがインボイス作成をトリガーしてはいけません。有料ルートの前に `/health` ルートを追加してください。[詳細 →](#health-check-endpoint)
+  </Step>
+  <Step title="エラーレスポンスが内部情報を漏洩しないこと">
+    プロバイダーエラーをキャッチし、スタックトレースではなくクリーンな503を返してください。[詳細 →](#error-handling)
+  </Step>
+  <Step title="価格が意図的に設定されていること">
+    `priceSats` は実際の価値を反映する必要があります。1 sat ≈ $0.0006 として、プレミアムエンドポイントに100 sats ≈ $0.06 は妥当です。誤って0に設定しないでください。
+  </Step>
+  <Step title="インボイスエンドポイントのアップタイムモニタリング">
+    402レスポンスをモニタリングしてください（これはエラーではなく正常なレスポンスです）。UptimeRobotなどのツールはカスタムステータスコードの期待値をサポートしています。
+  </Step>
+  <Step title="インボイス作成へのレート制限">
+    認証されていないリクエストはすべてLightningインボイスを作成します。レート制限がなければ、攻撃者は無料でプロバイダーのインボイスクォータを使い果たすことができます。公開デプロイ前に `express-rate-limit` を追加してください。[詳細 →](#rate-limiting)
+  </Step>
+</Steps>
+
+---
+
+## 重要: 本番環境でのリプレイ保護
+
+<Warning>
+デフォルトのリプレイアダプターは**インメモリのみ** — プロセスの再起動ごとにリセットされ、複数のサーバーインスタンスにまたがって動作しません。複数のプロセス（Gunicornワーカー、Kubernetesポッド、PM2クラスター）を使用する本番環境では、同じpreimageが2回受け入れられる可能性があります。
+
+**修正方法:** 環境に `SUPABASE_URL` + `SUPABASE_ANON_KEY` を設定してください。ミドルウェアは自動的にSupabaseをリプレイストアとして使用し、すべてのインスタンス間で共有されます。
+
+Redisの場合: `RedisReplayAdapter` を明示的に渡してください（[TypeScript SDK](/sdk/typescript#replay-protection) または [Python SDK](/sdk/python#replay-protection) を参照）。
+</Warning>
+
+---
+
+## 環境変数
+
+キーをハードコードしないでください。常に環境変数を使用してください:
+
+```bash
+# .env (絶対にコミットしないこと)
+BLINK_API_KEY=blink_xxx
+BLINK_WALLET_ID=your-wallet-id
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=sb_publishable_xxx    # クライアントへの公開は安全
+SUPABASE_SERVICE_KEY=sb_secret_xxx      # サーバーサイドのみ — クライアントに公開しないこと
+```
+
+```typescript
+import 'dotenv/config';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+---
+
+## 支払いログ（Supabase）
+
+VS Code拡張機能のダッシュボードとアナリティクスのために、すべての支払いをSupabaseに記録してください:
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!,
+);
+
+app.use(async (req, res, next) => {
+  const original = res.json.bind(res);
+  res.json = (body) => {
+    // 成功したL402支払いを記録する（ミドルウェア通過後）
+    if (req.l402Paid && req.l402Preimage) {
+      supabase.from('payments').insert({
+        endpoint: req.path,
+        preimage: req.l402Preimage,
+        amount_sats: req.l402AmountSats,
+      }).then(() => {});
+    }
+    return original(body);
+  };
+  next();
+});
+```
+
+---
+
+## Cloudflare Workersへのデプロイ
+
+l402-kit APIはCloudflare Workers（V8アイソレート、コールドスタートゼロ）上で動作します。インメモリのリプレイストアはアイソレートごとにリセットされます — トラフィックの多いAPIでは、リプレイ保護にCloudflare KVまたはDurable Objectsを使用してください。
+
+```typescript
+// api/data.ts
+import { l402 } from 'l402-kit';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+export default async function handler(req, res) {
+  await new Promise<void>((resolve, reject) => {
+    l402({ priceSats: 10, lightning: blink })(req, res, (err) => {
+      if (err) reject(err); else resolve();
+    });
+  });
+  res.json({ data: 'premium content' });
+}
+```
+
+---
+
+## Docker
+
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY dist ./dist
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
+```
+
+```yaml
+# docker-compose.yml
+services:
+  api:
+    build: .
+    environment:
+      BLINK_API_KEY: ${BLINK_API_KEY}
+      BLINK_WALLET_ID: ${BLINK_WALLET_ID}
+    ports:
+      - "3000:3000"
+```
+
+---
+
+## ユーザーデータの削除
+
+ユーザーが自分のデータを永久に削除できるよう、削除エンドポイントを公開してください。l402-kitバックエンドには `/api/delete-data` がすぐに使える形で含まれています:
+
+```http
+POST /api/delete-data
+Content-Type: application/json
+
+{ "lightningAddress": "user@blink.sv" }
+```
+
+```json
+// 200 OK
+{ "deleted": { "payments": 42, "proAccess": true } }
+```
+
+VS Code拡張機能はこれをダッシュボード下部の**Danger Zone**パネルとして表示します — ユーザーは確認のためにLightningアドレスを入力する必要があり、その後すべての支払い履歴とProアクセスが削除されます。この操作はサーバーサイドでSupabaseサービスキーを使用します。anonキーにはDELETE権限がありません。
+
+---
+
+## エラーハンドリング
+
+フォーマットされていない500として表面化する前に、プロバイダーエラーをキャッチしてください:
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, L402Error } from 'l402-kit';
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), async (req, res) => {
+  try {
+    res.json({ data: await fetchData() });
+  } catch (err) {
+    if (err instanceof L402Error) {
+      // トークンが無効、期限切れ、または使用済み — ミドルウェアに処理させる
+      return res.status(err.status).json({ error: err.code });
+    }
+    console.error('[api/data]', err);
+    res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+});
+```
+
+```python Python
+from l402kit import l402_required, L402Error
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(L402Error)
+async def l402_exception_handler(request: Request, exc: L402Error):
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.code})
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=503, content={"error": "Service temporarily unavailable"})
+```
+</CodeGroup>
+
+**基本的なルール:**
+- クライアントにスタックトレースを返さないこと — サーバーサイドでログに記録してください。
+- プロバイダーのタイムアウト（503）は一時的なものです — バックオフを使って安全に再試行できます。
+- トークンエラー（401）は一時的ではありません — 自動再試行せず、新しいインボイスを要求してください。
+- レート制限エラー（429）— `retryAfter` フィールドを呼び出し元に公開してください。
+
+構造化エラーコードの完全なリストは[エラーリファレンス](/reference/errors)を参照してください。
+
+---
+
+## レート制限
+
+認証されていないリクエストはすべて、LightningプロバイダーでのÀ `createInvoice()` をトリガーします。レート制限がなければ、誰でもエンドポイントをフラッドさせてプロバイダーのAPIクォータを無料で使い果たすことができます — 1 satも支払わずに。
+
+L402ルートの前に [`express-rate-limit`](https://www.npmjs.com/package/express-rate-limit) を追加してください:
+
+```bash
+npm install express-rate-limit
+```
+
+```typescript
+import rateLimit from "express-rate-limit";
+import { l402 } from "l402-kit";
+
+// インボイス作成を制限: IPごとに1分あたり30件の未認証リクエスト
+const invoiceLimit = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  // 有効なL402ヘッダーを既に持つリクエストにのみ適用をスキップ
+  skip: (req) => req.headers.authorization?.startsWith("L402 ") ?? false,
+  message: { error: "Too many requests — slow down" },
+});
+
+app.get("/api/premium", invoiceLimit, l402({ priceSats: 10, lightning }), handler);
+```
+
+<Note>
+既に支払い済みのクライアントは `skip` 関数によってスキップされます — 制限は新しいインボイスをトリガーする未認証の呼び出しにのみ適用されます。正当な支払い者がスロットルされることはありません。
+</Note>
+
+FastAPIの場合:
+
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/api/premium")
+@limiter.limit("30/minute")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium(request: Request):
+    return {"data": "paid content"}
+```
+
+---
+
+## ヘルスチェックエンドポイント
+
+モニタリングツールがインボイス作成をトリガーしないよう、常に無料のヘルスチェックを追加してください:
+
+```typescript
+app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// 有料エンドポイント
+app.get('/api/data', l402({ priceSats: 10, lightning: blink }), handler);
+```
+
+---
+
+## モニタリング
+
+追跡すべき主要メトリクス:
+- **402レスポンス率** — 正常なベースラインは高い（ほとんどの呼び出し元は支払いが必要）
+- **支払い検証率** — 支払い済みと未払いの呼び出しの比率
+- **プロバイダーレイテンシー** — `blink.createInvoice()` は500ms未満であるべき
+- **リプレイ試行** — スパイクはトークン再利用攻撃を示す
+
+```typescript
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    console.log(JSON.stringify({
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      ms: Date.now() - start,
+      paid: res.statusCode !== 402,
+    }));
+  });
+  next();
+});
+```
+
+---
+
+## パフォーマンス
+
+- トークン検証は **O(1)** — 純粋な暗号処理で、DBもネットワークも不要
+- インボイス作成（402パス）はLightningプロバイダーAPIを呼び出します — 支払い前に同じエンドポイントが繰り返しヒットされることが予想される場合はキャッシュを追加してください
+- リプレイストアはインメモリの `Set` — マルチインスタンスデプロイメントでは、Redisに切り替えてください
+
+```typescript
+// Redisリプレイストアの例
+import { Redis } from 'ioredis';
+const redis = new Redis(process.env.REDIS_URL!);
+
+// カスタムリプレイ関数をミドルウェアに渡す
+app.get('/api', l402({
+  priceSats: 10,
+  lightning: blink,
+  checkReplay: async (preimage) => {
+    const set = await redis.set(`l402:${preimage}`, '1', 'NX', 'EX', 86400);
+    return set === 'OK';
+  },
+}), handler);
+```

@@ -1,0 +1,158 @@
+---
+title: ウォレット
+description: BlinkまたはAlbyを接続して、エージェントがLightningインボイスを自動的に支払えるようにします。
+---
+
+## サポートされているウォレット
+
+| ウォレット | インストール | セルフカストディ | 備考 |
+|--------|---------|:------------:|-------|
+| [Blink](https://blink.sv) | 組み込み | ❌ カストディアル | 最も簡単なセットアップ、GraphQL API |
+| [Alby Hub](https://getalby.com) | 組み込み | ✅ セルフホストオプション | REST API、独自のHubをサポート |
+| カスタム | `L402Wallet` インターフェース | ✅ | 独自のウォレットを使用 |
+
+---
+
+## BlinkWallet
+
+### セットアップ
+
+1. [blink.sv](https://blink.sv) でサインアップする
+2. **Dashboard → API Keys** に移動してキーを作成する
+3. ダッシュボードから **ウォレットID** をコピーする
+
+```bash
+export BLINK_API_KEY="your-api-key"
+export BLINK_WALLET_ID="your-wallet-id"
+```
+
+### Node.js
+
+```typescript
+import { BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+```
+
+### 仕組み
+
+`lnInvoicePaymentSend` ミューテーションを使って [Blink GraphQL API](https://api.blink.sv/graphql) を呼び出します。決済済みトランザクションから `preImage` を返します。
+
+---
+
+## AlbyWallet
+
+### セットアップ
+
+1. [getalby.com](https://getalby.com) でアカウントを作成する
+2. **Settings → Access Tokens** に移動して `payments:send` スコープ付きのトークンを作成する
+3. （任意）セルフカストディのために独自の [Alby Hub](https://github.com/getAlby/hub) を実行する
+
+```bash
+export ALBY_TOKEN="your-access-token"
+# 任意 — セルフホストのHubにのみ必要:
+export ALBY_HUB_URL="https://your-hub.example.com"
+```
+
+### Node.js
+
+```typescript
+import { AlbyWallet } from "l402-kit";
+
+// Alby クラウド
+const wallet = new AlbyWallet(process.env.ALBY_TOKEN!);
+
+// セルフホストHub
+const wallet = new AlbyWallet(
+  process.env.ALBY_TOKEN!,
+  process.env.ALBY_HUB_URL,  // optional base URL
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import AlbyWallet
+
+# Alby クラウド
+wallet = AlbyWallet(os.environ["ALBY_TOKEN"])
+
+# セルフホストHub
+wallet = AlbyWallet(
+    access_token=os.environ["ALBY_TOKEN"],
+    base_url=os.environ.get("ALBY_HUB_URL", "https://api.getalby.com"),
+)
+```
+
+### 仕組み
+
+`Bearer` トークンを使って Alby Hub REST API の `POST /payments/bolt11` を呼び出します。レスポンスから `payment_preimage` を返します。
+
+---
+
+## カスタムウォレット
+
+`L402Wallet` インターフェースを実装して、任意の Lightning ウォレットを使用できます：
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import type { L402Wallet } from "l402-kit";
+
+    class PhoenixWallet implements L402Wallet {
+      async payInvoice(bolt11: string): Promise<{ preimage: string }> {
+        const res = await fetch("http://localhost:9740/payinvoice", {
+          method: "POST",
+          body: new URLSearchParams({ invoice: bolt11 }),
+        });
+        const data = await res.json();
+        return { preimage: data.paymentPreimage };
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Wallet
+    import httpx
+
+    class PhoenixWallet(L402Wallet):
+        def pay_invoice(self, bolt11: str) -> str:
+            r = httpx.post(
+                "http://localhost:9740/payinvoice",
+                data={"invoice": bolt11},
+            )
+            r.raise_for_status()
+            return r.json()["paymentPreimage"]
+    ```
+  </Tab>
+</Tabs>
+
+このインターフェースには単一のメソッドが必要です：
+
+| メソッド | TypeScript | Python |
+|--------|-----------|--------|
+| BOLT11 インボイスを支払う | `payInvoice(bolt11): Promise<{ preimage: string }>` | `pay_invoice(bolt11: str) -> str` |
+
+---
+
+## ウォレットの選び方
+
+- **テスト／プロトタイピング** → Blink（カストディアル、即時セットアップ、無料枠あり）
+- **本番エージェント、最大制御** → Alby Hub セルフホスト（ノンカストディアル、REST API）
+- **高スループット／低手数料** → カスタム `L402Wallet` 経由の Phoenix（ノンカストディアル、ACINQ）
+- **エンタープライズ** → カスタムウォレット経由の LNbits セルフホスト

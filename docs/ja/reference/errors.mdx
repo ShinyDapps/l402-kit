@@ -1,0 +1,166 @@
+---
+title: "エラーリファレンス"
+description: "エージェントと開発者向け l402-kit のセマンティックエラーコード。"
+---
+
+l402-kit のすべてのエラーは構造化された JSON 形式に従っており、エージェントがプログラム的に解析して対応できます。
+
+```json
+{
+  "error": "ERROR_CODE",
+  "code": 402,
+  "cause": "Human-readable explanation",
+  "action": "recommended_action",
+  "retry": false
+}
+```
+
+---
+
+## エラーコード
+
+### PAYMENT_FAILED
+
+```json
+{
+  "error": "PAYMENT_FAILED",
+  "code": 402,
+  "cause": "Insufficient balance in wallet",
+  "action": "increase_budget",
+  "retry": false
+}
+```
+
+ウォレットがインボイスを支払えませんでした。残高と `budgetSats` の上限を確認してください。
+
+---
+
+### TOKEN_EXPIRED
+
+```json
+{
+  "error": "TOKEN_EXPIRED",
+  "code": 402,
+  "cause": "Macaroon expiry timestamp exceeded",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+L402 トークンが生成されましたが、TTL（デフォルト: 1 時間）が経過する前に使用されませんでした。新しいインボイスを取得するためにリクエストを再試行してください。
+
+---
+
+### BUDGET_EXCEEDED
+
+```json
+{
+  "error": "BUDGET_EXCEEDED",
+  "code": 402,
+  "cause": "Session budget of {n} sats exhausted",
+  "action": "stop_or_increase_budget",
+  "retry": false
+}
+```
+
+エージェントが現在のセッションで `budgetSats` を超えて消費しました。予算を増やすか、セッションを終了してください。
+
+---
+
+### INVALID_MACAROON
+
+```json
+{
+  "error": "INVALID_MACAROON",
+  "code": 402,
+  "cause": "Macaroon is not valid base64 JSON",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+macaroon をデコードできませんでした。通常、破損したトークンが原因です。最初からやり直してください。
+
+---
+
+### TOKEN_ALREADY_USED
+
+```json
+{
+  "error": "TOKEN_ALREADY_USED",
+  "code": 401,
+  "cause": "Preimage was already presented — replay attack blocked",
+  "action": "do_not_retry",
+  "retry": false
+}
+```
+
+リプレイ保護が作動しました。各 preimage は一度しか使用できません。トークンを再利用しないでください。
+
+---
+
+### NODE_UNREACHABLE
+
+```json
+{
+  "error": "NODE_UNREACHABLE",
+  "code": 503,
+  "cause": "Lightning node did not respond within timeout",
+  "action": "retry_with_backoff",
+  "retry": true
+}
+```
+
+Lightning プロバイダーに接続できません。指数バックオフで再試行してください。
+
+---
+
+### INVOICE_EXPIRED
+
+```json
+{
+  "error": "INVOICE_EXPIRED",
+  "code": 402,
+  "cause": "BOLT11 invoice expired before payment was submitted",
+  "action": "request_new_invoice",
+  "retry": true
+}
+```
+
+BOLT11 インボイスには有効期限があります（デフォルト: 600 秒）。新しいインボイスを受け取るために元のリクエストを再試行してください。
+
+---
+
+### WRONG_PREIMAGE
+
+```json
+{
+  "error": "WRONG_PREIMAGE",
+  "code": 402,
+  "cause": "SHA256(preimage) does not match paymentHash in macaroon",
+  "action": "check_wallet_payment",
+  "retry": false
+}
+```
+
+暗号検証に失敗しました。preimage がこのインボイスの支払いを証明していません。
+
+---
+
+## エージェントでのエラー処理
+
+```typescript
+import { l402 } from "l402-kit/agent";
+
+try {
+  const res = await client.fetch("https://api.example.com/data");
+} catch (err: any) {
+  if (err.error === "BUDGET_EXCEEDED") {
+    // 停止してユーザーに報告する
+  } else if (err.retry === true) {
+    // 短い遅延の後に安全に再試行できる
+    await sleep(1000);
+    const res = await client.fetch("https://api.example.com/data");
+  }
+}
+```

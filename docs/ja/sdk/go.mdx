@@ -1,0 +1,183 @@
+---
+title: Go SDK
+description: l402-kit Go SDK の完全リファレンス — Bitcoin Lightning の従量課金APIのための net/http ミドルウェア。
+---
+
+## インストール
+
+```bash
+go get github.com/shinydapps/l402-kit/go@v1.8.2
+```
+
+**要件**: Go 1.21+
+
+---
+
+## クイックスタート
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+    "os"
+
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+func main() {
+    lightning := l402.NewBlinkProvider(
+        os.Getenv("BLINK_API_KEY"),
+        os.Getenv("BLINK_WALLET_ID"),
+    )
+
+    mux := http.NewServeMux()
+    mux.Handle("/api/data", l402.Middleware(l402.Options{
+        PriceSats: 10,
+        Lightning: lightning,
+    }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(map[string]string{"data": "premium content"})
+    })))
+
+    http.ListenAndServe(":8080", mux)
+}
+```
+
+Blink の認証情報は [dashboard.blink.sv](https://dashboard.blink.sv) で無料取得できます。支払いはウォレットに直接届きます。
+
+---
+
+## セルフホストモード（独自プロバイダーを使用）
+
+```go
+import l402 "github.com/shinydapps/l402-kit/go"
+
+type MyProvider struct{}
+
+func (p *MyProvider) CreateInvoice(ctx context.Context, amountSats int) (l402.Invoice, error) {
+    // create invoice with your Lightning node
+    // return l402.Invoice{PaymentRequest: "lnbc...", PaymentHash: "...", Macaroon: "..."}
+}
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: &MyProvider{},
+}, handler))
+```
+
+---
+
+## `l402.Options`
+
+| フィールド | 型 | デフォルト | 説明 |
+|---|---|---|---|
+| `PriceSats` | `int` | **必須** | 1回の呼び出しあたりの価格（satoshi単位） |
+| `Lightning` | `LightningProvider` | **必須** | Lightning バックエンド（`NewBlinkProvider` を使用） |
+| `OnPayment` | `func(L402Token, int)` | — | 検証済み支払いのたびに発火するコールバック |
+
+---
+
+## `l402.Middleware(opts Options, next http.Handler) http.Handler`
+
+`net/http`、Chi、Gorilla Mux、およびあらゆる標準的な Go HTTP フレームワークと互換性のある `http.Handler` を返します。
+
+### 動作
+
+| リクエスト | レスポンス |
+|---|---|
+| `Authorization` ヘッダーなし | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| 有効な `L402 <macaroon>:<preimage>` | `next.ServeHTTP(w, r)` |
+| 無効または期限切れのトークン | `401 Unauthorized` |
+| 再利用された preimage | `401 Token already used` |
+
+### 402 レスポンスボディ
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## `LightningProvider` インターフェース
+
+```go
+type LightningProvider interface {
+    CreateInvoice(ctx context.Context, amountSats int) (Invoice, error)
+}
+```
+
+---
+
+## `OnPayment` コールバック
+
+```go
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+mux.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+    OnPayment: func(token l402.L402Token, amountSats int) {
+        log.Printf("payment: %d sats, preimage: %s", amountSats, token.Preimage)
+    },
+}, handler))
+```
+
+---
+
+## 検証
+
+`SHA256(preimage) == paymentHash` はメモリ内でローカルに検証されます — ホットパスでの処理は**サブミリ秒、ネットワーク呼び出しなし**です。トークンの有効期限（macaroon 内の `exp` フィールド）も同一の処理内でチェックされます。
+
+リプレイガードはデフォルトでインメモリマップを使用します（単一プロセスに対して安全）。マルチインスタンス構成では、共有ストア（Redis など）を使用してください — これにより検証済みリクエストごとに **5〜50 ms** のラウンドトリップが追加されます。
+
+---
+
+## Chi ルーターの使用例
+
+`l402.Middleware` は標準の `http.Handler` を返すため、Chi の `r.Handle` でそのまま使用できます：
+
+```go
+import (
+    "github.com/go-chi/chi/v5"
+    l402 "github.com/shinydapps/l402-kit/go"
+)
+
+r := chi.NewRouter()
+lightning := l402.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+
+r.Handle("/api/data", l402.Middleware(l402.Options{
+    PriceSats: 10,
+    Lightning: lightning,
+}, http.HandlerFunc(handler)))
+```
+
+---
+
+## エラーコード
+
+| ステータス | 意味 |
+|---|---|
+| `402` | 支払いトークンなし — インボイスを支払ってください |
+| `401` | 無効なトークンまたは期限切れの macaroon |
+| `401` | 再利用されたトークン（preimage は既に使用済み） |
+
+---
+
+## 実行
+
+```bash
+go run main.go
+
+# テスト — 402 を発生させる
+curl http://localhost:8080/api/data
+
+# インボイスを支払った後：
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:8080/api/data
+```

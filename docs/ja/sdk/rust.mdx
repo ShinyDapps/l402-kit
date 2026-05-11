@@ -1,0 +1,185 @@
+---
+title: Rust SDK
+description: l402-kit Rust SDK の完全リファレンス — Bitcoin Lightning ペイパーコール API 向け axum ミドルウェア。
+---
+
+## インストール
+
+```bash
+cargo add l402kit
+```
+
+または `Cargo.toml` に記述:
+
+```toml
+[dependencies]
+l402kit = "1.8"
+```
+
+**要件**: Rust 1.75+、Tokio 非同期ランタイム
+
+---
+
+## クイックスタート
+
+最も手軽な方法は `ManagedProvider` を使用することです — Lightning ノード不要、手数料 0.3%:
+
+```rust
+use axum::{middleware, routing::get, Router, Json};
+use l402kit::{l402_middleware, Options, ManagedProvider};
+use serde_json::{json, Value};
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() {
+    let provider = ManagedProvider::new("you@yourdomain.com".into());
+    let opts = Arc::new(Options::new(10, provider));
+
+    let app = Router::new()
+        .route("/api/data", get(handler))
+        .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn handler() -> Json<Value> {
+    Json(json!({ "data": "premium content" }))
+}
+```
+
+ソブリンモード（手数料 0%）の場合は、`LightningProvider` トレイトを実装してください — 下記の[カスタムプロバイダー](#custom-provider)を参照。
+
+---
+
+## カスタムプロバイダー
+
+```rust
+use std::sync::Arc;
+use l402kit::{Options, LightningProvider, Invoice, BoxFuture, L402Error};
+
+struct MyProvider;
+
+impl LightningProvider for MyProvider {
+    fn create_invoice<'a>(&'a self, amount_sats: u64) -> BoxFuture<'a, Result<Invoice, L402Error>> {
+        Box::pin(async move {
+            Ok(Invoice {
+                payment_request: "lnbc...".into(),
+                payment_hash: "abc123...".into(),
+                macaroon: "eyJ...".into(),
+                amount_sats,
+            })
+        })
+    }
+}
+
+let opts = Arc::new(Options::new(10, Arc::new(MyProvider)));
+```
+
+---
+
+## `Options`
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `price_sats` | `u64` | 1 回のコールあたりの価格（satoshi 単位）（**必須**） |
+| `lightning` | `Arc<dyn LightningProvider>` | Lightning バックエンド（**必須**） |
+| `on_payment` | `Option<Box<dyn Fn(L402Token, u64)>>` | 各支払い検証後に発火するコールバック |
+
+### 非推奨: `with_address()`
+
+`Options::with_address(address)` は v1.4.0 で削除されました。代わりに `Options::new(sats, ManagedProvider::new(address))` を使用してください:
+
+```rust
+use l402kit::{Options, ManagedProvider};
+use std::sync::Arc;
+
+let provider = ManagedProvider::new("you@yourdomain.com".into());
+let opts = Arc::new(Options::new(10, provider));
+```
+
+---
+
+## `l402_middleware(opts: Options)`
+
+axum 0.8+ と互換性のある `axum::middleware::Layer` を返します。
+
+### 動作
+
+| リクエスト | レスポンス |
+|---|---|
+| `Authorization` ヘッダーなし | `402` + `WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."` |
+| 有効な `L402 <macaroon>:<preimage>` | ハンドラーが実行される |
+| 無効または期限切れのトークン | `401 Unauthorized` |
+| 再使用された preimage | `401 Token already used` |
+
+### 402 レスポンスボディ
+
+```json
+{
+  "error": "Payment Required",
+  "invoice": "lnbc100n1...",
+  "macaroon": "eyJoYXNoIjoiYWJjMTIzIiwiZXhwIjoxNzAwMDAwMDAwfQ==",
+  "price_sats": 10
+}
+```
+
+---
+
+## `on_payment` コールバック
+
+```rust
+use l402kit::{Options, L402Token};
+
+let opts = Arc::new(
+    Options::new(10, provider).on_payment(|token: L402Token, amount_sats: u64| {
+        println!("payment received: {} sats", amount_sats);
+    }),
+);
+```
+
+---
+
+## フィーチャーフラグ
+
+```toml
+[features]
+default = ["axum-middleware"]
+axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
+```
+
+`axum-middleware` を無効にすると、axum や reqwest なしでコア検証関数のみを使用できます:
+
+```toml
+l402kit = { version = "1.6", default-features = false }
+```
+
+---
+
+## 検証
+
+`SHA256(preimage) == paymentHash` は `sha2` クレートを使用してローカルで検証されます — ホットパス上でのネットワーク呼び出しは発生しません。トークンの有効期限も同じ処理内で確認されます。
+
+---
+
+## エラーコード
+
+| ステータス | 意味 |
+|---|---|
+| `402` | 支払いトークンなし — インボイスを支払ってください |
+| `401` | 無効なトークンまたは期限切れの macaroon |
+| `401` | 再使用された preimage（既に使用済み） |
+
+---
+
+## 実行
+
+```bash
+cargo run
+
+# テスト — 402 をトリガー
+curl http://localhost:3000/api/data
+
+# インボイスを支払った後:
+curl -H "Authorization: L402 <macaroon>:<preimage>" http://localhost:3000/api/data
+```

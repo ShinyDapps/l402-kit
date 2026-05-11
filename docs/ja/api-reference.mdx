@@ -1,0 +1,319 @@
+---
+title: "APIリファレンス"
+description: "ManagedProviderおよびVS Code拡張機能が使用するl402kit.comのすべてのRESTエンドポイントのリファレンス。"
+---
+
+ベースURL: `https://l402kit.com`
+
+すべてのレスポンスは `application/json` 形式です。すべてのオリジンに対してCORSが有効になっています。
+
+---
+
+## インボイス
+
+### インボイスの作成
+
+`POST /api/invoice`
+
+BOLT11 Lightningインボイスを作成します。`ManagedProvider` によって自動的に呼び出されるため、直接呼び出す必要はほとんどありません。
+
+**リクエストボディ**
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `amountSats` | number | ✅ | satoshi単位の金額（最小1） |
+| `ownerAddress` | string | — | あなたのLightning Address。スプリットを実行するために必要です。 |
+
+**レスポンス 200**
+
+```json
+{
+  "paymentRequest": "lnbc10n1p...",
+  "paymentHash":    "a1b2c3...",
+  "macaroon":       "eyJoYXNoIjoiYTFiMm..."
+}
+```
+
+**エラー**
+
+| コード | 理由 |
+|---|---|
+| 400 | `amountSats` が不足しているか無効 |
+| 429 | レート制限を超過（IPごとに20リクエスト/分） |
+| 503 | Lightningプロバイダーが一時的に利用不可 |
+
+---
+
+### トークンの検証
+
+`POST /api/verify`
+
+SDKを使用せずにサーバーサイドでL402トークンを検証します。
+
+**リクエストボディ**
+
+```json
+{ "token": "<macaroon>:<preimage>" }
+```
+
+**レスポンス 200**
+
+```json
+{ "valid": true }
+```
+
+```json
+{ "valid": false, "error": "Token expired" }
+```
+
+---
+
+## スプリットと支払い
+
+### スプリットの実行
+
+`POST /api/split`
+
+Lightning Addressへの99.7/0.3%のスプリット支払いを手動でトリガーします。`x-split-secret` ヘッダーが必要です。
+
+<Note>
+ほとんどの場合、スプリットはBlinkウェブフックを介して自動的にトリガーされます。このエンドポイントは手動リカバリーまたはカスタム統合にのみ使用してください。
+</Note>
+
+**ヘッダー**
+
+| ヘッダー | 値 |
+|---|---|
+| `x-split-secret` | 環境変数 `SPLIT_SECRET` の値 |
+
+**リクエストボディ**
+
+```json
+{
+  "amountSats":   1000,
+  "ownerAddress": "you@blink.sv"
+}
+```
+
+**レスポンス 200**
+
+```json
+{ "ok": true, "ownerSats": 997 }
+```
+
+**レスポンス 200（スキップ — 最小額未満）**
+
+```json
+{ "ok": true, "skipped": true }
+```
+
+---
+
+## ダッシュボードと統計
+
+### 統計の取得
+
+`GET /api/stats`
+
+支払い分析データを返します。`Authorization` ヘッダーにLNURL-authセッショントークンが必要です。
+
+**レスポンス 200**
+
+```json
+{
+  "totalPayments": 42,
+  "totalSats":     8400,
+  "shinydappsFee": 25,
+  "walletSats":    12345,
+  "walletUsdCents": 456789,
+  "byOwner": {
+    "dev@blink.sv": { "count": 42, "sats": 8400 }
+  },
+  "byDay": {
+    "2026-04-24": { "count": 5, "sats": 1000 }
+  },
+  "trend": {
+    "payments7d": 12,
+    "sats7d": 2400
+  },
+  "recent": [
+    {
+      "id": "uuid",
+      "endpoint": "/api/data",
+      "payment_hash": "a1b2...",
+      "amount_sats": 100,
+      "owner_address": "dev@blink.sv",
+      "paid_at": "2026-04-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Proプラン
+
+### Proアクセスの確認
+
+`GET /api/pro-check?address=you@blink.sv`
+
+Lightning AddressにアクティブなProサブスクリプションがあるかどうかを返します。
+
+**レスポンス 200**
+
+```json
+{ "active": true,  "expiresAt": "2026-05-24T10:00:00Z" }
+{ "active": false }
+```
+
+### Proへのサブスクライブ
+
+`GET /api/dev-token?address=you@blink.sv`
+
+30日間のProサブスクリプション（約9,000 sats）を購入するためのLightningインボイスを返します。
+
+**レスポンス 200**
+
+```json
+{
+  "priceSats": 9000,
+  "invoice":   "lnbc90n1p...",
+  "macaroon":  "eyJoYXNoIjoiY..."
+}
+```
+
+`POST /api/dev-token`
+
+インボイスの支払い後にProを有効化します。
+
+**リクエストボディ**
+
+```json
+{ "macaroon": "...", "preimage": "..." }
+```
+
+**レスポンス 200**
+
+```json
+{ "access": true, "expiresAt": "2026-05-24T10:00:00Z" }
+```
+
+---
+
+## 認証（LNURL-auth）
+
+### ログインの開始
+
+`GET /api/lnurl-auth`
+
+ダッシュボードログイン用のLNURL-authチャレンジを返します。ダッシュボードのQRコードをスキャンしてください。
+
+### LNURL-payエンドポイント
+
+`GET /.well-known/lnurlp/:username`
+
+Lightning Addressの解決に使用される標準的なLNURL-payメタデータです。スプリットメカニズムによって内部的に使用されます。
+
+---
+
+## デモ
+
+### デモインデックス
+
+`GET /api/demo`
+
+利用可能なデモエンドポイントに関する情報を返します。
+
+### BTCプライス（有料）
+
+`GET /api/demo/btc-price`
+
+BTCのライブ価格を返します。有効なL402トークン（1 sat）が必要です。
+
+最初の呼び出し時にインボイスとmacaroonを含む **402** を返します。`Authorization: L402 <macaroon>:<preimage>` を付けて再試行してください。
+
+### Preimageの取得
+
+`GET /api/demo/preimage?hash=<paymentHash>`
+
+デモインボイスの支払い後、このエンドポイントを `paymentHash` とともに呼び出してpreimageを取得し、L402トークンを構築します。
+
+---
+
+## ウェブフック
+
+### Blinkウェブフックレシーバー
+
+`POST /api/blink-webhook`
+
+内部エンドポイントです。BlinkからSvix HMAC-SHA256で署名された支払い確認を受信します。スプリットをトリガーし、支払いをログに記録します。直接使用することは想定されていません。
+
+---
+
+## APIディレクトリ
+
+### APIの登録
+
+`POST /api/register`
+
+L402で保護されたAPIをパブリックディレクトリに登録します。`registerDirectory` が指定されている場合、`ManagedProvider.fromAddress()` によって自動的に呼び出されます。べき等性があり、サーバー起動のたびに呼び出しても安全です。
+
+**リクエストボディ**
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `url` | string | ✅ | L402エンドポイントのパブリックURL |
+| `name` | string | ✅ | 表示名 |
+| `price_sats` | number | ✅ | 1回の呼び出しあたりの価格（satoshi単位、最小1） |
+| `lightning_address` | string | ✅ | あなたのLightning Address |
+| `description` | string | — | 短い説明 |
+| `category` | string | — | `data`、`ai`、`finance`、`weather`、`compute`、`storage`、または `other` |
+
+**レスポンス 200**
+
+```json
+{ "ok": true, "id": "uuid" }
+```
+
+---
+
+### APIの一覧取得
+
+`GET /api/apis.json`
+
+登録されているすべてのAPIを返します。エージェントが有料APIを発見できるように設計された機械可読形式です。
+
+**クエリパラメーター**
+
+| パラメーター | 説明 |
+|---|---|
+| `category` | カテゴリでフィルタリング（`data`、`ai`、`finance`、`weather`、`compute`、`storage`、`other`） |
+
+**レスポンス 200**
+
+```json
+{
+  "version": "1",
+  "count": 3,
+  "apis": [
+    {
+      "url": "https://api.example.com/weather",
+      "name": "Weather API",
+      "description": "Live weather data, 1 sat per query",
+      "price_sats": 1,
+      "category": "weather",
+      "created_at": "2026-04-26T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## データプライバシー
+
+### データの削除
+
+`POST /api/delete-data`
+
+LNURL-authチャレンジを開始します。ウォレットによる認証後、認証済み公開鍵に関連するすべての支払い記録が完全に削除されます（GDPRの消去権）。

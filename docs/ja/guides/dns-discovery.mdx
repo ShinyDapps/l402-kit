@@ -1,0 +1,68 @@
+---
+title: "DNS ディスカバリー"
+description: "DNS TXT レコードを使ってエージェントが L402 エンドポイントを自動検出できるようにします — HTTP リクエスト不要。"
+---
+
+## DNS ディスカバリーを使う理由
+
+インターネットアクセスを持つエージェントは、HTTP リクエストを行う前に DNS を解決できます。L402 エンドポイントを DNS TXT レコードとして公開すると、エージェントは自動的に検出できます — API にアクセスする前でも同様です。
+
+## TXT レコードの形式
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+フィールド:
+- `v=l402` — プロトコル識別子
+- `endpoint=` — L402 で保護された URL
+- `price=` — sats 単位の価格（任意、参考情報）
+- `docs=` — ドキュメントへのリンク（任意）
+
+## Cloudflare でのセットアップ
+
+1. **Cloudflare ダッシュボード → DNS** に移動します
+2. 新しいレコードを追加します:
+
+| タイプ | 名前 | コンテンツ | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## dig で確認する
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Expected output:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## エージェントの利用方法
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// Agent resolves DNS to find your endpoint
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Returns: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## l402-kit 自身のレコード
+
+以下の例では、形式を説明するために架空のドメイン（`api.example.com`）を使用しています — 実際のエンドポイントに置き換えてください。
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## メリット
+
+- **HTTP オーバーヘッドゼロ** — API コールの前にディスカバリーが完了
+- **エージェントネイティブ** — DNS は人間ではなくマシンがサービスを見つける仕組み
+- **API キー不要** — 完全にオープンなディスカバリー
+- **キャッシュ可能** — TTL によってエージェントの再解決頻度を制御
+
+補完的な HTTP ディスカバリー標準については [.well-known/agent.json](https://api.example.com/.well-known/agent.json) を参照してください。

@@ -1,0 +1,153 @@
+---
+title: プライバシーアーキテクチャ
+description: l402-kit がPIIをゼロで保存し、ウォレットで認証し、鍵を分散管理する方法 — Bitcoinにふさわしいプライバシーモデル。
+---
+
+## 従来の決済APIの問題点
+
+Stripe、LemonSqueezy、Paddle — あらゆる従来の決済プロバイダーが要求するもの：
+
+- メールアドレス（PII、GDPRリスク）
+- アカウントとパスワード（フィッシング・侵害の対象）
+- 集中型の鍵管理（単一障害点）
+- プロバイダーがデータを売らないという信頼
+
+Lightning はモデルを根本から変えます。**あなたのウォレットは、アイデンティティの暗号的証明です。** l402-kit はその前提のもとに構築されています。
+
+---
+
+## 保存するデータと保存しないデータ
+
+| データ | 保存 | 理由 |
+|---|---|---|
+| `payment_hash` | ✅ はい | preimage の SHA-256 — BOLT11 インボイスで既に公開済み |
+| Lightning Address | ✅ はい（オーナーのみ） | 99.7%の分配ルーティングに必要 |
+| 呼び出されたエンドポイント | ✅ はい | アナリティクスに必要 |
+| `preimage`（支払いシークレット） | ❌ 保存しない | 支払い鍵が露出するため |
+| メール | ❌ 保存しない | 不要 — ウォレットがアイデンティティ |
+| 名前 / IP / デバイス | ❌ 保存しない | いかなる層でも収集しない |
+| クッキー / トラッキング | ❌ 保存しない | アナリティクスSDKなし、フィンガープリンティングなし |
+
+### `payment_hash` が安全に保存できる理由
+
+preimage は支払いを証明する32バイトのシークレットです。その SHA-256 ハッシュ（`payment_hash`）は、作成した瞬間に BOLT11 インボイスとして既に公開されています。ハッシュを保存しても何も漏洩しません — preimage は私たちのデータベースに触れることはありません。
+
+```
+preimage  →  SHA-256  →  payment_hash  (公開、BOLT11 内)
+   ↑
+保存しない
+```
+
+---
+
+## 認証：パスワードではなくウォレット
+
+### デベロッパーダッシュボード
+
+アナリティクスダッシュボードは **LNURL-auth** で認証します — Lightning ウォレットが使用する secp256k1 フローと同じです：
+
+```
+sequenceDiagram
+  participant D as Dashboard
+  participant W as Your Wallet
+  participant S as Supabase
+
+  D->>S: Request challenge (k1 = 32 random bytes)
+  S-->>D: k1 encoded as LNURL
+  D->>W: Display QR / deeplink
+  W->>S: GET ?tag=login&k1&sig&key (secp256k1 signature)
+  S->>S: verify(sig, k1, pubkey) — no server call
+  S-->>D: JWT (Supabase session)
+  D->>S: Read payments, stats (RLS enforced)
+```
+
+フィッシングされるパスワードはありません。エッジから盗まれるセッショントークンもありません。JWTは行レベルセキュリティ（Row Level Security）によってスコープされており、他の公開鍵からは何も見えません。
+
+### データ削除
+
+あなたのウォレットのみがデータ削除を承認できます。フロー：
+
+1. クライアントが `/api/lnurl-auth?lightningAddress=you@yourdomain.com` を呼び出す
+2. サーバーがワンタイム k1 チャレンジ + LNURL を返す
+3. ウォレットが secp256k1 秘密鍵で k1 に署名する
+4. サーバーが署名を検証 — シングルユースの64文字トークンを発行する
+5. クライアントが `{ lightningAddress, token }` を付けて `/api/delete-data` に POST する
+6. サーバーがトークンを即時失効（リプレイ攻撃を防止）し、全行を削除する
+7. データは消去される — サポートチケットも、メール確認も不要
+
+**これが強固な理由：** あなたの Lightning Address を知る攻撃者は、秘密鍵なしではデータを削除できません。トークンはシングルユースで10分で失効します。
+
+---
+
+## 鍵の分散
+
+従来のSaaS：1回の侵害 → すべてが露出。
+
+l402-kit は信頼を複数の層に分散します：
+
+```
+Layer          Holds                          Can do if breached
+─────────────────────────────────────────────────────────────────
+Cloudflare     Env secrets (Workers)          Create invoices (not read data)
+Supabase       Payment rows (hashed)          See payment_hash + endpoints
+               RLS policies                  Cannot bypass without service key
+               Edge Functions                 Logic runs inside DB boundary
+Lightning      Your private key               Never leaves your wallet
+Your wallet    secp256k1 keypair              Signs challenges (offline capable)
+```
+
+いかなる単一の層も、あなたを偽装したり、アイデンティティを読み取ったり、ウォレットを空にしたりするには不十分です。
+
+---
+
+## 設計によるLGPD / GDPRコンプライアンス
+
+PIIをゼロで保存しているため、LGPD/GDPRの義務のほとんどが適用されません：
+
+- **データ主体リクエストなし** — 検索すべきアイデンティティが存在しない
+- **個人データの侵害通知なし** — payment_hash は個人データではない
+- **クッキー同意なし** — トラッキングなし、クッキーなし
+- **消去の権利** — LNURL-auth 削除により暗号的に実現
+
+これは法的見解ではありません。しかし「収集していない」という立場は、「収集して保護している」よりも強固です。
+
+---
+
+## Lightning 支払いはデフォルトでプライベート
+
+Lightning 支払いはオンチェーンで支払人を特定しません：
+
+- 名前なし、住所なし、銀行口座なし
+- 支払いルートはオニオン暗号化されている（Torと同様）
+- インボイス発行者のみが支払いの決済を知る
+- 支払人のアイデンティティは受取人に開示されない
+
+あなたのエンドユーザーはあなたのAPIに匿名で支払います。あなたはインボイスが支払われたことを知る。それが双方に必要なすべてです。
+
+---
+
+## 比較
+
+| | l402-kit | Stripe | LemonSqueezy |
+|---|---|---|---|
+| メール必須 | ❌ | ✅ | ✅ |
+| アカウント必須 | ❌ | ✅ | ✅ |
+| KYC / アイデンティティ | ❌ | ✅ | ✅ |
+| PII保存 | ❌ | ✅ | ✅ |
+| 認証方式 | secp256k1 ウォレット | メール＋パスワード | メール＋パスワード |
+| 削除メカニズム | 暗号的証明 | メールリクエスト | メールリクエスト |
+| LGPD/GDPRの負荷 | 最小 | 高 | 高 |
+| 支払人の匿名性 | ✅ | ❌ | ❌ |
+
+---
+
+## あなたのユーザーへの意味
+
+l402-kit の上に構築する場合：
+
+- ユーザーはメールアドレスをあなたに渡す必要がない
+- データベースへの侵害が発生しても個人情報は漏洩しない
+- あらゆるAIエージェントがアカウントやアイデンティティなしであなたのAPIに支払える
+- データ削除を望むユーザーは、ウォレットを使って即座に自分自身で行える
+
+これは Bitcoin にふさわしい決済レイヤーです。

@@ -1,0 +1,211 @@
+---
+title: MCP Server
+description: l402-kit をMCPツールとして追加し、Claude Desktop、Cursor、およびMCP対応AIがLightning APIを自動的に支払えるようにします。
+---
+
+## MCPとは？
+
+[Model Context Protocol](https://modelcontextprotocol.io) は、LLMが外部ツールにアクセスできるようにするAnthropicのオープン標準です。l402-kit は2種類のツールを備えた既製のMCPサーバーを同梱しています。
+
+### 汎用L402ツール
+
+| ツール | 説明 |
+|------|-------------|
+| `l402_fetch` | 任意のURLを取得 — 402が返された場合は自動的に支払います |
+| `l402_balance` | 残りのLightningの予算を確認します |
+| `l402_spending_report` | このセッションの支払いの完全な内訳 |
+
+### VERITYツール — 有料サービス、自動支払い対応
+
+| ツール | 価格 | 説明 |
+|------|------:|-------------|
+| `verity_btc_price` | 10 sats | USD、EUR、BRL建てのリアルタイムBTC価格 |
+| `verity_worldstate` | 80 sats | UTC時刻 + ジオロケーション + 現地の天気 |
+| `verity_search` | 100 sats | ウェブ検索、上位10件のオーガニック結果 |
+| `verity_summarize` | 50 sats | 最大50,000文字のAI要約 |
+| `verity_sentiment` | 30 sats | センチメントスコア + キーワード |
+| `verity_scrape` | 200 sats | クリーンなマークダウンへのウェブスクレイピング |
+| `verity_domain_intel` | 500 sats | WHOIS + DNS + SSL証明書 |
+| `verity_integration` | 10,000 sats | 任意のGitHubリポジトリへの完全なl402-kit統合 |
+
+VERITYツールは自律的に支払いを行います — 手動での請求書処理は不要です。
+
+---
+
+## Claude Desktopでのセットアップ
+
+### 1. Node.js ≥ 18 をインストール
+
+### 2. ウォレットを設定する
+
+<Tabs>
+  <Tab title="Blink">
+    `claude_desktop_config.json` を編集します：
+
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "BLINK_API_KEY": "your-blink-api-key",
+            "BLINK_WALLET_ID": "your-wallet-id",
+            "BUDGET_SATS": "2000"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Alby">
+    ```json
+    {
+      "mcpServers": {
+        "l402": {
+          "command": "npx",
+          "args": ["l402-kit-mcp"],
+          "env": {
+            "ALBY_TOKEN": "your-alby-access-token",
+            "BUDGET_SATS": "2000"
+          }
+        }
+      }
+    }
+    ```
+
+    セルフホストのAlby Hubの場合は、以下を追加します：
+    ```json
+    "ALBY_HUB_URL": "https://your-hub.example.com"
+    ```
+  </Tab>
+</Tabs>
+
+**設定ファイルの場所：**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+### 3. Claude Desktop を再起動する
+
+`l402_fetch`、`l402_balance`、`l402_spending_report` のツールがClaudeのツールリストに表示されます。
+
+---
+
+## 環境変数
+
+| 変数 | 必須 | 説明 |
+|----------|:--------:|-------------|
+| `BLINK_API_KEY` | Blinkのみ | Blink APIキー |
+| `BLINK_WALLET_ID` | Blinkのみ | BlinkウォレットID |
+| `ALBY_TOKEN` | Albyのみ | Albyアクセストークン |
+| `ALBY_HUB_URL` | 任意 | カスタムAlby HubのベースURL |
+| `BUDGET_SATS` | 任意 | セッションあたりの最大支出（デフォルト: `2000`） |
+
+---
+
+## ツールの使い方
+
+サーバーが起動すると、ClaudeはVERITYおよびL402で保護された任意のAPIを自律的に呼び出すことができます：
+
+```
+You: What's the BTC price right now?
+
+Claude: [calls verity_btc_price]
+        [Paid 10 sats] {"bitcoin":{"usd":97500,"eur":89800,"brl":548000}}
+
+        Bitcoin is currently $97,500 USD (Cost: 10 sats)
+```
+
+```
+You: Summarize this article: <pastes 5,000 words>
+
+Claude: [calls verity_summarize with text="..."]
+        [Paid 50 sats] {"summary":"..."}
+```
+
+```
+You: Search for "lightning network adoption 2026"
+
+Claude: [calls verity_search with q="lightning network adoption 2026"]
+        [Paid 100 sats] {"results":[...]}
+```
+
+```
+You: How much have I spent so far?
+
+Claude: [calls l402_spending_report]
+        === L402 Spending Report ===
+        Total spent:  160 sats
+        Remaining:    1840 sats
+
+        By domain:
+          l402kit.com: 160 sats
+```
+
+---
+
+## MCPレジストリ
+
+l402-kit は [Glama MCPレジストリ](https://glama.ai/mcp/servers/@ShinyDapps/l402-kit) に登録されています。
+
+マシンリーダブルなマニフェスト: `GET https://l402kit.com/.well-known/mcp.json`
+
+---
+
+## Cursor でのセットアップ
+
+**Settings → MCP Servers** のCursorのMCP設定に同じ設定ブロックを追加します。
+
+---
+
+## 任意のMCPクライアントでのセットアップ
+
+サーバーは `stdin` から読み込み / `stdout` に書き込みます（stdioトランスポート）：
+
+```bash
+BLINK_API_KEY=xxx BLINK_WALLET_ID=yyy BUDGET_SATS=500 npx l402-kit-mcp
+```
+
+MCP対応のクライアントはstdioトランスポートを使用して接続できます。
+
+---
+
+## カスタムMCPサーバーの構築
+
+`L402Client` を独自のMCPサーバーに直接組み込むこともできます：
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { L402Client, BlinkWallet } from "l402-kit";
+import { z } from "zod";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+  budgetSats: 1000,
+});
+
+const server = new McpServer({ name: "my-agent", version: "1.0.0" });
+
+server.tool(
+  "fetch_weather",
+  "Get current weather for a city — pays automatically",
+  { city: z.string() },
+  async ({ city }) => {
+    const res = await client.fetch(`https://api.weather.com/current?city=${city}`);
+    const text = await res.text();
+    return { content: [{ type: "text", text }] };
+  },
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+---
+
+## セキュリティに関する注意事項
+
+- 予算上限（`BUDGET_SATS`）が主要なセーフガードです — 保守的な値に設定してください
+- 各 `npx l402-kit-mcp` プロセスは独自のインメモリ予算を持ちます。再起動するとリセットされます
+- 本番環境のエージェントでは、`onSpend` コールバックを使用して支出ログを外部ストアに永続化してください

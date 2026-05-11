@@ -742,7 +742,81 @@
     {
       "group": "🇯🇵 日本語",
       "pages": [
-        "ja/introduction"
+        {
+          "group": "Getting Started",
+          "pages": [
+            "ja/introduction",
+            "ja/quickstart"
+          ]
+        },
+        {
+          "group": "SDKs",
+          "pages": [
+            "ja/sdk/typescript",
+            "ja/sdk/python",
+            "ja/sdk/go",
+            "ja/sdk/rust"
+          ]
+        },
+        {
+          "group": "Agent SDK",
+          "pages": [
+            "ja/agent/quickstart",
+            "ja/agent/wallets",
+            "ja/agent/budget",
+            "ja/agent/mcp",
+            "ja/agent/langchain",
+            "ja/agent/system-prompt",
+            "ja/agent/wallet-quickstart",
+            "ja/agent/delegation",
+            "ja/agent/verity",
+            "ja/agent/lawn-n"
+          ]
+        },
+        {
+          "group": "Agent Integrations",
+          "pages": [
+            "ja/agent/crewai",
+            "ja/agent/openai-agents",
+            "ja/agent/vercel-ai",
+            "ja/agent/autogpt"
+          ]
+        },
+        {
+          "group": "Guides",
+          "pages": [
+            "ja/guides/pricing",
+            "ja/guides/testing",
+            "ja/guides/dashboard",
+            "ja/guides/vscode",
+            "ja/guides/privacy",
+            "ja/guides/flows",
+            "ja/guides/ai-agents",
+            "ja/guides/lnurl",
+            "ja/guides/security",
+            "ja/guides/production",
+            "ja/guides/migration",
+            "ja/guides/troubleshooting",
+            "ja/guides/dns-discovery"
+          ]
+        },
+        {
+          "group": "Reference",
+          "pages": [
+            "ja/providers",
+            "ja/api-reference",
+            "ja/reference/errors",
+            "ja/competitive",
+            "ja/payment-layer"
+          ]
+        },
+        {
+          "group": "Examples",
+          "pages": [
+            "ja/examples/diagram-forge",
+            "ja/examples/verity"
+          ]
+        }
       ]
     },
     {

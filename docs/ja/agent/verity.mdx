@@ -1,0 +1,371 @@
+---
+title: "VERITY"
+description: "9つのL402保護サービスを持つ自律AIエージェント。satsを稼ぎ、satsで支払う。"
+---
+
+# VERITY
+
+VERITYはl402-kit上に構築された自律AIエージェントです。L402プロトコルを通じて9つのサービスを販売し、ビットコインの資金を蓄積し、人間の介入なしに需要に基づいて自らの価格を調整します。
+
+**ディスカバリーエンドポイント:** `GET https://l402kit.com/api/verity`
+
+---
+
+## 9つのサービス
+
+| サービス | エンドポイント | 価格 | 必要条件 |
+|---|---|---|---|
+| ウェブ検索 | `/api/verity/search` | 100 sats | — |
+| ウェブスクレイピング | `/api/verity/scrape` | 200 sats | — |
+| BTC価格 | `/api/verity/btc-price` | 10 sats | — |
+| 要約 | `/api/verity/summarize` | 50 sats | — |
+| センチメント分析 | `/api/verity/sentiment` | 30 sats | — |
+| ドメイン情報 | `/api/verity/domain-intel` | 500 sats | — |
+| l402-kit統合 | `/api/verity/integration` | 10,000 sats | — |
+| ワールドステート | `/api/verity/worldstate` | 80 sats | — |
+| 翻訳 | `/api/verity/translate` | 50 sats | — |
+
+価格は動的です — VERITYは需要に基づいて30分ごとに価格を調整します。
+
+---
+
+## 支払い方法
+
+すべてのサービスは標準的なL402に従います:
+
+```bash
+# ステップ1 — サービスをリクエストする（インボイスを取得）
+curl -i https://l402kit.com/api/verity/btc-price
+
+# HTTP/1.1 402 Payment Required
+# WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."
+
+# ステップ2 — 任意のLightning Networkウォレットでインボイスを支払う
+# ステップ3 — 証明とともに再リクエスト
+curl -H "Authorization: L402 <macaroon>:<preimage>" \
+  https://l402kit.com/api/verity/btc-price
+```
+
+---
+
+## L402Clientによる自動支払い
+
+```typescript
+import { L402Client } from "l402-kit/agent";
+import { BlinkWallet } from "l402-kit/wallets";
+
+const client = new L402Client({
+  wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
+  budget: { maxSats: 500 },
+});
+
+// BTC価格 — 10 sats
+const price = await client.fetch("https://l402kit.com/api/verity/btc-price");
+const data = await price.json();
+console.log(data.bitcoin.usd);
+
+// ワールドステート — 80 sats
+const world = await client.fetch("https://l402kit.com/api/verity/worldstate");
+const state = await world.json();
+console.log(state.time.utc, state.location.city, state.weather.temperature_c);
+```
+
+---
+
+## サービスリファレンス
+
+### 検索 — 100 sats
+上位10件のオーガニック検索結果を返すウェブ検索。
+
+```bash
+# GET
+curl -H "Authorization: L402 <token>" \
+  "https://l402kit.com/api/verity/search?q=bitcoin+lightning"
+
+# POST
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"q":"bitcoin lightning"}' \
+  https://l402kit.com/api/verity/search
+```
+
+**レスポンス:**
+```json
+{
+  "agent": "VERITY",
+  "service": "search",
+  "query": "bitcoin lightning",
+  "results": [
+    { "title": "...", "link": "...", "snippet": "..." }
+  ],
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+---
+
+### ウェブスクレイピング — 200 sats
+ページのコンテンツ全体をmarkdown形式で返します。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}' \
+  https://l402kit.com/api/verity/scrape
+```
+
+---
+
+### BTC価格 — 10 sats
+USD、EUR、BRLにおけるビットコインのリアルタイム価格。
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  https://l402kit.com/api/verity/btc-price
+```
+
+**レスポンス:**
+```json
+{
+  "bitcoin": { "usd": 98000, "eur": 90000, "brl": 550000 },
+  "timestamp": "2026-05-10T12:00:00.000Z"
+}
+```
+
+---
+
+### 要約 — 50 sats
+最大50,000文字のAI要約。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"...long text...", "language":"portuguese"}' \
+  https://l402kit.com/api/verity/summarize
+```
+
+---
+
+### センチメント分析 — 30 sats
+スコア、信頼度、キーワードを含むセンチメント分析。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Bitcoin is the future of money"}' \
+  https://l402kit.com/api/verity/sentiment
+```
+
+**レスポンス:**
+```json
+{
+  "analysis": {
+    "sentiment": "positive",
+    "score": 0.92,
+    "confidence": 0.88,
+    "keywords": ["bitcoin", "future", "money"]
+  }
+}
+```
+
+---
+
+### ドメイン情報 — 500 sats
+WHOIS、DNSレコード、SSL証明書。APIキー不要 — 公開RDAPとcrt.shを使用します。
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  "https://l402kit.com/api/verity/domain-intel?domain=example.com"
+```
+
+**レスポンス:**
+```json
+{
+  "domain": "example.com",
+  "whois": { "registrar": "...", "registered": "...", "expires": "..." },
+  "dns": { "a_records": ["93.184.216.34"] },
+  "certificates": [{ "issued": "...", "expires": "...", "issuer": "..." }]
+}
+```
+
+---
+
+### l402-kit統合 — 10,000 sats
+公開GitHubリポジトリのURLを送信します。VERITYはコードベースを解析し、完全なl402-kit統合コードを返します。
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"repoUrl":"https://github.com/owner/repo"}' \
+  https://l402kit.com/api/verity/integration
+```
+
+**レスポンス:**
+```json
+{
+  "repo": "owner/repo",
+  "integration": "## Detected: Express.js\n\n```typescript\nimport { l402 } from 'l402-kit';\n...",
+  "next_steps": ["Apply integration code", "Set env vars", "Deploy and test"]
+}
+```
+
+---
+
+### ワールドステート — 80 sats
+UTC時刻 + 呼び出し元のジオロケーション + 現地の天気を1回のリクエストで取得。外部API費用ゼロ。
+
+```bash
+curl -H "Authorization: L402 <token>" \
+  https://l402kit.com/api/verity/worldstate
+```
+
+**レスポンス:**
+```json
+{
+  "time": {
+    "utc": "2026-05-10T14:32:00.000Z",
+    "unix": 1778421120,
+    "hour": 14, "minute": 32, "weekday": "Sun"
+  },
+  "location": {
+    "city": "São Paulo", "country": "BR", "timezone": "America/Sao_Paulo"
+  },
+  "weather": {
+    "temperature_c": 23.4,
+    "feels_like_c": 22.1,
+    "humidity_pct": 68,
+    "condition": "partly cloudy"
+  }
+}
+```
+
+---
+
+### 翻訳 — 50 sats
+テキストまたはMDXドキュメントを11のサポート言語のいずれかに翻訳します。`format`が`mdx`の場合、コードブロック、MDXコンポーネント、URL、技術用語はそのまま保持され、散文のみが翻訳されます。
+
+**サポートロケール:** `pt`, `es`, `zh`, `ar`, `hi`, `fr`, `de`, `ru`, `ja`, `it`, `en`
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Pay once, access forever.", "locale": "pt", "format": "plain"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**MDX形式**（コードブロックとコンポーネントを保持）:
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "---\ntitle: Quickstart\n---\n\nPay with Lightning.", "locale": "ja", "format": "mdx"}' \
+  https://l402kit.com/api/verity/translate
+```
+
+**レスポンス:**
+```json
+{
+  "agent": "VERITY",
+  "service": "translate",
+  "locale": "pt",
+  "language": "Brazilian Portuguese",
+  "format": "plain",
+  "translated": "Pague uma vez, acesse para sempre.",
+  "source_length": 26,
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+1回のリクエストあたりの最大入力文字数: 100,000文字。
+
+---
+
+## 動的価格設定
+
+VERITYは30分ごとに価格を調整します:
+
+```
+需要が高い（閾値超の呼び出し/時間）→ 価格 × 1.1
+需要がゼロ（2時間連続）            → 価格 × 0.9
+最低価格の保護                     → 価格は最低価格を下回らない
+```
+
+現在の価格はいつでも確認できます:
+```bash
+curl https://l402kit.com/api/verity | jq '.services[].priceSats'
+```
+
+---
+
+## オペレーターAPI
+
+VERITYをフォークして独自のエージェントを実行する場合、これらのエンドポイントにより、デプロイ不要でランタイム中に価格設定と予算を変更できます。
+
+すべての管理者ルートには`DASHBOARD_SECRET`ヘッダーが必要です:
+```
+Authorization: Bearer <DASHBOARD_SECRET>
+```
+
+### GET /api/verity/admin/config
+すべてのサービスの現在の価格設定と消費者の支出を返します。
+
+```bash
+curl -H "Authorization: Bearer <secret>" \
+  https://l402kit.com/api/verity/admin/config
+```
+
+**レスポンス:**
+```json
+{
+  "configs": {
+    "search":  { "base": 100, "floor": 50, "surgeThreshold": 50, "cogs": 2 },
+    "translate": { "base": 50, "floor": 50, "surgeThreshold": 30, "cogs": 1 }
+  },
+  "prices": { "search": 100, "translate": 50 },
+  "consumer": { "spent_today": 340, "budget": 10000 }
+}
+```
+
+### POST /api/verity/admin/config
+特定のサービスの価格パラメータを更新します。指定したフィールドのみが変更されます。
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"service": "search", "base": 150, "floor": 80}' \
+  https://l402kit.com/api/verity/admin/config
+```
+
+| フィールド | 説明 |
+|---|---|
+| `service` | サービス名（必須） |
+| `base` | sats単位のベース価格 |
+| `floor` | 最低価格（動的価格設定はこれを下回らない） |
+| `surgeThreshold` | +10%のサージをトリガーする呼び出し数/時間 |
+| `cogs` | sats単位の原価（財務エージェントが使用） |
+
+### POST /api/verity/admin/budget
+消費者の1日の支出上限を設定します。
+
+```bash
+curl -X POST -H "Authorization: Bearer <secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"sats": 5000}' \
+  https://l402kit.com/api/verity/admin/budget
+```
+
+最低: 100 sats。変更は即座に反映されます。
+
+---
+
+## アーキテクチャ
+
+```
+VERITY (agent:shinydapps.verity)
+  ├── 9 L402-protected services
+  ├── Treasury: shinydapps@blink.sv
+  ├── Heartbeat: every 30min (price adjustment)
+  ├── Fiscal Agent: daily report (sats earned + BRL equivalent)
+  └── LAW-N: behavioral events emitted per transaction
+```
+
+VERITYはオープンソースです — 同じアーキテクチャをフォークして独自の自律エージェントを作成できます。

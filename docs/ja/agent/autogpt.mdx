@@ -1,0 +1,109 @@
+---
+title: "AutoGPT インテグレーション"
+description: "自律的な有料APIアクセスのために、AutoGPTのプラグインまたはスキルとしてl402-kitを使用します。"
+---
+
+## コンセプト
+
+AutoGPTおよび同様の自律エージェントは、タスクをループしてツールを呼び出します。l402-kitは有料APIを呼び出し可能なツールとしてラップします — エージェントは支払い、リトライし、人間の介入なしに処理を継続します。
+
+## インストール
+
+```bash
+pip install l402kit
+```
+
+## AutoGPT互換コマンドとしてのL402Client
+
+```python
+import os
+import asyncio
+from l402kit import L402Client
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=2000)
+
+# AutoGPTスタイルのコマンド定義
+COMMANDS = {
+    "l402_fetch": {
+        "description": "Fetch data from a paid API using Bitcoin Lightning micropayment",
+        "signature": '("url": "<string>")',
+        "example": '("url": "https://api.example.com/data")',
+    }
+}
+
+def execute_command(command: str, args: dict) -> str:
+    if command == "l402_fetch":
+        url = args.get("url", "")
+        try:
+            response = asyncio.run(client.get(url))
+            return f"Success: {response.text[:500]}"
+        except Exception as e:
+            return f"Error: {str(e)}"
+    return f"Unknown command: {command}"
+```
+
+## システムプロンプトへの追加
+
+AutoGPTエージェントのシステムプロンプトに以下を追加してください:
+
+```
+COMMANDS:
+- l402_fetch: Fetch data from a paid API using Bitcoin Lightning
+  Args: url (string) — the API endpoint
+  Cost: varies per endpoint (typically 1-100 sats)
+  Use when: the API returns HTTP 402 Payment Required
+
+BUDGET: {BUDGET_SATS} sats total for this session.
+Track spending and stop if budget is exceeded.
+```
+
+## 完全な自律ループの例
+
+```python
+import asyncio
+from l402kit import L402Client, BudgetExceededError
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+client = L402Client(wallet=wallet, budget_sats=1000)
+
+async def autonomous_data_collector(urls: list[str]) -> list[dict]:
+    results = []
+    for url in urls:
+        try:
+            response = await client.get(url)
+            results.append({
+                "url": url,
+                "status": "success",
+                "data": response.json(),
+                "cost_sats": client.last_payment_sats
+            })
+        except BudgetExceededError:
+            results.append({"url": url, "status": "budget_exceeded"})
+            break
+        except Exception as e:
+            results.append({"url": url, "status": "error", "error": str(e)})
+
+    print(f"Total spent: {client.spent_sats} sats")
+    return results
+
+# 実行
+results = asyncio.run(autonomous_data_collector([
+    "https://l402kit.com/api/demo",
+    "https://api.example.com/data",
+]))
+```
+
+## 予算トラッキング
+
+```python
+# 各呼び出し前に残りの予算を確認する
+if client.spent_sats + 100 > client.budget_sats:
+    print("Approaching budget limit, stopping.")
+else:
+    response = await client.get(url)
+```
+
+高度なセッション制限については[予算管理](/agent/budget)を、ウォレットの取得については[ウォレットクイックスタート](/agent/wallet-quickstart)を参照してください。

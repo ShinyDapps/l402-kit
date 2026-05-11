@@ -1,0 +1,113 @@
+---
+title: "エージェント間デリゲーション"
+description: "オーケストレーターが一度支払い、クレデンシャルをサブエージェントと共有する方法。"
+---
+
+## コンセプト
+
+L402トークン（`macaroon:preimage`）はポータブルな文字列です — 一度支払いが完了すれば、同じリソースへのアクセスが必要な任意のサブエージェントに渡すことができます。オーケストレーターがウォレットを保持し、サブエージェントはトークンのみを受け取ります。
+
+```
+Orchestrator (has wallet)
+   │
+   ├── pays invoice → receives token (macaroon:preimage)
+   │
+   ├── passes token string to SubAgent A
+   └── passes token string to SubAgent B
+
+SubAgent A — calls /api/data with token  ✓  (no wallet needed)
+SubAgent B — calls /api/data with token  ✓  (no wallet needed)
+```
+
+<Note>
+トークンは1時間後に期限切れになります。各preimageはサーバーごとに一度しか使用できません（リプレイ保護）。同じエンドポイントにアクセスする並列サブエージェントの場合、それぞれが独自の支払いを必要とします。
+</Note>
+
+## トークンを共有するか独立して支払うかの判断基準
+
+デリゲーションパターンには2種類あり、それぞれトレードオフが異なります：
+
+**トークン共有**は、サブエージェントが**同じエンドポイントに順番にアクセスする**場合に有効です。オーケストレーターが一度支払い、`Authorization`ヘッダーの値を取り出して文字列として渡します。サブエージェントはそのヘッダーを直接使ってエンドポイントを呼び出します — ウォレットは不要です。コストを最小化できます（支払いは一回）が、**並行アクセスには安全ではありません** — 特定のpreimageを保持できるエージェントは一つだけであり、サーバーはリプレイを拒否します。
+
+**独立支払い**（各サブエージェントがオーケストレーターのウォレットを共有する独自の`L402Client`を持つ方式）は、**並列または並行アクセス**に有効です。各エージェントが独自のインボイスを支払い、独自のトークンをキャッシュします。satsのコストは増えますが、動作の把握が容易で、どの並行レベルでも安全です。
+
+**目安：** サブエージェントが並列に展開する場合は、それぞれに独自の`L402Client`を持たせてください。順番に実行して同じエンドポイントにアクセスする場合は、トークン文字列を共有してください。
+
+## セキュリティに関する考慮事項
+
+- **ウォレットのクレデンシャルをサブエージェントに渡さないでください。** トークン文字列（`L402 <macaroon>:<preimage>`）のみを渡してください。トークンは最大1時間、一つのエンドポイントを呼び出せますが、秘密鍵はウォレットを空にしてしまいます。
+- **トークンはサーバーごとに単一使用です。** 最初のリクエストが受け入れられた後、サーバーはpreimageハッシュを記録します。同じpreimageによる2回目のリクエストは402を返します。これによりリプレイ攻撃は防げますが、同じサーバーにアクセスする2つの並行サブエージェント間でトークンを共有することはできません。
+- **予算管理はウォレットレベルで行います。** オーケストレーターの`L402Client`に`budgetSats`を設定して、そのウォレットを共有するすべてのサブエージェントの総支出に上限を設けてください。詳細は[Budget Control](/agent/budget)をご覧ください。
+
+## TypeScript — オーケストレーターが支払い、サブエージェントがトークンを使用
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+// Orchestrator: has wallet, pays invoice
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+const orchestrator = new L402Client({ wallet, budgetSats: 5000 });
+
+// Fetch triggers payment; token is cached inside orchestrator
+const res = await orchestrator.fetch("https://api.example.com/data");
+const data = await res.json();
+
+// Build the delegation header from the macaroon + preimage the Lightning Network returned.
+// In practice, retrieve these from the payment result or the client's token cache.
+// Format is always: "L402 <base64-macaroon>:<hex-preimage>"
+const tokenHeader = `L402 ${macaroon}:${preimage}`; // substitute values from payment result
+
+// Sub-agent: no wallet, passes the header directly
+const subRes = await fetch("https://api.example.com/data", {
+  headers: { Authorization: tokenHeader },
+});
+```
+
+## Python — オーケストレーターが支払い、サブエージェントがトークンを使用
+
+```python
+from l402kit import L402Client
+from l402kit.wallets.blink import BlinkWallet
+
+# Orchestrator pays
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+orchestrator = L402Client(wallet=wallet, budget_sats=5000)
+
+async with orchestrator:
+    response = await orchestrator.fetch("https://api.example.com/data")
+
+# Sub-agents: pass the Authorization header directly
+# Authorization: L402 <macaroon>:<preimage>
+```
+
+## マルチエージェントパターン：一度の支払いで並列読み取り
+
+複数のサブエージェントが**同じリソースに同時にアクセスする**必要がある場合、最もクリーンなパターンは、共有ウォレットを持つ独自の`L402Client`を使って各サブエージェントが独立して支払うことです：
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+
+// Each sub-agent gets its own L402Client — independent payment + token cache
+const agents = Array.from({ length: 3 }, () => new L402Client({ wallet }));
+
+const results = await Promise.all(
+  agents.map((agent) => agent.fetch("https://api.example.com/data"))
+);
+```
+
+## セキュリティ特性
+
+| プロパティ | 現在の動作 |
+|----------|--------------------|
+| ウォレット分離 | サブエージェントはトークン文字列のみを受け取り、秘密鍵は受け取らない |
+| 時間制限付き | Macaroonは1時間後に期限切れになる |
+| リプレイ安全 | 各preimageはサーバーに一度しか受け入れられない |
+| 予算管理 | オーケストレーターの`L402Client`に`budgetSats`を設定する |
+
+## 将来のバージョンで予定されている機能
+
+完全なmacaroonキャビアデリゲーション（エンドポイントスコーピング、シングルユーストークン、最大使用回数制限）が計画されています。進捗は[GitHub](https://github.com/ShinyDapps/l402-kit)でご確認ください。
+
+セッションレベルの支出制限については[Budget Control](/agent/budget)をご覧ください。

@@ -1,0 +1,224 @@
+---
+title: 予算管理
+description: 支出上限の設定、ドメイン別の支払い追跡、各トランザクション前のコールバック取得。
+---
+
+## 予算管理が重要な理由
+
+AIエージェントがループ内で有料APIを呼び出すと、コストがすぐに膨らむ可能性があります。予算管理を使用することで：
+
+- セッションごとの総支出に上限を設定できます
+- ドメインごとの上限を設定できます（例：`api.weather.com` でセッションあたり最大100 sats）
+- 各支払い前にコールバックを受け取れます
+- いつでも完全な支出レポートを取得できます
+
+---
+
+## グローバル予算
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+      budgetSats: 500, // max 500 sats total this session
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=500,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+402レスポンスに `priceSats` フィールドが含まれており、残りの予算を超過する場合、クライアントは**支払いを行う前に** `BudgetExceededError` をスローします — satoshiは消費されません。
+
+---
+
+## ドメインごとの予算
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 2000,
+      budgetPerDomain: {
+        "api.weather.com": 100,
+        "api.finance.com": 500,
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=2000,
+        budget_per_domain={
+            "api.weather.com": 100,
+            "api.finance.com": 500,
+        },
+    )
+    ```
+  </Tab>
+</Tabs>
+
+ドメインごとの上限はグローバル上限とは独立してチェックされます — 支払いを続行するには両方を通過する必要があります。
+
+---
+
+## コールバック
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 1000,
+      onSpend: (sats, url) => {
+        console.log(`✓ Paid ${sats} sats → ${url}`);
+        // log to your telemetry, update a dashboard, etc.
+      },
+      onBudgetExceeded: (url, sats) => {
+        console.warn(`✗ Blocked: ${sats} sats requested by ${url} — budget exhausted`);
+        // alert, notify Slack, etc.
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    def on_spend(sats: int, url: str) -> None:
+        print(f"✓ Paid {sats} sats → {url}")
+
+    def on_budget_exceeded(url: str, sats: int) -> None:
+        print(f"✗ Blocked: {sats} sats requested by {url} — budget exhausted")
+
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=1000,
+        on_spend=on_spend,
+        on_budget_exceeded=on_budget_exceeded,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+`onBudgetExceeded` / `on_budget_exceeded` は `BudgetExceededError` がスローされる直前に呼び出されます — ロギングやアラートに役立ちます。
+
+---
+
+## 支出レポート
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const report = client.spendingReport();
+
+    if (report) {
+      console.log(`Total spent: ${report.total} sats`);
+      console.log(`Remaining:   ${report.remaining} sats`);
+      console.log("By domain:", report.byDomain);
+      // { "api.weather.com": 42, "api.finance.com": 105 }
+
+      for (const tx of report.transactions) {
+        console.log(`  ${tx.ts}  ${tx.sats} sats  ${tx.url}`);
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    report = client.spending_report()
+
+    if report:
+        print(f"Total spent: {report.total} sats")
+        print(f"Remaining:   {report.remaining} sats")
+        print("By domain:", report.by_domain)
+        # {"api.weather.com": 42, "api.finance.com": 105}
+
+        for tx in report.transactions:
+            print(f"  {tx['ts']}  {tx['sats']} sats  {tx['url']}")
+    ```
+  </Tab>
+</Tabs>
+
+`spendingReport()` は予算が設定されていない場合、`null` / `None` を返します。
+
+---
+
+## BudgetExceededError の処理
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { BudgetExceededError } from "l402-kit";
+
+    try {
+      const res = await client.fetch("https://api.example.com/premium");
+    } catch (err) {
+      if (err instanceof BudgetExceededError) {
+        console.log(`Need ${err.required} sats, only ${err.remaining} remaining`);
+        // gracefully degrade — return cached data, skip this step, etc.
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import BudgetExceededError
+
+    try:
+        r = client.get("https://api.example.com/premium")
+    except BudgetExceededError as e:
+        print(f"Need {e.required} sats, only {e.remaining} remaining")
+        # gracefully degrade
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## 並行処理に関する注意事項
+
+<Warning>
+**予算制限が重要な場合、並行する `Promise.all` 呼び出しで1つの `L402Client` インスタンスを共有しないでください。**
+
+`BudgetTracker.check()` と `record()` は `await`（Lightning Network の支払い）によって分離されています。異なるエンドポイントへの2つの並行した `client.fetch()` 呼び出しは、どちらかが支出を記録する前に、両方が予算チェックを通過する可能性があります — つまり、合計コストが一時的に予算上限を1回の支払い分超過する可能性があります。
+
+**安全なパターン — 順次呼び出し：**
+```typescript
+for (const url of urls) {
+  const res = await client.fetch(url); // awaited one at a time
+}
+```
+
+**リスクのあるパターン — 並列呼び出し：**
+```typescript
+// Both may pass budget.check() before either calls budget.record()
+const results = await Promise.all(urls.map(url => client.fetch(url)));
+```
+
+**並列ワークロードの緩和策：** 並行支払い1回分の超過を吸収するために、`budgetSats` を保守的に設定してください（例：実際の上限の80%）。厳密な制限が必要な場合は、呼び出しを順次処理してください。
+</Warning>
+
+---
+
+## 全オプションリファレンス
+
+| オプション | TypeScript | Python | デフォルト | 説明 |
+|--------|-----------|--------|---------|-------------|
+| グローバル予算 | `budgetSats` | `budget_sats` | 無制限 | セッションの最大 sats |
+| ドメインごと | `budgetPerDomain` | `budget_per_domain` | `{}` | `ドメイン → 最大 sats` のマップ |
+| 支出フック | `onSpend` | `on_spend` | — | 各支払い後に呼び出される |
+| 超過フック | `onBudgetExceeded` | `on_budget_exceeded` | — | スロー前に呼び出される |

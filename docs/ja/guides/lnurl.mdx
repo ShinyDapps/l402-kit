@@ -1,0 +1,168 @@
+---
+title: LNURL インテグレーション
+description: l402-kit と組み合わせて、パスワードレスログインに LNURL-auth を、Lightning Address 決済に LNURL-pay を使用する。
+---
+
+## LNURL とは？
+
+[LNURL](https://github.com/lnurl/luds) は Lightning Network の上に構築されたオープン標準の集合です。アプリ内で生の Lightning インボイスやノードの公開鍵を直接公開するのではなく、LNURL はウォレットが処理方法を知っている人間に優しい URL ベースのプロトコルを定義します。ウォレットが LNURL QR コードをスキャンすると、URL をデコードし、サーバーから JSON レスポンスを取得し、適切なアクション（チャレンジへの署名、ペイリクエストの取得など）を実行します — これらはすべてユーザーには見えない形で行われます。
+
+l402-kit には 2 つの LNURL 機能が最初から含まれています：
+
+| 機能 | ユースケース |
+|---|---|
+| **LNURL-auth** | パスワードレスログイン — ウォレットがチャレンジに署名し、メールもパスワードも不要 |
+| **LNURL-pay** | Lightning Address（`you@domain.com`）— 人間が読めるアドレスで誰でも支払い可能 |
+
+どちらのプロトコルも主要な Lightning ウォレット（Phoenix、Blink、Zeus、Breez、Alby）で動作し、追加の依存関係は不要です — サーバーは JSON エンドポイントを提供し、オプションで secp256k1 署名を検証するだけです。
+
+---
+
+## LNURL-auth — パスワードレスログイン
+
+l402-kit.com は決済ダッシュボードに LNURL-auth を使用しています。同じフローをご自身のアプリに使用することができます。
+
+### 仕組み
+
+```
+1. サーバーがチャレンジ (k1) を生成する — ランダムな 32 バイトの hex 文字列
+2. LNURL としてエンコードし QR として表示する
+3. ユーザーが任意の LNURL-auth ウォレット（Phoenix、Blink、Zeus、Breez...）でスキャン
+4. ウォレットが Lightning ノードキーで k1 に署名 → 署名 + 公開鍵をコールバックに送信
+5. 署名を検証 — 有効であればユーザーは認証済み
+```
+
+ユーザーのアイデンティティは Lightning ノードの公開鍵 — 安定していて、グローバルで、自己主権的です。
+
+### エンドポイント
+
+```
+GET /api/lnurl-auth
+```
+
+LNURL チャレンジを返します。QR としてエンコードしてログインフローに表示します。
+
+```json
+{
+  "lnurl": "LNURL1DP68GURN8GHJ7...",
+  "k1": "a1b2c3..."
+}
+```
+
+ウォレットのコールバック後、以下で検証します：
+
+```
+GET /api/lnurl-auth?k1=<challenge>&sig=<signature>&key=<pubkey>
+```
+
+### TypeScript — LNURL-auth 署名の検証
+
+```typescript
+import { createHash } from "crypto";
+import * as secp256k1 from "@noble/curves/secp256k1";
+
+function verifyLnurlAuth(k1: string, sig: string, key: string): boolean {
+  try {
+    const msgHash = createHash("sha256").update(Buffer.from(k1, "hex")).digest();
+    return secp256k1.secp256k1.verify(sig, msgHash, key);
+  } catch {
+    return false;
+  }
+}
+```
+
+<Note>
+LNURL-auth はメール、パスワード、OAuth を一切必要としません。ユーザーのアイデンティティは Lightning の公開鍵 — ウォレット間で移植可能で、検閲不可能で、グローバルに一意です。
+</Note>
+
+---
+
+## LNURL-pay — Lightning Address
+
+Lightning Address（`you@domain.com`）は LNURL-pay エンドポイントに解決される人間が読めるエイリアスです。l402-kit は以下のエンドポイントを公開しています：
+
+```
+GET /.well-known/lnurlp/{username}
+```
+
+これはスプリットメカニズムによって内部的に使用されます — `ownerAddress: "you@blink.sv"` を設定すると、Worker は `blink.sv/.well-known/lnurlp/you` を解決して BOLT11 インボイスを取得します。
+
+### 独自の Lightning Address を設定する方法
+
+1. `https://yourdomain.com/.well-known/lnurlp/{username}` に LNURL-pay エンドポイントをデプロイする
+2. 標準の LNURL-pay メタデータレスポンスを返す：
+
+```json
+{
+  "callback": "https://yourdomain.com/lnurlp/pay",
+  "maxSendable": 100000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Pay you@yourdomain.com\"]]",
+  "tag": "payRequest"
+}
+```
+
+3. `callback` エンドポイントは `?amount=<msats>` を受け取り、以下を返す：
+
+```json
+{
+  "pr": "lnbc10n1p...",
+  "routes": []
+}
+```
+
+### BTCPay Server でセルフホスト
+
+BTCPay Server には LNURL-pay が組み込まれています — ストア設定で有効にするだけです。Lightning Address は `you@yourbtcpay.com` になります。
+
+```typescript
+import { BTCPayProvider } from "l402-kit";
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,
+  process.env.BTCPAY_API_KEY!,
+  process.env.BTCPAY_STORE_ID!,
+);
+// Lightning Address: you@yourbtcpay.com — 仲介者ゼロ、手数料 0%
+```
+
+---
+
+## API ディレクトリの所有権検証
+
+`POST /api/register` で API を登録すると、l402-kit は API のドメインにある `/.well-known/l402.txt` ファイルを自動的に確認します。ファイルが存在し、Lightning Address が含まれている場合、リスティングには**検証済み**バッジが付与されます。
+
+**ファイルを作成する：**
+
+```
+# https://api.yourdomain.com/.well-known/l402.txt
+you@blink.sv
+```
+
+**その後、登録する：**
+
+```typescript
+ManagedProvider.fromAddress("you@blink.sv", {
+  registerDirectory: {
+    url: "https://api.yourdomain.com/v1/data",
+    name: "My Data API",
+    priceSats: 10,
+  },
+});
+// Response: { ok: true, id: "...", verified: true }
+```
+
+検証済みの API はディレクトリ内でより上位に表示され、✓ バッジが表示されます。
+
+---
+
+## 対応ウォレット
+
+| ウォレット | LNURL-auth | LNURL-pay | セルフカストディ |
+|---|---|---|---|
+| [Phoenix](https://phoenix.acinq.co) | ✅ | ✅ | ✅ |
+| [Blink](https://blink.sv) | ✅ | ✅ | ❌ カストディアル |
+| [Zeus](https://zeusln.app) | ✅ | ✅ | ✅ |
+| [Breez](https://breez.technology) | ✅ | ✅ | ✅ |
+| [Alby](https://getalby.com) | ✅ | ✅ | ✅ Hub |
+| [Mutiny](https://mutinywallet.com) | ✅ | ✅ | ✅ |

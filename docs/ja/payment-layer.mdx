@@ -1,0 +1,158 @@
+---
+title: "ペイメントレイヤー"
+description: "l402-kit が Bitcoin Lightning 決済を処理する仕組み — BOLT11、L402 プロトコル、および暗号検証。"
+---
+
+# ペイメントレイヤー
+
+l402-kit は **ソベラノミドルウェア** であり、3 行のコードで任意の HTTP エンドポイントに Bitcoin Lightning ペイウォールを追加します。Lightning プロバイダーはご自身でご用意ください — 資金は仲介業者を介さず直接あなたのウォレットに届きます。
+
+---
+
+## プロトコル: L402
+
+L402 は HTTP/1.1 にネイティブの決済ハンドシェイクを追加するオープン標準です:
+
+```
+Client → GET /api/data
+Server ← 402 Payment Required
+         WWW-Authenticate: L402 <macaroon>, invoice="<BOLT11>"
+
+Client pays invoice via Lightning wallet
+Client → GET /api/data
+         Authorization: L402 <macaroon>:<preimage>
+Server ← 200 OK + data
+```
+
+**macaroon** はインボイスの `paymentHash` に紐付けられたケイパビリティトークンです。**preimage** は決済が確定したときに Lightning ノードが解放する暗号的シークレットです。サーバーは以下を検証します:
+
+```
+SHA256(preimage) == paymentHash ✓
+```
+
+アカウント不要、セッション不要、JWT 不要 — preimage **そのものが** 支払証明です。
+
+---
+
+## インボイス作成フロー
+
+```
+Your API receives a request without valid Authorization
+     │
+     ▼
+l402-kit middleware calls lightning.createInvoice(priceSats)
+     │  (your provider: Blink, Alby, OpenNode, BTCPay, LNbits…)
+     ▼
+Provider returns BOLT11 invoice + paymentHash
+     │
+     ▼
+Middleware builds macaroon: base64({ hash: paymentHash, exp: now+1h })
+     │
+     ▼
+Your API returns 402 + invoice + macaroon to client
+```
+
+---
+
+## 決済検証フロー
+
+```
+Client pays BOLT11 invoice via any Lightning wallet
+     │
+     ▼
+Lightning node releases preimage (32-byte secret)
+     │
+     ▼
+Client sends Authorization: L402 <macaroon>:<preimage>
+     │
+     ▼
+Middleware verifies locally — no network call:
+  1. Decode macaroon (base64 → JSON { hash, exp })
+  2. Check exp > now()
+  3. SHA256(preimage) === hash ✓
+     │
+     ▼
+Request passes through to your API handler → 200 OK
+```
+
+検証は **O(1)** です — 純粋な暗号演算であり、ホットパスでのデータベース検索は発生しません。リプレイ防止（Supabase `payment_hash` ロギング）は非同期で実行され、リクエストをブロックしません。
+
+### Macaroon フォーマット
+
+l402-kit は軽量なカスタム macaroon を使用しています — libmacaroon ではありません。トークンは `base64url` エンコードされた JSON オブジェクトです:
+
+```json
+{ "hash": "<paymentHash hex>", "exp": <unix timestamp> }
+```
+
+これは外部ライブラリなしでシンプルかつ監査可能な形式です。`Authorization` ヘッダーのフォーマットは次のとおりです:
+
+```
+Authorization: L402 <base64url-macaroon>:<preimage-hex>
+```
+
+---
+
+## 手数料モデル
+
+| モード | 手数料 | セットアップ |
+|---|---|---|
+| **ソベラノ**（任意のプロバイダー） | **0%** — 100% あなたの収益 | ご自身のプロバイダー認証情報をご用意ください |
+| **マネージド** (`ManagedProvider`) | l402kit.com へ 0.3% | Lightning ノード不要 — すぐに使用可能 |
+
+ソベラノモードがデフォルトです。マネージドモードは明示的なオプトインが必要です:
+
+```typescript
+// Soberano — 0% fee, you keep 100%
+import { AlbyProvider } from 'l402-kit';
+const lightning = new AlbyProvider(process.env.ALBY_TOKEN!);
+
+// Managed — 0.3% fee, no Lightning node needed
+import { ManagedProvider } from 'l402-kit';
+const lightning = ManagedProvider.fromAddress('you@yourdomain.com');
+```
+
+---
+
+## データストレージ（オプション — Supabase）
+
+`SUPABASE_URL` と `SUPABASE_ANON_KEY` を設定すると、決済を自動的に記録します:
+
+```sql
+create table payments (
+  id            uuid primary key default gen_random_uuid(),
+  payment_hash  text unique not null,  -- SHA256(preimage) — safe to store
+  endpoint      text,
+  amount_sats   integer,
+  paid_at       timestamptz default now()
+);
+```
+
+**`preimage` ではなく `payment_hash` を使用する理由は？** `payment_hash` はすべての BOLT11 インボイスにすでに埋め込まれており、設計上パブリックな情報です。秘密なのは `preimage` のみです。ハッシュを保存することで、追加の情報漏洩なしにリプレイ防止が実現できます。
+
+---
+
+## Lightning プロバイダー
+
+l402-kit はプロバイダーに依存しません。`LightningProvider` を実装する任意のバックエンドが利用できます:
+
+| プロバイダー | 備考 |
+|---|---|
+| [Alby Hub](https://hub.getalby.com) | セルフカストディアル、手数料 0% |
+| [Blink](https://blink.sv) | 無料カストディアル、少額なら KYC 不要 |
+| [BTCPay Server](https://btcpayserver.org) | セルフホスト型、完全なソベラノティ |
+| [OpenNode](https://opennode.com) | カストディアル、セットアップ不要 |
+| [LNbits](https://lnbits.com) | セルフホストまたはクラウド |
+
+プロバイダーのセットアップについては [TypeScript SDK](/sdk/typescript) または [Python SDK](/sdk/python) をご覧ください。
+
+---
+
+## セキュリティ保証
+
+| 脅威 | 対策 |
+|---|---|
+| リプレイ攻撃 | Preimage は初回検証後に使用済みとしてマーク — インメモリまたは Redis アダプター |
+| 偽造 preimage | `SHA256(preimage) === paymentHash` は暗号的に偽造不可能 |
+| トークン有効期限 | Macaroon に `exp` タイムスタンプが埋め込まれ — すべてのリクエストで検証 |
+| Webhook スプーフィング | `HMAC-SHA256(secret, body)` を処理前に検証 |

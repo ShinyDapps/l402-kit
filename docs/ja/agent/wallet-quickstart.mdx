@@ -1,0 +1,89 @@
+---
+title: "ウォレット クイックスタート"
+description: "60秒でLightningウォレットを取得。銀行不要。KYC不要。193カ国で利用可能。"
+---
+
+L402 APIに支払いを行うにはLightningウォレットが必要です。2つのオプションがあります — どちらも無料で、グローバルに利用できます。
+
+---
+
+## オプション A — Blink（推奨）
+
+<Steps>
+  <Step title="アカウントを作成する">
+    [blink.sv](https://blink.sv) にアクセスし、電話番号またはメールアドレスでサインアップします。
+  </Step>
+  <Step title="Lightning Addressをコピーする">
+    アプリ内: **設定 → Lightning Address**。`yourname@blink.sv` のような形式です。
+  </Step>
+  <Step title="APIキーを取得する">
+    [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → キーを作成します。
+  </Step>
+  <Step title="l402-kitで使用する">
+    ```typescript
+    import { ManagedProvider } from "l402-kit";
+
+    const provider = ManagedProvider.fromAddress("yourname@blink.sv");
+    ```
+
+    またはAgent SDKを使用する場合:
+
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ BLINK_API_KEY: "your-key" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## オプション B — Alby
+
+<Steps>
+  <Step title="アカウントを作成する">
+    [getalby.com](https://getalby.com) にアクセスし、サインアップします。
+  </Step>
+  <Step title="OAuthトークンを取得する">
+    [getalby.com/api-tokens](https://getalby.com/api-tokens) にアクセスし、`payments:send` スコープを持つトークンを作成します。
+  </Step>
+  <Step title="l402-kitで使用する">
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ ALBY_TOKEN: "your-token" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## 環境変数によるゼロコンフィグ
+
+l402-kitは環境変数からウォレットを自動検出します。コードの変更は不要です:
+
+```bash
+# Blink
+export BLINK_API_KEY="your-key"
+
+# Alby
+export ALBY_TOKEN="your-token"
+```
+
+```typescript
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env); // BlinkまたはAlbyを自動検出
+```
+
+---
+
+## ウォレットに入金する
+
+どちらのウォレットもsatsを受け取るためのLightning addressが提供されます。テストするには:
+
+1. [coinfos.net](https://coinfos.net) またはいずれかのフォーセットにアクセスします
+2. あなたのLightning addressに1000 satsを送金します
+3. `npm install l402-kit && node -e "require('l402-kit/agent').healthCheck()"` を実行します
+
+**銀行不要。煩雑なKYC不要。193カ国で利用可能。**
