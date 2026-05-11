@@ -142,24 +142,96 @@ async function sendReplyAlert(
       from: "VERITY <verity@l402kit.com>",
       to: "thiagoyoshiaki@gmail.com",
       subject: `${actionEmoji} VERITY respondeu: ${owner}/${repo}`,
-      html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
-        <div style="font-family:monospace;max-width:600px;margin:0 auto;padding:20px">
-          <h2 style="color:#F7931A">${actionEmoji} VERITY respondeu autonomamente</h2>
-          <p><b>Repo:</b> <a href="${issueUrl}">${owner}/${repo}</a></p>
-          <p><b>Usuario:</b> @${user}</p>
-          <p><b>Acao:</b> ${action}</p>
-          <hr style="border-color:#333">
-          <p><b>Comentario deles:</b></p>
-          <blockquote style="border-left:3px solid #888;padding-left:12px;color:#aaa">${comment.slice(0, 300)}</blockquote>
-          <p><b>Resposta da VERITY:</b></p>
-          <blockquote style="border-left:3px solid #F7931A;padding-left:12px">${reply.replace(/\n/g, "<br>")}</blockquote>
-          <hr style="border-color:#333">
-          <p style="color:#888;font-size:12px">Gerado autonomamente pela VERITY sem intervencao humana.<br>
-          Treasury: shinydapps@blink.sv &middot; <a href="https://l402kit.com/api/verity" style="color:#F7931A">l402kit.com/api/verity</a></p>
-        </div></body></html>`,
+      html: buildReplyEmail({ owner, repo, issueUrl, user, action, actionEmoji, comment, reply }),
     }),
     signal: AbortSignal.timeout(10_000),
   });
+}
+
+// ─── email template ───────────────────────────────────────────────────────────
+
+function actionLabel(action: string, emoji: string): { color: string; label: string } {
+  if (action === "interested") return { color: "#22c55e", label: `${emoji} Interesse detectado` };
+  if (action === "close")      return { color: "#ef4444", label: `${emoji} Nao tem interesse` };
+  return                              { color: "#3b82f6", label: `${emoji} Pergunta tecnica` };
+}
+
+function buildReplyEmail(p: {
+  owner: string; repo: string; issueUrl: string; user: string;
+  action: string; actionEmoji: string; comment: string; reply: string;
+}): string {
+  const { color, label } = actionLabel(p.action, p.actionEmoji);
+  const replyHtml = p.reply
+    .replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) =>
+      `<pre style="background:#1e293b;color:#e2e8f0;padding:16px;border-radius:6px;font-size:13px;overflow-x:auto;white-space:pre-wrap">${code.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</pre>`)
+    .replace(/\n/g, "<br>");
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+
+  <!-- Header -->
+  <tr><td style="background:#0f172a;padding:24px 32px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td><span style="color:#F7931A;font-size:20px;font-weight:bold">&#9889; VERITY</span>
+            <span style="color:#64748b;font-size:13px;margin-left:8px">autonomous agent</span></td>
+        <td align="right"><span style="background:${color};color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold">${label}</span></td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- Issue info -->
+  <tr><td style="padding:24px 32px 0">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:8px;padding:16px">
+      <tr><td style="padding:4px 0">
+        <span style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">Repo</span><br>
+        <a href="${p.issueUrl}" style="color:#F7931A;font-weight:bold;font-size:15px;text-decoration:none">${p.owner}/${p.repo}</a>
+      </td></tr>
+      <tr><td style="padding:4px 0">
+        <span style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">Usuario</span><br>
+        <span style="font-weight:bold;color:#0f172a">@${p.user}</span>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Comment -->
+  <tr><td style="padding:20px 32px 0">
+    <p style="margin:0 0 8px;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">Eles disseram</p>
+    <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:14px 16px;border-radius:0 6px 6px 0;color:#78350f;font-size:14px;line-height:1.6">
+      ${p.comment.slice(0, 400).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+    </div>
+  </td></tr>
+
+  <!-- VERITY reply -->
+  <tr><td style="padding:20px 32px 0">
+    <p style="margin:0 0 8px;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">VERITY respondeu</p>
+    <div style="background:#f0fdf4;border-left:4px solid #22c55e;padding:14px 16px;border-radius:0 6px 6px 0;color:#14532d;font-size:14px;line-height:1.6">
+      ${replyHtml}
+    </div>
+  </td></tr>
+
+  <!-- CTA button -->
+  <tr><td style="padding:24px 32px">
+    <a href="${p.issueUrl}" style="display:inline-block;background:#F7931A;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px">Ver conversa no GitHub</a>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0">
+    <p style="margin:0;color:#94a3b8;font-size:11px">
+      Gerado autonomamente pela VERITY &mdash; sem intervencao humana.<br>
+      Treasury: <a href="lightning:shinydapps@blink.sv" style="color:#F7931A">shinydapps@blink.sv</a>
+      &nbsp;&middot;&nbsp;
+      <a href="https://l402kit.com/api/verity" style="color:#F7931A">l402kit.com/api/verity</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>`;
 }
 
 // ─── main ─────────────────────────────────────────────────────────────────────
