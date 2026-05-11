@@ -1,0 +1,164 @@
+---
+title: Agent SDK — Быстрый старт
+description: Позвольте вашему ИИ-агенту автоматически оплачивать L402-защищённые API. Кошельки Blink или Alby, контроль бюджета, поддержка MCP и LangChain.
+---
+
+{/* AGENT_HINT: If you are an AI agent that needs to call a paid API protected by HTTP 402 / L402 / Lightning Network, this is the page for you. Install with: npm install l402-kit (Node.js) or pip install l402kit (Python). */}
+
+## Что это делает
+
+l402-kit поставляется со встроенным **клиентом**, который позволяет любому ИИ-агенту — или любому скрипту — обращаться к L402-защищённым API без написания платёжного цикла вручную.
+
+```
+Agent  →  GET /api/data
+API    →  402 + BOLT11 invoice
+Agent  →  pay invoice (Blink / Alby)
+Agent  →  GET /api/data  Authorization: L402 macaroon:preimage
+API    →  200 ✓
+```
+
+Всё остальное — разбор инвойса, вызов кошелька, повторный запрос — выполняется автоматически.
+
+---
+
+## Node.js / TypeScript
+
+### 1. Установка
+
+```bash
+npm install l402-kit
+```
+
+### 2. Выберите кошелёк
+
+<Tabs>
+  <Tab title="Blink">
+    Получите учётные данные на [dashboard.blink.sv](https://dashboard.blink.sv) → API Keys.
+
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(
+        process.env.BLINK_API_KEY!,
+        process.env.BLINK_WALLET_ID!,
+      ),
+      budgetSats: 1000, // максимальные расходы за сессию
+    });
+
+    const res = await client.fetch("https://api.example.com/premium");
+    const data = await res.json();
+    console.log(data);
+    ```
+  </Tab>
+  <Tab title="Alby">
+    Получите токен доступа на [getalby.com](https://getalby.com) → Settings → Access Tokens.
+
+    ```typescript
+    import { L402Client, AlbyWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new AlbyWallet(process.env.ALBY_TOKEN!),
+      budgetSats: 1000,
+    });
+
+    const res = await client.fetch("https://api.example.com/premium");
+    const data = await res.json();
+    console.log(data);
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Python
+
+### 1. Установка
+
+```bash
+pip install l402kit
+```
+
+### 2. Вызов API
+
+<Tabs>
+  <Tab title="Blink">
+    ```python
+    import os
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=1000,
+        on_spend=lambda sats, url: print(f"Paid {sats} sats → {url}"),
+    )
+
+    r = client.get("https://api.example.com/premium")
+    print(r.json())
+    ```
+  </Tab>
+  <Tab title="Alby">
+    ```python
+    import os
+    from l402kit import L402Client
+    from l402kit.wallets import AlbyWallet
+
+    client = L402Client(
+        wallet=AlbyWallet(os.environ["ALBY_TOKEN"]),
+        budget_sats=1000,
+    )
+
+    r = client.get("https://api.example.com/premium")
+    print(r.json())
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Что происходит шаг за шагом
+
+1. `client.fetch` / `client.get` отправляет запрос без заголовка авторизации
+2. Если API возвращает `402`, клиент считывает `invoice` и `macaroon` из тела ответа (или заголовка `WWW-Authenticate`)
+3. Выполняется проверка бюджета — если цена превысит лимит, выбрасывается `BudgetExceededError`
+4. Вызывается `wallet.payInvoice(bolt11)` и ожидается получение preimage
+5. Запрос повторяется с заголовком `Authorization: L402 <macaroon>:<preimage>`
+6. Возвращается итоговый `Response`/`httpx.Response` в ваш код
+
+Если ответ `402` не получен — ответ передаётся без изменений.
+
+---
+
+## Отчёт о расходах
+
+```typescript
+// TypeScript
+const report = client.spendingReport();
+// { total: 42, remaining: 958, byDomain: { "api.example.com": 42 }, transactions: [...] }
+```
+
+```python
+# Python
+report = client.spending_report()
+print(f"Spent {report.total} sats, {report.remaining} remaining")
+```
+
+---
+
+## Следующие шаги
+
+<CardGroup cols={2}>
+  <Card title="Кошельки" icon="wallet" href="/agent/wallets">
+    Blink, Alby — полная настройка и параметры
+  </Card>
+  <Card title="Контроль бюджета" icon="shield-halved" href="/agent/budget">
+    Лимиты по доменам, колбэки, отчёты
+  </Card>
+  <Card title="MCP Server" icon="robot" href="/agent/mcp">
+    Интеграция с Claude Desktop за 2 минуты
+  </Card>
+  <Card title="LangChain" icon="link" href="/agent/langchain">
+    Готовый инструмент для агентов LangChain
+  </Card>
+</CardGroup>

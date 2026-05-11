@@ -1,0 +1,68 @@
+---
+title: "DNS Discovery"
+description: "Позвольте агентам обнаруживать ваш L402 endpoint через DNS TXT запись — без HTTP запроса."
+---
+
+## Зачем нужен DNS discovery
+
+Агенты с доступом в интернет могут разрешать DNS до выполнения любого HTTP запроса. Если вы публикуете ваш L402 endpoint как DNS TXT запись, агенты обнаруживают его автоматически — ещё до обращения к вашему API.
+
+## Формат TXT записи
+
+```
+l402._payment.yourdomain.com  TXT  "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs"
+```
+
+Поля:
+- `v=l402` — идентификатор протокола
+- `endpoint=` — ваш L402-защищённый URL
+- `price=` — цена в sats (необязательно, информационное поле)
+- `docs=` — ссылка на вашу документацию (необязательно)
+
+## Настройка в Cloudflare
+
+1. Перейдите в **Cloudflare Dashboard → DNS**
+2. Добавьте новую запись:
+
+| Type | Name | Content | TTL |
+|------|------|---------|-----|
+| TXT | `l402._payment` | `v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=https://yourdomain.com/docs` | Auto |
+
+## Проверка с помощью dig
+
+```bash
+dig TXT l402._payment.yourdomain.com
+
+# Ожидаемый вывод:
+# l402._payment.yourdomain.com. 300 IN TXT "v=l402 endpoint=https://api.yourdomain.com/data price=10sat docs=..."
+```
+
+## Как агенты используют это
+
+```typescript
+import { discoverL402Endpoint } from "l402-kit/agent";
+
+// Агент разрешает DNS для поиска вашего endpoint
+const endpoint = await discoverL402Endpoint("yourdomain.com");
+// Возвращает: "https://api.yourdomain.com/data"
+
+const result = await client.fetch(endpoint);
+```
+
+## Собственная запись l402-kit
+
+В примере ниже используется вымышленный домен (`api.example.com`) для иллюстрации формата — замените его на ваш реальный endpoint.
+
+```bash
+dig TXT l402._payment.l402kit.com
+# v=l402 endpoint=https://api.example.com/api/demo price=1sat docs=https://docs.l402kit.com
+```
+
+## Преимущества
+
+- **Нулевые HTTP накладные расходы** — обнаружение до любого API вызова
+- **Нативность для агентов** — DNS это то, как машины находят сервисы, а не люди
+- **Не требует API ключа** — полностью открытое обнаружение
+- **Кешируемость** — TTL контролирует, как часто агенты повторно разрешают запись
+
+Смотрите [.well-known/agent.json](https://api.example.com/.well-known/agent.json) для дополнительного стандарта HTTP discovery.

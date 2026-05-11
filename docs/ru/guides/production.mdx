@@ -1,0 +1,333 @@
+---
+title: Руководство по production-развёртыванию
+description: Развёртывание l402-kit API в production — производительность, надёжность и масштабирование.
+---
+
+## Контрольный список перед запуском
+
+Выполните все пункты перед выходом в production. Каждый пункт ссылается на соответствующий раздел ниже.
+
+<Steps>
+  <Step title="Защита от повторного воспроизведения настроена для нескольких экземпляров">
+    Адаптер по умолчанию хранит данные только в памяти. Если вы запускаете более одного процесса (воркеры Gunicorn, кластер PM2, Kubernetes), задайте `SUPABASE_URL` + `SUPABASE_ANON_KEY` или используйте `RedisReplayAdapter`. [Подробнее →](#critical-replay-protection-in-production)
+  </Step>
+  <Step title="Переменные окружения хранятся в менеджере секретов">
+    Никогда не вставляйте API-ключи напрямую в код. Используйте `.env` локально, менеджер секретов — в production. [Подробнее →](#environment-variables)
+  </Step>
+  <Step title="Эндпоинт проверки работоспособности существует">
+    Запросы мониторинга не должны инициировать создание инвойсов. Добавьте маршрут `/health` перед платными маршрутами. [Подробнее →](#health-check-endpoint)
+  </Step>
+  <Step title="Ответы об ошибках не раскрывают внутренние данные">
+    Перехватывайте ошибки провайдера и возвращайте чистый 503 — без трассировки стека. [Подробнее →](#error-handling)
+  </Step>
+  <Step title="Цена задана осознанно">
+    `priceSats` должен отражать реальную ценность. При курсе 1 sat ≈ $0.0006, 100 sats ≈ $0.06 за premium-эндпоинт — разумная цена. Не устанавливайте значение 0 по ошибке.
+  </Step>
+  <Step title="Мониторинг доступности эндпоинта инвойсов">
+    Отслеживайте ответ 402 (это обычный ответ, не ошибка). Инструменты вроде UptimeRobot поддерживают ожидаемые пользовательские коды статуса.
+  </Step>
+  <Step title="Ограничение частоты запросов при создании инвойсов">
+    Каждый неаутентифицированный запрос создаёт Lightning-инвойс. Без ограничения частоты злоумышленник может бесплатно исчерпать квоту инвойсов вашего провайдера. Добавьте `express-rate-limit` перед публичным развёртыванием. [Подробнее →](#rate-limiting)
+  </Step>
+</Steps>
+
+---
+
+## Важно: защита от повторного воспроизведения в production
+
+<Warning>
+Адаптер повторного воспроизведения по умолчанию хранит данные **только в памяти** — он сбрасывается при каждом перезапуске процесса и не работает в нескольких экземплярах сервера. В production с более чем одним процессом (воркеры Gunicorn, поды Kubernetes, кластер PM2) один и тот же preimage может быть принят дважды.
+
+**Решение:** Задайте `SUPABASE_URL` + `SUPABASE_ANON_KEY` в окружении. Middleware автоматически использует Supabase как хранилище повторного воспроизведения, которое является общим для всех экземпляров.
+
+Для Redis: передайте `RedisReplayAdapter` явно (см. [TypeScript SDK](/sdk/typescript#replay-protection) или [Python SDK](/sdk/python#replay-protection)).
+</Warning>
+
+---
+
+## Переменные окружения
+
+Никогда не вставляйте ключи напрямую в код. Всегда используйте переменные окружения:
+
+```bash
+# .env (никогда не коммитьте этот файл)
+BLINK_API_KEY=blink_xxx
+BLINK_WALLET_ID=your-wallet-id
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=sb_publishable_xxx    # безопасно передавать клиентам
+SUPABASE_SERVICE_KEY=sb_secret_xxx      # только на стороне сервера — никогда не передавайте клиентам
+```
+
+```typescript
+import 'dotenv/config';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+---
+
+## Журналирование платежей (Supabase)
+
+Записывайте каждый платёж в Supabase для панели управления расширения VS Code и аналитики:
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!,
+);
+
+app.use(async (req, res, next) => {
+  const original = res.json.bind(res);
+  res.json = (body) => {
+    // Записываем успешные L402-платежи (после прохождения middleware)
+    if (req.l402Paid && req.l402Preimage) {
+      supabase.from('payments').insert({
+        endpoint: req.path,
+        preimage: req.l402Preimage,
+        amount_sats: req.l402AmountSats,
+      }).then(() => {});
+    }
+    return original(body);
+  };
+  next();
+});
+```
+
+---
+
+## Развёртывание на Cloudflare Workers
+
+l402-kit API работает на Cloudflare Workers (изоляты V8, без холодного старта). Хранилище повторного воспроизведения в памяти сбрасывается для каждого изолята — для высоконагруженных API используйте Cloudflare KV или Durable Objects для защиты от повторного воспроизведения.
+
+```typescript
+// api/data.ts
+import { l402 } from 'l402-kit';
+import { BlinkProvider } from 'l402-kit';
+
+const blink = new BlinkProvider(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+
+export default async function handler(req, res) {
+  await new Promise<void>((resolve, reject) => {
+    l402({ priceSats: 10, lightning: blink })(req, res, (err) => {
+      if (err) reject(err); else resolve();
+    });
+  });
+  res.json({ data: 'premium content' });
+}
+```
+
+---
+
+## Docker
+
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY dist ./dist
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
+```
+
+```yaml
+# docker-compose.yml
+services:
+  api:
+    build: .
+    environment:
+      BLINK_API_KEY: ${BLINK_API_KEY}
+      BLINK_WALLET_ID: ${BLINK_WALLET_ID}
+    ports:
+      - "3000:3000"
+```
+
+---
+
+## Удаление пользовательских данных
+
+Предоставьте эндпоинт удаления, чтобы пользователи могли безвозвратно удалить свои данные. Бэкенд l402-kit включает `/api/delete-data` из коробки:
+
+```http
+POST /api/delete-data
+Content-Type: application/json
+
+{ "lightningAddress": "user@blink.sv" }
+```
+
+```json
+// 200 OK
+{ "deleted": { "payments": 42, "proAccess": true } }
+```
+
+Расширение VS Code отображает это как панель **Danger Zone** в нижней части панели управления — пользователи должны ввести свой Lightning-адрес для подтверждения, после чего вся история платежей и доступ Pro удаляются. Операция использует сервисный ключ Supabase на стороне сервера; anon-ключ не имеет прав на DELETE.
+
+---
+
+## Обработка ошибок
+
+Перехватывайте ошибки провайдера до того, как они проявятся как неформатированные 500:
+
+<CodeGroup>
+```typescript TypeScript
+import { l402, L402Error } from 'l402-kit';
+
+app.get('/api/data', l402({ priceSats: 10, lightning }), async (req, res) => {
+  try {
+    res.json({ data: await fetchData() });
+  } catch (err) {
+    if (err instanceof L402Error) {
+      // Токен недействителен, истёк или уже использован — позвольте middleware обработать это
+      return res.status(err.status).json({ error: err.code });
+    }
+    console.error('[api/data]', err);
+    res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+});
+```
+
+```python Python
+from l402kit import l402_required, L402Error
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(L402Error)
+async def l402_exception_handler(request: Request, exc: L402Error):
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.code})
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=503, content={"error": "Service temporarily unavailable"})
+```
+</CodeGroup>
+
+**Практические правила:**
+- Никогда не возвращайте клиентам трассировку стека — записывайте её на стороне сервера.
+- Таймауты провайдера (503) являются временными — безопасно повторять с задержкой.
+- Ошибки токена (401) никогда не являются временными — не повторяйте запрос автоматически, требуйте новый инвойс.
+- Ошибки ограничения частоты (429) — передавайте поле `retryAfter` вызывающей стороне.
+
+Полный список структурированных кодов ошибок см. в [справочнике ошибок](/reference/errors).
+
+---
+
+## Ограничение частоты запросов
+
+Каждый неаутентифицированный запрос вызывает `createInvoice()` у вашего Lightning-провайдера. Без ограничения частоты любой может перегрузить ваш эндпоинт и бесплатно исчерпать квоту API провайдера — не заплатив ни одного sat.
+
+Добавьте [`express-rate-limit`](https://www.npmjs.com/package/express-rate-limit) перед вашими L402-маршрутами:
+
+```bash
+npm install express-rate-limit
+```
+
+```typescript
+import rateLimit from "express-rate-limit";
+import { l402 } from "l402-kit";
+
+// Ограничение создания инвойсов: 30 неаутентифицированных запросов/минуту на IP
+const invoiceLimit = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  // Применяется только к запросам без действующего заголовка L402
+  skip: (req) => req.headers.authorization?.startsWith("L402 ") ?? false,
+  message: { error: "Too many requests — slow down" },
+});
+
+app.get("/api/premium", invoiceLimit, l402({ priceSats: 10, lightning }), handler);
+```
+
+<Note>
+Клиенты, уже совершившие оплату, пропускаются функцией `skip` — ограничение применяется только к неаутентифицированным вызовам, инициирующим создание нового инвойса. Законопослушные плательщики никогда не получают ограничений.
+</Note>
+
+Для FastAPI:
+
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/api/premium")
+@limiter.limit("30/minute")
+@l402_required(price_sats=10, lightning=lightning)
+async def premium(request: Request):
+    return {"data": "paid content"}
+```
+
+---
+
+## Эндпоинт проверки работоспособности
+
+Всегда добавляйте бесплатную проверку работоспособности, чтобы инструменты мониторинга не инициировали создание инвойсов:
+
+```typescript
+app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// Платный эндпоинт
+app.get('/api/data', l402({ priceSats: 10, lightning: blink }), handler);
+```
+
+---
+
+## Мониторинг
+
+Ключевые метрики для отслеживания:
+- **Частота ответов 402** — здоровый базовый уровень высокий (большинство вызывающих должны платить)
+- **Доля верифицированных платежей** — соотношение оплаченных и неоплаченных вызовов
+- **Задержка провайдера** — `blink.createInvoice()` должен выполняться менее чем за 500 мс
+- **Попытки повторного воспроизведения** — всплеск указывает на атаки с повторным использованием токена
+
+```typescript
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    console.log(JSON.stringify({
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      ms: Date.now() - start,
+      paid: res.statusCode !== 402,
+    }));
+  });
+  next();
+});
+```
+
+---
+
+## Производительность
+
+- Верификация токена выполняется за **O(1)** — чистая криптография, без БД, без сети
+- Создание инвойса (путь 402) обращается к API вашего Lightning-провайдера — добавьте кэш, если ожидаете повторные обращения к одному эндпоинту до совершения оплаты
+- Хранилище повторного воспроизведения — `Set` в памяти — для многоэкземплярных развёртываний замените на Redis
+
+```typescript
+// Пример хранилища повторного воспроизведения на Redis
+import { Redis } from 'ioredis';
+const redis = new Redis(process.env.REDIS_URL!);
+
+// Передаём пользовательскую функцию повторного воспроизведения в middleware
+app.get('/api', l402({
+  priceSats: 10,
+  lightning: blink,
+  checkReplay: async (preimage) => {
+    const set = await redis.set(`l402:${preimage}`, '1', 'NX', 'EX', 86400);
+    return set === 'OK';
+  },
+}), handler);
+```

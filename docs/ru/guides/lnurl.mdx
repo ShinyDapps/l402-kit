@@ -1,0 +1,168 @@
+---
+title: Интеграция LNURL
+description: Используйте LNURL-auth для входа без пароля и LNURL-pay для платежей на Lightning Address вместе с l402-kit.
+---
+
+## Что такое LNURL?
+
+[LNURL](https://github.com/lnurl/luds) — это набор открытых стандартов, построенных поверх Lightning Network. Вместо того чтобы напрямую использовать в приложении необработанные Lightning-инвойсы или публичные ключи узлов, LNURL определяет удобные для пользователя протоколы на основе URL, которые умеют обрабатывать кошельки. Когда кошелёк сканирует QR-код LNURL, он декодирует URL, получает JSON-ответ от вашего сервера и выполняет соответствующее действие (подписывает вызов, запрашивает платёжный запрос и т. д.) — всё это незаметно для пользователя.
+
+l402-kit поставляется с двумя функциями LNURL из коробки:
+
+| Функция | Сценарий использования |
+|---|---|
+| **LNURL-auth** | Вход без пароля — кошелёк подписывает вызов, без email и пароля |
+| **LNURL-pay** | Lightning Address (`you@domain.com`) — любой может платить вам по понятному адресу |
+
+Оба протокола работают во всех основных Lightning-кошельках (Phoenix, Blink, Zeus, Breez, Alby) и не требуют дополнительных зависимостей — вашему серверу нужно лишь обслуживать JSON-эндпоинт и при необходимости верифицировать подпись secp256k1.
+
+---
+
+## LNURL-auth — вход без пароля
+
+l402-kit.com использует LNURL-auth для платёжной панели. Вы можете применить тот же сценарий в своём приложении.
+
+### Как это работает
+
+```
+1. Ваш сервер генерирует вызов (k1) — случайную 32-байтовую hex-строку
+2. Вы кодируете его как LNURL и отображаете в виде QR
+3. Пользователь сканирует с помощью любого кошелька с поддержкой LNURL-auth (Phoenix, Blink, Zeus, Breez...)
+4. Кошелёк подписывает k1 ключом своего Lightning-узла → отправляет подпись + pubkey на ваш callback
+5. Вы верифицируете подпись — если она действительна, пользователь аутентифицирован
+```
+
+Идентификатор пользователя — это публичный ключ его Lightning-узла: стабильный, глобальный и находящийся под его полным контролем.
+
+### Эндпоинт
+
+```
+GET /api/lnurl-auth
+```
+
+Возвращает вызов LNURL. Закодируйте в QR и отобразите в вашем сценарии входа.
+
+```json
+{
+  "lnurl": "LNURL1DP68GURN8GHJ7...",
+  "k1": "a1b2c3..."
+}
+```
+
+После callback от кошелька выполните верификацию через:
+
+```
+GET /api/lnurl-auth?k1=<challenge>&sig=<signature>&key=<pubkey>
+```
+
+### TypeScript — верификация подписи LNURL-auth
+
+```typescript
+import { createHash } from "crypto";
+import * as secp256k1 from "@noble/curves/secp256k1";
+
+function verifyLnurlAuth(k1: string, sig: string, key: string): boolean {
+  try {
+    const msgHash = createHash("sha256").update(Buffer.from(k1, "hex")).digest();
+    return secp256k1.secp256k1.verify(sig, msgHash, key);
+  } catch {
+    return false;
+  }
+}
+```
+
+<Note>
+LNURL-auth не требует email, пароля и OAuth. Идентификатор пользователя — это его Lightning pubkey: переносимый между кошельками, защищённый от цензуры и глобально уникальный.
+</Note>
+
+---
+
+## LNURL-pay — Lightning Address
+
+Lightning Address (`you@domain.com`) — это понятный человеку псевдоним, который разрешается в эндпоинт LNURL-pay. l402-kit предоставляет его по адресу:
+
+```
+GET /.well-known/lnurlp/{username}
+```
+
+Это используется внутри механизма распределения — когда вы задаёте `ownerAddress: "you@blink.sv"`, Worker разрешает `blink.sv/.well-known/lnurlp/you`, чтобы получить BOLT11-инвойс.
+
+### Как настроить собственный Lightning Address
+
+1. Разверните эндпоинт LNURL-pay по адресу `https://yourdomain.com/.well-known/lnurlp/{username}`
+2. Верните стандартный ответ с метаданными LNURL-pay:
+
+```json
+{
+  "callback": "https://yourdomain.com/lnurlp/pay",
+  "maxSendable": 100000000,
+  "minSendable": 1000,
+  "metadata": "[[\"text/plain\",\"Pay you@yourdomain.com\"]]",
+  "tag": "payRequest"
+}
+```
+
+3. Эндпоинт `callback` получает `?amount=<msats>` и возвращает:
+
+```json
+{
+  "pr": "lnbc10n1p...",
+  "routes": []
+}
+```
+
+### Самостоятельный хостинг с BTCPay Server
+
+BTCPay Server поставляется со встроенной поддержкой LNURL-pay — просто включите её в настройках магазина. Ваш Lightning Address становится `you@yourbtcpay.com`.
+
+```typescript
+import { BTCPayProvider } from "l402-kit";
+
+const lightning = new BTCPayProvider(
+  process.env.BTCPAY_URL!,
+  process.env.BTCPAY_API_KEY!,
+  process.env.BTCPAY_STORE_ID!,
+);
+// Lightning Address: you@yourbtcpay.com — без посредников, комиссия 0%
+```
+
+---
+
+## Верификация владения для каталога API
+
+Когда вы регистрируете свой API через `POST /api/register`, l402-kit автоматически проверяет наличие файла `/.well-known/l402.txt` на домене вашего API. Если файл найден и содержит ваш Lightning Address, ваша запись получает значок **verified**.
+
+**Создайте файл:**
+
+```
+# https://api.yourdomain.com/.well-known/l402.txt
+you@blink.sv
+```
+
+**Затем выполните регистрацию:**
+
+```typescript
+ManagedProvider.fromAddress("you@blink.sv", {
+  registerDirectory: {
+    url: "https://api.yourdomain.com/v1/data",
+    name: "My Data API",
+    priceSats: 10,
+  },
+});
+// Response: { ok: true, id: "...", verified: true }
+```
+
+Верифицированные API занимают более высокие позиции в каталоге и отображаются со значком ✓.
+
+---
+
+## Совместимые кошельки
+
+| Кошелёк | LNURL-auth | LNURL-pay | Самостоятельное хранение |
+|---|---|---|---|
+| [Phoenix](https://phoenix.acinq.co) | ✅ | ✅ | ✅ |
+| [Blink](https://blink.sv) | ✅ | ✅ | ❌ кастодиальный |
+| [Zeus](https://zeusln.app) | ✅ | ✅ | ✅ |
+| [Breez](https://breez.technology) | ✅ | ✅ | ✅ |
+| [Alby](https://getalby.com) | ✅ | ✅ | ✅ Hub |
+| [Mutiny](https://mutinywallet.com) | ✅ | ✅ | ✅ |

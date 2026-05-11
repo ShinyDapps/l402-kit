@@ -1,0 +1,314 @@
+---
+title: Быстрый старт
+description: От нуля до платного API за 60 секунд.
+---
+
+<Card title="▶ Сначала посмотрите на поток 402" icon="play" href="https://l402kit.com/#live-demo">
+  Интерактивная терминальная демонстрация — наблюдайте запрос → 402 → оплата Lightning → 200 OK прямо в браузере.
+</Card>
+
+## Вариант A — Создание полного сервера одной командой (быстрее всего)
+
+```bash
+npx create-l402-app my-api
+```
+
+Создаёт полноценный проект Express + l402-kit: `server.ts`, `.env.example`, `tsconfig.json` и эндпоинт `/premium`, готовый принимать Lightning-платежи.
+
+```
+my-api/
+  src/server.ts      ← ваш API с middleware l402
+  .env.example       ← шаблон учётных данных Blink/OpenNode
+  package.json       ← npm install l402-kit + tsx
+  tsconfig.json
+  README.md
+```
+
+Затем:
+
+```bash
+cd my-api
+cp .env.example .env   # добавьте ваш API-ключ Blink
+npm install
+npm run dev
+# ⚡ l402-kit server running on http://localhost:3000
+# curl http://localhost:3000/premium  →  402 Payment Required
+```
+
+---
+
+## Вариант B — Добавление в существующий проект
+
+### 1. Выберите режим
+
+| | **Managed** ⭐ | **Soberano** |
+|---|---|---|
+| Время настройки | ~2 мин | ~5 мин |
+| Ежемесячная стоимость | $0 | $0 |
+| Комиссия за транзакцию | 0,3% | 0% |
+| Что нужно | Lightning-адрес | Аккаунт Blink / Alby / BTCPay |
+| Обработка 10 000 sats | Комиссия 30 sat | Комиссия $0 |
+| Лучше всего подходит | Быстрый старт | Большие объёмы / продакшн |
+
+**Не уверены?** Начните с **Managed** — никаких нод, никаких аккаунтов, только Lightning-адрес. Переключитесь на Soberano одной строкой кода в любой момент, когда захотите 0% комиссий. Уже оплаченные токены продолжат работать после переключения.
+
+**Получить Lightning-адрес (бесплатно, 2 мин):** Зарегистрируйтесь на [dashboard.blink.sv](https://dashboard.blink.sv) — вы получите `yourname@blink.sv`. Или воспользуйтесь [Alby](https://getalby.com), [Phoenix](https://phoenix.acinq.co) или [Wallet of Satoshi](https://walletofsatoshi.com).
+
+**Настройка Soberano:** Зарегистрируйтесь на [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → создайте ключ → скопируйте ваш **BTC Wallet ID** со страницы кошелька. Укажите `BLINK_API_KEY` и `BLINK_WALLET_ID` в вашем `.env`.
+
+### 2. Установка
+
+<CodeGroup>
+```bash TypeScript
+npm install l402-kit
+```
+
+```bash Python
+pip install l402kit
+```
+
+```bash Go
+go get github.com/shinydapps/l402-kit/go
+```
+
+```toml Rust
+cargo add l402kit
+```
+</CodeGroup>
+
+### 3. Добавьте в ваш API
+
+<Tabs>
+  <Tab title="Managed (⭐ Рекомендуется)">
+    Lightning-нода не нужна — только ваш Lightning-адрес.
+
+    <CodeGroup>
+    ```typescript Express
+    import express from "express";
+    import { l402, ManagedProvider } from "l402-kit";
+
+    const app = express();
+    const lightning = ManagedProvider.fromAddress("you@yourdomain.com");
+
+    app.get("/premium", l402({ priceSats: 100, lightning }), (_req, res) => {
+      res.json({ data: "You paid 100 sats. Here is your data." });
+    });
+
+    app.listen(3000);
+    // 0.3% fee · no node setup · works immediately
+    ```
+
+    ```python FastAPI
+    from fastapi import FastAPI, Request
+    from l402kit import l402_required, ManagedProvider
+
+    app = FastAPI()
+    lightning = ManagedProvider.from_address("you@yourdomain.com")
+
+    @app.get("/premium")
+    @l402_required(price_sats=100, lightning=lightning)
+    async def premium(request: Request):
+        return {"data": "You paid 100 sats. Here is your data."}
+    ```
+
+    ```go Go
+    package main
+
+    import (
+        "fmt"
+        "net/http"
+        l402kit "github.com/shinydapps/l402-kit/go"
+    )
+
+    func main() {
+        provider := l402kit.NewManagedProvider("you@yourdomain.com")
+        http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+            PriceSats: 100,
+            Lightning: provider,
+        }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            fmt.Fprintln(w, `{"data":"You paid 100 sats. Here is your data."}`)
+        })))
+        http.ListenAndServe(":8080", nil)
+    }
+    ```
+
+    ```rust Rust (axum)
+    use axum::{middleware, routing::get, Router};
+    use l402kit::{l402_middleware, Options, ManagedProvider};
+    use std::sync::Arc;
+
+    #[tokio::main]
+    async fn main() {
+        let provider = ManagedProvider::new("you@yourdomain.com".into());
+        let opts = Arc::new(Options::new(100, provider));
+        let app = Router::new()
+            .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
+            .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+        axum::serve(listener, app).await.unwrap();
+    }
+    ```
+    </CodeGroup>
+  </Tab>
+  <Tab title="Soberano (0% комиссия — Blink)">
+    Ваш собственный Lightning-кошелёк. Зарегистрируйтесь на [dashboard.blink.sv](https://dashboard.blink.sv) и скопируйте ваш API Key + BTC Wallet ID.
+
+    <CodeGroup>
+    ```typescript Express
+    import express from "express";
+    import { l402, BlinkProvider } from "l402-kit";
+
+    const app = express();
+    const lightning = new BlinkProvider(
+      process.env.BLINK_API_KEY!,
+      process.env.BLINK_WALLET_ID!,
+    );
+
+    app.get("/premium", l402({ priceSats: 100, lightning }), (_req, res) => {
+      res.json({ data: "You paid 100 sats. Here is your data." });
+    });
+
+    app.listen(3000);
+    ```
+
+    ```python FastAPI
+    import os
+    from fastapi import FastAPI, Request
+    from l402kit import l402_required, BlinkProvider
+
+    app = FastAPI()
+    lightning = BlinkProvider(
+        api_key=os.environ["BLINK_API_KEY"],
+        wallet_id=os.environ["BLINK_WALLET_ID"],
+    )
+
+    @app.get("/premium")
+    @l402_required(price_sats=100, lightning=lightning)
+    async def premium(request: Request):
+        return {"data": "You paid 100 sats. Here is your data."}
+    ```
+
+    ```go Go
+    package main
+
+    import (
+        "fmt"
+        "net/http"
+        "os"
+        l402kit "github.com/shinydapps/l402-kit/go"
+    )
+
+    func main() {
+        blink := l402kit.NewBlinkProvider(os.Getenv("BLINK_API_KEY"), os.Getenv("BLINK_WALLET_ID"))
+        http.Handle("/premium", l402kit.Middleware(l402kit.Options{
+            PriceSats: 100,
+            Lightning: blink,
+        }, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            fmt.Fprintln(w, `{"data": "You paid 100 sats. Here is your data."}`)
+        })))
+        http.ListenAndServe(":8080", nil)
+    }
+    ```
+
+    ```rust Rust (axum)
+    use axum::{middleware, routing::get, Router};
+    use l402kit::{l402_middleware, Options, BlinkProvider};
+    use std::sync::Arc;
+
+    #[tokio::main]
+    async fn main() {
+        let provider = BlinkProvider::new(
+            std::env::var("BLINK_API_KEY").unwrap(),
+            std::env::var("BLINK_WALLET_ID").unwrap(),
+        );
+        let opts = Arc::new(Options::new(100, provider));
+        let app = Router::new()
+            .route("/premium", get(|| async { r#"{"data":"You paid 100 sats. Here is your data."}"# }))
+            .route_layer(middleware::from_fn_with_state(opts, l402_middleware));
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+        axum::serve(listener, app).await.unwrap();
+    }
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+### 4. Протестируйте
+
+```bash
+curl http://localhost:3000/premium
+```
+
+Ответ:
+```json
+{
+  "error": "Payment Required",
+  "price_sats": 100,
+  "invoice": "lnbc1u1p...",
+  "macaroon": "eyJoYXNo..."
+}
+```
+
+Оплатите инвойс с помощью любого Lightning-кошелька, затем:
+
+```bash
+curl http://localhost:3000/premium \
+  -H "Authorization: L402 <macaroon>:<preimage>"
+```
+
+Ответ:
+```json
+{ "data": "You paid 100 sats. Here is your data." }
+```
+
+<Check>Ваш API теперь принимает Bitcoin-платежи.</Check>
+
+---
+
+### Тестирование без реальных sats
+
+Для тестирования интеграции Lightning-кошелёк не нужен. Используйте **mock-провайдер** — он генерирует валидные криптографические пары токенов локально, без сетевых вызовов:
+
+```typescript
+import { createHash, randomBytes } from "crypto";
+import { l402 } from "l402-kit";
+import type { LightningProvider, Invoice } from "l402-kit";
+
+// Drop-in mock — generates real SHA256 hash/preimage pairs
+function makeMockProvider(): LightningProvider & { preimage: string } {
+  const preimage = randomBytes(32).toString("hex");
+  const paymentHash = createHash("sha256").update(Buffer.from(preimage, "hex")).digest("hex");
+  return {
+    preimage, // use this in your test Authorization header
+    async createInvoice(amountSats: number): Promise<Invoice> {
+      const macaroon = Buffer.from(
+        JSON.stringify({ hash: paymentHash, exp: Date.now() + 3_600_000 })
+      ).toString("base64");
+      return { paymentRequest: "lnbc_mock", paymentHash, macaroon, amountSats };
+    },
+    async checkPayment(): Promise<boolean> { return true; },
+  };
+}
+
+// Usage in tests:
+const mock = makeMockProvider();
+app.get("/premium", l402({ priceSats: 10, lightning: mock }), handler);
+
+// Step 1 — unauthenticated → 402
+const res402 = await request(app).get("/premium");
+// res402.body.macaroon  ← use this
+
+// Step 2 — pay with mock preimage → 200
+const res200 = await request(app)
+  .get("/premium")
+  .set("Authorization", `L402 ${res402.body.macaroon}:${mock.preimage}`);
+// res200.status === 200 ✓
+```
+
+Для тестирования с реальными деньгами в песочнице используйте [testMode OpenNode](/providers#opennode-soberano-0-fee):
+
+```typescript
+const lightning = new OpenNodeProvider(process.env.OPENNODE_KEY!, true); // testMode: no real sats
+```
+
+Полное руководство по тестированию → [Testing](/guides/testing)

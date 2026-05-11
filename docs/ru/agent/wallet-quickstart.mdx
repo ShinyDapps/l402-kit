@@ -1,0 +1,89 @@
+---
+title: "Быстрый старт с кошельком"
+description: "Получите Lightning-кошелёк за 60 секунд. Без банка. Без KYC. Работает в 193 странах."
+---
+
+Вам нужен Lightning-кошелёк для оплаты L402 API. Два варианта — оба бесплатны, оба работают по всему миру.
+
+---
+
+## Вариант А — Blink (рекомендуется)
+
+<Steps>
+  <Step title="Создайте аккаунт">
+    Перейдите на [blink.sv](https://blink.sv) и зарегистрируйтесь с номером телефона или email.
+  </Step>
+  <Step title="Скопируйте ваш Lightning Address">
+    В приложении: **Настройки → Lightning Address**. Он выглядит как `yourname@blink.sv`.
+  </Step>
+  <Step title="Получите ваш API-ключ">
+    Перейдите на [dashboard.blink.sv](https://dashboard.blink.sv) → **API Keys** → создайте ключ.
+  </Step>
+  <Step title="Используйте в l402-kit">
+    ```typescript
+    import { ManagedProvider } from "l402-kit";
+
+    const provider = ManagedProvider.fromAddress("yourname@blink.sv");
+    ```
+
+    Или с Agent SDK:
+
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ BLINK_API_KEY: "your-key" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Вариант Б — Alby
+
+<Steps>
+  <Step title="Создайте аккаунт">
+    Перейдите на [getalby.com](https://getalby.com) и зарегистрируйтесь.
+  </Step>
+  <Step title="Получите ваш OAuth-токен">
+    Перейдите на [getalby.com/api-tokens](https://getalby.com/api-tokens) и создайте токен с областью действия `payments:send`.
+  </Step>
+  <Step title="Используйте в l402-kit">
+    ```typescript
+    import { buildWallet } from "l402-kit/agent";
+
+    const wallet = buildWallet({ ALBY_TOKEN: "your-token" });
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Без настройки через переменные окружения
+
+l402-kit автоматически определяет ваш кошелёк из переменных окружения. Изменения в коде не требуются:
+
+```bash
+# Blink
+export BLINK_API_KEY="your-key"
+
+# Alby
+export ALBY_TOKEN="your-token"
+```
+
+```typescript
+import { buildWallet } from "l402-kit/agent";
+
+const wallet = buildWallet(process.env); // автоматически определяет Blink или Alby
+```
+
+---
+
+## Пополните ваш кошелёк
+
+Оба кошелька предоставляют вам Lightning-адрес для получения sats. Для тестирования:
+
+1. Перейдите на [coinfos.net](https://coinfos.net) или любой другой фaucet
+2. Отправьте 1000 sats на ваш Lightning-адрес
+3. Выполните `npm install l402-kit && node -e "require('l402-kit/agent').healthCheck()"`
+
+**Без банка. Без сложного KYC. Работает в 193 странах.**

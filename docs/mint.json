@@ -662,7 +662,81 @@
     {
       "group": "🇷🇺 Русский",
       "pages": [
-        "ru/introduction"
+        {
+          "group": "Getting Started",
+          "pages": [
+            "ru/introduction",
+            "ru/quickstart"
+          ]
+        },
+        {
+          "group": "SDKs",
+          "pages": [
+            "ru/sdk/typescript",
+            "ru/sdk/python",
+            "ru/sdk/go",
+            "ru/sdk/rust"
+          ]
+        },
+        {
+          "group": "Agent SDK",
+          "pages": [
+            "ru/agent/quickstart",
+            "ru/agent/wallets",
+            "ru/agent/budget",
+            "ru/agent/mcp",
+            "ru/agent/langchain",
+            "ru/agent/system-prompt",
+            "ru/agent/wallet-quickstart",
+            "ru/agent/delegation",
+            "ru/agent/verity",
+            "ru/agent/lawn-n"
+          ]
+        },
+        {
+          "group": "Agent Integrations",
+          "pages": [
+            "ru/agent/crewai",
+            "ru/agent/openai-agents",
+            "ru/agent/vercel-ai",
+            "ru/agent/autogpt"
+          ]
+        },
+        {
+          "group": "Guides",
+          "pages": [
+            "ru/guides/pricing",
+            "ru/guides/testing",
+            "ru/guides/dashboard",
+            "ru/guides/vscode",
+            "ru/guides/privacy",
+            "ru/guides/flows",
+            "ru/guides/ai-agents",
+            "ru/guides/lnurl",
+            "ru/guides/security",
+            "ru/guides/production",
+            "ru/guides/migration",
+            "ru/guides/troubleshooting",
+            "ru/guides/dns-discovery"
+          ]
+        },
+        {
+          "group": "Reference",
+          "pages": [
+            "ru/providers",
+            "ru/api-reference",
+            "ru/reference/errors",
+            "ru/competitive",
+            "ru/payment-layer"
+          ]
+        },
+        {
+          "group": "Examples",
+          "pages": [
+            "ru/examples/diagram-forge",
+            "ru/examples/verity"
+          ]
+        }
       ]
     },
     {

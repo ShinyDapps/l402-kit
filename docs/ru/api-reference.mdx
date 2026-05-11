@@ -1,0 +1,319 @@
+---
+title: "Справочник API"
+description: "Справочник по всем REST-эндпоинтам l402kit.com, используемым ManagedProvider и расширением VS Code."
+---
+
+Базовый URL: `https://l402kit.com`
+
+Все ответы имеют тип `application/json`. CORS включён для всех источников.
+
+---
+
+## Инвойсы
+
+### Создать инвойс
+
+`POST /api/invoice`
+
+Создаёт Lightning-инвойс BOLT11. Вызывается автоматически через `ManagedProvider` — вам редко нужно вызывать это напрямую.
+
+**Тело запроса**
+
+| Поле | Тип | Обязательно | Описание |
+|---|---|---|---|
+| `amountSats` | number | ✅ | Сумма в satoshis (мин. 1) |
+| `ownerAddress` | string | — | Ваш Lightning Address. Обязателен для выполнения сплита. |
+
+**Ответ 200**
+
+```json
+{
+  "paymentRequest": "lnbc10n1p...",
+  "paymentHash":    "a1b2c3...",
+  "macaroon":       "eyJoYXNoIjoiYTFiMm..."
+}
+```
+
+**Ошибки**
+
+| Код | Причина |
+|---|---|
+| 400 | Отсутствует или недопустимое значение `amountSats` |
+| 429 | Превышен лимит запросов (20 запросов/мин на IP) |
+| 503 | Lightning-провайдер временно недоступен |
+
+---
+
+### Проверить токен
+
+`POST /api/verify`
+
+Проверяет токен L402 на стороне сервера без SDK.
+
+**Тело запроса**
+
+```json
+{ "token": "<macaroon>:<preimage>" }
+```
+
+**Ответ 200**
+
+```json
+{ "valid": true }
+```
+
+```json
+{ "valid": false, "error": "Token expired" }
+```
+
+---
+
+## Сплит и платежи
+
+### Выполнить сплит
+
+`POST /api/split`
+
+Вручную запускает разделение платежа 99,7/0,3% на Lightning Address. Требует заголовок `x-split-secret`.
+
+<Note>
+В большинстве случаев сплит запускается автоматически через вебхук Blink. Используйте этот эндпоинт только для ручного восстановления или кастомных интеграций.
+</Note>
+
+**Заголовки**
+
+| Заголовок | Значение |
+|---|---|
+| `x-split-secret` | Ваша переменная окружения `SPLIT_SECRET` |
+
+**Тело запроса**
+
+```json
+{
+  "amountSats":   1000,
+  "ownerAddress": "you@blink.sv"
+}
+```
+
+**Ответ 200**
+
+```json
+{ "ok": true, "ownerSats": 997 }
+```
+
+**Ответ 200 (пропущено — ниже минимума)**
+
+```json
+{ "ok": true, "skipped": true }
+```
+
+---
+
+## Дашборд и статистика
+
+### Получить статистику
+
+`GET /api/stats`
+
+Возвращает аналитику платежей. Требует токен сессии LNURL-auth в заголовке `Authorization`.
+
+**Ответ 200**
+
+```json
+{
+  "totalPayments": 42,
+  "totalSats":     8400,
+  "shinydappsFee": 25,
+  "walletSats":    12345,
+  "walletUsdCents": 456789,
+  "byOwner": {
+    "dev@blink.sv": { "count": 42, "sats": 8400 }
+  },
+  "byDay": {
+    "2026-04-24": { "count": 5, "sats": 1000 }
+  },
+  "trend": {
+    "payments7d": 12,
+    "sats7d": 2400
+  },
+  "recent": [
+    {
+      "id": "uuid",
+      "endpoint": "/api/data",
+      "payment_hash": "a1b2...",
+      "amount_sats": 100,
+      "owner_address": "dev@blink.sv",
+      "paid_at": "2026-04-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Pro-тариф
+
+### Проверить Pro-доступ
+
+`GET /api/pro-check?address=you@blink.sv`
+
+Возвращает информацию о наличии активной Pro-подписки для указанного Lightning Address.
+
+**Ответ 200**
+
+```json
+{ "active": true,  "expiresAt": "2026-05-24T10:00:00Z" }
+{ "active": false }
+```
+
+### Оформить подписку Pro
+
+`GET /api/dev-token?address=you@blink.sv`
+
+Возвращает Lightning-инвойс для приобретения 30-дневной Pro-подписки (~9 000 sats).
+
+**Ответ 200**
+
+```json
+{
+  "priceSats": 9000,
+  "invoice":   "lnbc90n1p...",
+  "macaroon":  "eyJoYXNoIjoiY..."
+}
+```
+
+`POST /api/dev-token`
+
+Активирует Pro после оплаты инвойса.
+
+**Тело запроса**
+
+```json
+{ "macaroon": "...", "preimage": "..." }
+```
+
+**Ответ 200**
+
+```json
+{ "access": true, "expiresAt": "2026-05-24T10:00:00Z" }
+```
+
+---
+
+## Аутентификация (LNURL-auth)
+
+### Инициировать вход
+
+`GET /api/lnurl-auth`
+
+Возвращает LNURL-auth-запрос для входа в дашборд. Отсканируйте QR-код в дашборде.
+
+### LNURL-pay эндпоинт
+
+`GET /.well-known/lnurlp/:username`
+
+Стандартные метаданные LNURL-pay для разрешения Lightning Address. Используется внутри механизма сплита.
+
+---
+
+## Демо
+
+### Демо-индекс
+
+`GET /api/demo`
+
+Возвращает информацию о доступных демо-эндпоинтах.
+
+### Цена BTC (платный)
+
+`GET /api/demo/btc-price`
+
+Возвращает актуальную цену BTC. Требует действительный токен L402 (1 sat).
+
+При первом вызове возвращает **402** с инвойсом и macaroon. Повторите запрос с заголовком `Authorization: L402 <macaroon>:<preimage>`.
+
+### Получить preimage
+
+`GET /api/demo/preimage?hash=<paymentHash>`
+
+После оплаты демо-инвойса вызовите этот эндпоинт с `paymentHash`, чтобы получить ваш preimage и сформировать токен L402.
+
+---
+
+## Вебхуки
+
+### Получатель вебхука Blink
+
+`POST /api/blink-webhook`
+
+Внутренний эндпоинт. Принимает подписанные подтверждения платежей от Blink (Svix HMAC-SHA256). Запускает сплит и записывает платёж в журнал. Не предназначен для прямого использования.
+
+---
+
+## Каталог API
+
+### Зарегистрировать API
+
+`POST /api/register`
+
+Регистрирует ваш L402-защищённый API в публичном каталоге. Вызывается автоматически через `ManagedProvider.fromAddress()`, если указан параметр `registerDirectory`. Идемпотентен — безопасно вызывать при каждом запуске сервера.
+
+**Тело запроса**
+
+| Поле | Тип | Обязательно | Описание |
+|---|---|---|---|
+| `url` | string | ✅ | Публичный URL вашего L402-эндпоинта |
+| `name` | string | ✅ | Отображаемое название |
+| `price_sats` | number | ✅ | Цена за вызов в satoshis (мин. 1) |
+| `lightning_address` | string | ✅ | Ваш Lightning Address |
+| `description` | string | — | Краткое описание |
+| `category` | string | — | `data`, `ai`, `finance`, `weather`, `compute`, `storage` или `other` |
+
+**Ответ 200**
+
+```json
+{ "ok": true, "id": "uuid" }
+```
+
+---
+
+### Список API
+
+`GET /api/apis.json`
+
+Возвращает все зарегистрированные API. Машиночитаемый формат — предназначен для агентов, обнаруживающих платные API.
+
+**Параметры запроса**
+
+| Параметр | Описание |
+|---|---|
+| `category` | Фильтр по категории (`data`, `ai`, `finance`, `weather`, `compute`, `storage`, `other`) |
+
+**Ответ 200**
+
+```json
+{
+  "version": "1",
+  "count": 3,
+  "apis": [
+    {
+      "url": "https://api.example.com/weather",
+      "name": "Weather API",
+      "description": "Live weather data, 1 sat per query",
+      "price_sats": 1,
+      "category": "weather",
+      "created_at": "2026-04-26T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Конфиденциальность данных
+
+### Удалить мои данные
+
+`POST /api/delete-data`
+
+Инициирует LNURL-auth-запрос. После верификации через кошелёк все записи о платежах, связанные с аутентифицированным pubkey, безвозвратно удаляются (право на удаление по GDPR).

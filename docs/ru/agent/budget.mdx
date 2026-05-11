@@ -1,0 +1,224 @@
+---
+title: Контроль бюджета
+description: Установите лимиты расходов, отслеживайте платежи по доменам и получайте обратные вызовы перед каждой транзакцией.
+---
+
+## Почему контроль бюджета важен
+
+ИИ-агент, вызывающий платные API в цикле, может быстро накопить значительные расходы. Контроль бюджета позволяет:
+
+- Ограничить общие расходы за сессию
+- Установить лимиты по доменам (например, не более 100 sats/сессию на `api.weather.com`)
+- Получать обратный вызов перед каждым платежом
+- Получить полный отчёт о расходах в любое время
+
+---
+
+## Глобальный бюджет
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { L402Client, BlinkWallet } from "l402-kit";
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!),
+      budgetSats: 500, // max 500 sats total this session
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Client
+    from l402kit.wallets import BlinkWallet
+
+    client = L402Client(
+        wallet=BlinkWallet(os.environ["BLINK_API_KEY"], os.environ["BLINK_WALLET_ID"]),
+        budget_sats=500,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+Когда ответ 402 содержит поле `priceSats` и его значение превышает оставшийся бюджет, клиент выбрасывает `BudgetExceededError` **до совершения платежа** — никакие satoshi не тратятся.
+
+---
+
+## Бюджет по доменам
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 2000,
+      budgetPerDomain: {
+        "api.weather.com": 100,
+        "api.finance.com": 500,
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=2000,
+        budget_per_domain={
+            "api.weather.com": 100,
+            "api.finance.com": 500,
+        },
+    )
+    ```
+  </Tab>
+</Tabs>
+
+Лимиты по доменам проверяются независимо от глобального лимита — оба условия должны выполняться, чтобы платёж был совершён.
+
+---
+
+## Обратные вызовы
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const client = new L402Client({
+      wallet,
+      budgetSats: 1000,
+      onSpend: (sats, url) => {
+        console.log(`✓ Paid ${sats} sats → ${url}`);
+        // log to your telemetry, update a dashboard, etc.
+      },
+      onBudgetExceeded: (url, sats) => {
+        console.warn(`✗ Blocked: ${sats} sats requested by ${url} — budget exhausted`);
+        // alert, notify Slack, etc.
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    def on_spend(sats: int, url: str) -> None:
+        print(f"✓ Paid {sats} sats → {url}")
+
+    def on_budget_exceeded(url: str, sats: int) -> None:
+        print(f"✗ Blocked: {sats} sats requested by {url} — budget exhausted")
+
+    client = L402Client(
+        wallet=wallet,
+        budget_sats=1000,
+        on_spend=on_spend,
+        on_budget_exceeded=on_budget_exceeded,
+    )
+    ```
+  </Tab>
+</Tabs>
+
+`onBudgetExceeded` / `on_budget_exceeded` вызывается непосредственно перед выбросом `BudgetExceededError` — удобно для логирования или оповещений.
+
+---
+
+## Отчёт о расходах
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const report = client.spendingReport();
+
+    if (report) {
+      console.log(`Total spent: ${report.total} sats`);
+      console.log(`Remaining:   ${report.remaining} sats`);
+      console.log("By domain:", report.byDomain);
+      // { "api.weather.com": 42, "api.finance.com": 105 }
+
+      for (const tx of report.transactions) {
+        console.log(`  ${tx.ts}  ${tx.sats} sats  ${tx.url}`);
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    report = client.spending_report()
+
+    if report:
+        print(f"Total spent: {report.total} sats")
+        print(f"Remaining:   {report.remaining} sats")
+        print("By domain:", report.by_domain)
+        # {"api.weather.com": 42, "api.finance.com": 105}
+
+        for tx in report.transactions:
+            print(f"  {tx['ts']}  {tx['sats']} sats  {tx['url']}")
+    ```
+  </Tab>
+</Tabs>
+
+`spendingReport()` возвращает `null` / `None`, если бюджет не настроен.
+
+---
+
+## Обработка BudgetExceededError
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { BudgetExceededError } from "l402-kit";
+
+    try {
+      const res = await client.fetch("https://api.example.com/premium");
+    } catch (err) {
+      if (err instanceof BudgetExceededError) {
+        console.log(`Need ${err.required} sats, only ${err.remaining} remaining`);
+        // gracefully degrade — return cached data, skip this step, etc.
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import BudgetExceededError
+
+    try:
+        r = client.get("https://api.example.com/premium")
+    except BudgetExceededError as e:
+        print(f"Need {e.required} sats, only {e.remaining} remaining")
+        # gracefully degrade
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Замечания о параллельном выполнении
+
+<Warning>
+**Не используйте один экземпляр `L402Client` в параллельных вызовах `Promise.all`, если важны лимиты бюджета.**
+
+`BudgetTracker.check()` и `record()` разделены операцией `await` (платёж через Lightning Network). Два параллельных вызова `client.fetch()` к разным эндпоинтам могут оба пройти проверку бюджета до того, как хоть один из них зафиксирует расход — это означает, что суммарные затраты могут временно превысить лимит бюджета на один платёж.
+
+**Безопасный паттерн — последовательные вызовы:**
+```typescript
+for (const url of urls) {
+  const res = await client.fetch(url); // awaited one at a time
+}
+```
+
+**Рискованный паттерн — параллельные вызовы:**
+```typescript
+// Both may pass budget.check() before either calls budget.record()
+const results = await Promise.all(urls.map(url => client.fetch(url)));
+```
+
+**Решение для параллельных задач:** устанавливайте `budgetSats` с запасом (например, 80% от реального лимита), чтобы компенсировать перерасход от одного параллельного платежа. Для строгого соблюдения лимитов обрабатывайте вызовы последовательно.
+</Warning>
+
+---
+
+## Полный справочник параметров
+
+| Параметр | TypeScript | Python | По умолчанию | Описание |
+|--------|-----------|--------|---------|-------------|
+| Глобальный бюджет | `budgetSats` | `budget_sats` | без ограничений | Максимум sats за сессию |
+| По доменам | `budgetPerDomain` | `budget_per_domain` | `{}` | Карта `домен → максимум sats` |
+| Хук расхода | `onSpend` | `on_spend` | — | Вызывается после каждого платежа |
+| Хук превышения | `onBudgetExceeded` | `on_budget_exceeded` | — | Вызывается перед выбросом исключения |

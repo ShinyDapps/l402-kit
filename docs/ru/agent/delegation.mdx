@@ -1,0 +1,113 @@
+---
+title: "Делегирование между агентами"
+description: "Позвольте оркестратору заплатить один раз и передать учётные данные дочерним агентам."
+---
+
+## Концепция
+
+Токен L402 (`macaroon:preimage`) — это переносимая строка: после оплаты её можно передать любому дочернему агенту, которому нужен доступ к тому же ресурсу. Кошелёк хранится у оркестратора; дочерние агенты получают только токен.
+
+```
+Orchestrator (has wallet)
+   │
+   ├── pays invoice → receives token (macaroon:preimage)
+   │
+   ├── passes token string to SubAgent A
+   └── passes token string to SubAgent B
+
+SubAgent A — calls /api/data with token  ✓  (no wallet needed)
+SubAgent B — calls /api/data with token  ✓  (no wallet needed)
+```
+
+<Note>
+Срок действия токенов истекает через 1 час. Каждый preimage может быть использован только один раз на сервере (защита от повторного воспроизведения). Если параллельные дочерние агенты обращаются к одному и тому же эндпоинту, каждый из них должен выполнить собственную оплату.
+</Note>
+
+## Когда передавать токен, а когда платить независимо
+
+Существует два паттерна делегирования, каждый из которых имеет свои компромиссы:
+
+**Совместное использование токена** работает, когда дочерние агенты обращаются к **одному и тому же эндпоинту последовательно**. Оркестратор платит один раз, извлекает значение заголовка `Authorization` и передаёт его в виде строки. Дочерние агенты вызывают эндпоинт с этим заголовком напрямую — кошелёк не требуется. Это минимизирует затраты (одна оплата), однако **небезопасно при конкурентном доступе** — только один агент может владеть данным preimage, а серверы отклоняют повторные запросы.
+
+**Независимая оплата** (каждый дочерний агент имеет собственный `L402Client`, использующий кошелёк оркестратора) подходит для **параллельного или конкурентного доступа**. Каждый агент оплачивает собственный инвойс и кэширует собственный токен. Это обходится дороже в sats, но проще в понимании и безопасно при любом уровне параллелизма.
+
+**Практическое правило:** если ваши дочерние агенты работают параллельно, дайте каждому собственный `L402Client`. Если они работают последовательно и обращаются к одному эндпоинту — передайте строку токена.
+
+## Соображения безопасности
+
+- **Никогда не передавайте учётные данные кошелька дочерним агентам.** Передавайте только строку токена (`L402 <macaroon>:<preimage>`). Токен позволяет обратиться к одному эндпоинту в течение до одного часа — приватный ключ может опустошить кошелёк.
+- **Токены одноразовые для каждого сервера.** После первого принятого запроса сервер записывает хэш preimage. Второй запрос с тем же preimage вернёт 402. Это предотвращает атаки повторного воспроизведения, но означает, что один токен нельзя разделить между двумя конкурентными дочерними агентами, обращающимися к одному серверу.
+- **Управление бюджетом осуществляется на уровне кошелька.** Установите `budgetSats` на `L402Client` оркестратора, чтобы ограничить общие расходы всех дочерних агентов, использующих этот кошелёк. См. [Управление бюджетом](/agent/budget).
+
+## TypeScript — оркестратор платит, дочерний агент использует токен
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+// Orchestrator: has wallet, pays invoice
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+const orchestrator = new L402Client({ wallet, budgetSats: 5000 });
+
+// Fetch triggers payment; token is cached inside orchestrator
+const res = await orchestrator.fetch("https://api.example.com/data");
+const data = await res.json();
+
+// Build the delegation header from the macaroon + preimage the Lightning Network returned.
+// In practice, retrieve these from the payment result or the client's token cache.
+// Format is always: "L402 <base64-macaroon>:<hex-preimage>"
+const tokenHeader = `L402 ${macaroon}:${preimage}`; // substitute values from payment result
+
+// Sub-agent: no wallet, passes the header directly
+const subRes = await fetch("https://api.example.com/data", {
+  headers: { Authorization: tokenHeader },
+});
+```
+
+## Python — оркестратор платит, дочерний агент использует токен
+
+```python
+from l402kit import L402Client
+from l402kit.wallets.blink import BlinkWallet
+
+# Orchestrator pays
+wallet = BlinkWallet(api_key=os.environ["BLINK_API_KEY"])
+orchestrator = L402Client(wallet=wallet, budget_sats=5000)
+
+async with orchestrator:
+    response = await orchestrator.fetch("https://api.example.com/data")
+
+# Sub-agents: pass the Authorization header directly
+# Authorization: L402 <macaroon>:<preimage>
+```
+
+## Паттерн с несколькими агентами: одна оплата, параллельное чтение
+
+Если нескольким дочерним агентам нужен **один и тот же ресурс одновременно**, наиболее чистый паттерн — это независимая оплата каждым дочерним агентом с использованием собственного `L402Client` с общим кошельком:
+
+```typescript
+import { L402Client, BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(process.env.BLINK_API_KEY!, process.env.BLINK_WALLET_ID!);
+
+// Each sub-agent gets its own L402Client — independent payment + token cache
+const agents = Array.from({ length: 3 }, () => new L402Client({ wallet }));
+
+const results = await Promise.all(
+  agents.map((agent) => agent.fetch("https://api.example.com/data"))
+);
+```
+
+## Свойства безопасности
+
+| Свойство | Как работает сегодня |
+|----------|--------------------|
+| Изоляция кошелька | Дочерние агенты получают строку токена, но не приватные ключи |
+| Ограничение по времени | Macaroon истекают через 1 час |
+| Защита от повторного воспроизведения | Каждый preimage может быть принят сервером только один раз |
+| Управление бюджетом | Установите `budgetSats` на `L402Client` оркестратора |
+
+## Планируется в будущей версии
+
+Полное делегирование с ограничениями macaroon (ограничение по эндпоинту, одноразовые токены, лимиты использования) запланировано. Следите за прогрессом на [GitHub](https://github.com/ShinyDapps/l402-kit).
+
+См. [Управление бюджетом](/agent/budget) для установки лимитов расходов на уровне сессии.
