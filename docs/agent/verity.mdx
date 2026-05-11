@@ -1,17 +1,17 @@
 ---
 title: "VERITY"
-description: "Autonomous AI agent with 9 L402-protected services. Earns sats, pays in sats."
+description: "Autonomous AI agent with 10 L402-protected services. Earns sats, pays in sats."
 ---
 
 # VERITY
 
-VERITY is an autonomous AI agent built on l402-kit. She sells 9 services via the L402 protocol, accumulates a Bitcoin treasury, and adjusts her own prices based on demand — without human intervention.
+VERITY is an autonomous AI agent built on l402-kit. She sells 10 services via the L402 protocol, accumulates a Bitcoin treasury, and adjusts her own prices based on demand — without human intervention.
 
 **Discovery endpoint:** `GET https://l402kit.com/api/verity`
 
 ---
 
-## The 9 Services
+## The 10 Services
 
 | Service | Endpoint | Price | Requires |
 |---|---|---|---|
@@ -24,6 +24,7 @@ VERITY is an autonomous AI agent built on l402-kit. She sells 9 services via the
 | l402-kit Integration | `/api/verity/integration` | 10,000 sats | — |
 | World State | `/api/verity/worldstate` | 80 sats | — |
 | Translate | `/api/verity/translate` | 50 sats | — |
+| Research | `/api/verity/research` | 300 sats | — |
 
 Prices are dynamic — VERITY adjusts them every 30 minutes based on demand.
 
@@ -241,6 +242,36 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
+### Research — 300 sats
+Deep research bundle: search + scrape + AI summarization in a single call. Saves 3 separate payments and 3x the roundtrip latency.
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "bitcoin lightning network adoption 2026"}' \
+  https://l402kit.com/api/verity/research
+```
+
+**Response:**
+```json
+{
+  "agent": "VERITY",
+  "service": "research",
+  "query": "bitcoin lightning network adoption 2026",
+  "summary": "Lightning Network adoption has accelerated significantly in 2026...",
+  "scraped_url": "https://example.com/article",
+  "sources": [
+    { "title": "...", "link": "...", "snippet": "..." }
+  ],
+  "provider": "serper",
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+**vs. calling services separately:** Search (100 sats) + Scrape (200 sats) + Summarize (50 sats) = 350 sats total. Research costs 300 sats — cheaper and one payment.
+
+---
+
 ### Translate — 50 sats
 Translates text or MDX documentation to any of 11 supported languages. When `format` is `mdx`, code blocks, MDX components, URLs, and technical terms are preserved exactly — only prose is translated.
 
@@ -361,10 +392,11 @@ Minimum: 100 sats. Changes take effect immediately.
 
 ```
 VERITY (agent:shinydapps.verity)
-  ├── 9 L402-protected services
+  ├── 10 L402-protected services
   ├── Treasury: shinydapps@blink.sv
-  ├── Heartbeat: every 30min (price adjustment)
-  ├── Fiscal Agent: daily report (sats earned + BRL equivalent)
+  ├── Heartbeat: every 30min (price adjustment + Satring market scan)
+  ├── Query cache: KV-backed, per-service TTL (5min–24h)
+  ├── Fiscal Agent: daily report (sats earned + BRL equivalent + revenue alerts)
   └── LAW-N: behavioral events emitted per transaction
 ```
 
