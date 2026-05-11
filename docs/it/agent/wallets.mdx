@@ -1,0 +1,158 @@
+---
+title: Wallet
+description: Collega Blink o Alby per permettere al tuo agente di pagare le fatture Lightning automaticamente.
+---
+
+## Wallet supportati
+
+| Wallet | Installazione | Custodia autonoma | Note |
+|--------|---------|:------------:|-------|
+| [Blink](https://blink.sv) | integrato | ❌ custodial | Configurazione più semplice, GraphQL API |
+| [Alby Hub](https://getalby.com) | integrato | ✅ opzione self-hosted | REST API, supporta Hub proprio |
+| Personalizzato | interfaccia `L402Wallet` | ✅ | Usa il tuo wallet |
+
+---
+
+## BlinkWallet
+
+### Configurazione
+
+1. Registrati su [blink.sv](https://blink.sv)
+2. Vai su **Dashboard → API Keys** → crea una chiave
+3. Copia il tuo **Wallet ID** dalla dashboard
+
+```bash
+export BLINK_API_KEY="your-api-key"
+export BLINK_WALLET_ID="your-wallet-id"
+```
+
+### Node.js
+
+```typescript
+import { BlinkWallet } from "l402-kit";
+
+const wallet = new BlinkWallet(
+  process.env.BLINK_API_KEY!,
+  process.env.BLINK_WALLET_ID!,
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import BlinkWallet
+
+wallet = BlinkWallet(
+    api_key=os.environ["BLINK_API_KEY"],
+    wallet_id=os.environ["BLINK_WALLET_ID"],
+)
+```
+
+### Come funziona
+
+Chiama la [Blink GraphQL API](https://api.blink.sv/graphql) con la mutation `lnInvoicePaymentSend`. Restituisce il `preImage` dalla transazione completata.
+
+---
+
+## AlbyWallet
+
+### Configurazione
+
+1. Crea un account su [getalby.com](https://getalby.com)
+2. Vai su **Settings → Access Tokens** → crea un token con scope `payments:send`
+3. (Opzionale) Esegui il tuo [Alby Hub](https://github.com/getAlby/hub) per la custodia autonoma
+
+```bash
+export ALBY_TOKEN="your-access-token"
+# Opzionale — necessario solo per Hub self-hosted:
+export ALBY_HUB_URL="https://your-hub.example.com"
+```
+
+### Node.js
+
+```typescript
+import { AlbyWallet } from "l402-kit";
+
+// Alby cloud
+const wallet = new AlbyWallet(process.env.ALBY_TOKEN!);
+
+// Hub self-hosted
+const wallet = new AlbyWallet(
+  process.env.ALBY_TOKEN!,
+  process.env.ALBY_HUB_URL,  // optional base URL
+);
+```
+
+### Python
+
+```python
+from l402kit.wallets import AlbyWallet
+
+# Alby cloud
+wallet = AlbyWallet(os.environ["ALBY_TOKEN"])
+
+# Hub self-hosted
+wallet = AlbyWallet(
+    access_token=os.environ["ALBY_TOKEN"],
+    base_url=os.environ.get("ALBY_HUB_URL", "https://api.getalby.com"),
+)
+```
+
+### Come funziona
+
+Chiama `POST /payments/bolt11` sulla REST API di Alby Hub con un token `Bearer`. Restituisce il `payment_preimage` dalla risposta.
+
+---
+
+## Wallet personalizzato
+
+Implementa l'interfaccia `L402Wallet` per utilizzare qualsiasi wallet Lightning:
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import type { L402Wallet } from "l402-kit";
+
+    class PhoenixWallet implements L402Wallet {
+      async payInvoice(bolt11: string): Promise<{ preimage: string }> {
+        const res = await fetch("http://localhost:9740/payinvoice", {
+          method: "POST",
+          body: new URLSearchParams({ invoice: bolt11 }),
+        });
+        const data = await res.json();
+        return { preimage: data.paymentPreimage };
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from l402kit import L402Wallet
+    import httpx
+
+    class PhoenixWallet(L402Wallet):
+        def pay_invoice(self, bolt11: str) -> str:
+            r = httpx.post(
+                "http://localhost:9740/payinvoice",
+                data={"invoice": bolt11},
+            )
+            r.raise_for_status()
+            return r.json()["paymentPreimage"]
+    ```
+  </Tab>
+</Tabs>
+
+L'interfaccia richiede un singolo metodo:
+
+| Metodo | TypeScript | Python |
+|--------|-----------|--------|
+| Paga una fattura BOLT11 | `payInvoice(bolt11): Promise<{ preimage: string }>` | `pay_invoice(bolt11: str) -> str` |
+
+---
+
+## Scegliere un wallet
+
+- **Test / prototipazione** → Blink (custodial, configurazione immediata, piano gratuito)
+- **Agente in produzione, massimo controllo** → Alby Hub self-hosted (non-custodial, REST API)
+- **Alta elaborazione / commissioni basse** → Phoenix tramite `L402Wallet` personalizzato (non-custodial, ACINQ)
+- **Enterprise** → LNbits self-hosted tramite wallet personalizzato

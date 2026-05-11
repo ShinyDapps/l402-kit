@@ -822,7 +822,45 @@
     {
       "group": "🇮🇹 Italiano",
       "pages": [
-        "it/introduction"
+        {
+          "group": "Getting Started",
+          "pages": [
+            "it/introduction",
+            "it/quickstart"
+          ]
+        },
+        {
+          "group": "SDKs",
+          "pages": [
+            "it/sdk/typescript",
+            "it/sdk/python",
+            "it/sdk/go",
+            "it/sdk/rust"
+          ]
+        },
+        {
+          "group": "Agent SDK",
+          "pages": [
+            "it/agent/quickstart",
+            "it/agent/wallets",
+            "it/agent/budget",
+            "it/agent/mcp",
+            "it/agent/langchain",
+            "it/agent/system-prompt",
+            "it/agent/wallet-quickstart",
+            "it/agent/delegation"
+          ]
+        },
+        {
+          "group": "Reference",
+          "pages": [
+            "it/providers",
+            "it/api-reference",
+            "it/reference/errors",
+            "it/competitive",
+            "it/payment-layer"
+          ]
+        }
       ]
     }
   ],
