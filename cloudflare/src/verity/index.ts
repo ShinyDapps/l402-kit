@@ -8,6 +8,7 @@ import { handleVerityDomainIntel } from "./services/domainIntel";
 import { handleVerityIntegration } from "./services/integration";
 import { handleVerityWorldState }  from "./services/worldstate";
 import { handleVerityTranslate }   from "./services/translate";
+import { handleVerityResearch }    from "./services/research";
 import { getAllPrices, getServiceConfig, setServiceConfig, DEFAULTS } from "./pricing";
 import { getDailySpend, getDailyBudget } from "./consumer";
 import { verityRateLimit } from "./ratelimit";
@@ -32,6 +33,7 @@ export async function handleVerity(req: Request, env: Env): Promise<Response> {
     case "integration": return handleVerityIntegration(req, env);
     case "worldstate":  return handleVerityWorldState(req, env);
     case "translate":   return handleVerityTranslate(req, env);
+    case "research":    return handleVerityResearch(req, env);
     case "admin":       return handleVerityAdmin(req, env);
     default:            return handleVerityIndex(env);
   }

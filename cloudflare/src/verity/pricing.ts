@@ -19,6 +19,7 @@ export const DEFAULTS: Record<string, ServiceConfig> = {
   integration: { floor: 10000, base: 10000, surgeThreshold: 3,   cogs: 150 },
   worldstate:  { floor: 80,    base: 80,    surgeThreshold: 100, cogs: 0   },
   translate:   { floor: 50,    base: 50,    surgeThreshold: 30,  cogs: 1   },
+  research:    { floor: 300,  base: 300,   surgeThreshold: 15,  cogs: 51  }, // search+scrape+summarize bundled
 };
 
 export async function getServiceConfig(service: string, env: Env): Promise<ServiceConfig> {
@@ -86,6 +87,19 @@ export async function adjustAllPrices(env: Env): Promise<Record<string, number>>
   }
 
   return changes;
+}
+
+export async function adjustPrice(service: string, direction: "up" | "down", env: Env): Promise<void> {
+  const config = await getServiceConfig(service, env);
+  const current = await getPrice(service, env);
+  const factor = direction === "up" ? 1.05 : 0.9;
+  const newPrice = Math.max(
+    Math.round(current * factor),
+    Math.max(config.floor, config.cogs + MARGIN_FLOOR),
+  );
+  if (newPrice !== current) {
+    await env.demo_preimages.put(`verity_price:${service}`, String(newPrice));
+  }
 }
 
 export async function getAllPrices(env: Env): Promise<Record<string, number>> {
