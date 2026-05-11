@@ -15,7 +15,7 @@ export async function handleVerityWorldState(req: Request, env: Env): Promise<Re
     await recordCall(SERVICE, env);
 
     const now = new Date();
-    const cf = (req as Request & { cf?: CloudflareRequestCF }).cf;
+    const cf = (req as Request & { cf?: { latitude?: unknown; longitude?: unknown; country?: unknown; city?: unknown; timezone?: unknown; region?: unknown; continent?: unknown } }).cf;
 
     const lat = cf?.latitude ? parseFloat(String(cf.latitude)) : null;
     const lon = cf?.longitude ? parseFloat(String(cf.longitude)) : null;
