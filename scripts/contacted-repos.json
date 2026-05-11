@@ -1,0 +1,117 @@
+{
+  "momentum-mod/website": {
+    "contacted_at": "2026-05-10T13:12:52.313Z",
+    "issue_url": "https://github.com/momentum-mod/website/issues/1489",
+    "issue_number": 1489
+  },
+  "alwalxed/qafiyah": {
+    "contacted_at": "2026-05-10T13:12:57.612Z",
+    "issue_url": "https://github.com/alwalxed/qafiyah/issues/41",
+    "issue_number": 41
+  },
+  "cially/cially": {
+    "contacted_at": "2026-05-10T13:13:02.955Z",
+    "issue_url": "https://github.com/cially/cially/issues/105",
+    "issue_number": 105
+  },
+  "suhaibbinyounis/github-copilot-api-vscode": {
+    "contacted_at": "2026-05-10T13:13:07.718Z",
+    "issue_url": "https://github.com/suhaibbinyounis/github-copilot-api-vscode/issues/117",
+    "issue_number": 117
+  },
+  "rayriffy/elysia-rate-limit": {
+    "contacted_at": "2026-05-10T13:13:12.795Z",
+    "issue_url": "https://github.com/rayriffy/elysia-rate-limit/issues/81",
+    "issue_number": 81
+  },
+  "ad-naan/Adnify": {
+    "contacted_at": "2026-05-10T16:12:17.171Z",
+    "issue_url": "https://github.com/ad-naan/Adnify/issues/92",
+    "issue_number": 92
+  },
+  "cdnjs/api-server": {
+    "contacted_at": "2026-05-10T16:12:23.332Z",
+    "issue_url": "https://github.com/cdnjs/api-server/issues/213",
+    "issue_number": 213
+  },
+  "Ephigenia/ikea-availability-checker": {
+    "contacted_at": "2026-05-10T16:12:28.776Z",
+    "issue_url": "https://github.com/Ephigenia/ikea-availability-checker/issues/680",
+    "issue_number": 680
+  },
+  "beenuar/AiSOC": {
+    "contacted_at": "2026-05-10T16:12:35.092Z",
+    "issue_url": "https://github.com/beenuar/AiSOC/issues/48",
+    "issue_number": 48
+  },
+  "taogeYT/fast-grpc": {
+    "contacted_at": "2026-05-10T16:12:40.587Z",
+    "issue_url": "https://github.com/taogeYT/fast-grpc/issues/16",
+    "issue_number": 16
+  },
+  "violit-dev/violit": {
+    "contacted_at": "2026-05-10T16:12:45.419Z",
+    "issue_url": "https://github.com/violit-dev/violit/issues/26",
+    "issue_number": 26
+  },
+  "bob798/speakeasy": {
+    "contacted_at": "2026-05-10T16:12:51.821Z",
+    "issue_url": "https://github.com/bob798/speakeasy/issues/25",
+    "issue_number": 25
+  },
+  "smaramwbc/statewave": {
+    "contacted_at": "2026-05-10T16:12:56.843Z",
+    "issue_url": "https://github.com/smaramwbc/statewave/issues/70",
+    "issue_number": 70
+  },
+  "AleksNeStu/ai-real-estate-assistant": {
+    "contacted_at": "2026-05-10T16:13:02.191Z",
+    "issue_url": "https://github.com/AleksNeStu/ai-real-estate-assistant/issues/48",
+    "issue_number": 48
+  },
+  "Aivis-Project/AivisSpeech-Engine": {
+    "contacted_at": "2026-05-10T16:13:07.298Z",
+    "issue_url": "https://github.com/Aivis-Project/AivisSpeech-Engine/issues/48",
+    "issue_number": 48
+  },
+  "FellouAI/eko": {
+    "contacted_at": "2026-05-10T16:15:26.809Z",
+    "issue_url": "https://github.com/FellouAI/eko/issues/283",
+    "type": "agent-client"
+  },
+  "builderz-labs/mission-control": {
+    "contacted_at": "2026-05-10T16:15:28.768Z",
+    "issue_url": "https://github.com/builderz-labs/mission-control/issues/672",
+    "type": "agent-client"
+  },
+  "heilcheng/awesome-agent-skills": {
+    "contacted_at": "2026-05-10T16:15:30.735Z",
+    "issue_url": "https://github.com/heilcheng/awesome-agent-skills/issues/226",
+    "type": "agent-client"
+  },
+  "liveblocks/liveblocks": {
+    "contacted_at": "2026-05-10T16:15:32.746Z",
+    "issue_url": "https://github.com/liveblocks/liveblocks/issues/3404",
+    "type": "agent-client"
+  },
+  "thunderbird/thunderbolt": {
+    "contacted_at": "2026-05-10T16:15:34.736Z",
+    "issue_url": "https://github.com/thunderbird/thunderbolt/issues/852",
+    "type": "agent-client"
+  },
+  "CaviraOSS/OpenMemory": {
+    "contacted_at": "2026-05-10T16:15:36.756Z",
+    "issue_url": "https://github.com/CaviraOSS/OpenMemory/issues/175",
+    "type": "agent-client"
+  },
+  "darrenhinde/OpenAgentsControl": {
+    "contacted_at": "2026-05-10T16:15:38.737Z",
+    "issue_url": "https://github.com/darrenhinde/OpenAgentsControl/issues/315",
+    "type": "agent-client"
+  },
+  "abhi1693/openclaw-mission-control": {
+    "contacted_at": "2026-05-10T16:15:40.735Z",
+    "issue_url": "https://github.com/abhi1693/openclaw-mission-control/issues/348",
+    "type": "agent-client"
+  }
+}
