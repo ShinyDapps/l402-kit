@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess, recordError } from "../pricing";
 import { scrapeUrl, validateUrl } from "../providers/scrape";
 
 const SERVICE = "scrape";
@@ -25,8 +25,9 @@ export async function handleVerityScrape(req: Request, env: Env): Promise<Respon
     await recordCall(SERVICE, env);
 
     const result = await scrapeUrl(targetUrl, env);
-    if (!result) return json({ error: "Scrape failed — URL may require JavaScript or authentication" }, 503);
+    if (!result) { await recordError(SERVICE, env); return json({ error: "Scrape failed — URL may require JavaScript or authentication" }, 503); }
 
+    await recordSuccess(SERVICE, env);
     return json({
       agent: "VERITY",
       service: SERVICE,

@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess } from "../pricing";
 
 const SERVICE = "domainIntel";
 
@@ -23,6 +23,7 @@ export async function handleVerityDomainIntel(req: Request, env: Env): Promise<R
     domain = domain.replace(/^https?:\/\//, "").split("/")[0].toLowerCase();
 
     await recordCall(SERVICE, env);
+    await recordSuccess(SERVICE, env);
 
     const [whois, dns, certs] = await Promise.allSettled([
       fetchRdap(domain),

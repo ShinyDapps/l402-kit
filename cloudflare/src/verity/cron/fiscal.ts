@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { DEFAULTS, getPrice, adjustPrice } from "../pricing";
-import { getDailySpend, getDailyBudget } from "../consumer";
+import { getDailySpend, getDailyBudget, applyBonusBudget } from "../consumer";
 
 const ALERT_THRESHOLD_SATS = 1_000; // notify when daily revenue crosses 1000 sats
 
@@ -126,6 +126,7 @@ export async function runFiscalAgent(env: Env): Promise<void> {
       await sendRevenueAlert(report as Record<string, unknown>, env);
     }
 
+    await applyBonusBudget(env);
     console.log("[VERITY] fiscal report:", JSON.stringify(report));
   } catch (e) {
     console.error("[VERITY] fiscal agent error:", String(e));

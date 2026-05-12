@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess, recordError } from "../pricing";
 import { infer } from "../providers/inference";
 
 const SERVICE = "translate";
@@ -67,8 +67,9 @@ ${text}`,
       { system: "You are a professional technical translator. Preserve all formatting, code, and technical terms exactly as instructed." },
     );
 
-    if (!translated) return json({ error: "Translation failed" }, 503);
+    if (!translated) { await recordError(SERVICE, env); return json({ error: "Translation failed" }, 503); }
 
+    await recordSuccess(SERVICE, env);
     return json({
       agent: "VERITY",
       service: SERVICE,

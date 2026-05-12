@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess, recordError } from "../pricing";
 import { infer } from "../providers/inference";
 
 const SERVICE = "summarize";
@@ -27,8 +27,9 @@ export async function handleVeritySummarize(req: Request, env: Env): Promise<Res
       `Summarize the following text concisely in ${language}. Return only the summary, no preamble.\n\n${text}`,
       env,
     );
-    if (!summary) return json({ error: "Summarization failed" }, 503);
+    if (!summary) { await recordError(SERVICE, env); return json({ error: "Summarization failed" }, 503); }
 
+    await recordSuccess(SERVICE, env);
     return json({
       agent: "VERITY",
       service: SERVICE,

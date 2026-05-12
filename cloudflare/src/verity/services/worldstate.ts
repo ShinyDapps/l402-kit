@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess } from "../pricing";
 
 const SERVICE = "worldstate";
 
@@ -13,6 +13,7 @@ export async function handleVerityWorldState(req: Request, env: Env): Promise<Re
     if (await replayCheck(preimage!, env)) return json({ error: "Token already used" }, 401);
 
     await recordCall(SERVICE, env);
+    await recordSuccess(SERVICE, env);
 
     const now = new Date();
     const cf = (req as Request & { cf?: { latitude?: unknown; longitude?: unknown; country?: unknown; city?: unknown; timezone?: unknown; region?: unknown; continent?: unknown } }).cf;

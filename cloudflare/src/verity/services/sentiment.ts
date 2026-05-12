@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess, recordError } from "../pricing";
 import { infer } from "../providers/inference";
 
 const SERVICE = "sentiment";
@@ -29,7 +29,7 @@ export async function handleVeritySentiment(req: Request, env: Env): Promise<Res
 Text: ${text}`,
       env,
     );
-    if (!raw) return json({ error: "Sentiment analysis failed" }, 503);
+    if (!raw) { await recordError(SERVICE, env); return json({ error: "Sentiment analysis failed" }, 503); }
 
     let parsed: unknown;
     try {
@@ -39,6 +39,7 @@ Text: ${text}`,
       parsed = { sentiment: "neutral", score: 0.5, confidence: 0.5, keywords: [] };
     }
 
+    await recordSuccess(SERVICE, env);
     return json({
       agent: "VERITY",
       service: SERVICE,

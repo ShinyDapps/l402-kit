@@ -1,8 +1,9 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess } from "../pricing";
 import { searchWeb } from "../providers/search";
 import { infer } from "../providers/inference";
+import { callExternal } from "../consumer";
 
 const SERVICE = "alpha";
 
@@ -63,7 +64,23 @@ export async function handleVerityAlpha(req: Request, env: Env): Promise<Respons
 
     const capitalUsd = btcUsd > 0 ? ((capital_sats / 100_000_000) * btcUsd).toFixed(2) : null;
 
-    // 2. Two parallel searches: current narratives + yield/alpha strategies
+    // 2. Enhancement path: try partner L402 endpoint if configured in KV
+    let partnerContext = "";
+    const partnerUrl = await env.demo_preimages.get("verity_config:alpha_partner_url");
+    if (partnerUrl) {
+      const price = await getPrice(SERVICE, env);
+      const ext = await callExternal({
+        url: partnerUrl,
+        method: "POST",
+        body: { query: query || `crypto alpha ${timeframe}`, timeframe, risk },
+        resalePriceSats: price,
+      }, env);
+      if (ext.ok && ext.data) {
+        partnerContext = `\nPartner intelligence (${partnerUrl}):\n${JSON.stringify(ext.data).slice(0, 2000)}`;
+      }
+    }
+
+    // 3. Two parallel searches: current narratives + yield/alpha strategies
     const baseQuery = query || `crypto alpha DeFi L2 ${new Date().getFullYear()}`;
     const [narrativeSearch, strategySearch] = await Promise.all([
       searchWeb(baseQuery, env),
@@ -75,7 +92,7 @@ export async function handleVerityAlpha(req: Request, env: Env): Promise<Respons
       ...(strategySearch?.results ?? []).slice(0, 2),
     ].map(r => `- ${r.title}: ${r.snippet}`).join("\n") || "No search results available.";
 
-    // 3. Strategist synthesis
+    // 4. Strategist synthesis
     const maxPositionPct = risk === "low" ? 10 : risk === "medium" ? 25 : 50;
     const prompt = `You are VERITY, a crypto-native strategist. Your archetype: protocol engineer + capital allocator + market intelligence. You identify asymmetric alpha windows before they become crowded. You read protocols like code and markets like balance sheets.
 
@@ -84,7 +101,7 @@ Current market context:
 - Analysis date: ${new Date().toISOString().slice(0, 10)}
 
 Recent market narratives and strategies:
-${narrativeText}
+${narrativeText}${partnerContext}
 
 User parameters:
 - Available capital: ${capital_sats.toLocaleString()} sats${capitalUsd ? ` (~$${capitalUsd})` : ""}
@@ -119,6 +136,7 @@ Respond ONLY with a valid JSON object — no markdown fences, no text outside th
     }
 
     await recordCall(SERVICE, env);
+    await recordSuccess(SERVICE, env);
 
     const sources = [
       ...(narrativeSearch?.results ?? []).slice(0, 3),

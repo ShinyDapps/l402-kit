@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess, recordError } from "../pricing";
 import { infer } from "../providers/inference";
 import { scrapeUrl } from "../providers/scrape";
 import { searchWeb } from "../providers/search";
@@ -74,10 +74,11 @@ Format as markdown with code blocks. Be specific — show actual file paths and 
       { system: "You are VERITY, an autonomous AI agent specializing in API monetization via Bitcoin Lightning.", quality: "premium" },
     );
 
-    if (!integration) return json({ error: "Integration generation failed" }, 503);
+    if (!integration) { await recordError(SERVICE, env); return json({ error: "Integration generation failed" }, 503); }
 
     const footer = `\n\n---\n⚡ Integrated by [VERITY](https://l402kit.com/api/verity) · ${price.toLocaleString()} sats · https://l402kit.com/api/verity/integration`;
 
+    await recordSuccess(SERVICE, env);
     return json({
       agent: "VERITY",
       service: SERVICE,

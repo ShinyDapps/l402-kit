@@ -52,8 +52,21 @@ export async function recordCall(service: string, env: Env): Promise<void> {
   const hour = Math.floor(Date.now() / 3_600_000);
   const key = `verity_calls:${service}:${hour}`;
   const raw = await env.demo_preimages.get(key);
-  const count = raw ? parseInt(raw, 10) + 1 : 1;
-  await env.demo_preimages.put(key, String(count), { expirationTtl: 7200 });
+  await env.demo_preimages.put(key, String(raw ? parseInt(raw, 10) + 1 : 1), { expirationTtl: 7200 });
+}
+
+export async function recordSuccess(service: string, env: Env): Promise<void> {
+  const hour = Math.floor(Date.now() / 3_600_000);
+  const key = `verity_success:${service}:${hour}`;
+  const raw = await env.demo_preimages.get(key);
+  await env.demo_preimages.put(key, String(raw ? parseInt(raw, 10) + 1 : 1), { expirationTtl: 86400 });
+}
+
+export async function recordError(service: string, env: Env): Promise<void> {
+  const hour = Math.floor(Date.now() / 3_600_000);
+  const key = `verity_error:${service}:${hour}`;
+  const raw = await env.demo_preimages.get(key);
+  await env.demo_preimages.put(key, String(raw ? parseInt(raw, 10) + 1 : 1), { expirationTtl: 86400 });
 }
 
 export async function adjustAllPrices(env: Env): Promise<Record<string, number>> {

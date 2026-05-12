@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import { verifyL402, replayCheck, createVerityInvoice, make402, json } from "../l402";
-import { getPrice, recordCall } from "../pricing";
+import { getPrice, recordCall, recordSuccess } from "../pricing";
 import { searchWeb } from "../providers/search";
 import { scrapeUrl } from "../providers/scrape";
 import { infer } from "../providers/inference";
@@ -49,6 +49,7 @@ export async function handleVerityResearch(req: Request, env: Env): Promise<Resp
     }
 
     await recordCall(SERVICE, env);
+    await recordSuccess(SERVICE, env);
 
     return json({
       agent: "VERITY",
