@@ -106,15 +106,13 @@ export async function runRadar(env: Env): Promise<void> {
     return;
   }
 
-  console.log("[RADAR] serper key length:", env.SERPER_API_KEY?.length ?? 0);
-
   const lock = await acquireRadarLock(env);
   if (!lock) {
     console.log("[RADAR] skipped — another run in progress");
     return;
   }
 
-  const log = { ts: new Date().toISOString(), found: 0, queued: 0, skipped: 0, errors: 0, serper: [] as number[], keyLen: 0 };
+  const log = { ts: new Date().toISOString(), found: 0, queued: 0, skipped: 0, errors: 0, serper: [] as number[] };
 
   try {
     const [h1, h2, a1, a2] = await Promise.allSettled([
@@ -126,8 +124,7 @@ export async function runRadar(env: Env): Promise<void> {
 
     const counts = [h1, h2, a1, a2].map(r => (r.status === "fulfilled" ? r.value.length : -1));
     log.serper = counts;
-    log.keyLen = env.SERPER_API_KEY?.length ?? 0;
-    console.log("[RADAR] serper counts:", counts, "keyLen:", log.keyLen);
+    console.log("[RADAR] serper counts:", counts);
 
     type Tagged = SerperItem & { persona: Persona };
     const tag = (items: SerperItem[], persona: Persona): Tagged[] =>
