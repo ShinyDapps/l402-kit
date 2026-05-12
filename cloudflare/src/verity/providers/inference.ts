@@ -3,21 +3,23 @@ import type { Env } from "../../worker";
 export interface InferenceOptions {
   system?: string;
   maxTokens?: number;
+  quality?: "standard" | "premium"; // standard=Haiku, premium=Sonnet
 }
 
 export async function infer(prompt: string, env: Env, opts: InferenceOptions = {}): Promise<string | null> {
   const system  = opts.system ?? "You are VERITY, an autonomous AI agent. Be concise and precise.";
   const maxTok  = opts.maxTokens ?? 2048;
+  const quality = opts.quality ?? "standard";
 
-  // 1. Groq — free tier (14,400 req/day), activate by adding GROQ_API_KEY secret
-  if (env.GROQ_API_KEY) {
+  // 1. Groq — free tier, standard quality only
+  if (env.GROQ_API_KEY && quality === "standard") {
     const groq = await inferGroq(prompt, system, maxTok, env.GROQ_API_KEY);
     if (groq) return groq;
   }
 
-  // 2. Claude Haiku — paid fallback (~1 sat/call)
+  // 2. Claude — Sonnet for premium, Haiku for standard
   if (env.ANTHROPIC_API_KEY) {
-    return inferHaiku(prompt, system, maxTok, env.ANTHROPIC_API_KEY);
+    return inferClaude(prompt, system, maxTok, quality, env.ANTHROPIC_API_KEY);
   }
 
   return null;
@@ -46,7 +48,8 @@ async function inferGroq(prompt: string, system: string, maxTokens: number, apiK
   }
 }
 
-async function inferHaiku(prompt: string, system: string, maxTokens: number, apiKey: string): Promise<string | null> {
+async function inferClaude(prompt: string, system: string, maxTokens: number, quality: "standard" | "premium", apiKey: string): Promise<string | null> {
+  const model = quality === "premium" ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -56,7 +59,7 @@ async function inferHaiku(prompt: string, system: string, maxTokens: number, api
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model,
         max_tokens: maxTokens,
         system,
         messages: [{ role: "user", content: prompt }],

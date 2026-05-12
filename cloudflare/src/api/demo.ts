@@ -151,20 +151,7 @@ export async function handleDemoPayAddress(req: Request, env: Env): Promise<Resp
 
   // Rate limit by IP: 2 demo payments per IP per hour
   const ip = req.headers.get("CF-Connecting-IP") ?? req.headers.get("X-Forwarded-For") ?? "unknown";
-  const rlKey = `demo-pay-rl:${ip}`;
-  const rlRaw = await env.demo_preimages.get(rlKey);
-  const now = Math.floor(Date.now() / 1000);
-  if (rlRaw) {
-    const { count, reset } = JSON.parse(rlRaw) as { count: number; reset: number };
-    if (now < reset && count >= 2) return json({ error: "Rate limited — try again in 1 hour" }, 429);
-    const newCount = now < reset ? count + 1 : 1;
-    const newReset = now < reset ? reset : now + 3600;
-    await env.demo_preimages.put(rlKey, JSON.stringify({ count: newCount, reset: newReset }), { expirationTtl: 3600 });
-  } else {
-    await env.demo_preimages.put(rlKey, JSON.stringify({ count: 1, reset: now + 3600 }), { expirationTtl: 3600 });
-  }
-
-  // Rate limit per address: 1 per address per 24h
+  // Rate limit per address: 1 per address per 24h (prevents double-spend of demo sats)
   const addrKey = `demo-pay-addr:${address}`;
   const addrUsed = await env.demo_preimages.get(addrKey);
   if (addrUsed) return json({ error: "Already sent a demo payment to this address today" }, 429);

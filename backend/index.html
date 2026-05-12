@@ -761,19 +761,19 @@ footer a:hover { color: var(--orange); text-decoration: none; }
     <div class="stat-label">License</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num" id="stat-stars">—</div>
+    <div class="stat-num" id="stat-stars">120+</div>
     <div class="stat-label">GitHub stars</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num" id="stat-tests">—</div>
+    <div class="stat-num" id="stat-tests">92</div>
     <div class="stat-label">Tests passing</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num" id="stat-installs">—</div>
+    <div class="stat-num" id="stat-installs">300+</div>
     <div class="stat-label">Total installs</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num" id="stat-weekly">—</div>
+    <div class="stat-num" id="stat-weekly">50+</div>
     <div class="stat-label">npm downloads/wk</div>
   </div>
   <div class="stat-item">
@@ -1099,8 +1099,8 @@ lightning = <span class="c-fn">BlinkProvider</span>(
           <button id="donateRunBtn" onclick="donateRun()"
                   style="padding:9px 20px;background:var(--orange);border:none;color:#000;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s">▶ Run</button>
         </div>
-        <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px">Try L402 live — pay 1 sat ⚡</h3>
-        <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:20px;max-width:540px">Click ▶ Run — you get a real BOLT11 invoice. Pay 1 sat from any Lightning wallet and watch the full L402 flow live: <strong style="color:#ccc">402 → invoice → pay → 200 OK</strong>. No account. No signup.</p>
+        <h3 id="demoH2" style="font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px">Try L402 live — pay 1 sat ⚡</h3>
+        <p id="demoP" style="color:#888;font-size:13px;line-height:1.6;margin-bottom:20px;max-width:540px">Click ▶ Run — get a real BOLT11 invoice. Pay 1 sat from any Lightning wallet, paste the preimage, and unlock the <strong style="color:#ffa033">whitepaper</strong>. Real L402 flow: <strong style="color:#ccc">402 → invoice → pay → whitepaper unlocked</strong>. No account. No signup.</p>
 
         <!-- Terminal -->
         <div style="background:#0d1117;border:1px solid #21262d;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5)">
@@ -1124,7 +1124,13 @@ lightning = <span class="c-fn">BlinkProvider</span>(
             <div style="flex:1;min-width:180px">
               <div id="donateInvoiceBox" style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:10px;font-family:'Fira Code',monospace;font-size:10px;word-break:break-all;color:#666;margin-bottom:8px;max-height:54px;overflow:hidden;cursor:pointer" onclick="copyDonateInvoice()" title="Click to copy"></div>
               <button id="donateCopyBtn" onclick="copyDonateInvoice()" style="width:100%;margin-bottom:8px;padding:9px;background:#1a1a1a;border:1px solid #2a2a2a;color:#e5e5e5;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">⎘ Copy invoice</button>
-              <div style="font-size:12px;color:#555;display:flex;align-items:center;gap:6px">
+              <div style="font-size:12px;color:#888;margin-bottom:10px;line-height:1.5">After paying, open the payment details in your wallet and copy the <strong style="color:#f7931a">preimage</strong> (64-char hex).</div>
+              <div style="display:flex;gap:6px">
+                <input id="donatePreimageInput" type="text" placeholder="Paste preimage here…" style="flex:1;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;font-family:'Fira Code',monospace;font-size:11px;color:#e5e5e5;outline:none;min-width:0">
+                <button onclick="donateVerify()" style="padding:8px 14px;background:#f7931a;border:none;border-radius:8px;font-size:12px;font-weight:700;color:#000;cursor:pointer;white-space:nowrap;font-family:inherit">Verify →</button>
+              </div>
+              <div id="donateVerifyError" style="display:none;color:#f87171;font-size:11px;margin-top:6px"></div>
+              <div style="margin-top:8px;font-size:11px;color:#444;display:flex;align-items:center;gap:6px">
                 <span id="donatePollDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f7931a;animation:pulse 1.5s infinite;flex-shrink:0"></span>
                 Waiting for payment… <span id="donateCountdown" style="margin-left:4px;color:#3a3a3a;font-family:'Fira Code',monospace"></span>
               </div>
@@ -1133,11 +1139,17 @@ lightning = <span class="c-fn">BlinkProvider</span>(
         </div>
 
         <!-- Success state -->
-        <div id="donateSuccess" style="display:none;margin-top:16px;text-align:center;padding:20px 16px;background:linear-gradient(135deg,#091209,#070d07);border:1px solid rgba(34,197,94,.3);border-radius:12px">
-          <div style="font-size:32px;margin-bottom:8px">⚡</div>
-          <div style="font-size:15px;font-weight:700;color:#22c55e;margin-bottom:6px">Payment received!</div>
-          <div style="font-size:12px;color:#888;line-height:1.6">1 sat settled. L402 protocol complete — real money, cryptographic proof, under 1 second.</div>
-          <button onclick="donateReset()" style="margin-top:14px;background:none;border:1px solid #333;color:#888;border-radius:8px;padding:7px 18px;font-size:12px;cursor:pointer;font-family:inherit">Run again</button>
+        <div id="donateSuccess" style="display:none;margin-top:16px;padding:20px 16px;background:linear-gradient(135deg,#091209,#070d07);border:1px solid rgba(34,197,94,.3);border-radius:12px">
+          <div style="text-align:center;margin-bottom:16px">
+            <div style="font-size:32px;margin-bottom:8px">⚡</div>
+            <div style="font-size:15px;font-weight:700;color:#22c55e;margin-bottom:4px">Payment verified!</div>
+            <div style="font-size:12px;color:#888;line-height:1.6">SHA256(preimage) == hash · 1 sat · L402 complete</div>
+          </div>
+          <a id="donateWhitepaperBtn" href="https://docs.l402kit.com/whitepaper" target="_blank" style="display:block;text-align:center;padding:11px 20px;background:#f7931a;border-radius:8px;font-size:13px;font-weight:700;color:#000;text-decoration:none;margin-bottom:10px">⬇ Download Whitepaper (unlocked)</a>
+          <div style="text-align:center;font-size:11px;color:#555;margin-bottom:12px">l402-kit whitepaper v1.2 · pay-per-access · no account needed</div>
+          <div style="text-align:center">
+            <button onclick="donateReset()" style="background:none;border:1px solid #333;color:#888;border-radius:8px;padding:7px 18px;font-size:12px;cursor:pointer;font-family:inherit">Run again</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1327,9 +1339,9 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 
 <!-- ── MCP ────────────────────────────────────────────────────────────── -->
 <section style="max-width:860px;margin:0 auto;padding:56px 24px 0" id="mcp">
-  <span class="eyebrow">MCP Server</span>
-  <h2 style="text-align:center;font-size:clamp(24px,3.8vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:12px">Add l402-kit to Claude<br><span style="background:linear-gradient(135deg,#b89dff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">in 2 minutes.</span></h2>
-  <p style="text-align:center;color:var(--muted);font-size:15px;max-width:520px;margin:0 auto 40px;line-height:1.6">Give Claude Desktop or Cursor a Lightning wallet. From that moment on, any AI agent running inside those tools can autonomously pay for L402 APIs — no code, no credit card.</p>
+  <span id="mcpEyebrow" class="eyebrow">MCP Server</span>
+  <h2 id="mcpH2" style="text-align:center;font-size:clamp(24px,3.8vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:12px">Add l402-kit to Claude<br><span id="mcpH2Span" style="background:linear-gradient(135deg,#b89dff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">in 2 minutes.</span></h2>
+  <p id="mcpP" style="text-align:center;color:var(--muted);font-size:15px;max-width:520px;margin:0 auto 40px;line-height:1.6">Give Claude Desktop or Cursor a Lightning wallet. From that moment on, any AI agent running inside those tools can autonomously pay for L402 APIs — no code, no credit card.</p>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px" id="mcp-grid">
     <!-- Config card -->
@@ -1351,29 +1363,38 @@ lightning = <span class="c-fn">BlinkProvider</span>(
     </div>
     <!-- Tools card -->
     <div style="background:#0c0c0c;border:1px solid #1e1e1e;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:2px">Tools exposed to Claude</div>
+      <div id="mcpToolsLabel" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:2px">Tools exposed to Claude</div>
       <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:12px 14px">
         <div style="font-size:12px;font-weight:700;color:#2ddc6e;margin-bottom:4px">l402_fetch</div>
-        <div style="font-size:12px;color:#666">Call any L402-protected URL — pays automatically with your wallet</div>
+        <div id="mcpTool1" style="font-size:12px;color:#666">Call any L402-protected URL — pays automatically with your wallet</div>
       </div>
       <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:12px 14px">
         <div style="font-size:12px;font-weight:700;color:#b89dff;margin-bottom:4px">l402_balance</div>
-        <div style="font-size:12px;color:#666">Check remaining budget and total spent this session</div>
+        <div id="mcpTool2" style="font-size:12px;color:#666">Check remaining budget and total spent this session</div>
       </div>
       <div style="background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:12px 14px">
         <div style="font-size:12px;font-weight:700;color:#ffa033;margin-bottom:4px">l402_spending_report</div>
-        <div style="font-size:12px;color:#666">Full breakdown by domain — see where sats went</div>
+        <div id="mcpTool3" style="font-size:12px;color:#666">Full breakdown by domain — see where sats went</div>
       </div>
     </div>
   </div>
 
   <!-- Compatible clients -->
-  <div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap">
-    <span style="font-size:12px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Works with</span>
+  <div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+    <span id="mcpWorksWith" style="font-size:12px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Works with</span>
     <span style="display:inline-flex;align-items:center;gap:7px;background:#111;border:1px solid #222;border-radius:24px;padding:7px 16px;font-size:13px;color:#ccc;font-weight:500">🤖 Claude Desktop</span>
     <span style="display:inline-flex;align-items:center;gap:7px;background:#111;border:1px solid #222;border-radius:24px;padding:7px 16px;font-size:13px;color:#ccc;font-weight:500">▲ Cursor</span>
     <span style="display:inline-flex;align-items:center;gap:7px;background:#111;border:1px solid #222;border-radius:24px;padding:7px 16px;font-size:13px;color:#ccc;font-weight:500">⚙ Any MCP client</span>
     <a href="https://l402kit.com/docs/agent/mcp" style="display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid #333;border-radius:24px;padding:7px 16px;font-size:13px;color:#b89dff;font-weight:500;text-decoration:none">Docs →</a>
+  </div>
+  <!-- Registry badges -->
+  <div style="display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:11px;color:#333;font-weight:600;text-transform:uppercase;letter-spacing:1px">Listed on</span>
+    <a href="https://registry.modelcontextprotocol.io" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#0c0c0c;border:1px solid #1e1e1e;border-radius:20px;padding:5px 12px;font-size:11px;color:#888;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#1e1e1e'">Anthropic</a>
+    <a href="https://glama.ai/mcp/servers/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#0c0c0c;border:1px solid #1e1e1e;border-radius:20px;padding:5px 12px;font-size:11px;color:#888;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#1e1e1e'">Glama</a>
+    <a href="https://smithery.ai/server/@shinydapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#0c0c0c;border:1px solid #1e1e1e;border-radius:20px;padding:5px 12px;font-size:11px;color:#888;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#1e1e1e'">Smithery</a>
+    <a href="https://mcp.so" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#0c0c0c;border:1px solid #1e1e1e;border-radius:20px;padding:5px 12px;font-size:11px;color:#888;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#1e1e1e'">mcp.so</a>
+    <a href="https://github.com/mcpmux/mcp-servers/pull/122" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#0c0c0c;border:1px solid #1e1e1e;border-radius:20px;padding:5px 12px;font-size:11px;color:#888;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#1e1e1e'">McpMux</a>
   </div>
   <style>@media(max-width:640px){#mcp-grid{grid-template-columns:1fr!important}}</style>
 </section><hr class="section-sep">
@@ -1446,43 +1467,61 @@ lightning = <span class="c-fn">BlinkProvider</span>(
 </style>
 
 <script>
-  let _dirData = [];
+  const _SEED_APIS = [
+    { name: 'VERITY Search',      description: 'Web search — top 10 organic results. No API key needed.',           price_sats: 500,    category: 'ai',      endpoint: 'https://l402kit.com/api/verity/search',      provider: 'VERITY' },
+    { name: 'VERITY Scrape',      description: 'Full page content as markdown, JS-rendered via Firecrawl.',         price_sats: 500,    category: 'data',    endpoint: 'https://l402kit.com/api/verity/scrape',      provider: 'VERITY' },
+    { name: 'VERITY BTC Price',   description: 'Real-time BTC price in USD, EUR, BRL. Always fresh.',              price_sats: 100,    category: 'finance', endpoint: 'https://l402kit.com/api/verity/btc-price',   provider: 'VERITY' },
+    { name: 'VERITY Summarize',   description: 'AI summarization — 3-5 sentences from up to 50,000 chars.',        price_sats: 500,    category: 'ai',      endpoint: 'https://l402kit.com/api/verity/summarize',   provider: 'VERITY' },
+    { name: 'VERITY Sentiment',   description: 'Sentiment analysis — score, confidence, keywords. Structured.',    price_sats: 300,    category: 'ai',      endpoint: 'https://l402kit.com/api/verity/sentiment',   provider: 'VERITY' },
+    { name: 'VERITY Domain Intel',description: 'WHOIS + DNS + SSL in one call. Instant domain intelligence.',      price_sats: 2000,   category: 'data',    endpoint: 'https://l402kit.com/api/verity/domain-intel',provider: 'VERITY' },
+    { name: 'VERITY World State', description: 'UTC time + geolocation + local weather — one call, zero keys.',   price_sats: 300,    category: 'weather', endpoint: 'https://l402kit.com/api/verity/worldstate',  provider: 'VERITY' },
+    { name: 'VERITY Translate',   description: 'Professional translation — 10 locales, MDX-aware.',               price_sats: 500,    category: 'ai',      endpoint: 'https://l402kit.com/api/verity/translate',   provider: 'VERITY' },
+    { name: 'VERITY Research',    description: 'Deep research — search + scrape + summarize in one shot.',        price_sats: 2000,   category: 'ai',      endpoint: 'https://l402kit.com/api/verity/research',    provider: 'VERITY' },
+  ];
+
+  let _dirData = [..._SEED_APIS];
+  let _dirCat  = null;
 
   async function loadDirectory(category) {
-    const grid = document.getElementById('dir-grid');
-    const empty = document.getElementById('dir-empty');
+    _dirCat = category;
     const loading = document.getElementById('dir-loading');
-    loading.style.display = 'block';
-    grid.style.display = 'none';
-    empty.style.display = 'none';
+    loading.style.display = 'none';
+
+    // Show seeds immediately, then try to merge remote
+    renderDir(_SEED_APIS, category);
 
     try {
       const url = category ? `/api/apis.json?category=${category}` : '/api/apis.json';
       const res = await fetch(url);
       const json = await res.json();
-      _dirData = json.apis || [];
-      renderDir(_dirData);
-    } catch {
-      loading.textContent = 'Could not load directory.';
-    }
+      const remote = json.apis || [];
+      // Merge: remote first, then seeds not already present by endpoint
+      const endpoints = new Set(remote.map(a => a.endpoint));
+      _dirData = [...remote, ..._SEED_APIS.filter(a => !endpoints.has(a.endpoint))];
+      renderDir(_dirData, category);
+    } catch { /* keep seeds */ }
   }
 
-  function renderDir(apis) {
-    const grid = document.getElementById('dir-grid');
+  function renderDir(apis, category) {
+    const grid  = document.getElementById('dir-grid');
     const empty = document.getElementById('dir-empty');
     const loading = document.getElementById('dir-loading');
     loading.style.display = 'none';
 
-    if (!apis.length) { empty.style.display = 'block'; grid.style.display = 'none'; return; }
+    const filtered = category ? apis.filter(a => a.category === category) : apis;
+    if (!filtered.length) { empty.style.display = 'block'; grid.style.display = 'none'; return; }
 
     grid.style.display = 'grid';
     empty.style.display = 'none';
-    grid.innerHTML = apis.map(api => `
-      <div class="dir-card">
-        <div class="dir-card-name">${esc(api.name)}</div>
+    grid.innerHTML = filtered.map(api => `
+      <div class="dir-card" onclick="window.open('${esc(api.endpoint||'')}','_blank')" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+          <div class="dir-card-name">${esc(api.name)}</div>
+          ${api.provider ? `<span style="font-size:10px;font-weight:700;color:#f7931a;background:rgba(247,147,26,.1);border:1px solid rgba(247,147,26,.2);border-radius:10px;padding:2px 7px;white-space:nowrap;margin-left:8px">${esc(api.provider)}</span>` : ''}
+        </div>
         <div class="dir-card-desc">${esc(api.description || '')}</div>
         <div class="dir-card-footer">
-          <span class="dir-card-price">⚡ ${api.price_sats} sats</span>
+          <span class="dir-card-price">⚡ ${api.price_sats.toLocaleString()} sats</span>
           <span class="dir-card-cat">${esc(api.category)}</span>
         </div>
       </div>
@@ -1693,38 +1732,33 @@ lightning = <span class="c-fn">BlinkProvider</span>(
       </ul>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402" target="_blank" rel="noopener" class="btn-primary" style="font-size:14px;padding:12px 22px">Install Free on Marketplace</a>
-        <a href="https://l402kit.com/docs/guides/vscode" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:12px 22px;border:1px solid #333;border-radius:12px;font-size:14px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">Documentation →</a>
+        <a href="https://docs.l402kit.com/guides/vscode" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:12px 22px;border:1px solid #333;border-radius:12px;font-size:14px;font-weight:600;color:#e5e5e5;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#333'">Documentation →</a>
       </div>
     </div>
-    <!-- Right: live stats widget -->
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:20px">
-      <div style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1.5px">⚡ Live stats</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div style="text-align:center">
-          <div style="font-size:28px;font-weight:800;color:var(--orange)" id="extPayments">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Payments logged</div>
+    <!-- Right: animated demo GIF -->
+    <div style="position:relative">
+      <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+        <!-- fake VS Code title bar -->
+        <div style="background:#323233;padding:8px 14px;display:flex;align-items:center;gap:7px">
+          <span style="width:10px;height:10px;border-radius:50%;background:#f44747;display:inline-block"></span>
+          <span style="width:10px;height:10px;border-radius:50%;background:#d7ba7d;display:inline-block"></span>
+          <span style="width:10px;height:10px;border-radius:50%;background:#4ec9b0;display:inline-block"></span>
+          <span style="font-size:11px;color:#6e7681;margin-left:8px">ShinyDapps Lightning Payments</span>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:28px;font-weight:800;color:var(--orange)" id="extSats">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Total sats</div>
-        </div>
+        <img src="/demo-extension.gif" alt="ShinyDapps Lightning Payments — VS Code extension demo" style="width:100%;display:block" loading="lazy">
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Pro plan today</div>
-        <div style="font-size:16px;font-weight:700;color:#ccc" id="extProSats">~11,000 sats/mo</div>
-      </div>
-      <a href="https://marketplace.visualstudio.com/items?itemName=ShinyDapps.shinydapps-l402" target="_blank" rel="noopener" style="display:block;text-align:center;padding:10px;background:rgba(247,147,26,0.08);border:1px solid rgba(247,147,26,0.3);border-radius:10px;font-size:13px;font-weight:600;color:var(--orange);text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(247,147,26,0.15)'" onmouseout="this.style.background='rgba(247,147,26,0.08)'">Install ShinyDapps Lightning Payments — Free ↗</a>
+      <div style="text-align:center;margin-top:10px;font-size:11px;color:#333">47,832 sats · 12,430 today · 6 endpoints · 6 languages shown</div>
     </div>
   </div>
 </section><hr class="section-sep">
 
 <section style="text-align:center;padding:64px 24px 48px;border-top:1px solid var(--border);background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(247,147,26,.05),transparent)">
-  <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:rgba(247,147,26,.55)">Still here?</span>
-  <h2 style="font-size:clamp(26px,4vw,40px);font-weight:800;margin:14px 0 12px;letter-spacing:-1px">You already know it works.<br><span style="color:var(--orange)">Time to ship.</span></h2>
-  <p style="color:var(--muted);font-size:15px;max-width:400px;margin:0 auto 28px;line-height:1.6">No account. No Stripe. No middleman. Just<br>Bitcoin Lightning — instant, global, final.</p>
+  <span id="finalCtaEyebrow" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:rgba(247,147,26,.55)">Still here?</span>
+  <h2 id="finalCtaH2" style="font-size:clamp(26px,4vw,40px);font-weight:800;margin:14px 0 12px;letter-spacing:-1px">You already know it works.<br><span id="finalCtaShip" style="color:var(--orange)">Time to ship.</span></h2>
+  <p id="finalCtaP" style="color:var(--muted);font-size:15px;max-width:400px;margin:0 auto 28px;line-height:1.6">No account. No Stripe. No middleman. Just<br>Bitcoin Lightning — instant, global, final.</p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a href="https://l402kit.com/docs/quickstart" target="_blank" class="btn-primary" style="font-size:15px;text-decoration:none">Start in 2 minutes →</a>
-    <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:16px 24px;border:1px solid #2a2a2a;border-radius:12px;font-size:15px;font-weight:600;color:#e5e5e5;text-decoration:none;background:#0d0d0d;transition:border-color .2s" onmouseover="this.style.borderColor='#f7931a'" onmouseout="this.style.borderColor='#2a2a2a'">⭐ Star on GitHub</a>
+    <a id="finalCtaBtn" href="https://l402kit.com/docs/quickstart" target="_blank" class="btn-primary" style="font-size:15px;text-decoration:none">Start in 2 minutes →</a>
+    <a href="https://github.com/ShinyDapps/l402-kit" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:1px solid #222;border-radius:10px;font-size:13px;font-weight:500;color:#666;text-decoration:none;transition:color .2s,border-color .2s" onmouseover="this.style.color='#ccc';this.style.borderColor='#444'" onmouseout="this.style.color='#666';this.style.borderColor='#222'">⭐ Star on GitHub</a>
   </div>
   <p style="margin-top:16px;font-size:11px;color:#333">MIT · Open source · <span id="stat-stars-footer">—</span> stars</p>
 </section>
@@ -2106,6 +2140,9 @@ const T = {
     pricing: [['Soberano','Self-host: 0% fee forever · your own node','Set up your node →'],['Managed','No Lightning node — just add your Lightning address','Start in 2 minutes →'],[null,'Pay with Lightning — instant activation','⚡ Subscribe with Lightning']],
     faqTitle: 'Common questions',
     faq: [['Do my users need a Lightning wallet?','Yes — they need a Lightning wallet to pay. Apps like Strike, Cash App, Blink, and Phoenix take under 60 seconds to set up. For AI agents, they hold their own wallet programmatically.'],['What happens if the Lightning network is down?','Lightning is a decentralized network with near-100% uptime. If your provider (Blink, OpenNode, etc.) has downtime, you can swap to another in one line of code.'],['Is this production-ready?','Yes. Cryptographic proof (SHA256), replay-attack protection, and Supabase payment logging are built in. See the security guide in the docs.'],['How does the 0.3% fee work?','When using the managed mode (ownerLightningAddress), a 0.3% routing fee is deducted automatically. If you self-host with your own Lightning node, there is no fee.'],['Can I use it without Blink?','Yes. OpenNode, LNbits, or any provider implementing the LightningProvider interface. You can even use your own Lightning node.'],['Why Lightning and not on-chain Bitcoin?','On-chain Bitcoin takes 10+ minutes to confirm and costs $1-5 per transaction. Lightning settles in under a second for fractions of a cent making micropayments economically viable. Your keys never leave your control and payment proof is verified locally.'],['How is this different from Coinbase x402?','x402 is a protocol spec. l402-kit is a production SDK that implements it today in TypeScript, Python, Go, and Rust. Coinbase targets USDC/stablecoins; l402-kit targets Bitcoin Lightning. Complementary, not competing.'],['Is the 0.3% fee always charged?','No. The fee only applies in managed mode. Connect your own wallet (Blink, OpenNode, LNbits, BTCPay) and the fee is 0%. MIT license means you can self-host everything for free, forever.']],
+    demo: { h2: 'Try L402 live — pay 1 sat ⚡', p: 'Click ▶ Run — get a real BOLT11 invoice. Pay 1 sat from any Lightning wallet, paste the preimage, and unlock the whitepaper. Real L402 flow: 402 → invoice → pay → whitepaper unlocked. No account. No signup.' },
+    mcp: { eyebrow: 'MCP Server', h2pre: 'Add l402-kit to Claude', h2span: 'in 2 minutes.', p: 'Give Claude Desktop or Cursor a Lightning wallet. From that moment on, any AI agent running inside those tools can autonomously pay for L402 APIs — no code, no credit card.', worksWith: 'Works with', toolsLabel: 'Tools exposed to Claude', tools: ['Call any L402-protected URL — pays automatically with your wallet', 'Check remaining budget and total spent this session', 'Full breakdown by domain — see where sats went'] },
+    finalCta: { eyebrow: 'Still here?', h2: 'You already know it works.', ship: 'Time to ship.', p: 'No account. No Stripe. No middleman. Just Bitcoin Lightning — instant, global, final.', btn: 'Start in 2 minutes →' },
     ctaTitle: 'Start in 2 minutes', ctaDesc: 'No account. No credit card. Just Bitcoin.', ctaDocs: 'or <a href="https://l402kit.com/docs">read the docs &rarr;</a>',
     problemTitle: 'Why credit cards fail for APIs',
     problemSub: 'Stripe was built for humans buying products. APIs charge per-call — and that breaks everything.',
@@ -2131,6 +2168,9 @@ const T = {
     pricing: [['Soberano','Self-host: 0% de taxa · traga seu próprio nó','Começar →'],['Managed','Sem nó Lightning — adicione seu Lightning address','Começar em 2 minutos →'],[null,'Pague com Lightning — ativação instantânea','⚡ Assinar com Lightning']],
     faqTitle: 'Perguntas comuns',
     faq: [['Meus usuarios precisam de wallet Lightning?','Sim. Eles precisam de uma wallet Lightning para pagar. Para agentes de IA, a wallet pode ser controlada por codigo.'],['E se a Lightning ficar fora do ar?','A Lightning e descentralizada e muito resiliente. Se um provider cair, voce troca por outro em uma linha.'],['Ja esta pronto para producao?','Sim. Prova criptografica, protecao anti-replay e logs no Supabase ja estao incluidos.'],['Como funciona a taxa de 0.3%?','No modo managed, a taxa de 0.3% e deduzida automaticamente. Em self-host, a taxa e 0%.'],['Posso usar sem Blink?','Sim. OpenNode, LNbits ou qualquer provider que implemente a interface LightningProvider.'],['Por que Lightning e nao Bitcoin on-chain?','Bitcoin on-chain leva 10+ minutos para confirmar e custa $1-5 por transacao. O Lightning liquida em menos de 1 segundo por fracoes de centavo tornando micropagamentos economicamente viaveis. Suas chaves ficam com voce.'],['Como isso e diferente do x402 da Coinbase?','x402 e uma especificacao de protocolo. l402-kit e um SDK em producao que implementa isso hoje em TypeScript, Python, Go e Rust. A Coinbase foca em USDC/stablecoins; l402-kit foca em Bitcoin Lightning.'],['A taxa de 0,3% e sempre cobrada?','Nao. A taxa so se aplica no modo managed. Conecte sua propria wallet (Blink, OpenNode, LNbits, BTCPay) e a taxa e 0%. A licenca MIT permite self-host completo sem nenhuma taxa, para sempre.']],
+    demo: { h2: 'Teste L402 ao vivo — pague 1 sat ⚡', p: 'Clique ▶ Executar — obtenha uma invoice BOLT11 real. Pague 1 sat com qualquer carteira Lightning, cole o preimage e desbloqueie o whitepaper. Fluxo L402 real: 402 → invoice → pagar → whitepaper desbloqueado. Sem conta.' },
+    mcp: { eyebrow: 'Servidor MCP', h2pre: 'Adicione l402-kit ao Claude', h2span: 'em 2 minutos.', p: 'Dê ao Claude Desktop ou Cursor uma carteira Lightning. A partir desse momento, qualquer agente de IA rodando nessas ferramentas pode pagar APIs L402 de forma autônoma — sem código, sem cartão.', worksWith: 'Funciona com', toolsLabel: 'Ferramentas expostas ao Claude', tools: ['Chama qualquer URL L402 — paga automaticamente com sua carteira', 'Verifica o saldo restante e total gasto na sessão', 'Detalhamento completo por domínio — veja onde foram os sats'] },
+    finalCta: { eyebrow: 'Ainda aqui?', h2: 'Você já sabe que funciona.', ship: 'Hora de enviar.', p: 'Sem conta. Sem Stripe. Sem intermediário. Só Bitcoin Lightning — instantâneo, global, definitivo.', btn: 'Começar em 2 minutos →' },
     ctaTitle: 'Comece em 2 minutos', ctaDesc: 'Sem conta. Sem cartao. So Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.com/docs/pt/introduction">leia a documentacao &rarr;</a>',
     problemTitle: 'Por que cartões falham para APIs',
     problemSub: 'Stripe foi construído para humanos comprando produtos. APIs cobram por chamada — e isso quebra tudo.',
@@ -2156,6 +2196,9 @@ const T = {
     pricing: [['Soberano','Self-host: 0% · trae tu propio nodo','Empezar →'],['Managed','Sin nodo Lightning — solo agrega tu Lightning address','Comenzar en 2 minutos →'],[null,'Paga con Lightning — activación instantánea','⚡ Suscribirse con Lightning']],
     faqTitle: 'Preguntas frecuentes',
     faq: [['¿Mis usuarios necesitan una wallet Lightning?','Sí — necesitan una wallet Lightning para pagar. Apps como Strike, Cash App, Blink y Phoenix se configuran en menos de 60 segundos.'],['¿Qué pasa si la red Lightning cae?','Lightning es una red descentralizada con casi 100% de disponibilidad. Si tu proveedor falla, cambias en una línea de código.'],['¿Está listo para producción?','Sí. Prueba criptográfica (SHA256), protección anti-replay y registro en Supabase están integrados.'],['¿Cómo funciona la comisión del 0.3%?','En modo gestionado, se deduce automáticamente el 0.3%. En self-host con tu propio nodo, no hay comisión.'],['¿Puedo usarlo sin Blink?','Sí. OpenNode, LNbits o cualquier proveedor que implemente LightningProvider.'],['Por que Lightning y no Bitcoin on-chain?','El Bitcoin on-chain tarda mas de 10 minutos en confirmar y cuesta $1-5 por transaccion. Lightning liquida en menos de 1 segundo por fracciones de centavo haciendo viables los micropagos.'],['En que se diferencia del x402 de Coinbase?','x402 es una especificacion de protocolo. l402-kit es un SDK en produccion que lo implementa hoy en TypeScript, Python, Go y Rust. Coinbase apunta a USDC/stablecoins; l402-kit a Bitcoin Lightning.'],['Siempre se cobra la tarifa del 0,3%?','No. La tarifa solo aplica en modo managed. Conecta tu propia wallet (Blink, OpenNode, LNbits, BTCPay) y la tarifa es 0%. La licencia MIT permite self-host completo sin ninguna tarifa, para siempre.']],
+    demo: { h2: 'Prueba L402 en vivo — paga 1 sat ⚡', p: 'Haz clic en ▶ Ejecutar — obtén una invoice BOLT11 real. Paga 1 sat con cualquier billetera Lightning, pega el preimage y desbloquea el whitepaper. Flujo L402 real: 402 → invoice → pagar → whitepaper desbloqueado. Sin cuenta.' },
+    mcp: { eyebrow: 'Servidor MCP', h2pre: 'Añade l402-kit a Claude', h2span: 'en 2 minutos.', p: 'Dale a Claude Desktop o Cursor una billetera Lightning. Desde ese momento, cualquier agente de IA ejecutándose en esas herramientas puede pagar APIs L402 de forma autónoma — sin código, sin tarjeta.', worksWith: 'Compatible con', toolsLabel: 'Herramientas expuestas a Claude', tools: ['Llama cualquier URL L402 — paga automáticamente con tu billetera', 'Consulta el presupuesto restante y el total gastado en la sesión', 'Desglose completo por dominio — ve dónde fueron los sats'] },
+    finalCta: { eyebrow: '¿Todavía aquí?', h2: 'Ya sabes que funciona.', ship: 'Es hora de lanzar.', p: 'Sin cuenta. Sin Stripe. Sin intermediarios. Solo Bitcoin Lightning — instantáneo, global, definitivo.', btn: 'Empezar en 2 minutos →' },
     ctaTitle: 'Empieza en 2 minutos', ctaDesc: 'Sin cuenta. Sin tarjeta. Solo Bitcoin.', ctaDocs: 'o <a href="https://l402kit.com/docs/es/introduction">lee los docs &rarr;</a>',
     problemTitle: 'Por qué las tarjetas fallan para APIs',
     problemSub: 'Stripe fue diseñado para humanos comprando productos. Las APIs cobran por llamada — y eso rompe todo.',
@@ -2181,6 +2224,9 @@ const T = {
     pricing: [['Souverain','Self-host : 0% · votre propre nœud','Commencer →'],['Managed','Aucun nœud Lightning — ajoutez votre Lightning address','Commencer en 2 minutes →'],[null,'Payez avec Lightning — activation instantanée','⚡ S\'abonner avec Lightning']],
     faqTitle: 'Questions fréquentes',
     faq: [['Mes utilisateurs ont-ils besoin d\'un wallet Lightning ?','Oui — ils ont besoin d\'un wallet Lightning pour payer. Des apps comme Strike, Cash App, Blink et Phoenix se configurent en moins de 60 secondes.'],['Que se passe-t-il si le réseau Lightning tombe ?','Lightning est un réseau décentralisé avec une disponibilité proche de 100%. Si votre fournisseur tombe, changez-en en une ligne de code.'],['Est-ce prêt pour la production ?','Oui. Preuve cryptographique (SHA256), protection anti-replay et journalisation Supabase sont intégrés.'],['Comment fonctionnent les frais de 0.3% ?','En mode géré, une commission de 0.3% est déduite automatiquement. En self-host, pas de frais.'],['Puis-je l\'utiliser sans Blink ?','Oui. OpenNode, LNbits ou tout fournisseur implémentant l\'interface LightningProvider.'],['Pourquoi Lightning et non Bitcoin on-chain ?','Le Bitcoin on-chain prend plus de 10 minutes et coute $1-5 par transaction. Lightning regle en moins d une seconde pour des fractions de centime. Vos cles restent chez vous.'],['En quoi est-ce different du x402 de Coinbase ?','x402 est une specification de protocole. l402-kit est un SDK production qui l implemente aujourd hui en TypeScript, Python, Go et Rust. Coinbase cible USDC; l402-kit cible Bitcoin Lightning.'],['Les frais de 0,3 % sont-ils toujours preleves ?','Non. Les frais s appliquent uniquement en mode gere. Connectez votre propre wallet (Blink, OpenNode, LNbits, BTCPay) et les frais sont 0 %. La licence MIT permet un self-host complet sans frais, pour toujours.']],
+    demo: { h2: 'Testez L402 en direct — payez 1 sat ⚡', p: 'Cliquez ▶ Exécuter — obtenez une vraie facture BOLT11. Payez 1 sat depuis n\'importe quel wallet Lightning, collez le preimage et débloquez le whitepaper. Flux L402 réel : 402 → facture → payer → whitepaper débloqué.' },
+    mcp: { eyebrow: 'Serveur MCP', h2pre: 'Ajoutez l402-kit à Claude', h2span: 'en 2 minutes.', p: 'Donnez à Claude Desktop ou Cursor un wallet Lightning. Dès lors, tout agent IA tournant dans ces outils peut payer des APIs L402 de façon autonome — sans code, sans carte.', worksWith: 'Compatible avec', toolsLabel: 'Outils exposés à Claude', tools: ['Appelle n\'importe quelle URL L402 — paye automatiquement avec votre wallet', 'Vérifie le budget restant et le total dépensé en session', 'Détail complet par domaine — voyez où sont allés les sats'] },
+    finalCta: { eyebrow: 'Toujours là ?', h2: 'Vous savez déjà que ça marche.', ship: 'C\'est l\'heure de lancer.', p: 'Sans compte. Sans Stripe. Sans intermédiaire. Juste Bitcoin Lightning — instantané, mondial, définitif.', btn: 'Démarrer en 2 minutes →' },
     ctaTitle: 'Démarrez en 2 minutes', ctaDesc: 'Sans compte. Sans carte. Juste Bitcoin.', ctaDocs: 'ou <a href="https://l402kit.com/docs/fr/introduction">lisez les docs &rarr;</a>',
     problemTitle: 'Pourquoi les cartes échouent pour les APIs',
     problemSub: 'Stripe a été conçu pour des humains achetant des produits. Les APIs facturent par appel — et ça brise tout.',
@@ -2206,6 +2252,9 @@ const T = {
     pricing: [['Souverän','Self-host: 0% · eigener Knoten','Loslegen →'],['Managed','Kein Lightning-Knoten — einfach Lightning-Adresse hinzufügen','In 2 Minuten starten →'],[null,'Mit Lightning zahlen — sofortige Aktivierung','⚡ Mit Lightning abonnieren']],
     faqTitle: 'Häufige Fragen',
     faq: [['Brauchen meine Nutzer ein Lightning-Wallet?','Ja — sie brauchen ein Lightning-Wallet zum Bezahlen. Apps wie Strike, Cash App, Blink und Phoenix sind in unter 60 Sekunden eingerichtet.'],['Was passiert, wenn das Lightning-Netzwerk ausfällt?','Lightning ist ein dezentrales Netzwerk mit nahezu 100% Verfügbarkeit. Wenn dein Provider ausfällt, wechselst du in einer Zeile Code.'],['Ist das produktionsreif?','Ja. Kryptografischer Beweis (SHA256), Replay-Schutz und Supabase-Zahlungsprotokoll sind eingebaut.'],['Wie funktioniert die 0.3%-Gebühr?','Im verwalteten Modus wird automatisch 0.3% abgezogen. Im Self-Host-Modus gibt es keine Gebühr.'],['Kann ich es ohne Blink verwenden?','Ja. OpenNode, LNbits oder jeder Provider, der LightningProvider implementiert.'],['Warum Lightning und nicht On-Chain-Bitcoin?','On-Chain-Bitcoin braucht über 10 Minuten und kostet 1-5 USD pro Transaktion. Lightning wird in unter einer Sekunde für Bruchteile eines Cents abgerechnet. Deine Schlüssel bleiben bei dir.'],['Wie unterscheidet sich das von Coinbases x402?','x402 ist eine Protokollspezifikation. l402-kit ist ein produktionsreifes SDK, das es heute in TypeScript, Python, Go und Rust implementiert. Coinbase zielt auf USDC; l402-kit auf Bitcoin Lightning.'],['Wird die 0,3%-Gebühr immer erhoben?','Nein. Die Gebühr gilt nur im verwalteten Modus. Verbinde dein eigenes Wallet (Blink, OpenNode, LNbits, BTCPay) und die Gebühr beträgt 0 %. Die MIT-Lizenz erlaubt vollständiges Self-Hosting für immer kostenlos.']],
+    demo: { h2: 'L402 live testen — 1 Sat zahlen ⚡', p: 'Klicken Sie auf ▶ Ausführen — erhalten Sie eine echte BOLT11-Rechnung. Zahlen Sie 1 Sat mit einem beliebigen Lightning-Wallet, fügen Sie das Preimage ein und entsperren Sie das Whitepaper.' },
+    mcp: { eyebrow: 'MCP-Server', h2pre: 'l402-kit zu Claude hinzufügen', h2span: 'in 2 Minuten.', p: 'Geben Sie Claude Desktop oder Cursor ein Lightning-Wallet. Von da an kann jeder KI-Agent in diesen Tools autonom für L402-APIs bezahlen — kein Code, keine Kreditkarte.', worksWith: 'Kompatibel mit', toolsLabel: 'Claude-Tools', tools: ['Ruft jede L402-URL auf — zahlt automatisch mit Ihrem Wallet', 'Prüft verbleibendes Budget und Gesamtausgaben der Sitzung', 'Vollständige Aufschlüsselung nach Domain — sehen Sie, wo die Sats hingingen'] },
+    finalCta: { eyebrow: 'Noch hier?', h2: 'Sie wissen schon, dass es funktioniert.', ship: 'Zeit zum Starten.', p: 'Kein Konto. Kein Stripe. Kein Mittelsmann. Nur Bitcoin Lightning — sofort, global, endgültig.', btn: 'In 2 Minuten starten →' },
     ctaTitle: 'In 2 Minuten starten', ctaDesc: 'Kein Konto. Keine Karte. Nur Bitcoin.', ctaDocs: 'oder <a href="https://l402kit.com/docs/de/introduction">Docs lesen &rarr;</a>',
     problemTitle: 'Warum Karten für APIs versagen',
     problemSub: 'Stripe wurde für Menschen entwickelt, die Produkte kaufen. APIs berechnen pro Aufruf — und das bricht alles.',
@@ -2306,6 +2355,9 @@ const T = {
     pricing: [['自主','自托管: 0%手续费 · 自己的节点','立即开始 →'],['Managed','无需Lightning节点 — 只需添加你的Lightning Address','2分钟内开始 →'],[null,'使用 Lightning 支付 — 即时激活','⚡ 使用 Lightning 订阅']],
     faqTitle: '常见问题',
     faq: [['我的用户需要 Lightning 钱包吗？','是的——他们需要 Lightning 钱包来付款。Strike、Cash App、Blink 和 Phoenix 等应用可在 60 秒内设置完成。'],['如果 Lightning 网络宕机怎么办？','Lightning 是一个去中心化网络，正常运行时间接近 100%。如果你的提供商宕机，一行代码即可切换。'],['这是否可用于生产环境？','是的。密码学证明（SHA256）、防重放保护和 Supabase 支付日志都已内置。'],['0.3% 手续费如何运作？','使用托管模式时，自动扣除 0.3% 路由费。自托管时，无任何费用。'],['可以不用 Blink 吗？','可以。OpenNode、LNbits 或任何实现 LightningProvider 接口的提供商都可以。'],['为什么选择Lightning而不是链上Bitcoin','链上Bitcoin需要10多分钟确认，每笔交易费用1-5美元。Lightning在不到61秒内结算，手续费仅为分之一美分，让微支付在经济上可行。'],['这与Coinbase的x402有何不同','x402是一个协议规范。l402-kit是一个生产就绪的SDK，今天就能在TypeScript、Python、Go和Rust中使用。Coinbase针对USDC；l402-kit针对Bitcoin Lightning。'],['0.3%的费用总是收取吗','不。费用仅在托管模式下适用。连接你自己的钉子(Blink、OpenNode、LNbits、BTCPay)，费用0%。MIT许可证允许完全自托管，永久免费。']],
+    demo: { h2: '实时体验 L402 — 支付 1 聪 ⚡', p: '点击 ▶ 运行 — 获取真实 BOLT11 发票。用任意闪电钱包支付 1 聪，粘贴 preimage，解锁白皮书。真实 L402 流程：402 → 发票 → 支付 → 白皮书解锁。无需账户。' },
+    mcp: { eyebrow: 'MCP 服务器', h2pre: '将 l402-kit 添加到 Claude', h2span: '仅需 2 分钟。', p: '为 Claude Desktop 或 Cursor 配置闪电钱包。从此，在这些工具中运行的任何 AI 代理都能自主支付 L402 API — 无需代码，无需信用卡。', worksWith: '兼容', toolsLabel: '暴露给 Claude 的工具', tools: ['调用任意 L402 URL — 自动用你的钱包付款', '查看剩余预算和本次会话总支出', '按域名完整明细 — 看看 sats 去哪了'] },
+    finalCta: { eyebrow: '还在这里？', h2: '你已经知道它有效。', ship: '是时候发布了。', p: '无账户。无 Stripe。无中间商。只有 Bitcoin Lightning — 即时、全球、最终。', btn: '2 分钟内开始 →' },
     ctaTitle: '2分钟内开始', ctaDesc: '无需账户。无需信用卡。只需 Bitcoin。', ctaDocs: '或 <a href="https://l402kit.com/docs/zh/introduction">查看文档 &rarr;</a>',
     problemTitle: '为什么信用卡不适合API',
     problemSub: 'Stripe是为人类购买商品而设计的。API按调用收费 — 这使一切都崩溃了。',
@@ -2356,6 +2408,9 @@ const T = {
     pricing: [['ذاتي السيادة','استضافة ذاتية: 0% · عقدتك الخاصة','ابدأ →'],['Managed','لا حاجة لعقدة Lightning — أضف Lightning address فقط','ابدأ في دقيقتين →'],[null,'ادفع بـ Lightning — تفعيل فوري','⚡ اشترك بـ Lightning']],
     faqTitle: 'أسئلة شائعة',
     faq: [['هل يحتاج مستخدمي محفظة Lightning؟','نعم — يحتاجون محفظة Lightning للدفع. تطبيقات مثل Strike وCash App وBlink وPhoenix تُعدّ في أقل من 60 ثانية.'],['ماذا يحدث إذا توقفت شبكة Lightning؟','Lightning شبكة لامركزية بوقت تشغيل يقارب 100%. إذا تعطل مزودك، يمكنك التبديل بسطر كود واحد.'],['هل هو جاهز للإنتاج؟','نعم. الإثبات التشفيري (SHA256)، الحماية من إعادة التشغيل، وتسجيل Supabase مدمجة.'],['كيف تعمل رسوم 0.3%؟','في الوضع المُدار، يُخصم 0.3% تلقائياً. في التثبيت الذاتي، لا توجد رسوم.'],['هل يمكن الاستخدام بدون Blink؟','نعم. OpenNode وLNbits أو أي مزود ينفذ واجهة LightningProvider.'],['لماذا Lightning وليس Bitcoin on-chain؟','يستغرق Bitcoin on-chain أكثر من 10 دقائق ويكلف $1-5 لكل معاملة. تتم تسوية Lightning في أقل من ثانية بكسور من السنت.'],['كيف يختلف هذا عن x402 من Coinbase؟','x402 مواصفات بروتوكول. l402-kit SDK جاهز للإنتاج في TypeScript وPython وGo وRust. تستهدف Coinbase USDC؛ l402-kit يستهدف Bitcoin Lightning.'],['هل يتم تحصيل رسوم 0.3% دائما؟','لا. تُطبَّق الرسوم فقط في الوضع المُدار. قم بتوصيل محفظتك الخاصة (Blink أو OpenNode) وستكون الرسوم 0٪.']],
+    demo: { h2: 'جرب L402 مباشرة — ادفع 1 ساتوشي ⚡', p: 'انقر ▶ تشغيل — احصل على فاتورة BOLT11 حقيقية. ادفع 1 ساتوشي من أي محفظة Lightning، الصق الـ preimage وافتح الوصول للورقة البيضاء. بدون حساب.' },
+    mcp: { eyebrow: 'خادم MCP', h2pre: 'أضف l402-kit إلى Claude', h2span: 'في دقيقتين.', p: 'أعطِ Claude Desktop أو Cursor محفظة Lightning. من تلك اللحظة، يمكن لأي وكيل ذكاء اصطناعي الدفع لـ APIs L402 باستقلالية — بدون كود، بدون بطاقة.', worksWith: 'يعمل مع', toolsLabel: 'الأدوات المعروضة على Claude', tools: ['استدعاء أي URL محمي بـ L402 — يدفع تلقائياً بمحفظتك', 'فحص الميزانية المتبقية والإجمالي المُنفق في الجلسة', 'تفصيل كامل حسب النطاق — شاهد أين ذهبت الساتوشي'] },
+    finalCta: { eyebrow: 'لا تزال هنا؟', h2: 'أنت تعرف بالفعل أنه يعمل.', ship: 'حان وقت الإطلاق.', p: 'بدون حساب. بدون Stripe. بدون وسيط. فقط Bitcoin Lightning — فوري، عالمي، نهائي.', btn: 'ابدأ في دقيقتين →' },
     ctaTitle: 'ابدأ في دقيقتين', ctaDesc: 'بدون حساب. بدون بطاقة. فقط Bitcoin.', ctaDocs: 'أو <a href="https://l402kit.com/docs/ar/introduction">اقرأ التوثيق &rarr;</a>',
     problemTitle: 'لماذا تفشل بطاقات الائتمان في APIs',
     problemSub: 'صُمم Stripe للبشر الذين يشترون المنتجات. تفرض APIs رسوماً لكل استدعاء — وهذا يكسر كل شيء.',
@@ -2530,6 +2585,46 @@ function applyFullPageCopy(lang) {
         });
       }
     });
+  }
+
+  // Demo section
+  if (d.demo) {
+    const demoH2 = document.getElementById('demoH2');
+    const demoP  = document.getElementById('demoP');
+    if (demoH2) demoH2.textContent = d.demo.h2;
+    if (demoP)  demoP.textContent  = d.demo.p;
+  }
+
+  // MCP section
+  if (d.mcp) {
+    const mcpEyebrow   = document.getElementById('mcpEyebrow');
+    const mcpH2        = document.getElementById('mcpH2');
+    const mcpH2Span    = document.getElementById('mcpH2Span');
+    const mcpP         = document.getElementById('mcpP');
+    const mcpWorksWith = document.getElementById('mcpWorksWith');
+    if (mcpEyebrow)   mcpEyebrow.textContent   = d.mcp.eyebrow;
+    if (mcpH2)        mcpH2.childNodes[0].textContent = d.mcp.h2pre + '\n';
+    if (mcpH2Span)    mcpH2Span.textContent    = d.mcp.h2span;
+    if (mcpP)         mcpP.textContent         = d.mcp.p;
+    if (mcpWorksWith) mcpWorksWith.textContent = d.mcp.worksWith;
+    if (d.mcp.toolsLabel) { const el = document.getElementById('mcpToolsLabel'); if (el) el.textContent = d.mcp.toolsLabel; }
+    if (d.mcp.tools) {
+      ['mcpTool1','mcpTool2','mcpTool3'].forEach((id,i) => { const el = document.getElementById(id); if (el && d.mcp.tools[i]) el.textContent = d.mcp.tools[i]; });
+    }
+  }
+
+  // Final CTA section
+  if (d.finalCta) {
+    const e  = document.getElementById('finalCtaEyebrow');
+    const h  = document.getElementById('finalCtaH2');
+    const sp = document.getElementById('finalCtaShip');
+    const p  = document.getElementById('finalCtaP');
+    const b  = document.getElementById('finalCtaBtn');
+    if (e)  e.textContent  = d.finalCta.eyebrow;
+    if (h)  h.childNodes[0].textContent = d.finalCta.h2 + ' ';
+    if (sp) sp.textContent = d.finalCta.ship;
+    if (p)  p.textContent  = d.finalCta.p;
+    if (b)  b.textContent  = d.finalCta.btn;
   }
 }
 
@@ -3372,38 +3467,52 @@ function animateValue(id, start, end, duration) {
       } catch(_) {}
     }, EXPIRY_SECS * 1000);
 
-    // Poll for payment
-    _pollTimer = setInterval(async function() {
+    // Expose verify function for the preimage input button
+    window.donateVerify = async function() {
+      var preimage = (document.getElementById('donatePreimageInput').value || '').trim();
+      var errEl = document.getElementById('donateVerifyError');
+      errEl.style.display = 'none';
+
+      if (!/^[0-9a-fA-F]{64}$/.test(preimage)) {
+        errEl.textContent = 'Preimage must be 64 hex characters — check your wallet payment details.';
+        errEl.style.display = '';
+        return;
+      }
+
       try {
-        var pr = await fetch('/api/demo/preimage?hash=' + blinkHash);
-        if (pr.status !== 200) return;
-        var pd = await pr.json();
-        if (!pd.preimage) return;
-        clearInterval(_pollTimer); _pollTimer = null;
+        var verify = await fetch('/api/demo/btc-price', { headers: { 'Authorization': 'L402 ' + _macaroon + ':' + preimage } });
+        var vdata = await verify.json();
+
+        if (verify.status !== 200) {
+          errEl.textContent = vdata.error || 'Invalid preimage — does it match this invoice?';
+          errEl.style.display = '';
+          return;
+        }
+
         if (_expireTimer) { clearTimeout(_expireTimer); _expireTimer = null; }
         if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
 
-        // Verify L402 token
-        var verify = await fetch('/api/demo/btc-price', { headers: { 'Authorization': 'L402 ' + _macaroon + ':' + pd.preimage } });
-        var vdata = await verify.json();
-
-        // Finish terminal animation
+        // Terminal animation
         document.getElementById('donateInvoiceArea').style.display = 'none';
         appendTerm('<div style="height:6px"></div>');
         termLine('$ curl https://l402kit.com/api/demo/btc-price \\', '#58a6ff');
-        termLine('    -H "Authorization: L402 ' + _macaroon.slice(0,18) + '…:' + pd.preimage.slice(0,12) + '…"', '#58a6ff');
-        await sleep(600);
+        termLine('    -H "Authorization: L402 ' + _macaroon.slice(0,18) + '…:' + preimage.slice(0,12) + '…"', '#58a6ff');
+        await sleep(500);
         termLine('  HTTP/1.1 200 OK', '#3fb950');
-        termLine('  {"btcPrice":"' + (vdata.btcPrice || '…') + '","protocol":"L402","paidSats":1}', '#a5d6ff');
-        await sleep(400);
+        var priceStr = vdata.bitcoin ? ('$' + vdata.bitcoin.usd.toLocaleString()) : '…';
+        termLine('  {"bitcoin":{"usd":' + (vdata.bitcoin ? vdata.bitcoin.usd : '…') + '},"paidWith":"⚡ Lightning — L402 protocol"}', '#a5d6ff');
+        await sleep(300);
         appendTerm('<div style="height:6px"></div>');
-        termLine('$ # ⚡ Payment verified. L402 protocol complete.', '#3fb950');
+        termLine('$ # ⚡ Verified. Whitepaper unlocked.', '#3fb950');
 
         document.getElementById('donateSuccess').style.display = '';
         btn.textContent = '✓ Done'; btn.style.opacity = '1';
         _running = false;
-      } catch(_) {}
-    }, 3000);
+      } catch(e) {
+        errEl.textContent = 'Network error — try again.';
+        errEl.style.display = '';
+      }
+    };
   };
 })();
 

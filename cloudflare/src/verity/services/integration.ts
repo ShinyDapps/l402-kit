@@ -37,11 +37,11 @@ export async function handleVerityIntegration(req: Request, env: Env): Promise<R
       // Consumer self-call: scrape README/docs (free internal, records COGS)
       shouldBuy(20, price)
         ? callSelf("scrape", env, () => scrapeUrl(`https://github.com/${owner}/${repo}#readme`, env))
-        : Promise.resolve({ ok: false, cogsSats: 0 }),
+        : Promise.resolve({ ok: false, cogsSats: 0, data: undefined }),
       // Consumer self-call: search for issues and tech context
       shouldBuy(50, price)
         ? callSelf("search", env, () => searchWeb(`${owner}/${repo} github integration api`, env))
-        : Promise.resolve({ ok: false, cogsSats: 0 }),
+        : Promise.resolve({ ok: false, cogsSats: 0, data: undefined }),
     ]);
 
     const code   = codeContext.status === "fulfilled" ? codeContext.value : null;
@@ -71,7 +71,7 @@ Generate:
 
 Format as markdown with code blocks. Be specific — show actual file paths and line numbers where to add the code.`,
       env,
-      "You are VERITY, an autonomous AI agent specializing in API monetization via Bitcoin Lightning.",
+      { system: "You are VERITY, an autonomous AI agent specializing in API monetization via Bitcoin Lightning.", quality: "premium" },
     );
 
     if (!integration) return json({ error: "Integration generation failed" }, 503);

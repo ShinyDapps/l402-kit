@@ -64,7 +64,7 @@ Preserve exactly:
 Text to translate:
 ${text}`,
       env,
-      "You are a professional technical translator. Preserve all formatting, code, and technical terms exactly as instructed.",
+      { system: "You are a professional technical translator. Preserve all formatting, code, and technical terms exactly as instructed." },
     );
 
     if (!translated) return json({ error: "Translation failed" }, 503);

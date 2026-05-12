@@ -66,18 +66,20 @@ Docs deploy automatically via Mintlify on git push to main.
 **Treasury:** `shinydapps@blink.sv`
 **Agent ID:** `agent:shinydapps.verity`
 
-### 8 services
+### 9 services (preços dinâmicos — valores base)
 
 | Service | Endpoint | Price | Key needed |
 |---|---|---|---|
-| Search | `/api/verity/search` | 100 sats | SERPER_API_KEY |
-| Scrape | `/api/verity/scrape` | 200 sats | FIRECRAWL_API_KEY |
-| BTC Price | `/api/verity/btc-price` | 10 sats | — |
-| Summarize | `/api/verity/summarize` | 50 sats | ANTHROPIC_API_KEY |
-| Sentiment | `/api/verity/sentiment` | 30 sats | ANTHROPIC_API_KEY |
-| Domain Intel | `/api/verity/domain-intel` | 500 sats | — |
-| Integration | `/api/verity/integration` | 10,000 sats | ANTHROPIC_API_KEY |
-| World State | `/api/verity/worldstate` | 80 sats | — |
+| Search | `/api/verity/search` | 500 sats | SERPER_API_KEY |
+| Scrape | `/api/verity/scrape` | 500 sats | FIRECRAWL_API_KEY |
+| BTC Price | `/api/verity/btc-price` | 100 sats | — |
+| Summarize | `/api/verity/summarize` | 500 sats | ANTHROPIC_API_KEY |
+| Sentiment | `/api/verity/sentiment` | 300 sats | ANTHROPIC_API_KEY |
+| Domain Intel | `/api/verity/domain-intel` | 2,000 sats | — |
+| Integration | `/api/verity/integration` | 200,000 sats | ANTHROPIC_API_KEY |
+| World State | `/api/verity/worldstate` | 300 sats | — |
+| Translate | `/api/verity/translate` | 500 sats | ANTHROPIC_API_KEY |
+| Research | `/api/verity/research` | 2,000 sats | ANTHROPIC_API_KEY |
 
 ### Add a new service
 1. Create `cloudflare/src/verity/services/myservice.ts` (copy pattern from btcprice.ts)

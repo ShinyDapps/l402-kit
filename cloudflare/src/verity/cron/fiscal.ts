@@ -96,8 +96,8 @@ export async function runFiscalAgent(env: Env): Promise<void> {
     const brlEquivalent = btcBrl > 0 ? ((totalSats / 100_000_000) * btcBrl).toFixed(2) : "unavailable";
 
     const [consumerSpent, consumerBudget] = await Promise.all([
-      getDailySpend(env),
-      getDailyBudget(env),
+      getDailySpend("external", env),
+      getDailyBudget("external", env),
     ]);
     const netSats = totalSats - consumerSpent;
 

@@ -26,6 +26,7 @@ OWNER_ADDRESSES = "shinydapps@blink.sv"
 # FIRECRAWL_API_KEY         ← firecrawl.dev (VERITY scrape service)
 # ANTHROPIC_API_KEY         ← api.anthropic.com (VERITY summarize/sentiment/integration)
 # LAWN_HMAC_SECRET          ← HMAC para ingest de eventos LAW-N
+# GITHUB_PAT                ← GitHub PAT (public repo read-only) — 5000 req/h vs 60 sem token
 
 [triggers]
 crons = ["*/30 * * * *"]

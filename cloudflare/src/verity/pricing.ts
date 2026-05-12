@@ -10,16 +10,16 @@ export interface ServiceConfig {
 }
 
 export const DEFAULTS: Record<string, ServiceConfig> = {
-  search:      { floor: 100,   base: 100,   surgeThreshold: 50,  cogs: 50  },
-  scrape:      { floor: 200,   base: 200,   surgeThreshold: 20,  cogs: 20  }, // Jina grátis reduz COGS
-  btcprice:    { floor: 10,    base: 10,    surgeThreshold: 200, cogs: 0   },
-  summarize:   { floor: 50,    base: 50,    surgeThreshold: 30,  cogs: 1   },
-  sentiment:   { floor: 30,    base: 30,    surgeThreshold: 40,  cogs: 1   },
-  domainIntel: { floor: 500,   base: 500,   surgeThreshold: 10,  cogs: 0   },
-  integration: { floor: 10000, base: 10000, surgeThreshold: 3,   cogs: 150 },
-  worldstate:  { floor: 80,    base: 80,    surgeThreshold: 100, cogs: 0   },
-  translate:   { floor: 50,    base: 50,    surgeThreshold: 30,  cogs: 1   },
-  research:    { floor: 300,  base: 300,   surgeThreshold: 15,  cogs: 51  }, // search+scrape+summarize bundled
+  search:      { floor: 500,    base: 500,    surgeThreshold: 50,  cogs: 50  },
+  scrape:      { floor: 500,    base: 500,    surgeThreshold: 20,  cogs: 20  },
+  btcprice:    { floor: 100,    base: 100,    surgeThreshold: 200, cogs: 0   },
+  summarize:   { floor: 500,    base: 500,    surgeThreshold: 30,  cogs: 1   },
+  sentiment:   { floor: 300,    base: 300,    surgeThreshold: 40,  cogs: 1   },
+  domainIntel: { floor: 2000,   base: 2000,   surgeThreshold: 10,  cogs: 0   },
+  integration: { floor: 200000, base: 200000, surgeThreshold: 3,   cogs: 150 },
+  worldstate:  { floor: 300,    base: 300,    surgeThreshold: 100, cogs: 0   },
+  translate:   { floor: 500,    base: 500,    surgeThreshold: 30,  cogs: 1   },
+  research:    { floor: 2000,   base: 2000,   surgeThreshold: 15,  cogs: 51  },
 };
 
 export async function getServiceConfig(service: string, env: Env): Promise<ServiceConfig> {
