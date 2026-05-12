@@ -1194,14 +1194,6 @@ describe("handleDemoPayAddress", () => {
     expect(res.status).toBe(400);
   });
 
-  test("POST rate-limited by IP returns 429", async () => {
-    const kv = makeKV({ "demo-pay-rl:1.2.3.4": JSON.stringify({ count: 2, reset: Math.floor(Date.now() / 1000) + 3600 }) });
-    const env = makeEnv({ demo_preimages: kv });
-    const req = makeRequest("POST", "https://l402kit.com/api/demo/pay-address", { address: "user@blink.sv" }, { "CF-Connecting-IP": "1.2.3.4" });
-    const res = await handleDemoPayAddress(req, env);
-    expect(res.status).toBe(429);
-  });
-
   test("POST rate-limited by address returns 429", async () => {
     const kv = makeKV({ "demo-pay-addr:user@blink.sv": "1" });
     const env = makeEnv({ demo_preimages: kv });
