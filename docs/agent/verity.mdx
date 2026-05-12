@@ -61,12 +61,12 @@ const client = new L402Client({
   budget: { maxSats: 500 },
 });
 
-// BTC price — 10 sats
+// BTC price — 100 sats
 const price = await client.fetch("https://l402kit.com/api/verity/btc-price");
 const data = await price.json();
 console.log(data.bitcoin.usd);
 
-// World state — 80 sats
+// World state — 300 sats
 const world = await client.fetch("https://l402kit.com/api/verity/worldstate");
 const state = await world.json();
 console.log(state.time.utc, state.location.city, state.weather.temperature_c);
@@ -76,7 +76,7 @@ console.log(state.time.utc, state.location.city, state.weather.temperature_c);
 
 ## Service Reference
 
-### Search — 100 sats
+### Search — 500 sats
 Web search returning top 10 organic results.
 
 ```bash
@@ -106,7 +106,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### Web Scraping — 200 sats
+### Web Scraping — 500 sats
 Returns full page content as markdown.
 
 ```bash
@@ -118,7 +118,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### BTC Price — 10 sats
+### BTC Price — 100 sats
 Real-time Bitcoin price in USD, EUR, and BRL.
 
 ```bash
@@ -136,7 +136,7 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
-### Summarize — 50 sats
+### Summarize — 500 sats
 AI summarization up to 50,000 characters.
 
 ```bash
@@ -148,7 +148,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### Sentiment — 30 sats
+### Sentiment — 300 sats
 Sentiment analysis with score, confidence, and keywords.
 
 ```bash
@@ -172,7 +172,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### Domain Intel — 500 sats
+### Domain Intel — 2,000 sats
 WHOIS, DNS records, and SSL certificates. No API key — uses public RDAP and crt.sh.
 
 ```bash
@@ -192,7 +192,7 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
-### l402-kit Integration — 10,000 sats
+### l402-kit Integration — 200,000 sats
 Send a public GitHub repo URL. VERITY analyzes the codebase and returns complete l402-kit integration code.
 
 ```bash
@@ -213,7 +213,7 @@ curl -X POST -H "Authorization: L402 <token>" \
 
 ---
 
-### World State — 80 sats
+### World State — 300 sats
 UTC time + caller geolocation + local weather in a single call. Zero external API cost.
 
 ```bash
@@ -362,7 +362,12 @@ VERITY adjusts prices every 30 minutes:
 High demand (> threshold calls/hour) → price × 1.1
 Zero demand (2 consecutive hours)    → price × 0.9
 Floor protection                     → price never below minimum
+Reputation modifier                  → success rate drives long-term adjustment
 ```
+
+Each call writes to `verity_success:{service}:{hour}` or `verity_error:{service}:{hour}` in KV. The fiscal agent reads these counters daily and feeds them into the reputation module — services with high error rates get penalized, high success rates unlock better surge thresholds.
+
+**Bonus budget reinvestment:** the fiscal agent automatically reinvests 10% of weekly revenue as consumer budget — 70% reserved for calling external L402 partners, 30% for internal service calls. VERITY earns, saves, and spends autonomously.
 
 Check current prices at any time:
 ```bash
@@ -395,7 +400,7 @@ curl https://l402kit.com/api/verity/services
       "surge_threshold": 50
     }
   ],
-  "count": 10,
+  "count": 11,
   "updated": "2026-05-12T14:32:00.000Z"
 }
 ```
@@ -499,7 +504,7 @@ Minimum: 100 sats. Changes take effect immediately.
 
 ```
 VERITY (agent:shinydapps.verity)
-  ├── 10 L402-protected services
+  ├── 11 L402-protected services
   ├── Treasury: shinydapps@blink.sv
   ├── Heartbeat: every 30min (price adjustment + Satring market scan)
   ├── Query cache: KV-backed, per-service TTL (5min–24h)
