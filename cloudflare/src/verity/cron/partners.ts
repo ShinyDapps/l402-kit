@@ -1,6 +1,7 @@
 import type { Env } from "../../worker";
 import type { PartnerEntry } from "../radar/types";
 import { buildPartnerEntry, recordPartnerFailure, shouldActivatePartnerRing } from "../radar/partners";
+import { DEFAULTS } from "../pricing";
 
 const SELF_REPO = "ShinyDapps/l402-kit";
 
@@ -125,6 +126,35 @@ async function sendNewPartnerEmail(url: string, title: string, env: Env): Promis
   } catch { /* non-critical */ }
 }
 
+export async function hasEarned(env: Env): Promise<boolean> {
+  const hour = Math.floor(Date.now() / 3_600_000);
+  const services = Object.keys(DEFAULTS);
+  for (const service of services) {
+    for (let h = 0; h < 24; h++) {
+      const val = await env.demo_preimages.get(`verity_success:${service}:${hour - h}`);
+      if (val && parseInt(val, 10) > 0) return true;
+    }
+  }
+  return false;
+}
+
+export async function activatePartnerIfEarning(env: Env): Promise<void> {
+  if (!(await hasEarned(env))) {
+    console.log("[RADAR] partners: no earnings yet — partner activation deferred");
+    return;
+  }
+  const partners = await loadPartners(env);
+  if (partners.length === 0) return;
+
+  const candidate = partners[0];
+  await env.demo_preimages.put(
+    "verity_config:alpha_partner_url",
+    candidate.url,
+    { expirationTtl: 7 * 86_400 },
+  );
+  console.log("[RADAR] partners: activated partner for alpha:", candidate.url);
+}
+
 export async function runPartnersRadar(env: Env): Promise<void> {
   if (!env.SERPER_API_KEY) {
     console.log("[RADAR] partners: no SERPER_API_KEY — skipping");
@@ -181,6 +211,8 @@ export async function runPartnersRadar(env: Env): Promise<void> {
     }
 
     console.log("[RADAR] partners:", { found: all.length, new: newCount, total: existing.length });
+
+    await activatePartnerIfEarning(env);
   } catch (e) {
     console.error("[RADAR] partners error:", String(e));
   }
