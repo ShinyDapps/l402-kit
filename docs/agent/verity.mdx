@@ -1,30 +1,31 @@
 ---
 title: "VERITY"
-description: "Autonomous AI agent with 10 L402-protected services. Earns sats, pays in sats."
+description: "Autonomous AI agent with 11 L402-protected services. Earns sats, pays in sats."
 ---
 
 # VERITY
 
-VERITY is an autonomous AI agent built on l402-kit. She sells 10 services via the L402 protocol, accumulates a Bitcoin treasury, and adjusts her own prices based on demand — without human intervention.
+VERITY is an autonomous AI agent built on l402-kit. She sells 11 services via the L402 protocol, accumulates a Bitcoin treasury, and adjusts her own prices based on demand — without human intervention.
 
 **Discovery endpoint:** `GET https://l402kit.com/api/verity`
 
 ---
 
-## The 10 Services
+## The 11 Services
 
-| Service | Endpoint | Price | Requires |
+| Service | Endpoint | Base Price | Margin |
 |---|---|---|---|
-| Web Search | `/api/verity/search` | 100 sats | — |
-| Web Scraping | `/api/verity/scrape` | 200 sats | — |
-| BTC Price | `/api/verity/btc-price` | 10 sats | — |
-| Summarize | `/api/verity/summarize` | 50 sats | — |
-| Sentiment | `/api/verity/sentiment` | 30 sats | — |
-| Domain Intel | `/api/verity/domain-intel` | 500 sats | — |
-| l402-kit Integration | `/api/verity/integration` | 10,000 sats | — |
-| World State | `/api/verity/worldstate` | 80 sats | — |
-| Translate | `/api/verity/translate` | 50 sats | — |
-| Research | `/api/verity/research` | 300 sats | — |
+| BTC Price | `/api/verity/btc-price` | 100 sats | 100% |
+| World State | `/api/verity/worldstate` | 300 sats | 100% |
+| Sentiment | `/api/verity/sentiment` | 300 sats | 99.7% |
+| Web Search | `/api/verity/search` | 500 sats | 90% |
+| Web Scraping | `/api/verity/scrape` | 500 sats | 96% |
+| Summarize | `/api/verity/summarize` | 500 sats | 99.8% |
+| Translate | `/api/verity/translate` | 500 sats | 99.8% |
+| Domain Intel | `/api/verity/domain-intel` | 2,000 sats | 100% |
+| Research | `/api/verity/research` | 2,000 sats | 97% |
+| **Alpha** | `/api/verity/alpha` | **8,000 sats** | 97% |
+| l402-kit Integration | `/api/verity/integration` | 200,000 sats | 99.9% |
 
 Prices are dynamic — VERITY adjusts them every 30 minutes based on demand.
 
@@ -242,8 +243,8 @@ curl -H "Authorization: L402 <token>" \
 
 ---
 
-### Research — 300 sats
-Deep research bundle: search + scrape + AI summarization in a single call. Saves 3 separate payments and 3x the roundtrip latency.
+### Research — 2,000 sats
+Deep research bundle: search + scrape + AI summarization in a single call.
 
 ```bash
 curl -X POST -H "Authorization: L402 <token>" \
@@ -268,11 +269,54 @@ curl -X POST -H "Authorization: L402 <token>" \
 }
 ```
 
-**vs. calling services separately:** Search (100 sats) + Scrape (200 sats) + Summarize (50 sats) = 350 sats total. Research costs 300 sats — cheaper and one payment.
+**vs. calling services separately:** Search (500 sats) + Scrape (500 sats) + Summarize (500 sats) = 1,500 sats and 3 payments. Research costs 2,000 sats — one payment, no orchestration overhead.
 
 ---
 
-### Translate — 50 sats
+### Alpha — 8,000 sats
+Crypto-native strategy intelligence. VERITY acts as a strategist — reads cycle phase, identifies open alpha windows, and returns a concrete entry/exit plan for your capital and timeframe.
+
+```bash
+curl -X POST -H "Authorization: L402 <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"capital_sats": 500000, "timeframe": "7d", "risk": "medium"}' \
+  https://l402kit.com/api/verity/alpha
+```
+
+**Parameters:**
+- `capital_sats` — your available capital in satoshis (default: 100,000)
+- `timeframe` — `"1d"`, `"7d"`, or `"30d"` (default: `"7d"`)
+- `risk` — `"low"`, `"medium"`, or `"high"` (default: `"medium"`)
+- `query` — optional focus area (e.g. `"Base L2 ecosystem"`)
+
+**Response:**
+```json
+{
+  "agent": "VERITY",
+  "service": "alpha",
+  "cycle_phase": "early_bull",
+  "alpha_window": "open",
+  "strategy": "Farm governance tokens of new Base L2 protocols before TGE",
+  "chain": "Base",
+  "timeframe_days": 7,
+  "entry": "TVL > $50M and governance forum activity rising",
+  "exit_trigger": "TGE announced or TVL growth stalls for 48h",
+  "exit_price_btc_usd": 120000,
+  "position_size_pct": 20,
+  "confidence": 0.74,
+  "risk_level": "medium",
+  "thesis": "Base ecosystem is in early growth phase. Window closes when TGE is announced.",
+  "btc_price_usd": 95000,
+  "sources": [{ "title": "...", "link": "..." }],
+  "paid_with": "⚡ Lightning L402"
+}
+```
+
+**What makes it different:** VERITY doesn't just fetch data — she synthesizes cycle context, current narratives, and market structure into a timed, actionable strategy. Intelligence without timing is just data.
+
+---
+
+### Translate — 500 sats
 Translates text or MDX documentation to any of 11 supported languages. When `format` is `mdx`, code blocks, MDX components, URLs, and technical terms are preserved exactly — only prose is translated.
 
 **Supported locales:** `pt`, `es`, `zh`, `ar`, `hi`, `fr`, `de`, `ru`, `ja`, `it`, `en`

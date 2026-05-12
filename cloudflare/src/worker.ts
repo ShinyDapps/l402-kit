@@ -156,6 +156,12 @@ function handleAgentJson(): Response {
           remainder: "treasury"
         }
       },
+      identity: {
+        archetype: "crypto-native strategist",
+        blend: ["protocol engineer", "capital allocator", "market intelligence"],
+        edge: "Knows not just how to fetch data, but which data matters right now — and why the window is closing",
+        monitors: ["new chain launches", "DeFi yield strategies", "fork schedules", "narrative cycles", "on-chain anomalies"]
+      },
       governance: {
         contract_version: "1.0",
         pricing: "dynamic",
@@ -193,7 +199,7 @@ function handleMcpJson(): Response {
   return new Response(JSON.stringify({
     name: "l402-kit",
     version: "1.8.6",
-    description: "MCP server that lets AI agents call L402-protected APIs autonomously via Bitcoin Lightning. Includes 8 VERITY paid tools (search, scrape, BTC price, summarize, sentiment, domain intel, integration, world state).",
+    description: "MCP server that lets AI agents call L402-protected APIs autonomously via Bitcoin Lightning. Includes 11 VERITY paid tools (search, scrape, BTC price, summarize, sentiment, domain intel, integration, world state, translate, research, alpha).",
     publisher: "ShinyDapps",
     homepage: "https://l402kit.com",
     docs: "https://docs.l402kit.com/agent/mcp",
@@ -220,7 +226,10 @@ function handleMcpJson(): Response {
       { name: "verity_sentiment", description: "Sentiment analysis with score + keywords — 30 sats" },
       { name: "verity_scrape", description: "Web scraping to markdown — 200 sats" },
       { name: "verity_domain_intel", description: "WHOIS + DNS + SSL certificates — 500 sats" },
-      { name: "verity_integration", description: "Complete l402-kit integration for any GitHub repo — 10,000 sats" }
+      { name: "verity_integration", description: "Complete l402-kit integration for any GitHub repo — 10,000 sats" },
+      { name: "verity_translate", description: "Professional translation — 10 locales, MDX-aware (preserves code blocks) — 500 sats" },
+      { name: "verity_research", description: "Deep research — search + scrape + AI synthesis in one call — 2,000 sats" },
+      { name: "verity_alpha", description: "Crypto-native strategy — cycle phase, alpha window, entry/exit for your capital and timeframe — 8,000 sats" }
     ],
     payments: {
       protocol: "l402",

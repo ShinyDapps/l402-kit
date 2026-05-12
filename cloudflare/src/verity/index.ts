@@ -9,6 +9,7 @@ import { handleVerityIntegration } from "./services/integration";
 import { handleVerityWorldState }  from "./services/worldstate";
 import { handleVerityTranslate }   from "./services/translate";
 import { handleVerityResearch }    from "./services/research";
+import { handleVerityAlpha }       from "./services/alpha";
 import { getAllPrices, getServiceConfig, setServiceConfig, DEFAULTS } from "./pricing";
 import { getDailySpend, getDailyBudget } from "./consumer";
 import { getAlerts, clearAlert } from "./alerts";
@@ -38,6 +39,7 @@ export async function handleVerity(req: Request, env: Env): Promise<Response> {
     case "worldstate":  return handleVerityWorldState(req, env);
     case "translate":   return handleVerityTranslate(req, env);
     case "research":    return handleVerityResearch(req, env);
+    case "alpha":       return handleVerityAlpha(req, env);
     case "fiscal":      return handleVerityFiscal(req, env);
     case "services":    return handleVerityServices(env);
     case "admin":       return handleVerityAdmin(req, env);
@@ -335,6 +337,14 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         params: "{ query: string }",
         priceSats: prices.research,
         description: "Deep research — search + scrape + AI synthesis in one call",
+      },
+      {
+        id: "alpha",
+        endpoint: "/api/verity/alpha",
+        method: "POST",
+        params: "{ capital_sats?, timeframe?, risk?, query? }",
+        priceSats: prices.alpha,
+        description: "Crypto-native strategy — cycle phase + alpha window + entry/exit for your capital and timeframe",
       },
     ],
     how_to_pay: {
