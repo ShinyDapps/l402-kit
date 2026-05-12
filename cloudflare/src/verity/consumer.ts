@@ -1,5 +1,6 @@
 import type { Env } from "../worker";
 import { MARGIN_FLOOR, getServiceConfig } from "./pricing";
+import { recordAlert, checkBudgetAlert } from "./alerts";
 
 const BLINK_API = "https://api.blink.sv/graphql";
 
@@ -172,6 +173,7 @@ export async function callSelf(
   const budget = await getDailyBudget("internal", env);
   const spent  = await getDailySpend("internal", env);
   if (spent + cogsSats > budget) {
+    await checkBudgetAlert("internal", spent, budget, env, cogsSats);
     return { ok: false, cogsSats };
   }
 
@@ -243,10 +245,16 @@ export async function callExternal(opts: ExternalCallOptions, env: Env): Promise
   try {
     const budget = await getDailyBudget("external", env);
     const spent  = await getDailySpend("external", env);
-    if (spent + costSats > budget) return { ok: false };
+    if (spent + costSats > budget) {
+      await checkBudgetAlert("external", spent, budget, env, costSats);
+      return { ok: false };
+    }
 
     preimage = await payInvoice(invoice402.invoice, env);
-    if (!preimage) return { ok: false };
+    if (!preimage) {
+      await recordAlert("payment_failed", "external", { url, costSats, invoice: invoice402.invoice.slice(0, 30) }, env);
+      return { ok: false };
+    }
 
     await recordSpend("external", costSats, url, env);
   } finally {

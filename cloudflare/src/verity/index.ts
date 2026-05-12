@@ -11,6 +11,7 @@ import { handleVerityTranslate }   from "./services/translate";
 import { handleVerityResearch }    from "./services/research";
 import { getAllPrices, getServiceConfig, setServiceConfig, DEFAULTS } from "./pricing";
 import { getDailySpend, getDailyBudget } from "./consumer";
+import { getAlerts, clearAlert } from "./alerts";
 import { dequeueAll } from "./radar/queue";
 import type { QueueKey, EcosystemReport } from "./radar/types";
 import { buildSynthesis } from "./radar/synthesis";
@@ -191,6 +192,20 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
     return json({ removed: body.url, remaining: filtered.length });
   }
 
+  // GET /api/verity/admin/alerts — list treasury alerts (budget_low, budget_exhausted, payment_failed)
+  if (req.method === "GET" && action === "alerts") {
+    const alerts = await getAlerts(env);
+    return json({ count: alerts.length, alerts });
+  }
+
+  // DELETE /api/verity/admin/alerts — clear a specific alert by key
+  if (req.method === "DELETE" && action === "alerts") {
+    const body = await req.json().catch(() => ({})) as { key?: string };
+    if (!body.key?.startsWith("verity_alert:")) return json({ error: "Invalid alert key" }, 400);
+    await clearAlert(body.key, env);
+    return json({ cleared: body.key });
+  }
+
   return json({ error: "Unknown admin action" }, 404);
 }
 
@@ -225,10 +240,21 @@ async function handleVerityIndex(env: Env): Promise<Response> {
 
   return json({
     name: "VERITY",
-    description: "Autonomous AI agent. 9 services. Earns in sats, pays in sats.",
+    description: "Autonomous AI agent. 10 services. Earns in sats, pays in sats.",
     agent_id: "agent:shinydapps.verity",
     wallet: "shinydapps@blink.sv",
     protocol: "L402 (Bitcoin Lightning)",
+    modus_operandi: {
+      mindset: "crypto-native strategist — reads protocols like code and markets like balance sheets",
+      approach: "Does not just answer queries. Identifies which intelligence is actionable right now, in this market cycle.",
+      strategic_lens: [
+        "What chain / protocol is generating asymmetric returns today?",
+        "Is this a narrative window or a structural shift?",
+        "Where is the smart money positioning before the crowd notices?"
+      ],
+      example: "Farming fork snapshots in a single day — recognizing a 24h alpha window in DeFi before the strategy was crowded out.",
+      principle: "Intelligence without timing is just data. VERITY delivers both."
+    },
     services: [
       {
         id: "search",
@@ -301,6 +327,14 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         params: "{ text: string, locale: string, format?: 'mdx'|'plain' }",
         priceSats: prices.translate,
         description: "Professional translation — 10 locales, MDX-aware (preserves code blocks)",
+      },
+      {
+        id: "research",
+        endpoint: "/api/verity/research",
+        method: "POST",
+        params: "{ query: string }",
+        priceSats: prices.research,
+        description: "Deep research — search + scrape + AI synthesis in one call",
       },
     ],
     how_to_pay: {
