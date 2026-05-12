@@ -37,6 +37,8 @@ export async function handleVerity(req: Request, env: Env): Promise<Response> {
     case "worldstate":  return handleVerityWorldState(req, env);
     case "translate":   return handleVerityTranslate(req, env);
     case "research":    return handleVerityResearch(req, env);
+    case "fiscal":      return handleVerityFiscal(req, env);
+    case "services":    return handleVerityServices(env);
     case "admin":       return handleVerityAdmin(req, env);
     default:            return handleVerityIndex(env);
   }
@@ -190,6 +192,30 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
   }
 
   return json({ error: "Unknown admin action" }, 404);
+}
+
+// ─── Public fiscal report ─────────────────────────────────────────────────────
+
+async function handleVerityFiscal(_req: Request, env: Env): Promise<Response> {
+  const today = new Date().toISOString().slice(0, 10);
+  const raw = await env.demo_preimages.get(`verity_fiscal:${today}`);
+  if (!raw) return json({ error: "No fiscal report for today yet. Runs daily at 00:00 UTC." }, 404);
+  return json(JSON.parse(raw));
+}
+
+// ─── Machine-readable service catalog ────────────────────────────────────────
+
+async function handleVerityServices(env: Env): Promise<Response> {
+  const prices = await getAllPrices(env);
+  const catalog = Object.entries(DEFAULTS).map(([id, cfg]) => ({
+    id,
+    endpoint: `https://l402kit.com/api/verity/${id.replace(/([A-Z])/g, "-$1").toLowerCase()}`,
+    price_sats: prices[id] ?? cfg.base,
+    floor_sats: cfg.floor,
+    cogs_sats: cfg.cogs,
+    surge_threshold: cfg.surgeThreshold,
+  }));
+  return json({ services: catalog, count: catalog.length, updated: new Date().toISOString() });
 }
 
 // ─── Service index ────────────────────────────────────────────────────────────

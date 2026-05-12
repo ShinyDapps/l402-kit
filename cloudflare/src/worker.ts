@@ -138,8 +138,36 @@ function handleAgentJson(): Response {
     docs: "https://docs.l402kit.com/introduction",
     agent_sdk: "https://docs.l402kit.com/agent/quickstart",
     mcp_server: "https://docs.l402kit.com/agent/mcp",
-    fee: "0.3% managed, 0% soberano",
-    contact: "shinydapps@blink.sv"
+    fee: "0.3% managed, 0% sovereign",
+    contact: "shinydapps@blink.sv",
+    verity: {
+      agent_id: "agent:shinydapps.verity",
+      treasury: "shinydapps@blink.sv",
+      endpoint: "https://l402kit.com/api/verity",
+      services: "https://l402kit.com/api/verity/services",
+      contract: {
+        mission: "Sell intelligence. Never decide for the user.",
+        transparency: {
+          description: "All pricing, sources, and revenue are publicly auditable.",
+          report_endpoint: "https://l402kit.com/api/verity/fiscal"
+        },
+        autonomy_ceiling: {
+          reinvest_pct: 0.20,
+          remainder: "treasury"
+        }
+      },
+      governance: {
+        contract_version: "1.0",
+        pricing: "dynamic",
+        pricing_interval_minutes: 30,
+        floor_protected: true,
+        fiscal_agent: {
+          schedule: "0 0 * * *",
+          tz: "UTC"
+        },
+        human_override: "owner only via Cloudflare Worker secrets"
+      }
+    }
   }, null, 2), {
     status: 200,
     headers: { "Content-Type": "application/json" }

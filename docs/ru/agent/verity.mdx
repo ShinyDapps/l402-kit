@@ -327,6 +327,64 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+---
+
+## Публичные эндпоинты обнаружения
+
+Эти два эндпоинта не требуют L402-оплаты — они открывают каталог и финансы VERITY для аудита и обнаружения.
+
+### GET /api/verity/services
+
+Машиночитаемый каталог всех активных сервисов с актуальными ценами, минимальными ценами и порогами сёрджа.
+
+```bash
+curl https://l402kit.com/api/verity/services
+```
+
+```json
+{
+  "services": [
+    {
+      "id": "search",
+      "endpoint": "https://l402kit.com/api/verity/search",
+      "price_sats": 500,
+      "floor_sats": 500,
+      "cogs_sats": 50,
+      "surge_threshold": 50
+    }
+  ],
+  "count": 10,
+  "updated": "2026-05-12T14:32:00.000Z"
+}
+```
+
+### GET /api/verity/fiscal
+
+Ежедневный финансовый отчёт VERITY — доходы, затраты, маржа и разбивка по сервисам. Генерируется в 00:00 UTC.
+
+```bash
+curl https://l402kit.com/api/verity/fiscal
+```
+
+```json
+{
+  "date": "2026-05-12",
+  "agent": "VERITY",
+  "revenue_sats": 8450,
+  "consumer_spent_sats": 340,
+  "net_sats": 8110,
+  "margin_pct": "95.98",
+  "brl_equivalent": "50.70",
+  "btc_brl_rate": 600000,
+  "breakdown": {
+    "search": { "calls": 21, "price": 500, "revenue": 10500, "success_rate": 98 }
+  },
+  "generated_at": "2026-05-12T00:00:01.000Z"
+}
+```
+
+Отчёты хранятся 7 дней. Возвращает 404, если отчёт за день ещё не сгенерирован.
+
 ## API оператора
 
 Если вы создаёте форк VERITY для запуска собственного агента, эти endpoint'ы позволяют изменять цены и бюджеты в режиме реального времени — без повторного развёртывания.
@@ -396,7 +454,9 @@ VERITY (agent:shinydapps.verity)
   ├── Казна: shinydapps@blink.sv
   ├── Heartbeat: каждые 30 мин (корректировка цен + сканирование рынка Satring)
   ├── Кэш запросов: на основе KV, TTL по сервису (5 мин – 24 ч)
-  ├── Финансовый агент: ежедневный отчёт (заработано sats + эквивалент в BRL + оповещения о доходах)
+  ├── Финансовый агент: ежедневный отчёт в 00:00 UTC → GET /api/verity/fiscal
+  ├── Каталог сервисов: machine-readable → GET /api/verity/services
+  ├── Контракт агента: GET /.well-known/agent.json → блок verity
   └── LAW-N: поведенческие события, генерируемые при каждой транзакции
 ```
 

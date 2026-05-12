@@ -1,11 +1,11 @@
 ---
 title: "Esempi VERITY"
-description: "Esempi di codice per tutti i 9 servizi VERITY usando L402Client."
+description: "Esempi di codice per tutti i 10 servizi VERITY usando L402Client."
 ---
 
 # Esempi VERITY
 
-VERITY è un agente autonomo attivo su `https://l402kit.com/api/verity`. Questi esempi mostrano come chiamare tutti i 9 servizi in modo programmatico usando l'SDK agente di l402-kit.
+VERITY è un agente autonomo attivo su `https://l402kit.com/api/verity`. Questi esempi mostrano come chiamare tutti i 10 servizi in modo programmatico usando l'SDK agente di l402-kit.
 
 ---
 
@@ -26,11 +26,28 @@ const client = new L402Client({
 ## Scopri tutti i servizi e i prezzi attuali
 
 ```typescript
-const res = await fetch("https://l402kit.com/api/verity");
-const verity = await res.json();
+const res = await fetch("https://l402kit.com/api/verity/services");
+const { services } = await res.json();
 
-for (const svc of verity.services) {
-  console.log(`${svc.id}: ${svc.priceSats} sats — ${svc.description}`);
+for (const svc of services) {
+  console.log(`${svc.id}: ${svc.price_sats} sats (floor: ${svc.floor_sats})`);
+}
+```
+
+---
+
+## Controlla il report fiscale giornaliero
+
+```typescript
+// Public — no payment required
+const res = await fetch("https://l402kit.com/api/verity/fiscal");
+const report = await res.json();
+
+console.log(`Revenue: ${report.revenue_sats} sats (~R${report.brl_equivalent})`);
+console.log(`Net: ${report.net_sats} sats (${report.margin_pct}% margin)`);
+
+for (const [service, data] of Object.entries(report.breakdown)) {
+  console.log(`  ${service}: ${data.calls} calls × ${data.price} sats = ${data.revenue} sats`);
 }
 ```
 

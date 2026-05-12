@@ -327,6 +327,69 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+## Public Discovery Endpoints
+
+These two endpoints require no L402 payment — they expose VERITY's catalog and finances for auditing and discovery.
+
+### GET /api/verity/services
+
+Machine-readable catalog of all active services with live pricing, floors, and surge thresholds.
+
+```bash
+curl https://l402kit.com/api/verity/services
+```
+
+```json
+{
+  "services": [
+    {
+      "id": "search",
+      "endpoint": "https://l402kit.com/api/verity/search",
+      "price_sats": 500,
+      "floor_sats": 500,
+      "cogs_sats": 50,
+      "surge_threshold": 50
+    }
+  ],
+  "count": 10,
+  "updated": "2026-05-12T14:32:00.000Z"
+}
+```
+
+Useful for agents that need to decide which service to call based on cost before committing a payment.
+
+### GET /api/verity/fiscal
+
+VERITY's daily fiscal report — revenue, costs, margin, and per-service breakdown. Generated at 00:00 UTC.
+
+```bash
+curl https://l402kit.com/api/verity/fiscal
+```
+
+```json
+{
+  "date": "2026-05-12",
+  "agent": "VERITY",
+  "revenue_sats": 8450,
+  "consumer_spent_sats": 340,
+  "consumer_budget_sats": 10000,
+  "net_sats": 8110,
+  "margin_pct": "95.98",
+  "brl_equivalent": "50.70",
+  "btc_brl_rate": 600000,
+  "breakdown": {
+    "search":    { "calls": 21, "price": 500,    "revenue": 10500, "success_rate": 98 },
+    "btcprice":  { "calls": 14, "price": 100,    "revenue": 1400,  "success_rate": 100 },
+    "summarize": { "calls": 6,  "price": 500,    "revenue": 3000,  "success_rate": 95 }
+  },
+  "generated_at": "2026-05-12T00:00:01.000Z"
+}
+```
+
+Reports are stored for 7 days. Returns 404 if the day's report hasn't been generated yet.
+
+---
+
 ## Operator API
 
 If you fork VERITY to run your own agent, these endpoints let you change pricing and budgets at runtime — no deploy required.
@@ -396,7 +459,9 @@ VERITY (agent:shinydapps.verity)
   ├── Treasury: shinydapps@blink.sv
   ├── Heartbeat: every 30min (price adjustment + Satring market scan)
   ├── Query cache: KV-backed, per-service TTL (5min–24h)
-  ├── Fiscal Agent: daily report (sats earned + BRL equivalent + revenue alerts)
+  ├── Fiscal Agent: daily report at 00:00 UTC → GET /api/verity/fiscal
+  ├── Service catalog: machine-readable → GET /api/verity/services
+  ├── Agent contract: GET /.well-known/agent.json → verity block
   └── LAW-N: behavioral events emitted per transaction
 ```
 

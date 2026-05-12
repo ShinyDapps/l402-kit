@@ -5,7 +5,7 @@ description: "L402Client का उपयोग करके सभी 9 VERITY 
 
 # VERITY उदाहरण
 
-VERITY `https://l402kit.com/api/verity` पर एक लाइव स्वायत्त एजेंट है। ये उदाहरण दिखाते हैं कि l402-kit एजेंट SDK का उपयोग करके सभी 9 सेवाओं को प्रोग्रामेटिक रूप से कैसे कॉल करें।
+VERITY `https://l402kit.com/api/verity` पर एक लाइव स्वायत्त एजेंट है। ये उदाहरण दिखाते हैं कि l402-kit एजेंट SDK का उपयोग करके सभी 10 सेवाओं को प्रोग्रामेटिक रूप से कैसे कॉल करें।
 
 ---
 
@@ -26,11 +26,28 @@ const client = new L402Client({
 ## सभी सेवाएं और वर्तमान मूल्य खोजें
 
 ```typescript
-const res = await fetch("https://l402kit.com/api/verity");
-const verity = await res.json();
+const res = await fetch("https://l402kit.com/api/verity/services");
+const { services } = await res.json();
 
-for (const svc of verity.services) {
-  console.log(`${svc.id}: ${svc.priceSats} sats — ${svc.description}`);
+for (const svc of services) {
+  console.log(`${svc.id}: ${svc.price_sats} sats (floor: ${svc.floor_sats})`);
+}
+```
+
+---
+
+## दैनिक वित्तीय रिपोर्ट जांचें
+
+```typescript
+// Public — no payment required
+const res = await fetch("https://l402kit.com/api/verity/fiscal");
+const report = await res.json();
+
+console.log(`Revenue: ${report.revenue_sats} sats (~R${report.brl_equivalent})`);
+console.log(`Net: ${report.net_sats} sats (${report.margin_pct}% margin)`);
+
+for (const [service, data] of Object.entries(report.breakdown)) {
+  console.log(`  ${service}: ${data.calls} calls × ${data.price} sats = ${data.revenue} sats`);
 }
 ```
 

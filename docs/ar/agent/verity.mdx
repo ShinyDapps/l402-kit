@@ -327,6 +327,64 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+---
+
+## نقاط النهاية العامة للاكتشاف
+
+لا تتطلب هذه النقطتان دفع L402 — تكشفان عن كتالوج VERITY وبياناتها المالية للتدقيق والاكتشاف.
+
+### GET /api/verity/services
+
+كتالوج قابل للقراءة آليًا لجميع الخدمات النشطة مع التسعير الفوري والحد الأدنى وعتبات الزيادة.
+
+```bash
+curl https://l402kit.com/api/verity/services
+```
+
+```json
+{
+  "services": [
+    {
+      "id": "search",
+      "endpoint": "https://l402kit.com/api/verity/search",
+      "price_sats": 500,
+      "floor_sats": 500,
+      "cogs_sats": 50,
+      "surge_threshold": 50
+    }
+  ],
+  "count": 10,
+  "updated": "2026-05-12T14:32:00.000Z"
+}
+```
+
+### GET /api/verity/fiscal
+
+التقرير المالي اليومي لـ VERITY — الإيرادات والتكاليف والهامش والتفصيل حسب الخدمة. يُنشأ يوميًا في 00:00 UTC.
+
+```bash
+curl https://l402kit.com/api/verity/fiscal
+```
+
+```json
+{
+  "date": "2026-05-12",
+  "agent": "VERITY",
+  "revenue_sats": 8450,
+  "consumer_spent_sats": 340,
+  "net_sats": 8110,
+  "margin_pct": "95.98",
+  "brl_equivalent": "50.70",
+  "btc_brl_rate": 600000,
+  "breakdown": {
+    "search": { "calls": 21, "price": 500, "revenue": 10500, "success_rate": 98 }
+  },
+  "generated_at": "2026-05-12T00:00:01.000Z"
+}
+```
+
+تُحفظ التقارير لمدة 7 أيام. يُرجع 404 إذا لم يُنشأ تقرير اليوم بعد.
+
 ## واجهة برمجة المشغّل
 
 إذا قمت بنسخ VERITY لتشغيل وكيلك الخاص، تتيح لك هذه النقاط تغيير التسعير والميزانيات في وقت التشغيل — دون الحاجة إلى نشر جديد.
@@ -396,7 +454,9 @@ VERITY (agent:shinydapps.verity)
   ├── Treasury: shinydapps@blink.sv
   ├── Heartbeat: every 30min (price adjustment + Satring market scan)
   ├── Query cache: KV-backed, per-service TTL (5min–24h)
-  ├── Fiscal Agent: daily report (sats earned + BRL equivalent + revenue alerts)
+  ├── Fiscal Agent: daily report at 00:00 UTC → GET /api/verity/fiscal
+  ├── Service catalog: machine-readable → GET /api/verity/services
+  ├── Agent contract: GET /.well-known/agent.json → verity block
   └── LAW-N: behavioral events emitted per transaction
 ```
 

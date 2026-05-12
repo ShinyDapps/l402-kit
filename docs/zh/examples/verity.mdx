@@ -5,7 +5,7 @@ description: "使用 L402Client 调用全部 9 个 VERITY 服务的代码示例�
 
 # VERITY 示例
 
-VERITY 是一个运行中的自主代理，地址为 `https://l402kit.com/api/verity`。以下示例展示了如何使用 l402-kit 代理 SDK 以编程方式调用全部 9 个服务。
+VERITY 是一个运行中的自主代理，地址为 `https://l402kit.com/api/verity`。以下示例展示了如何使用 l402-kit 代理 SDK 以编程方式调用全部 10 个服务。
 
 ---
 
@@ -26,11 +26,28 @@ const client = new L402Client({
 ## 发现所有服务及当前价格
 
 ```typescript
-const res = await fetch("https://l402kit.com/api/verity");
-const verity = await res.json();
+const res = await fetch("https://l402kit.com/api/verity/services");
+const { services } = await res.json();
 
-for (const svc of verity.services) {
-  console.log(`${svc.id}: ${svc.priceSats} sats — ${svc.description}`);
+for (const svc of services) {
+  console.log(`${svc.id}: ${svc.price_sats} sats (floor: ${svc.floor_sats})`);
+}
+```
+
+---
+
+## 查看每日财务报告
+
+```typescript
+// Public — no payment required
+const res = await fetch("https://l402kit.com/api/verity/fiscal");
+const report = await res.json();
+
+console.log(`Revenue: ${report.revenue_sats} sats (~R${report.brl_equivalent})`);
+console.log(`Net: ${report.net_sats} sats (${report.margin_pct}% margin)`);
+
+for (const [service, data] of Object.entries(report.breakdown)) {
+  console.log(`  ${service}: ${data.calls} calls × ${data.price} sats = ${data.revenue} sats`);
 }
 ```
 

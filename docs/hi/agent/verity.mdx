@@ -327,6 +327,64 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+---
+
+## सार्वजनिक डिस्कवरी एंडपॉइंट
+
+इन दो एंडपॉइंट के लिए L402 भुगतान आवश्यक नहीं है — ये VERITY के कैटलॉग और वित्त को ऑडिट और खोज के लिए उजागर करते हैं।
+
+### GET /api/verity/services
+
+सभी सक्रिय सेवाओं का मशीन-readable कैटलॉग जिसमें लाइव मूल्य, floor और surge threshold शामिल हैं।
+
+```bash
+curl https://l402kit.com/api/verity/services
+```
+
+```json
+{
+  "services": [
+    {
+      "id": "search",
+      "endpoint": "https://l402kit.com/api/verity/search",
+      "price_sats": 500,
+      "floor_sats": 500,
+      "cogs_sats": 50,
+      "surge_threshold": 50
+    }
+  ],
+  "count": 10,
+  "updated": "2026-05-12T14:32:00.000Z"
+}
+```
+
+### GET /api/verity/fiscal
+
+VERITY की दैनिक वित्तीय रिपोर्ट — राजस्व, लागत, मार्जिन और प्रति-सेवा विवरण। 00:00 UTC पर उत्पन्न होती है।
+
+```bash
+curl https://l402kit.com/api/verity/fiscal
+```
+
+```json
+{
+  "date": "2026-05-12",
+  "agent": "VERITY",
+  "revenue_sats": 8450,
+  "consumer_spent_sats": 340,
+  "net_sats": 8110,
+  "margin_pct": "95.98",
+  "brl_equivalent": "50.70",
+  "btc_brl_rate": 600000,
+  "breakdown": {
+    "search": { "calls": 21, "price": 500, "revenue": 10500, "success_rate": 98 }
+  },
+  "generated_at": "2026-05-12T00:00:01.000Z"
+}
+```
+
+रिपोर्ट 7 दिनों के लिए संग्रहीत की जाती हैं। यदि दिन की रिपोर्ट अभी तक नहीं बनी है तो 404 लौटाता है।
+
 ## ऑपरेटर API
 
 यदि आप अपना एजेंट चलाने के लिए VERITY को फोर्क करते हैं, तो ये एंडपॉइंट आपको रनटाइम पर मूल्य निर्धारण और बजट बदलने देते हैं — बिना किसी डिप्लॉय के।
@@ -396,7 +454,9 @@ VERITY (agent:shinydapps.verity)
   ├── खजाना: shinydapps@blink.sv
   ├── हार्टबीट: हर 30 मिनट (मूल्य समायोजन + Satring मार्केट स्कैन)
   ├── क्वेरी कैश: KV-समर्थित, प्रति-सेवा TTL (5 मिनट–24 घंटे)
-  ├── वित्तीय एजेंट: दैनिक रिपोर्ट (sats अर्जित + BRL समकक्ष + राजस्व अलर्ट)
+  ├── वित्तीय एजेंट: दैनिक रिपोर्ट 00:00 UTC → GET /api/verity/fiscal
+  ├── सेवा सूची: मशीन-readable → GET /api/verity/services
+  ├── एजेंट अनुबंध: GET /.well-known/agent.json → verity ब्लॉक
   └── LAW-N: प्रति लेनदेन व्यवहार संबंधी इवेंट उत्सर्जित
 ```
 

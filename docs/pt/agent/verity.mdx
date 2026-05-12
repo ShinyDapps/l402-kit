@@ -328,6 +328,64 @@ curl https://l402kit.com/api/verity | jq '.services[].priceSats'
 
 ---
 
+---
+
+## Endpoints Públicos de Descoberta
+
+Esses dois endpoints não exigem pagamento L402 — expõem o catálogo e as finanças da VERITY para auditoria e descoberta.
+
+### GET /api/verity/services
+
+Catálogo machine-readable de todos os serviços ativos com preços ao vivo, floors e limiares de surge.
+
+```bash
+curl https://l402kit.com/api/verity/services
+```
+
+```json
+{
+  "services": [
+    {
+      "id": "search",
+      "endpoint": "https://l402kit.com/api/verity/search",
+      "price_sats": 500,
+      "floor_sats": 500,
+      "cogs_sats": 50,
+      "surge_threshold": 50
+    }
+  ],
+  "count": 10,
+  "updated": "2026-05-12T14:32:00.000Z"
+}
+```
+
+### GET /api/verity/fiscal
+
+Relatório fiscal diário da VERITY — receita, custos, margem e detalhamento por serviço. Gerado às 00:00 UTC.
+
+```bash
+curl https://l402kit.com/api/verity/fiscal
+```
+
+```json
+{
+  "date": "2026-05-12",
+  "agent": "VERITY",
+  "revenue_sats": 8450,
+  "consumer_spent_sats": 340,
+  "net_sats": 8110,
+  "margin_pct": "95.98",
+  "brl_equivalent": "50.70",
+  "btc_brl_rate": 600000,
+  "breakdown": {
+    "search": { "calls": 21, "price": 500, "revenue": 10500, "success_rate": 98 }
+  },
+  "generated_at": "2026-05-12T00:00:01.000Z"
+}
+```
+
+Os relatórios são armazenados por 7 dias. Retorna 404 se o relatório do dia ainda não foi gerado.
+
 ## API do Operador
 
 Se você fizer um fork de VERITY para executar seu próprio agente, estes endpoints permitem alterar preços e orçamentos em tempo de execução — sem necessidade de novo deploy.
@@ -397,7 +455,9 @@ VERITY (agent:shinydapps.verity)
   ├── Tesouro: shinydapps@blink.sv
   ├── Heartbeat: a cada 30min (ajuste de preços + varredura do mercado Satring)
   ├── Cache de consultas: baseado em KV, TTL por serviço (5min–24h)
-  ├── Agente Fiscal: relatório diário (sats ganhos + equivalente em BRL + alertas de receita)
+  ├── Agente Fiscal: relatório diário às 00:00 UTC → GET /api/verity/fiscal
+  ├── Catálogo de serviços: machine-readable → GET /api/verity/services
+  ├── Contrato do agente: GET /.well-known/agent.json → bloco verity
   └── LAW-N: eventos comportamentais emitidos por transação
 ```
 
