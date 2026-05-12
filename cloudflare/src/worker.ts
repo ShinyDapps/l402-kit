@@ -24,6 +24,10 @@ import { handleActivity } from "./api/activity";
 import { handleVerity } from "./verity/index";
 import { runVerityHeartbeat } from "./verity/cron/heartbeat";
 import { runFiscalAgent } from "./verity/cron/fiscal";
+import { runRadar } from "./verity/cron/radar";
+import { runEcosystemRadar } from "./verity/cron/ecosystem";
+import { runCompetitorsRadar } from "./verity/cron/competitors";
+import { runPartnersRadar } from "./verity/cron/partners";
 import { runMonitor } from "./monitor";
 import { runGithubResponder } from "./github-responder";
 
@@ -267,6 +271,21 @@ export default {
     // Fiscal agent runs daily at midnight UTC
     if (new Date(event.scheduledTime).getUTCHours() === 0) {
       await runFiscalAgent(env);
+    }
+    // RADAR Anel 1 — 1x/hora durante calibração
+    await runRadar(env);
+    // RADAR Anel 3 — ecossistema · semanal (domingo meia-noite UTC)
+    const now = new Date(event.scheduledTime);
+    if (now.getUTCDay() === 0 && now.getUTCHours() === 0) {
+      await runEcosystemRadar(env);
+    }
+    // RADAR Anel 4 — concorrentes · diário (meia-noite UTC)
+    if (now.getUTCHours() === 0) {
+      await runCompetitorsRadar(env);
+    }
+    // RADAR Anel 2 — parceiros · diário (meia-noite UTC)
+    if (now.getUTCHours() === 0) {
+      await runPartnersRadar(env);
     }
     // Monitor: checks payments, issue replies, HN, npm — emails if relevant
     await runMonitor(env);

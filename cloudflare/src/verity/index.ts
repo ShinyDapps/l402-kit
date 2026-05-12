@@ -11,6 +11,9 @@ import { handleVerityTranslate }   from "./services/translate";
 import { handleVerityResearch }    from "./services/research";
 import { getAllPrices, getServiceConfig, setServiceConfig, DEFAULTS } from "./pricing";
 import { getDailySpend, getDailyBudget } from "./consumer";
+import { dequeueAll } from "./radar/queue";
+import type { QueueKey, EcosystemReport } from "./radar/types";
+import { buildSynthesis } from "./radar/synthesis";
 import { verityRateLimit } from "./ratelimit";
 import { json } from "./l402";
 
@@ -46,7 +49,8 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
   if (secret !== env.DASHBOARD_SECRET) return json({ error: "Unauthorized" }, 401);
 
   const url = new URL(req.url);
-  const action = url.pathname.replace(/^\/api\/verity\/admin\/?/, "").split("/")[0];
+  const adminPath = url.pathname.replace(/^\/api\/verity\/admin\/?/, "");
+  const action = adminPath.split("/")[0];
 
   // GET /api/verity/admin/config — read all configs
   if (req.method === "GET" && action === "config") {
@@ -56,8 +60,8 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
     }
     const [prices, consumerSpent, consumerBudget] = await Promise.all([
       getAllPrices(env),
-      getDailySpend(env),
-      getDailyBudget(env),
+      getDailySpend("external", env),
+      getDailyBudget("external", env),
     ]);
     return json({ configs, prices, consumer: { spent_today: consumerSpent, budget: consumerBudget } });
   }
@@ -91,6 +95,100 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
     return json({ consumer_budget_sats: body.sats });
   }
 
+  // GET /api/verity/admin/radar/synthesis — 360° view across all rings
+  if (req.method === "GET" && adminPath === "radar/synthesis") {
+    const QUEUE_KEYS: Record<string, QueueKey> = {
+      human_hot:  "verity_radar:pending:human:hot",
+      human_warm: "verity_radar:pending:human:warm",
+      agent_hot:  "verity_radar:pending:agent:hot",
+      agent_warm: "verity_radar:pending:agent:warm",
+    };
+    const [hh, hw, ah, aw] = await Promise.all(
+      Object.values(QUEUE_KEYS).map(k => dequeueAll(k, env)),
+    );
+    const allBuyers = [...hh, ...hw, ...ah, ...aw];
+
+    // Anel 3 — ecosystem report
+    const week = (() => {
+      const now   = new Date();
+      const start = new Date(now.getFullYear(), 0, 1);
+      const w = Math.ceil(((now.getTime() - start.getTime()) / 86_400_000 + start.getDay() + 1) / 7);
+      return `${now.getFullYear()}-W${String(w).padStart(2, "0")}`;
+    })();
+    const ecoRaw = await env.demo_preimages.get(`verity_radar:ecosystem:${week}`);
+    const ecosystem: EcosystemReport = ecoRaw
+      ? JSON.parse(ecoRaw)
+      : { anomalies: [], timestamp: new Date().toISOString() };
+
+    // Anel 4 — competitors
+    const compRaw = await env.demo_preimages.get("verity_radar:competitors:list");
+    const competitors: unknown[] = compRaw ? JSON.parse(compRaw) : [];
+
+    // Anel 2 — partners
+    const partnersRaw = await env.demo_preimages.get("verity_radar:partners:list");
+    const partnersList: { url: string }[] = partnersRaw ? JSON.parse(partnersRaw) : [];
+
+    const report = buildSynthesis({ buyers: allBuyers, ecosystem, competitors, partners: partnersList });
+    return json(report);
+  }
+
+  // GET /api/verity/admin/radar — queues + stats + last log
+  if (req.method === "GET" && action === "radar") {
+    const QUEUE_KEYS: Record<string, QueueKey> = {
+      human_hot:  "verity_radar:pending:human:hot",
+      human_warm: "verity_radar:pending:human:warm",
+      agent_hot:  "verity_radar:pending:agent:hot",
+      agent_warm: "verity_radar:pending:agent:warm",
+    };
+
+    const [hh, hw, ah, aw] = await Promise.all(
+      Object.values(QUEUE_KEYS).map(k => dequeueAll(k, env)),
+    );
+
+    const queues = { human_hot: hh, human_warm: hw, agent_hot: ah, agent_warm: aw };
+    const hotTotal   = hh.length + ah.length;
+    const warmTotal  = hw.length + aw.length;
+    const totalQueued = hotTotal + warmTotal;
+
+    // Latest log — try current hour then walk back up to 24h
+    let log: unknown = null;
+    for (let h = 0; h < 24; h++) {
+      const ts = new Date(Date.now() - h * 3_600_000).toISOString().slice(0, 13);
+      const raw = await env.demo_preimages.get(`verity_radar:log:${ts}`);
+      if (raw) { log = JSON.parse(raw); break; }
+    }
+
+    const partnersRaw = await env.demo_preimages.get("verity_radar:partners:list");
+    const partners: unknown[] = partnersRaw ? JSON.parse(partnersRaw) : [];
+    const partnerRingActive = partners.length >= 5;
+
+    return json({ queues, stats: { total_queued: totalQueued, hot_total: hotTotal, warm_total: warmTotal }, partners: { count: partners.length, ring_active: partnerRingActive }, log });
+  }
+
+  // DELETE /api/verity/admin/radar/lead — remove lead from queue (acted on it)
+  if (req.method === "DELETE" && adminPath.startsWith("radar")) {
+    const body = await req.json().catch(() => ({})) as { queue?: string; url?: string };
+    const QUEUE_MAP: Record<string, QueueKey> = {
+      human_hot:  "verity_radar:pending:human:hot",
+      human_warm: "verity_radar:pending:human:warm",
+      agent_hot:  "verity_radar:pending:agent:hot",
+      agent_warm: "verity_radar:pending:agent:warm",
+    };
+    if (!body.queue || !QUEUE_MAP[body.queue] || !body.url) {
+      return json({ error: "Required: { queue: 'human_hot'|'human_warm'|'agent_hot'|'agent_warm', url: string }" }, 400);
+    }
+    const key = QUEUE_MAP[body.queue];
+    const leads = await dequeueAll(key, env);
+    const filtered = leads.filter(l => l.url !== body.url);
+    await env.demo_preimages.put(key, JSON.stringify(filtered), { expirationTtl: 172_800 });
+    // Mark as acted in KV so RADAR doesn't re-queue it
+    const h = Math.abs(
+      body.url.split("").reduce((acc, c) => (Math.imul(31, acc) + c.charCodeAt(0)) | 0, 0),
+    ).toString(36);
+    await env.demo_preimages.put(`verity_radar:acted:${h}`, JSON.stringify({ url: body.url, date: new Date().toISOString() }), { expirationTtl: 2_592_000 }); // 30 days
+    return json({ removed: body.url, remaining: filtered.length });
+  }
+
   return json({ error: "Unknown admin action" }, 404);
 }
 
@@ -112,7 +210,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "GET or POST",
         params: "q (query string or body)",
         priceSats: prices.search,
-        description: "Web search — returns top 10 organic results",
+        description: "Web search — top 10 organic results, no API key needed",
       },
       {
         id: "scrape",
@@ -120,7 +218,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "POST",
         params: "{ url: string }",
         priceSats: prices.scrape,
-        description: "Web scraping — returns page content as markdown",
+        description: "Web scraping — full page content as markdown, JS-rendered",
       },
       {
         id: "btc-price",
@@ -128,7 +226,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "GET",
         params: "none",
         priceSats: prices.btcprice,
-        description: "Real-time BTC price in USD, EUR, BRL",
+        description: "Real-time BTC price in USD, EUR, BRL — L402-native",
       },
       {
         id: "summarize",
@@ -136,7 +234,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "POST",
         params: "{ text: string, language?: string }",
         priceSats: prices.summarize,
-        description: "Text summarization via AI — up to 50,000 chars",
+        description: "AI summarization — 3-5 sentences from up to 50,000 chars",
       },
       {
         id: "sentiment",
@@ -144,7 +242,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "POST",
         params: "{ text: string }",
         priceSats: prices.sentiment,
-        description: "Sentiment analysis — returns score, confidence, keywords",
+        description: "Sentiment analysis — score, confidence, keywords. Structured output.",
       },
       {
         id: "domain-intel",
@@ -152,7 +250,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "GET or POST",
         params: "domain (query string or body)",
         priceSats: prices.domainIntel,
-        description: "Domain intelligence — WHOIS, DNS, SSL certificates",
+        description: "Domain intelligence — WHOIS + DNS + SSL in one call",
       },
       {
         id: "integration",
@@ -160,7 +258,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "POST",
         params: "{ repoUrl: string }",
         priceSats: prices.integration,
-        description: "l402-kit integration — analyzes your repo and generates complete middleware code",
+        description: "L402 integration — analyzes your repo, generates production-ready middleware. Replaces a consultant.",
       },
       {
         id: "worldstate",
@@ -168,7 +266,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "GET",
         params: "none",
         priceSats: prices.worldstate,
-        description: "World state — UTC time + caller geolocation + local weather in one call",
+        description: "World state — UTC time + geolocation + local weather in one call",
       },
       {
         id: "translate",
@@ -176,7 +274,7 @@ async function handleVerityIndex(env: Env): Promise<Response> {
         method: "POST",
         params: "{ text: string, locale: string, format?: 'mdx'|'plain' }",
         priceSats: prices.translate,
-        description: "Text translation — 10 locales, MDX-aware (preserves code blocks and components)",
+        description: "Professional translation — 10 locales, MDX-aware (preserves code blocks)",
       },
     ],
     how_to_pay: {
