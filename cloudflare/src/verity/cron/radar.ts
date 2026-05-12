@@ -3,6 +3,7 @@ import type { Lead, Persona } from "../radar/types";
 import { scoreSignal, detectFramework, queueKey } from "../radar/scoring";
 import { enqueue, seenBefore, markSeen } from "../radar/queue";
 import { acquireRadarLock, releaseRadarLock } from "../radar/lock";
+import { draftOutreach, storeDraft } from "../radar/outreach";
 
 // ─── Buyer discovery queries ─────────────────────────────────────────────────
 
@@ -68,9 +69,12 @@ async function isOpenGitHubIssue(link: string, pat?: string): Promise<boolean> {
 
 // ─── Email notification ───────────────────────────────────────────────────────
 
-async function notifyHotLead(lead: Lead, env: Env): Promise<void> {
+async function notifyHotLead(lead: Lead, draft: string | null, env: Env): Promise<void> {
   if (!env.RESEND_API_KEY) return;
   const personaLabel = lead.persona === "human" ? "Integration/Research" : "Volume service";
+  const draftSection = draft
+    ? [``, `── OUTREACH DRAFT ──`, draft, `── END DRAFT ──`, ``, `POST this draft as a GitHub comment: ${lead.url}`]
+    : [``, `(outreach draft unavailable)`];
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -89,8 +93,9 @@ async function notifyHotLead(lead: Lead, env: Env): Promise<void> {
           `Title:     ${lead.title}`,
           `Snippet:   ${lead.snippet.slice(0, 200)}`,
           `Found at:  ${lead.foundAt}`,
+          ...draftSection,
           ``,
-          `Action: GET /api/verity/admin/radar to review queues`,
+          `All leads: GET /api/verity/admin/radar`,
         ].join("\n"),
       }),
       signal: AbortSignal.timeout(5_000),
@@ -178,7 +183,11 @@ export async function runRadar(env: Env): Promise<void> {
         await markSeen(item.link, env);
         log.queued++;
 
-        if (signal === "hot") await notifyHotLead(lead, env);
+        if (signal === "hot") {
+          const draft = await draftOutreach(lead, env);
+          if (draft) await storeDraft(lead, draft, env);
+          await notifyHotLead(lead, draft, env);
+        }
       } catch {
         log.errors++;
       }

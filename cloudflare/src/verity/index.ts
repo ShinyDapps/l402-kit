@@ -14,6 +14,7 @@ import { getAllPrices, getServiceConfig, setServiceConfig, DEFAULTS } from "./pr
 import { getDailySpend, getDailyBudget } from "./consumer";
 import { getAlerts, clearAlert } from "./alerts";
 import { dequeueAll } from "./radar/queue";
+import { getDraft } from "./radar/outreach";
 import type { QueueKey, EcosystemReport } from "./radar/types";
 import { buildSynthesis } from "./radar/synthesis";
 import { verityRateLimit } from "./ratelimit";
@@ -150,10 +151,19 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
       Object.values(QUEUE_KEYS).map(k => dequeueAll(k, env)),
     );
 
+    const hotLeads = [...hh, ...ah];
     const queues = { human_hot: hh, human_warm: hw, agent_hot: ah, agent_warm: aw };
     const hotTotal   = hh.length + ah.length;
     const warmTotal  = hw.length + aw.length;
     const totalQueued = hotTotal + warmTotal;
+
+    // Attach outreach drafts to hot leads
+    const hotWithDrafts = await Promise.all(
+      hotLeads.map(async lead => ({
+        ...lead,
+        outreach_draft: await getDraft(lead.url, env),
+      })),
+    );
 
     // Latest log — try current hour then walk back up to 24h
     let log: unknown = null;
@@ -167,7 +177,7 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
     const partners: unknown[] = partnersRaw ? JSON.parse(partnersRaw) : [];
     const partnerRingActive = partners.length >= 5;
 
-    return json({ queues, stats: { total_queued: totalQueued, hot_total: hotTotal, warm_total: warmTotal }, partners: { count: partners.length, ring_active: partnerRingActive }, log });
+    return json({ queues, hot_with_drafts: hotWithDrafts, stats: { total_queued: totalQueued, hot_total: hotTotal, warm_total: warmTotal }, partners: { count: partners.length, ring_active: partnerRingActive }, log });
   }
 
   // DELETE /api/verity/admin/radar/lead — remove lead from queue (acted on it)
