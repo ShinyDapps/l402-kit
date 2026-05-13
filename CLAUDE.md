@@ -66,7 +66,7 @@ Docs deploy automatically via Mintlify on git push to main.
 **Treasury:** `shinydapps@blink.sv`
 **Agent ID:** `agent:shinydapps.verity`
 
-### 9 services (preços dinâmicos — valores base)
+### 11 services (preços dinâmicos — valores base)
 
 | Service | Endpoint | Price | Key needed |
 |---|---|---|---|
@@ -80,20 +80,32 @@ Docs deploy automatically via Mintlify on git push to main.
 | World State | `/api/verity/worldstate` | 300 sats | — |
 | Translate | `/api/verity/translate` | 500 sats | ANTHROPIC_API_KEY |
 | Research | `/api/verity/research` | 2,000 sats | ANTHROPIC_API_KEY |
+| Alpha | `/api/verity/alpha` | 5,000 sats | ANTHROPIC_API_KEY + SERPER_API_KEY |
 
 ### Add a new service
 1. Create `cloudflare/src/verity/services/myservice.ts` (copy pattern from btcprice.ts)
-2. Add to `cloudflare/src/verity/pricing.ts` SERVICES map
+2. Add to `cloudflare/src/verity/pricing.ts` DEFAULTS map
 3. Add route to `cloudflare/src/verity/index.ts`
 4. Deploy: `npx wrangler deploy --config wrangler.toml`
 
 ### Dynamic pricing
 Runs every 30min via cron. +10% when demand > threshold, -10% when idle, never below floor.
-Config: `cloudflare/src/verity/pricing.ts` → SERVICES map.
+Config: `cloudflare/src/verity/pricing.ts` → DEFAULTS map.
 
 ### Fiscal Agent
 Runs daily at midnight UTC. Report stored in KV: `verity_fiscal:YYYY-MM-DD`.
 Read latest: `wrangler kv key get "verity_fiscal:$(date +%Y-%m-%d)" --binding demo_preimages`
+
+### Treasury alerts
+`GET /api/verity/admin/alerts` (requer `x-dashboard-secret`)
+Tipos: `budget_low` (≥80% do budget), `budget_exhausted`, `payment_failed`.
+`DELETE /api/verity/admin/alerts` com `{ key }` para limpar.
+
+### RADAR — inteligência autônoma
+4 anéis ativos (buyers, partners, ecosystem, competitors). Cron a cada 30min.
+Hot leads chegam com `outreach_draft` em `GET /api/verity/admin/radar`.
+Earn-first gate: parceiro só ativa como consumidor L402 após VERITY ter receita.
+Partner URL ativo: `verity_config:alpha_partner_url` no KV (aponta para `/api/verity/research`).
 
 ---
 
