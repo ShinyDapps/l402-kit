@@ -8,11 +8,15 @@ const FRAMEWORKS = [
 const HOT_KEYWORDS = [
   "how do i charge", "monetize my api", "pay per call",
   "payment wall", "l402", "lightning micropayment", "pay per request",
+  "charge per request", "charge per call", "pay per use",
 ];
 
 const WARM_KEYWORDS = [
   "add payments", "billing", "micropayments", "api pricing",
   "rate limit", "monetize", "pay per", "pay-per",
+  "charge users", "charge for", "payment", "subscription",
+  "metered", "usage-based", "paywall", "invoic", "revenue model",
+  "monetisation", "api gateway", "access control",
 ];
 
 export function detectFramework(text: string): string | undefined {
@@ -24,6 +28,7 @@ export function scoreSignal(
   title: string,
   snippet: string,
   dateStr?: string,
+  sourceBoost = false, // true when result comes from a targeted search query
 ): { score: number; signal: SignalStrength } {
   const text = `${title} ${snippet}`.toLowerCase();
 
@@ -47,6 +52,13 @@ export function scoreSignal(
   }
 
   const final = Math.round(base * recency * fwMatch);
+
+  // If body content is cold but came from a targeted query, promote to warm without
+  // multipliers — avoids false hot emails while still queueing relevant results.
+  if (final < 3 && sourceBoost && base > 1) {
+    return { score: 3, signal: "warm" };
+  }
+
   const signal: SignalStrength = final >= 6 ? "hot" : final >= 3 ? "warm" : "cold";
   return { score: final, signal };
 }

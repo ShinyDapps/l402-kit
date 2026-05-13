@@ -20,7 +20,7 @@ export const DEFAULTS: Record<string, ServiceConfig> = {
   worldstate:  { floor: 300,    base: 300,    surgeThreshold: 100, cogs: 0   },
   translate:   { floor: 500,    base: 500,    surgeThreshold: 30,  cogs: 1   },
   research:    { floor: 2000,   base: 2000,   surgeThreshold: 15,  cogs: 51  },
-  alpha:       { floor: 5000,   base: 8000,   surgeThreshold: 8,   cogs: 202 },
+  alpha:       { floor: 5000,   base: 5000,   surgeThreshold: 10,  cogs: 100 },
 };
 
 export async function getServiceConfig(service: string, env: Env): Promise<ServiceConfig> {

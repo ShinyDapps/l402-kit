@@ -157,7 +157,7 @@ export async function runRadar(env: Env): Promise<void> {
           }
         }
 
-        const { score, signal } = scoreSignal(item.title, item.snippet ?? "", item.date);
+        const { score, signal } = scoreSignal(item.title, item.snippet ?? "", item.date, true);
         const framework = detectFramework(`${item.title} ${item.snippet ?? ""}`);
         const key = queueKey(item.persona, signal);
 

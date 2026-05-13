@@ -96,6 +96,24 @@ describe("scoreSignal — signal classification", () => {
     expect(signal).toBe("cold");
   });
 
+  it("sourceBoost promotes keyword-matched item that scored below threshold to warm", () => {
+    // Has a warm keyword ("add payments") but no recency/framework boost → base=3, final=3 → warm
+    const { signal, score } = scoreSignal("add payments to my service", "need billing support", undefined, true);
+    expect(signal).toBe("warm");
+    expect(score).toBe(3);
+  });
+
+  it("sourceBoost does NOT promote zero-keyword items — no noise from source alone", () => {
+    // No keywords at all → base=1, stays cold even with sourceBoost
+    const { signal } = scoreSignal("generic repo page", "readme for my project", undefined, true);
+    expect(signal).toBe("cold");
+  });
+
+  it("sourceBoost does not override genuine hot signal", () => {
+    const { signal } = scoreSignal("how do I charge for my API calls", "", undefined, true);
+    expect(signal).toBe("hot");
+  });
+
   it("returns numeric score ≥ 1", () => {
     const { score } = scoreSignal("anything", "");
     expect(score).toBeGreaterThanOrEqual(1);
