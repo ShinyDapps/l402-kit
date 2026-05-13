@@ -28,6 +28,7 @@ import { runRadar } from "./verity/cron/radar";
 import { runEcosystemRadar } from "./verity/cron/ecosystem";
 import { runCompetitorsRadar } from "./verity/cron/competitors";
 import { runPartnersRadar } from "./verity/cron/partners";
+import { runSynthesisRadar } from "./verity/cron/synthesis";
 import { runMonitor } from "./monitor";
 import { runGithubResponder } from "./github-responder";
 
@@ -323,6 +324,10 @@ export default {
     // RADAR Anel 2 — parceiros · diário (meia-noite UTC)
     if (now.getUTCHours() === 0) {
       await runPartnersRadar(env);
+    }
+    // RADAR Anel 5 — síntese · diário (01:00 UTC, após fiscal + anéis 2/4)
+    if (now.getUTCHours() === 1) {
+      await runSynthesisRadar(env);
     }
     // Monitor: checks payments, issue replies, HN, npm — emails if relevant
     await runMonitor(env);

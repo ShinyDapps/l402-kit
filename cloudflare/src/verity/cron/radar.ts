@@ -19,7 +19,7 @@ const AGENT_QUERIES = [
   'site:github.com "API monetization" OR "pay-per-call" OR "pay per request"',
 ];
 
-// ─── Serper ───────────────────────────────────────────────────────────────────
+// ─── Search providers ─────────────────────────────────────────────────────────
 
 interface SerperItem { title: string; link: string; snippet: string; date?: string }
 
@@ -42,6 +42,45 @@ async function serperSearch(query: string, apiKey: string): Promise<SerperItem[]
     console.error("[RADAR] serper fetch exception:", String(e));
     return [];
   }
+}
+
+// Brave Search — used as fallback when Serper returns < BRAVE_FALLBACK_THRESHOLD results
+const BRAVE_FALLBACK_THRESHOLD = 3;
+
+interface BraveResult { title: string; url: string; description: string; page_age?: string }
+
+async function braveSearch(query: string, apiKey: string): Promise<SerperItem[]> {
+  try {
+    const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=10`;
+    const r = await fetch(url, {
+      headers: { "X-Subscription-Token": apiKey, Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!r.ok) {
+      console.error("[RADAR] brave error status:", r.status);
+      return [];
+    }
+    const data = await r.json() as { web?: { results?: BraveResult[] } };
+    return (data.web?.results ?? []).map(item => ({
+      title:   item.title,
+      link:    item.url,
+      snippet: item.description ?? "",
+      date:    item.page_age,
+    }));
+  } catch (e) {
+    console.error("[RADAR] brave fetch exception:", String(e));
+    return [];
+  }
+}
+
+async function search(query: string, env: Env, persona: "human" | "agent"): Promise<SerperItem[]> {
+  const primary = await serperSearch(query, env.SERPER_API_KEY);
+  if (primary.length >= BRAVE_FALLBACK_THRESHOLD || !env.BRAVE_API_KEY) return primary;
+  console.log(`[RADAR] serper thin (${primary.length}) for ${persona} — falling back to Brave`);
+  const fallback = await braveSearch(query, env.BRAVE_API_KEY);
+  // Merge, deduplicate by link
+  const seen = new Set(primary.map(r => r.link));
+  return [...primary, ...fallback.filter(r => !seen.has(r.link))];
 }
 
 // ─── GitHub issue validation ──────────────────────────────────────────────────
@@ -121,10 +160,10 @@ export async function runRadar(env: Env): Promise<void> {
 
   try {
     const [h1, h2, a1, a2] = await Promise.allSettled([
-      serperSearch(HUMAN_QUERIES[0], env.SERPER_API_KEY),
-      serperSearch(HUMAN_QUERIES[1], env.SERPER_API_KEY),
-      serperSearch(AGENT_QUERIES[0], env.SERPER_API_KEY),
-      serperSearch(AGENT_QUERIES[1], env.SERPER_API_KEY),
+      search(HUMAN_QUERIES[0], env, "human"),
+      search(HUMAN_QUERIES[1], env, "human"),
+      search(AGENT_QUERIES[0], env, "agent"),
+      search(AGENT_QUERIES[1], env, "agent"),
     ]);
 
     const counts = [h1, h2, a1, a2].map(r => (r.status === "fulfilled" ? r.value.length : -1));

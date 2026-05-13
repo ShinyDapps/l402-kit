@@ -8,20 +8,21 @@ export function normalizeRingScores(scores: number[]): number[] {
   return scores.map(s => (s - min) / (max - min));
 }
 
+import type { CompetitorEntry } from "./types";
+
 interface SynthesisInput {
   buyers:      Lead[];
   ecosystem:   EcosystemReport;
-  competitors: unknown[];
-  partners:    PartnerSummary[];
+  competitors: CompetitorEntry[];
+  partners:    { url: string }[];
 }
-
-interface PartnerSummary { url: string }
 
 export function buildSynthesis(input: SynthesisInput): SynthesisReport {
   const { buyers, ecosystem, competitors, partners } = input;
 
   const hotBuyers  = buyers.filter(l => l.signal === "hot").length;
   const warmBuyers = buyers.filter(l => l.signal === "warm").length;
+  const highThreatCompetitors = competitors.filter(c => c.threatLevel === "high").length;
 
   const rawScores = buyers.map(l => l.score);
   const normalized = normalizeRingScores(rawScores);
@@ -44,6 +45,7 @@ export function buildSynthesis(input: SynthesisInput): SynthesisReport {
       hotBuyers,
       hasAnomalies:   ecosystem.anomalies.length > 0,
       newCompetitors: competitors.length,
+      highThreatCompetitors,
     },
   };
 }

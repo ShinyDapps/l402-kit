@@ -199,18 +199,37 @@ export async function runPartnersRadar(env: Env): Promise<void> {
       }
     }
 
-    // Re-validate existing reliable partners (mark failures)
-    const revalidated: (PartnerEntry & { title?: string })[] = [];
-    for (const partner of existing) {
-      if ((partner as { title?: string }).title === undefined) {
-        // Already in list before this run — skip re-validation to avoid extra calls
-        revalidated.push(partner);
-        continue;
+    // Re-validate partners not checked in the last 7 days
+    const SEVEN_DAYS_MS = 7 * 86_400_000;
+    let revalidationChanges = 0;
+    for (let i = 0; i < existing.length; i++) {
+      const partner = existing[i];
+      if (partner.unreliable) continue;
+      const age = Date.now() - new Date(partner.lastValidated).getTime();
+      if (age < SEVEN_DAYS_MS) continue;
+
+      const stillValid = await validatePartnerEndpoint(partner.url);
+      if (stillValid) {
+        existing[i] = {
+          ...partner,
+          consecutiveFailures: 0,
+          reliability: Math.min(1.0, partner.reliability + 0.1),
+          lastValidated: new Date().toISOString(),
+        };
+      } else {
+        existing[i] = {
+          ...recordPartnerFailure(partner),
+          lastValidated: new Date().toISOString(),
+        };
+        revalidationChanges++;
+        console.log("[RADAR] partners: re-validation failed for", partner.url,
+          "failures:", existing[i].consecutiveFailures, "unreliable:", existing[i].unreliable);
       }
-      revalidated.push(partner);
     }
 
-    console.log("[RADAR] partners:", { found: all.length, new: newCount, total: existing.length });
+    if (revalidationChanges > 0) await savePartners(existing, env);
+
+    console.log("[RADAR] partners:", { found: all.length, new: newCount, revalidated: revalidationChanges, total: existing.length });
 
     await activatePartnerIfEarning(env);
   } catch (e) {

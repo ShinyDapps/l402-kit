@@ -32,19 +32,34 @@ export interface EcosystemReport {
   timestamp: string;
 }
 
+export interface CompetitorEntry {
+  title: string;
+  link: string;
+  snippet: string;
+  foundAt: string;
+  threatLevel?: "low" | "medium" | "high";
+  threatAnalysis?: string;
+}
+
 export interface SynthesisReport {
   timestamp: string;
   rings: {
     buyers:      { total: number; hot: number; warm: number };
     ecosystem:   EcosystemReport;
-    competitors: unknown[];
+    competitors: CompetitorEntry[];
     partners:    number;
   };
   topBuyers: Lead[];
   summary: {
-    totalBuyers: number;
-    hotBuyers:   number;
-    hasAnomalies: boolean;
+    totalBuyers:    number;
+    hotBuyers:      number;
+    hasAnomalies:   boolean;
     newCompetitors: number;
+    highThreatCompetitors: number;
   };
+}
+
+export interface StoredSynthesis extends SynthesisReport {
+  strategicSummary: string;
+  date: string;
 }

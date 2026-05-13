@@ -128,7 +128,7 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
 
     // Anel 4 — competitors
     const compRaw = await env.demo_preimages.get("verity_radar:competitors:list");
-    const competitors: unknown[] = compRaw ? JSON.parse(compRaw) : [];
+    const competitors: import("./radar/types").CompetitorEntry[] = compRaw ? JSON.parse(compRaw) : [];
 
     // Anel 2 — partners
     const partnersRaw = await env.demo_preimages.get("verity_radar:partners:list");

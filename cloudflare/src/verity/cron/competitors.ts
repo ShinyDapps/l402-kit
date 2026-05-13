@@ -1,18 +1,14 @@
 import type { Env } from "../../worker";
+import type { CompetitorEntry } from "../radar/types";
 import { isCompetitorRelevant, competitorHash } from "../radar/competitors";
+import { infer } from "../providers/inference";
 
 const COMPETITOR_QUERIES = [
   '"l402" OR "x402" new project github',
   '"lightning micropayment" api tool launch',
   '"pay-per-call api" OR "pay per request api" github',
+  '"api monetization" OR "api billing" open source github',
 ];
-
-interface CompetitorEntry {
-  title: string;
-  link: string;
-  snippet: string;
-  foundAt: string;
-}
 
 async function serperSearch(query: string, apiKey: string): Promise<{ title: string; link: string; snippet: string }[]> {
   try {
@@ -52,6 +48,32 @@ async function appendToList(entry: CompetitorEntry, env: Env): Promise<void> {
   );
 }
 
+async function scoreThreat(entry: CompetitorEntry, env: Env): Promise<Pick<CompetitorEntry, "threatLevel" | "threatAnalysis">> {
+  const prompt = `You are a competitive intelligence analyst for l402-kit, an open-source L402/Lightning payment middleware for APIs (TypeScript, Python, Go, Rust).
+
+A new competitor or related project was found:
+Title: ${entry.title}
+URL: ${entry.link}
+Snippet: ${entry.snippet}
+
+Classify the threat level:
+- "high": directly implements L402 or x402 protocol as middleware/SDK, targets same developer audience
+- "medium": general API monetization or pay-per-call tooling, partial overlap
+- "low": research, mention, or adjacent technology with little direct overlap
+
+Reply with JSON only: {"threatLevel":"low"|"medium"|"high","threatAnalysis":"one sentence max 80 chars"}`;
+
+  const raw = await infer(prompt, env, { maxTokens: 80, system: "Return only valid JSON." });
+  if (!raw) return { threatLevel: "low", threatAnalysis: "Analysis unavailable." };
+  try {
+    const parsed = JSON.parse(raw.trim()) as { threatLevel?: string; threatAnalysis?: string };
+    const level = (["low", "medium", "high"] as const).find(l => l === parsed.threatLevel) ?? "low";
+    return { threatLevel: level, threatAnalysis: parsed.threatAnalysis ?? "" };
+  } catch {
+    return { threatLevel: "low", threatAnalysis: "Parse error." };
+  }
+}
+
 async function sendNewCompetitorEmail(entry: CompetitorEntry, env: Env): Promise<void> {
   if (!env.RESEND_API_KEY) return;
   try {
@@ -61,15 +83,17 @@ async function sendNewCompetitorEmail(entry: CompetitorEntry, env: Env): Promise
       body: JSON.stringify({
         from: "VERITY RADAR <verity@l402kit.com>",
         to: ["thiagoyoshiaki@gmail.com"],
-        subject: `[RADAR] Novo concorrente detectado: ${entry.title.slice(0, 50)}`,
+        subject: `[RADAR] ${entry.threatLevel?.toUpperCase() ?? "?"} threat — ${entry.title.slice(0, 50)}`,
         text: [
           `VERITY RADAR — Anel 4 · Concorrentes`,
           ``,
+          `Ameaça:  ${entry.threatLevel?.toUpperCase() ?? "unknown"}`,
+          `Análise: ${entry.threatAnalysis ?? "-"}`,
           `Título:  ${entry.title}`,
           `Link:    ${entry.link}`,
           `Snippet: ${entry.snippet.slice(0, 200)}`,
           ``,
-          `Análise: GET /api/verity/admin/radar/synthesis`,
+          `Síntese: GET /api/verity/admin/radar/synthesis`,
         ].join("\n"),
       }),
       signal: AbortSignal.timeout(5_000),
@@ -97,7 +121,8 @@ export async function runCompetitorsRadar(env: Env): Promise<void> {
       if (!isCompetitorRelevant(text)) continue;
       if (!(await isNewCompetitor(item.link, env))) continue;
 
-      const entry: CompetitorEntry = { ...item, foundAt: new Date().toISOString() };
+      const threat = await scoreThreat({ ...item, foundAt: new Date().toISOString() }, env);
+      const entry: CompetitorEntry = { ...item, foundAt: new Date().toISOString(), ...threat };
       await appendToList(entry, env);
       await markCompetitorSeen(item.link, env);
       await sendNewCompetitorEmail(entry, env);
