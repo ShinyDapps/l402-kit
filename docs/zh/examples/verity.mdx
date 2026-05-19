@@ -1,4 +1,4 @@
----
+﻿---
 title: "VERITY 示例"
 description: "使用 L402Client 调用全部 9 个 VERITY 服务的代码示例。"
 ---
@@ -43,7 +43,7 @@ for (const svc of services) {
 const res = await fetch("https://l402kit.com/api/verity/fiscal");
 const report = await res.json();
 
-console.log(`Revenue: ${report.revenue_sats} sats (~R${report.brl_equivalent})`);
+console.log(`Revenue: ${report.revenue_sats} sats (~${report.usd_equivalent})`);
 console.log(`Net: ${report.net_sats} sats (${report.margin_pct}% margin)`);
 
 for (const [service, data] of Object.entries(report.breakdown)) {

@@ -4,20 +4,20 @@ import { getDailySpend, getDailyBudget, applyBonusBudget } from "../consumer";
 
 const ALERT_THRESHOLD_SATS = 1_000; // notify when daily revenue crosses 1000 sats
 
-async function fetchBtcBrl(): Promise<number> {
+async function fetchBtcUsd(): Promise<number> {
   // Primary: CoinGecko (free tier needs a UA — silently 403s without it)
   try {
     const r = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=brl",
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
       {
         headers: { Accept: "application/json", "User-Agent": "VERITY/1.0 (+https://l402kit.com)" },
         signal: AbortSignal.timeout(5_000),
       },
     );
     if (r.ok) {
-      const d = await r.json() as { bitcoin?: { brl?: number } };
-      if (d.bitcoin?.brl && d.bitcoin.brl > 0) return d.bitcoin.brl;
-      console.warn("[fiscal] coingecko BRL empty:", JSON.stringify(d).slice(0, 200));
+      const d = await r.json() as { bitcoin?: { usd?: number } };
+      if (d.bitcoin?.usd && d.bitcoin.usd > 0) return d.bitcoin.usd;
+      console.warn("[fiscal] coingecko USD empty:", JSON.stringify(d).slice(0, 200));
     } else {
       console.warn("[fiscal] coingecko status", r.status, (await r.text().catch(() => "")).slice(0, 200));
     }
@@ -25,18 +25,18 @@ async function fetchBtcBrl(): Promise<number> {
     console.warn("[fiscal] coingecko fetch failed:", String(e));
   }
 
-  // Fallback: Coinbase exchange-rates (no auth, returns rates against BTC including BRL)
+  // Fallback: Coinbase exchange-rates (no auth, returns rates against BTC including USD)
   try {
     const r = await fetch("https://api.coinbase.com/v2/exchange-rates?currency=BTC", {
       headers: { Accept: "application/json", "User-Agent": "VERITY/1.0" },
       signal: AbortSignal.timeout(5_000),
     });
     if (r.ok) {
-      const d = await r.json() as { data?: { rates?: { BRL?: string } } };
-      const brl = parseFloat(d.data?.rates?.BRL ?? "0");
-      if (brl > 0) {
-        console.log("[fiscal] using coinbase fallback for BTC/BRL:", brl);
-        return brl;
+      const d = await r.json() as { data?: { rates?: { USD?: string } } };
+      const usd = parseFloat(d.data?.rates?.USD ?? "0");
+      if (usd > 0) {
+        console.log("[fiscal] using coinbase fallback for BTC/USD:", usd);
+        return usd;
       }
     } else {
       console.warn("[fiscal] coinbase status", r.status);
@@ -59,7 +59,7 @@ async function sendRevenueAlert(report: Record<string, unknown>, env: Env): Prom
       `Revenue:  ${report.revenue_sats} sats`,
       `Net:      ${report.net_sats} sats`,
       `Margin:   ${report.margin_pct}%`,
-      `BRL:      R$ ${report.brl_equivalent}`,
+      `USD:      $ ${report.usd_equivalent}`,
       ``,
       JSON.stringify(report.breakdown, null, 2),
     ].join("\n"),
@@ -124,10 +124,10 @@ export async function runFiscalAgent(env: Env): Promise<void> {
       breakdown[service] = { calls: dailyCalls, price, revenue, success_rate: Math.round(successRate * 100) };
     }
 
-    // BTC/BRL rate — CoinGecko primary, Coinbase fallback
-    const btcBrl = await fetchBtcBrl();
+    // BTC/USD rate — CoinGecko primary, Coinbase fallback
+    const btcUsd = await fetchBtcUsd();
 
-    const brlEquivalent = btcBrl > 0 ? ((totalSats / 100_000_000) * btcBrl).toFixed(2) : "unavailable";
+    const usdEquivalent = btcUsd > 0 ? ((totalSats / 100_000_000) * btcUsd).toFixed(2) : "unavailable";
 
     const [consumerSpent, consumerBudget] = await Promise.all([
       getDailySpend("external", env),
@@ -143,8 +143,8 @@ export async function runFiscalAgent(env: Env): Promise<void> {
       consumer_budget_sats: consumerBudget,
       net_sats: netSats,
       margin_pct: totalSats > 0 ? ((netSats / totalSats) * 100).toFixed(2) : "0.00",
-      brl_equivalent: brlEquivalent,
-      btc_brl_rate: btcBrl,
+      usd_equivalent: usdEquivalent,
+      btc_usd_rate: btcUsd,
       breakdown,
       generated_at: new Date().toISOString(),
     };

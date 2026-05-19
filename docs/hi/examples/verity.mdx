@@ -1,4 +1,4 @@
----
+﻿---
 title: "VERITY उदाहरण"
 description: "L402Client का उपयोग करके सभी 9 VERITY सेवाओं के लिए कोड उदाहरण।"
 ---
@@ -43,7 +43,7 @@ for (const svc of services) {
 const res = await fetch("https://l402kit.com/api/verity/fiscal");
 const report = await res.json();
 
-console.log(`Revenue: ${report.revenue_sats} sats (~R${report.brl_equivalent})`);
+console.log(`Revenue: ${report.revenue_sats} sats (~${report.usd_equivalent})`);
 console.log(`Net: ${report.net_sats} sats (${report.margin_pct}% margin)`);
 
 for (const [service, data] of Object.entries(report.breakdown)) {
