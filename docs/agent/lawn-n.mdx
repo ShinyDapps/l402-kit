@@ -36,24 +36,86 @@ The event is emitted after every successful payment. It never blocks the respons
 
 ## Enable on the client side
 
-```typescript
-import { L402Client } from "l402-kit/agent";
-import { BlinkWallet } from "l402-kit/wallets";
-import { createLawNAdapter } from "l402-kit/agent";
+Available in **all 4 SDKs** as of `1.10.0`. Contract is identical: POST JSON + HMAC-SHA256 in `X-LAW-N-Signature` + random `X-LAW-N-Request-Id` + fire-and-forget (network errors swallowed so behavioral writes never block payments).
 
-const lawN = createLawNAdapter({
-  ingestUrl: "https://l402kit.com/api/lawn-events",
-  hmacSecret: process.env.LAWN_HMAC_SECRET!,
-  network: "mainnet",
-});
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { L402Client } from "l402-kit/agent";
+    import { BlinkWallet } from "l402-kit/wallets";
+    import { createLawNAdapter } from "l402-kit/integrations/law-n-adapter";
 
-const client = new L402Client({
-  wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
-  agentId: "agent:myorg.myagent",
-  budget: { maxSats: 1000 },
-  onEvent: lawN,
-});
-```
+    const onEvent = createLawNAdapter({
+      endpoint: "https://law-n.sageworks.ai/ingest/events",
+      secret: process.env.LAWN_SECRET!,
+    });
+
+    const client = new L402Client({
+      wallet: new BlinkWallet(process.env.BLINK_API_KEY!),
+      agentId: "agent:myorg.myagent",
+      onEvent,
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    import os
+    from l402kit import L402Client
+    from l402kit.wallets import build_wallet
+    from l402kit.integrations import create_lawn_adapter
+
+    on_event = create_lawn_adapter(
+        endpoint="https://law-n.sageworks.ai/ingest/events",
+        secret=os.environ["LAWN_SECRET"],
+    )
+
+    client = L402Client(
+        wallet=build_wallet(),  # auto BLINK_API_KEY+BLINK_WALLET_ID or ALBY_TOKEN
+        on_event=on_event,
+    )
+    ```
+  </Tab>
+  <Tab title="Rust">
+    ```rust
+    use l402kit::integrations::create_lawn_adapter;
+    use std::time::Duration;
+
+    // Requires Tokio runtime (already present in any axum/tonic app)
+    let on_event = create_lawn_adapter(
+        "https://law-n.sageworks.ai/ingest/events".into(),
+        std::env::var("LAWN_SECRET").unwrap(),
+        Duration::from_secs(5),
+    );
+
+    // Wire `on_event(event)` into your L402 middleware's event hook
+    ```
+
+    The `lawn-adapter` feature is enabled by default. To opt out (lighter binary), use `default-features = false` in `Cargo.toml`.
+  </Tab>
+  <Tab title="Go">
+    ```go
+    package main
+
+    import (
+        "os"
+        "time"
+
+        l402kit "github.com/ShinyDapps/l402-kit/go"
+    )
+
+    func main() {
+        onEvent := l402kit.CreateLawNAdapter(
+            "https://law-n.sageworks.ai/ingest/events",
+            os.Getenv("LAWN_SECRET"),
+            5*time.Second,
+        )
+
+        // Wire onEvent(event) into your L402 middleware's event hook
+        _ = onEvent
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ---
 

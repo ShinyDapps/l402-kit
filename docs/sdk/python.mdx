@@ -304,6 +304,39 @@ blink = BlinkWallet(api_key="...", wallet_id="...")
 alby  = AlbyWallet(access_token=os.environ["ALBY_TOKEN"])
 ```
 
+### `build_wallet(env=None)` — auto-detect
+
+Picks the wallet from environment variables. Priority: `BLINK_API_KEY` + `BLINK_WALLET_ID` → Blink, else `ALBY_TOKEN` → Alby. Reads `os.environ` by default.
+
+```python
+from l402kit.wallets import build_wallet
+
+wallet = build_wallet()  # auto-detected
+# wallet = build_wallet({"BLINK_API_KEY": ..., "BLINK_WALLET_ID": ...})  # explicit
+```
+
+Raises `ValueError` if no credentials are configured.
+
+---
+
+## LAW-N adapter — behavioral telemetry (1.10.0+)
+
+Forward L402 payment events to a [LAW-N](/agent/lawn-n) ingest endpoint. Same contract as TS/Rust/Go: POST JSON + HMAC-SHA256 in `X-LAW-N-Signature` + random `X-LAW-N-Request-Id` + fire-and-forget. Network errors are swallowed so behavioral writes never block payments.
+
+```python
+import os
+from l402kit.integrations import create_lawn_adapter
+
+on_event = create_lawn_adapter(
+    endpoint="https://law-n.sageworks.ai/ingest/events",
+    secret=os.environ["LAWN_SECRET"],
+    timeout=5.0,  # seconds, optional
+)
+
+# Pass on_event to your L402Client / agent framework so it fires per payment.
+```
+
+
 ---
 
 ## AsyncL402Client — async/await
