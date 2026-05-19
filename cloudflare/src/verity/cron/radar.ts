@@ -7,16 +7,19 @@ import { draftOutreach, storeDraft } from "../radar/outreach";
 
 // ─── Buyer discovery queries ─────────────────────────────────────────────────
 
-// Note: site:github.com/issues does not work in Google — use site:github.com with
-// issue-oriented keywords instead. URL-level filtering happens in isOpenGitHubIssue().
+// Notes:
+//   - site:github.com/issues does not work in Google — filter via isOpenGitHubIssue() later
+//   - Excludes from L402 infra orgs (lightninglabs, l402-protocol, Fewsats) so queries
+//     don't return what isBuyerLead() will reject anyway
+//   - Diversifies sources beyond GitHub to find real buyers asking on SO/dev.to/Reddit
 const HUMAN_QUERIES = [
-  'site:github.com "how do I charge" OR "monetize my api" OR "pay per call" api',
-  'site:github.com "add payments" OR "add billing" express OR fastapi OR axum OR gin',
+  '(stackoverflow.com OR dev.to OR hashnode.dev) "how do I charge" OR "monetize my api" OR "pay per call" api',
+  'site:github.com "add payments" OR "add billing" express OR fastapi OR axum OR gin -lightninglabs -l402-protocol -Fewsats',
 ];
 
 const AGENT_QUERIES = [
-  'site:github.com "micropayments" OR "l402" OR "lightning micropayment" api',
-  'site:github.com "API monetization" OR "pay-per-call" OR "pay per request"',
+  '(stackoverflow.com OR reddit.com/r/programming OR dev.to) "micropayments" OR "pay-per-call" OR "API monetization" api',
+  'site:github.com "API monetization" OR "pay-per-call" OR "pay per request" -lightninglabs -l402-protocol -Fewsats -awesome',
 ];
 
 // ─── Search providers ─────────────────────────────────────────────────────────
