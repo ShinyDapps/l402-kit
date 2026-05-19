@@ -1,0 +1,22 @@
+# Code owners — every PR auto-requests review from these handles.
+# Syntax: <path-pattern> <handle1> [<handle2>...]
+#
+# Org account ShinyDapps owns the repo; personal account ThiagoDataEngineer
+# is the active maintainer.
+
+*                          @ShinyDapps @ThiagoDataEngineer
+
+# Security-sensitive files require extra eyes
+/.github/workflows/        @ShinyDapps @ThiagoDataEngineer
+/.githooks/                @ShinyDapps @ThiagoDataEngineer
+/.gitleaks.toml            @ShinyDapps @ThiagoDataEngineer
+/SECURITY.md               @ShinyDapps @ThiagoDataEngineer
+
+# Cross-lang SDK parity — flag for review on any SDK change
+/src/                      @ShinyDapps @ThiagoDataEngineer
+/python/                   @ShinyDapps @ThiagoDataEngineer
+/rust/                     @ShinyDapps @ThiagoDataEngineer
+/go/                       @ShinyDapps @ThiagoDataEngineer
+
+# Server-side (production worker)
+/cloudflare/               @ShinyDapps @ThiagoDataEngineer
