@@ -95,7 +95,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: dtolnay/rust-toolchain@stable
       - name: cargo publish
-        run: cd rust && cargo publish --token ${{ secrets.CARGO_TOKEN }}
+        # --allow-dirty: CI regenerates Cargo.lock during build (not tracked).
+        # The diff is metadata-only; the published crate matches the tag.
+        run: cd rust && cargo publish --allow-dirty --token ${{ secrets.CARGO_TOKEN }}
 
   publish-go-tag:
     name: Go module proxy (mirror tag `go/vX.Y.Z`)

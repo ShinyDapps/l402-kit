@@ -1,9 +1,9 @@
 # l402-kit — Live Status
 
 > **Purpose:** snapshot vivo do projeto para retomar contexto rápido. Atualizar a cada sessão significativa.
-> **Last updated:** 2026-05-19 noite (audit profundo + RETOMADA.md + OUTREACH_TWITCH.md + Telegram pack atualizado com grupos verificados)
+> **Last updated:** 2026-05-19 fim-de-sessão (1.10.1 cross-lang shipped: NWCWallet TS + AlbyWallet deprecation TS+Py; Rust+Go bump cosmético + NWC roadmap notes; release matrix matrix funcionou com fix `--allow-dirty` no cargo publish)
 >
-> **Para retomar contexto rápido:** [`RETOMADA.md`](RETOMADA.md) — sequência canônica de 5 blocos paralelos (~5min total).
+> **Para retomar contexto rápido:** [`RETOMADA.md`](RETOMADA.md) — sequência canônica de 7 blocos paralelos (~5min total).
 
 ---
 
@@ -17,10 +17,10 @@
 
 | Camada | Onde | Versão | Estado |
 |---|---|---|---|
-| npm `l402-kit` | https://www.npmjs.com/package/l402-kit | **1.10.0** | ✅ Granular token bypass 2FA · LAW-N adapter + MCP server completo |
-| PyPI `l402kit` | https://pypi.org/project/l402kit | **1.10.0** | ✅ LAW-N adapter Python + build_wallet ergonomics 19 Mai |
-| crates.io `l402kit` | https://crates.io/crates/l402kit | **1.10.0** | ✅ LAW-N adapter Rust (feature `lawn-adapter`) 19 Mai |
-| Go module | github.com/shinydapps/l402-kit/go | **v1.10.0** | ✅ LAW-N adapter Go (`CreateLawNAdapter`). Tag `go/v1.10.0` no proxy 5-30min |
+| npm `l402-kit` | https://www.npmjs.com/package/l402-kit | **1.10.1** | ✅ NWCWallet via @getalby/sdk opt peer dep + AlbyWallet deprecated · 19 Mai |
+| PyPI `l402kit` | https://pypi.org/project/l402kit | **1.10.1** | ✅ AlbyWallet DeprecationWarning · NWCWallet Python ships 1.11 · 19 Mai |
+| crates.io `l402kit` | https://crates.io/crates/l402kit | **1.10.1** | ✅ Bump cosmético + roadmap NWC 1.11 · publish manual via `--allow-dirty` |
+| Go module | github.com/shinydapps/l402-kit/go | **v1.10.1** | ✅ Bump cosmético + roadmap NWC 1.11 · tag `go/v1.10.1` no proxy 5-30min |
 | VS Code Extension | ShinyDapps.shinydapps-l402 | **1.9.2** | ✅ 3 tabs: Payments / VERITY (11 services) / LAW-N · published 2026-05-19 |
 | Cloudflare Worker `l402kit-api` | l402kit.com/api/* | vf28aa984 | ✅ deployed 2026-05-13 (radar evolution + alpha repricing) |
 | Docs Mintlify | docs.l402kit.com | auto-sync | ✅ EN + 10 locales × 40 pages |
