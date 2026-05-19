@@ -85,10 +85,8 @@ describe("seenBefore / markSeen", () => {
     const kv = makeKV();
     const env = makeEnv(kv);
     await markSeen("https://example.com", env);
-    // At least one key with radar:seen prefix should exist
-    let found = false;
-    kv["__store"] = undefined; // can't introspect directly — test via seenBefore
-    found = await seenBefore("https://example.com", env);
+    // Verify indirectly via seenBefore (can't introspect KV mock directly).
+    const found = await seenBefore("https://example.com", env);
     expect(found).toBe(true);
   });
 });
