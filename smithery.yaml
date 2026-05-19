@@ -1,0 +1,55 @@
+# Smithery configuration — https://smithery.ai/docs/build/project-config
+# Server: https://smithery.ai/server/ShinyDapps/l402-kit
+
+name: shinydapps/l402-kit
+displayName: l402-kit
+description: |
+  Lightning-native MCP server: lets AI agents autonomously pay L402-protected
+  APIs in Bitcoin sats. 12 tools across two layers.
+
+  Layer 1 — generic protocol tools: l402_fetch (call any L402 URL with auto pay-and-retry),
+  l402_balance, l402_spending_report, l402_set_budget.
+
+  Layer 2 — VERITY: pre-wired tools for VERITY's 11 paid services on l402kit.com
+  (BTC price, web search, scrape, AI summarize/sentiment/translate, world state,
+  domain intelligence, deep research, strategic alpha, l402-kit integration).
+  Prices are dynamic — call verity_pricing first for the live rate card (free).
+
+  Agent posture: spend in sats, budget-aware, treasury-auditable. Each call returns
+  the sats actually paid alongside the response, so cost is observable per tool call.
+
+iconUrl: https://l402kit.com/logos/icon-256.png
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - BLINK_API_KEY
+      - BLINK_WALLET_ID
+    properties:
+      BLINK_API_KEY:
+        type: string
+        title: Blink API key
+        description: Get free at blink.sv → Settings → API Keys
+      BLINK_WALLET_ID:
+        type: string
+        title: Blink BTC wallet ID
+        description: From blink.sv → Settings → Wallets (BTC wallet)
+      BUDGET_SATS:
+        type: string
+        title: Session budget (sats)
+        default: "2000"
+        description: |
+          Hard cap on total spend per MCP session. Default 2000 sats.
+          Once exhausted, all paid tools refuse — call l402_balance to check.
+  commandFunction: |-
+    (config) => ({
+      command: "npx",
+      args: ["-y", "-p", "l402-kit", "l402-kit-mcp"],
+      env: {
+        BLINK_API_KEY: config.BLINK_API_KEY,
+        BLINK_WALLET_ID: config.BLINK_WALLET_ID,
+        BUDGET_SATS: config.BUDGET_SATS || "2000"
+      }
+    })

@@ -7,9 +7,12 @@
  * 1. GENERIC — l402_fetch, l402_balance, l402_spending_report, l402_set_budget
  *    Lets Claude/Cursor call any L402-protected API autonomously.
  *
- * 2. VERITY — verity_btc_price, verity_search, verity_worldstate, verity_summarize,
- *    verity_sentiment, verity_scrape, verity_domain_intel, verity_integration
- *    Named tools for VERITY's 8 paid services (auto-pays sats per call).
+ * 2. VERITY — 11 named tools wired to VERITY's paid services on l402kit.com.
+ *    Prices are dynamic — call verity_pricing first or query
+ *    https://l402kit.com/api/verity/services for current sats per call.
+ *    Tools: verity_pricing, verity_btc_price, verity_worldstate, verity_search,
+ *    verity_scrape, verity_summarize, verity_sentiment, verity_translate,
+ *    verity_domain_intel, verity_research, verity_alpha, verity_integration.
  *
  * ## Environment Variables
  *
@@ -92,7 +95,7 @@ function requireClient(): L402Client {
 
 const server = new McpServer({
   name: "l402-kit",
-  version: "1.8.6",
+  version: "1.9.0",
 });
 
 // Tool: l402_fetch
@@ -292,9 +295,9 @@ function verityResult(r: { text: string; spent: number; status: number }) {
 server.registerTool(
   "verity_btc_price",
   {
-    title: "BTC Price — 10 sats",
+    title: "BTC Price (low-cost tier)",
     description:
-      "Get real-time Bitcoin price in USD, EUR, and BRL via VERITY. Costs 10 sats per call. " +
+      "Get real-time Bitcoin price in USD, EUR, and BRL via VERITY. Low-cost tier — call verity_pricing for current sats. " +
       "Returns: { bitcoin: { usd, eur, brl }, timestamp }. " +
       "Use this instead of a free price API when you need a cryptographically billed, auditable data source.",
     inputSchema: {},
@@ -312,9 +315,9 @@ server.registerTool(
 server.registerTool(
   "verity_worldstate",
   {
-    title: "World State — 80 sats",
+    title: "World State (low-cost tier)",
     description:
-      "Get UTC time, caller geolocation, and local weather in a single call via VERITY. Costs 80 sats. " +
+      "Get UTC time, caller geolocation, and local weather in a single call via VERITY. Low-cost tier — call verity_pricing for current sats. " +
       "Returns: { time: { utc, unix, hour, minute, weekday }, location: { city, country, timezone }, weather: { temperature_c, feels_like_c, humidity_pct, condition } }. " +
       "Zero external API cost — uses Cloudflare geo headers + Open-Meteo.",
     inputSchema: {},
@@ -332,9 +335,9 @@ server.registerTool(
 server.registerTool(
   "verity_search",
   {
-    title: "Web Search — 100 sats",
+    title: "Web Search (mid tier)",
     description:
-      "Search the web and return top 10 organic results via VERITY. Costs 100 sats. " +
+      "Search the web and return top 10 organic results via VERITY. Mid tier — call verity_pricing for current sats. " +
       "Returns: { results: [{ title, link, snippet }] }. " +
       "Powered by Serper API. Use for research, fact-checking, or link discovery.",
     inputSchema: {
@@ -354,9 +357,9 @@ server.registerTool(
 server.registerTool(
   "verity_summarize",
   {
-    title: "Summarize — 50 sats",
+    title: "Summarize (mid tier)",
     description:
-      "AI summarization of text up to 50,000 characters via VERITY. Costs 50 sats. " +
+      "AI summarization of text up to 50,000 characters via VERITY. Mid tier — call verity_pricing for current sats. " +
       "Returns: { summary: string }. Language parameter is optional (default: english). " +
       "Powered by Claude Haiku.",
     inputSchema: {
@@ -377,9 +380,9 @@ server.registerTool(
 server.registerTool(
   "verity_sentiment",
   {
-    title: "Sentiment Analysis — 30 sats",
+    title: "Sentiment Analysis (low-cost tier)",
     description:
-      "Analyze text sentiment with score, confidence, and keywords via VERITY. Costs 30 sats. " +
+      "Analyze text sentiment with score, confidence, and keywords via VERITY. Low-cost tier — call verity_pricing for current sats. " +
       "Returns: { analysis: { sentiment: 'positive'|'negative'|'neutral', score, confidence, keywords } }. " +
       "Powered by Claude Haiku.",
     inputSchema: {
@@ -399,9 +402,9 @@ server.registerTool(
 server.registerTool(
   "verity_scrape",
   {
-    title: "Web Scrape — 200 sats",
+    title: "Web Scrape (mid tier)",
     description:
-      "Scrape a public URL and return its content as clean markdown via VERITY. Costs 200 sats. " +
+      "Scrape a public URL and return its content as clean markdown via VERITY. Mid tier — call verity_pricing for current sats. " +
       "Returns: { content: string, title: string }. " +
       "Powered by Firecrawl. Use for extracting article content, documentation, or structured data.",
     inputSchema: {
@@ -421,9 +424,9 @@ server.registerTool(
 server.registerTool(
   "verity_domain_intel",
   {
-    title: "Domain Intelligence — 500 sats",
+    title: "Domain Intelligence (premium tier)",
     description:
-      "Get WHOIS, DNS records, and SSL certificates for any domain via VERITY. Costs 500 sats. " +
+      "Get WHOIS, DNS records, and SSL certificates for any domain via VERITY. Premium tier — call verity_pricing for current sats. " +
       "Returns: { domain, whois: { registrar, registered, expires }, dns: { a_records }, certificates }. " +
       "Zero external API cost — uses RDAP, Cloudflare DNS, and crt.sh.",
     inputSchema: {
@@ -443,13 +446,13 @@ server.registerTool(
 server.registerTool(
   "verity_integration",
   {
-    title: "l402-kit Integration — 10,000 sats",
+    title: "l402-kit Integration (consulting tier)",
     description:
-      "Send VERITY a public GitHub repo URL and receive complete l402-kit integration code. Costs 10,000 sats (~$6). " +
+      "Send VERITY a public GitHub repo URL and receive complete l402-kit integration code. Consulting tier — expensive (~$120-200 in sats). Call verity_pricing for exact current price BEFORE invoking. " +
       "Returns: { integration: string (markdown with exact code), next_steps: string[] }. " +
       "VERITY analyzes the codebase, detects framework (Express, FastAPI, Gin, Axum, etc.), " +
       "and generates middleware code with exact file paths and line numbers. " +
-      "WARNING: This tool costs 10,000 sats. Check l402_balance first.",
+      "WARNING: Always check l402_balance and verity_pricing first — this is the most expensive tool.",
     inputSchema: {
       repoUrl: z.string().describe("Public GitHub repository URL (e.g. 'https://github.com/owner/repo')"),
     },
@@ -458,6 +461,100 @@ server.registerTool(
   async ({ repoUrl }) => {
     try {
       return verityResult(await verityCall("/integration", { method: "POST", body: { repoUrl } }));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_pricing",
+  {
+    title: "VERITY live pricing (free)",
+    description:
+      "Get the current sat price for every VERITY service. Free — no payment required. " +
+      "Returns the live machine-readable catalog: { services: [{ id, endpoint, priceSats, floor, ... }], updated }. " +
+      "Prices are dynamic (adjust every 30min based on demand). " +
+      "Use this BEFORE any other verity_* tool when budget is tight, especially before verity_integration.",
+    inputSchema: {},
+    annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+  },
+  async () => {
+    try {
+      const res = await fetch(`${VERITY}/services`);
+      const text = await res.text();
+      return { content: [{ type: "text" as const, text }] };
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_translate",
+  {
+    title: "Translate text or MDX (mid tier)",
+    description:
+      "Translate text or MDX documentation to any of 11 supported locales via VERITY. Mid tier — call verity_pricing for current sats. " +
+      "Supported locales: pt, es, zh, ar, hi, fr, de, ru, ja, it, en. " +
+      "format='mdx' preserves code blocks, MDX components, URLs, and technical terms; format='plain' translates everything. " +
+      "Returns: { translated: string, language: string, source_length: number }. " +
+      "Max input: 100,000 characters per call. Powered by Claude.",
+    inputSchema: {
+      text: z.string().describe("Text or MDX content to translate (max 100,000 characters)"),
+      locale: z.string().describe("Target locale: 'pt'|'es'|'zh'|'ar'|'hi'|'fr'|'de'|'ru'|'ja'|'it'|'en'"),
+      format: z.enum(["mdx", "plain"]).optional().describe("'mdx' preserves code/components, 'plain' translates everything (default: plain)"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ text, locale, format }) => {
+    try {
+      return verityResult(await verityCall("/translate", { method: "POST", body: { text, locale, format } }));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_research",
+  {
+    title: "Deep research bundle (premium tier)",
+    description:
+      "Deep research: web search + scrape of top result + AI summarization in a single call via VERITY. Premium tier — call verity_pricing for current sats. " +
+      "Cheaper than calling search + scrape + summarize separately, and one Lightning payment instead of three. " +
+      "Returns: { summary: string, scraped_url: string, sources: [{ title, link, snippet }] }.",
+    inputSchema: {
+      query: z.string().describe("Research question or topic"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ query }) => {
+    try {
+      return verityResult(await verityCall("/research", { method: "POST", body: { query } }));
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
+server.registerTool(
+  "verity_alpha",
+  {
+    title: "Crypto-native strategic intelligence (premium tier)",
+    description:
+      "Strategic intelligence on crypto narratives, on-chain anomalies, and alpha windows via VERITY's strategist persona. Premium tier — call verity_pricing for current sats. " +
+      "Different from research: alpha specifically identifies which intelligence is actionable NOW, in this market cycle (timing-aware). " +
+      "Use for: 'should I rotate?', 'is this a narrative window?', 'where is smart money positioning?'. " +
+      "Returns structured strategic synthesis with thesis, risks, and timing signal.",
+    inputSchema: {
+      query: z.string().describe("Strategic question (best framed in terms of positioning, timing, narrative)"),
+    },
+    annotations: { readOnlyHint: true, idempotentHint: false, openWorldHint: true },
+  },
+  async ({ query }) => {
+    try {
+      return verityResult(await verityCall("/alpha", { method: "POST", body: { query } }));
     } catch (err) {
       return { content: [{ type: "text" as const, text: `Error: ${String(err)}` }], isError: true };
     }
