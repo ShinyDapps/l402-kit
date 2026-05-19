@@ -1,7 +1,7 @@
 # l402-kit — Live Status
 
 > **Purpose:** snapshot vivo do projeto para retomar contexto rápido. Atualizar a cada sessão significativa.
-> **Last updated:** 2026-05-19 madrugada (sessão completa: 402index + A/B + live demo + RADAR seen wipe + local registry + Smithery refresh + l402-kit@1.9.1)
+> **Last updated:** 2026-05-19 (sessão completa: /admin dashboard + RADAR isBuyerLead + queries SERPER diversificadas + **SDK security parity 1.9.1 Py/Rust/Go**)
 
 ---
 
@@ -16,9 +16,9 @@
 | Camada | Onde | Versão | Estado |
 |---|---|---|---|
 | npm `l402-kit` | https://www.npmjs.com/package/l402-kit | **1.9.1** | ✅ MCP server v1.9.1 com verity_pricing + translate + research + alpha tools, sem preços hardcoded |
-| PyPI `l402kit` | https://pypi.org/project/l402kit | 1.8.6 | ⚠️ atrasado vs npm 1.9.0 (sem LAW-N adapter Python) |
-| crates.io `l402kit` | https://crates.io/crates/l402kit | 1.8.5 | ⚠️ Rust independente, sem LAW-N |
-| Go module | github.com/shinydapps/l402-kit/go | v1.8.2 | ⚠️ Go independente, sem LAW-N |
+| PyPI `l402kit` | https://pypi.org/project/l402kit | **1.9.1** | ✅ security parity 19 Mai (token length guard + MAX_EXP_MS cap + timing-safe compare) |
+| crates.io `l402kit` | https://crates.io/crates/l402kit | **1.9.1** | ✅ security parity 19 Mai (subtle::ConstantTimeEq + 2h cap + 4096 guard) |
+| Go module | github.com/shinydapps/l402-kit/go | **v1.9.1** | ✅ security parity 19 Mai (crypto/subtle.ConstantTimeCompare + 2h cap + 4096 guard). Tag `go/v1.9.1` aguarda indexação proxy.golang.org (5-30min) |
 | VS Code Extension | ShinyDapps.shinydapps-l402 | 1.9.1 | ✅ 3 tabs: Payments / VERITY / LAW-N |
 | Cloudflare Worker `l402kit-api` | l402kit.com/api/* | vf28aa984 | ✅ deployed 2026-05-13 (radar evolution + alpha repricing) |
 | Docs Mintlify | docs.l402kit.com | auto-sync | ✅ EN + 10 locales × 40 pages |
