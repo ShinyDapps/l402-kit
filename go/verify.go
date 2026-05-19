@@ -2,12 +2,20 @@ package l402kit
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"strings"
 	"time"
 )
+
+// MaxTokenLen rejects oversized tokens before parsing (DoS guard). Parity with TS SDK.
+const MaxTokenLen = 4096
+
+// MaxExpMs caps how far in the future a token may claim to expire. Mirrors
+// the TS SDK's 2-hour MAX_EXP_MS — prevents forged tokens with absurd `exp`.
+const MaxExpMs = int64(2 * 60 * 60 * 1000)
 
 // L402Token holds the parsed components of an L402 authorization token.
 type L402Token struct {
@@ -34,10 +42,16 @@ func ParseToken(token string) (L402Token, error) {
 }
 
 // VerifyToken performs real cryptographic verification:
-//  1. Preimage must be 32 bytes (64 hex chars).
-//  2. Token must not be expired.
-//  3. SHA256(preimage) must equal the paymentHash stored in the macaroon.
+//  1. Token length within MaxTokenLen (DoS guard).
+//  2. Preimage must be 32 bytes (64 hex chars).
+//  3. Token must not be expired AND must expire within MaxExpMs from now.
+//  4. SHA256(preimage) must equal the paymentHash stored in the macaroon
+//     (constant-time compare via crypto/subtle).
 func VerifyToken(token string) (bool, error) {
+	if len(token) > MaxTokenLen {
+		return false, nil
+	}
+
 	t, err := ParseToken(token)
 	if err != nil {
 		return false, nil
@@ -71,8 +85,12 @@ func VerifyToken(token string) (bool, error) {
 		return false, nil
 	}
 
-	// Check expiry
-	if time.Now().UnixMilli() > payload.Exp {
+	nowMs := time.Now().UnixMilli()
+	if nowMs > payload.Exp {
+		return false, nil
+	}
+	// Forward-cap: reject tokens with exp more than 2h in the future
+	if payload.Exp > nowMs+MaxExpMs {
 		return false, nil
 	}
 
@@ -80,5 +98,9 @@ func VerifyToken(token string) (bool, error) {
 	digest := sha256.Sum256(preimageBytes)
 	digestHex := hex.EncodeToString(digest[:])
 
-	return digestHex == payload.Hash, nil
+	// Constant-time compare to defeat hash-prefix side-channel attacks
+	if len(digestHex) != len(payload.Hash) {
+		return false, nil
+	}
+	return subtle.ConstantTimeCompare([]byte(digestHex), []byte(payload.Hash)) == 1, nil
 }

@@ -55,8 +55,22 @@ class TestVerifyToken:
     def test_valid_token(self):
         assert self.verify(make_token()) is True
 
-    def test_valid_token_expiring_far_future(self):
-        assert self.verify(make_token(exp_offset=365 * 24 * 3600)) is True
+    def test_token_within_2h_cap_is_valid(self):
+        # 1h forward — under the 2h MAX_EXP cap
+        assert self.verify(make_token(exp_offset=3600)) is True
+
+    def test_token_beyond_2h_cap_is_rejected(self):
+        # 3h forward — exceeds the 2h MAX_EXP cap (was valid pre-1.9.1)
+        assert self.verify(make_token(exp_offset=3 * 3600)) is False
+
+    def test_token_far_future_is_rejected(self):
+        # 1 year forward — far above cap, previously accepted, now rejected
+        assert self.verify(make_token(exp_offset=365 * 24 * 3600)) is False
+
+    def test_oversized_token_rejected(self):
+        # Tokens > 4096 chars rejected before parsing (DoS guard)
+        oversized = "A" * 5000 + ":" + "a" * 64
+        assert self.verify(oversized) is False
 
     def test_valid_token_with_extra_macaroon_fields(self):
         """Forward-compat: extra fields in macaroon should not break verification."""

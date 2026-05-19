@@ -118,11 +118,39 @@ func TestVerifyToken_ValidToken(t *testing.T) {
 	}
 }
 
-func TestVerifyToken_ValidToken_FarFuture(t *testing.T) {
-	token := makeToken(t, 365*24*3_600_000)
+func TestVerifyToken_Within2hCapIsValid(t *testing.T) {
+	// 1h forward — under MAX_EXP_MS cap
+	token := makeToken(t, 3_600_000)
 	ok, err := l402kit.VerifyToken(token)
 	if err != nil || !ok {
-		t.Errorf("expected far-future token to be valid, got ok=%v err=%v", ok, err)
+		t.Errorf("expected 1h-future token to pass cap, got ok=%v err=%v", ok, err)
+	}
+}
+
+func TestVerifyToken_Beyond2hCapIsRejected(t *testing.T) {
+	// 3h forward — exceeds 2h MAX_EXP cap (was valid pre-1.9.1)
+	token := makeToken(t, 3*3_600_000)
+	ok, _ := l402kit.VerifyToken(token)
+	if ok {
+		t.Error("expected 3h-future token to fail cap")
+	}
+}
+
+func TestVerifyToken_FarFutureIsRejected(t *testing.T) {
+	// 1 year forward — was valid pre-1.9.1, now rejected after MAX_EXP cap parity
+	token := makeToken(t, 365*24*3_600_000)
+	ok, _ := l402kit.VerifyToken(token)
+	if ok {
+		t.Error("expected 1-year-future token to fail cap")
+	}
+}
+
+func TestVerifyToken_OversizedRejected(t *testing.T) {
+	// Tokens > 4096 chars rejected before parsing (DoS guard parity with TS)
+	oversized := strings.Repeat("A", 5000) + ":" + strings.Repeat("a", 64)
+	ok, _ := l402kit.VerifyToken(oversized)
+	if ok {
+		t.Error("expected oversized token to be rejected")
 	}
 }
 

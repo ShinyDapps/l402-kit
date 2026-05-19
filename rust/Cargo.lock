@@ -653,7 +653,7 @@ dependencies = [
 
 [[package]]
 name = "l402kit"
-version = "1.8.2"
+version = "1.9.1"
 dependencies = [
  "axum",
  "base64",
@@ -664,6 +664,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "subtle",
  "thiserror",
  "tokio",
  "tower",

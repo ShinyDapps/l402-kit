@@ -108,9 +108,31 @@ fn test_verify_token_valid() {
 }
 
 #[test]
-fn test_verify_token_valid_far_future() {
+fn test_verify_token_within_2h_cap_is_valid() {
+    // 1h forward — under MAX_EXP_MS cap (2h)
+    let token = make_token(3_600_000);
+    assert!(verify_token(&token), "1h-future expiry should pass cap");
+}
+
+#[test]
+fn test_verify_token_beyond_2h_cap_is_rejected() {
+    // 3h forward — exceeds the 2h MAX_EXP cap (was valid pre-1.9.1)
+    let token = make_token(3 * 3_600_000);
+    assert!(!verify_token(&token), "3h-future expiry should fail cap");
+}
+
+#[test]
+fn test_verify_token_far_future_is_rejected() {
+    // 1 year forward — previously accepted, now rejected after MAX_EXP cap parity
     let token = make_token(365 * 24 * 3_600_000);
-    assert!(verify_token(&token), "far-future expiry should pass");
+    assert!(!verify_token(&token), "1-year-future expiry should fail cap");
+}
+
+#[test]
+fn test_verify_token_oversized_rejected() {
+    // Tokens > 4096 chars rejected before parsing (DoS guard parity with TS)
+    let oversized = "A".repeat(5000) + ":" + &"a".repeat(64);
+    assert!(!verify_token(&oversized), "oversized token must be rejected");
 }
 
 #[test]
