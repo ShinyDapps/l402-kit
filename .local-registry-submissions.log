@@ -1,0 +1,23 @@
+=== Local registry submissions 2026-05-19T05:24:02Z ===
+VERITY BTC Price | {"ok":true,"id":"09409a3b-114e-4dd3-82c3-7355fbd75d4e","verified":false}
+HTTP:200
+VERITY World State | {"ok":true,"id":"7ff2cd3d-43c6-4e7a-9e6f-7c4e5c821b78","verified":false}
+HTTP:200
+VERITY Sentiment | {"ok":true,"id":"934577a8-7acf-4c26-abc7-bc1c0bf4493f","verified":false}
+HTTP:200
+VERITY Web Search | {"ok":true,"id":"e2c067ad-12f0-4b6a-938e-de353371cb09","verified":false}
+HTTP:200
+VERITY Web Scrape | {"ok":true,"id":"a85f6a36-a843-4467-97ea-98c5d49d14bb","verified":false}
+HTTP:200
+VERITY Summarize | {"ok":true,"id":"ab107111-c654-4ad6-829b-f83cdf9aafc5","verified":false}
+HTTP:200
+VERITY Translate | {"ok":true,"id":"1ed714f5-1a69-449d-b36a-67a6d38cb1f7","verified":false}
+HTTP:200
+VERITY Domain Intel | {"ok":true,"id":"ded5da82-152b-4900-bfb6-c9970fb75a47","verified":false}
+HTTP:200
+VERITY Research | {"ok":true,"id":"d972b4d3-ed2f-4b09-a1cb-11dd83a0b7f4","verified":false}
+HTTP:200
+VERITY Alpha | {"ok":true,"id":"fdfe5d68-d974-4167-9ab0-8e92b264923f","verified":false}
+HTTP:200
+VERITY l402-kit Integration | {"error":"Rate limit exceeded — max 10 registrations per hour per IP"}
+HTTP:429

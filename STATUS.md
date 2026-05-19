@@ -90,6 +90,21 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 
 ---
 
+## Diretório próprio /api/apis.json (popular desde 2026-05-19)
+
+10/11 VERITY services registrados + Diagram Forge = 11 entradas. Antes só tinha Diagram Forge.
+- Integration (200k sats) ficou de fora — rate limit /api/register é 10/IP/hora. Resubmeto em 1h.
+- Script reutilizável: `scripts/register-local-directory.sh`
+- Widget API Directory na landing já tinha 9 VERITYs em `_SEED_APIS` (hardcoded), agora bate com o banco real
+
+## RADAR seen cache wipe (2026-05-19)
+
+- **129 chaves `verity_radar:seen:*` deletadas** via `DELETE /api/verity/admin/radar/seen` (novo endpoint admin)
+- RADAR vai re-descobrir leads frescos no próximo cron (/30min)
+- Queue antes do reset já tinha 28 leads (8 hot, 20 warm) — desbloqueio aumenta o pool
+
+---
+
 ## Glama MCP score (2026-05-19)
 
 `l402-kit-mcp` em https://glama.ai/mcp/servers/ShinyDapps/l402-kit/score:
