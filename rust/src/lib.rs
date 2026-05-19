@@ -1,4 +1,5 @@
 pub mod errors;
+pub mod integrations;
 pub mod replay;
 pub mod types;
 pub mod verify;
