@@ -95,4 +95,12 @@ zone_name = "l402kit.com"
 pattern = "l402kit.com/api/verity"
 zone_name = "l402kit.com"
 
+[[routes]]
+pattern = "l402kit.com/admin"
+zone_name = "l402kit.com"
+
+[[routes]]
+pattern = "l402kit.com/admin/*"
+zone_name = "l402kit.com"
+
 

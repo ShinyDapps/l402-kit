@@ -1,0 +1,202 @@
+/**
+ * TDD — /admin dashboard (cookie-auth board interface)
+ *
+ * Three endpoints:
+ *   POST /admin/login   — validates DASHBOARD_SECRET, sets HttpOnly cookie
+ *   POST /admin/logout  — clears cookie
+ *   GET  /admin         — returns HTML (login form if no cookie, dashboard if valid)
+ *   GET  /admin/data    — JSON: aggregates verity state for the dashboard
+ *
+ * Philosophy: VERITY tem vida própria. Dashboard é interface de board/tesoureiro,
+ * não admin SaaS. Read-mostly, com poucas ações humanas (encerrar lead, limpar alerta).
+ */
+
+import {
+  handleAdminDashboard,
+  handleAdminLogin,
+  handleAdminLogout,
+  handleAdminData,
+  verifySessionCookie,
+  signSessionCookie,
+} from "../api/admin-dashboard";
+
+function makeKV(initial: Record<string, string> = {}): KVNamespace {
+  const store = new Map<string, string>(Object.entries(initial));
+  return {
+    get: async (k: string) => store.get(k) ?? null,
+    put: async (k: string, v: string) => { store.set(k, v); },
+    delete: async (k: string) => { store.delete(k); },
+    list: async (opts?: { prefix?: string }) => {
+      const prefix = opts?.prefix ?? "";
+      const keys = [...store.keys()]
+        .filter(k => k.startsWith(prefix))
+        .map(name => ({ name }));
+      return { keys, list_complete: true, cursor: "" };
+    },
+    getWithMetadata: async (k: string) => ({ value: store.get(k) ?? null, metadata: null }),
+  } as unknown as KVNamespace;
+}
+
+const SECRET = "test-dashboard-secret";
+
+function makeEnv(kv?: KVNamespace): import("../worker").Env {
+  return {
+    demo_preimages: kv ?? makeKV(),
+    DASHBOARD_SECRET: SECRET,
+  } as unknown as import("../worker").Env;
+}
+
+function req(path: string, init: RequestInit = {}): Request {
+  return new Request(`https://l402kit.com${path}`, init);
+}
+
+// ─── Cookie signing primitives ───────────────────────────────────────────────
+
+describe("session cookie signing", () => {
+  it("round-trips a valid signed cookie", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const verified = await verifySessionCookie(SECRET, cookie);
+    expect(verified.ok).toBe(true);
+  });
+
+  it("rejects an expired cookie", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() - 1_000);
+    const verified = await verifySessionCookie(SECRET, cookie);
+    expect(verified.ok).toBe(false);
+  });
+
+  it("rejects a cookie signed with a different secret", async () => {
+    const cookie = await signSessionCookie("other-secret", Date.now() + 60_000);
+    const verified = await verifySessionCookie(SECRET, cookie);
+    expect(verified.ok).toBe(false);
+  });
+
+  it("rejects a tampered cookie", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const tampered = cookie.replace(/.$/, c => (c === "a" ? "b" : "a"));
+    const verified = await verifySessionCookie(SECRET, tampered);
+    expect(verified.ok).toBe(false);
+  });
+});
+
+// ─── POST /admin/login ───────────────────────────────────────────────────────
+
+describe("POST /admin/login", () => {
+  it("returns 401 for wrong secret", async () => {
+    const res = await handleAdminLogin(
+      req("/admin/login", { method: "POST", body: JSON.stringify({ secret: "wrong" }) }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 200 + Set-Cookie for correct secret", async () => {
+    const res = await handleAdminLogin(
+      req("/admin/login", { method: "POST", body: JSON.stringify({ secret: SECRET }) }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const setCookie = res.headers.get("Set-Cookie") ?? "";
+    expect(setCookie).toMatch(/admin_session=/);
+    expect(setCookie).toMatch(/HttpOnly/i);
+    expect(setCookie).toMatch(/Secure/i);
+    expect(setCookie).toMatch(/SameSite=Strict/i);
+  });
+
+  it("rejects non-POST", async () => {
+    const res = await handleAdminLogin(req("/admin/login"), makeEnv());
+    expect(res.status).toBe(405);
+  });
+});
+
+// ─── POST /admin/logout ──────────────────────────────────────────────────────
+
+describe("POST /admin/logout", () => {
+  it("clears the cookie", async () => {
+    const res = await handleAdminLogout(req("/admin/logout", { method: "POST" }));
+    expect(res.status).toBe(200);
+    const setCookie = res.headers.get("Set-Cookie") ?? "";
+    expect(setCookie).toMatch(/admin_session=;/);
+    expect(setCookie).toMatch(/Max-Age=0/i);
+  });
+});
+
+// ─── GET /admin ──────────────────────────────────────────────────────────────
+
+describe("GET /admin", () => {
+  it("returns login HTML when no cookie present", async () => {
+    const res = await handleAdminDashboard(req("/admin"), makeEnv());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toMatch(/text\/html/);
+    const body = await res.text();
+    expect(body).toMatch(/login|secret/i);
+  });
+
+  it("returns dashboard HTML when cookie valid", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const res = await handleAdminDashboard(
+      req("/admin", { headers: { Cookie: `admin_session=${cookie}` } }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    // Dashboard markers — must mention VERITY status framing
+    expect(body).toMatch(/VERITY/);
+    expect(body).toMatch(/action-queue|Action queue|Fila/i);
+  });
+
+  it("returns login HTML when cookie invalid", async () => {
+    const res = await handleAdminDashboard(
+      req("/admin", { headers: { Cookie: "admin_session=not-a-real-cookie" } }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toMatch(/login|secret/i);
+  });
+});
+
+// ─── GET /admin/data ─────────────────────────────────────────────────────────
+
+describe("GET /admin/data", () => {
+  it("returns 401 without valid cookie", async () => {
+    const res = await handleAdminData(req("/admin/data"), makeEnv());
+    expect(res.status).toBe(401);
+  });
+
+  it("returns aggregated JSON with valid cookie", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const today = new Date().toISOString().slice(0, 10);
+
+    const kv = makeKV({
+      [`verity_fiscal:${today}`]: JSON.stringify({
+        date: today,
+        gross_sats: 1500,
+        cogs_sats: 300,
+        net_sats: 1200,
+        calls: 7,
+      }),
+      "verity_radar:pending:human:hot": JSON.stringify([
+        { url: "https://github.com/foo/bar", title: "hot lead", signal: "hot", persona: "human", score: 9, foundAt: new Date().toISOString(), expiresAt: Date.now() + 86_400_000 },
+      ]),
+      "verity_alerts": JSON.stringify([
+        { key: "budget_low:2026-05-19", type: "budget_low", message: "80% used", createdAt: new Date().toISOString() },
+      ]),
+    });
+
+    const res = await handleAdminData(
+      req("/admin/data", { headers: { Cookie: `admin_session=${cookie}` } }),
+      makeEnv(kv),
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json() as {
+      header: { receita_hoje_sats: number; status: string };
+      action_queue: { hot_leads: unknown[]; alerts: unknown[] };
+    };
+    expect(data.header).toBeDefined();
+    expect(data.header.receita_hoje_sats).toBe(1200);
+    expect(data.action_queue).toBeDefined();
+    expect(data.action_queue.hot_leads.length).toBeGreaterThanOrEqual(1);
+    expect(data.action_queue.alerts.length).toBeGreaterThanOrEqual(1);
+  });
+});
