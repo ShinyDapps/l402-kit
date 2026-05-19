@@ -1,4 +1,5 @@
 import type { Env } from "../worker";
+import { getDraft } from "../verity/radar/outreach";
 
 /**
  * /admin — VERITY board interface.
@@ -103,14 +104,27 @@ export async function handleAdminData(req: Request, env: Env): Promise<Response>
   ]);
 
   const fiscal = safeJson<{ gross_sats?: number; cogs_sats?: number; net_sats?: number; calls?: number }>(fiscalRaw) ?? {};
-  const hotHuman = safeJson<unknown[]>(hotHumanRaw) ?? [];
-  const hotAgent = safeJson<unknown[]>(hotAgentRaw) ?? [];
+  type Lead = { url: string; title?: string; snippet?: string; score?: number; persona?: string; foundAt?: string };
+  const hotHuman = safeJson<Lead[]>(hotHumanRaw) ?? [];
+  const hotAgent = safeJson<Lead[]>(hotAgentRaw) ?? [];
   const alerts = safeJson<unknown[]>(alertsRaw) ?? [];
+
+  // Dedup by URL — RADAR may re-queue across cron runs. Keep most recent + tag persona.
+  const byUrl = new Map<string, Lead>();
+  for (const l of [...hotHuman, ...hotAgent]) {
+    const prev = byUrl.get(l.url);
+    if (!prev || (l.foundAt ?? "") > (prev.foundAt ?? "")) byUrl.set(l.url, l);
+  }
+  const unique = [...byUrl.values()].sort((a, b) => (b.foundAt ?? "").localeCompare(a.foundAt ?? ""));
+
+  // Attach outreach drafts (VERITY already generated them — show what it wants to say)
+  const hot_leads = await Promise.all(
+    unique.map(async l => ({ ...l, outreach_draft: await getDraft(l.url, env).catch(() => null) })),
+  );
 
   const receita_hoje_sats = typeof fiscal.net_sats === "number" ? fiscal.net_sats : 0;
   const calls_hoje = typeof fiscal.calls === "number" ? fiscal.calls : 0;
-  const hot_total = hotHuman.length + hotAgent.length;
-  const needs_human = hot_total > 0 || alerts.length > 0;
+  const needs_human = hot_leads.length > 0 || alerts.length > 0;
 
   return json({
     header: {
@@ -120,7 +134,7 @@ export async function handleAdminData(req: Request, env: Env): Promise<Response>
       today,
     },
     action_queue: {
-      hot_leads: [...hotHuman, ...hotAgent],
+      hot_leads,
       alerts,
     },
     services_cache: servicesRaw ? safeJson(servicesRaw) : null,
@@ -283,11 +297,15 @@ function render(d){
   }
   for (const l of leads){
     const ring = l.persona === 'human' ? 'humano' : 'agente';
+    const draft = l.outreach_draft || null;
+    const draftBody = draft && draft.body ? draft.body : '';
+    const draftSubj = draft && draft.subject ? draft.subject : '';
     html += '<div class="item">' +
-      '<div class="label">Hot lead <span class="badge hot">' + ring + '</span></div>' +
+      '<div class="label">Hot lead <span class="badge hot">' + ring + '</span> · score ' + (l.score||'?') + ' · ' + ago(l.foundAt) + '</div>' +
       '<div><a href="' + escape(l.url) + '" target="_blank" rel="noopener">' + escape(l.title || l.url) + '</a></div>' +
       (l.snippet ? '<div class="snippet">' + escape(l.snippet) + '</div>' : '') +
-      (l.outreach_draft ? '<div class="snippet">Draft: ' + escape((l.outreach_draft.body||'').slice(0,200)) + '…</div>' : '') +
+      (draft ? '<details class="draft"><summary>Draft VERITY' + (draftSubj?': '+escape(draftSubj):'') + '</summary><pre>' + escape(draftBody) + '</pre>' +
+        '<button class="btn" onclick="copyDraft(this)">copy</button></details>' : '<div class="snippet" style="color:#666">(sem draft ainda)</div>') +
       '<button class="btn" onclick="dismissLead(' + JSON.stringify(l.persona) + ',' + JSON.stringify(l.url) + ')">encerrar</button>' +
       '</div>';
   }

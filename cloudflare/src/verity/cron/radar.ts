@@ -1,6 +1,6 @@
 import type { Env } from "../../worker";
 import type { Lead, Persona } from "../radar/types";
-import { scoreSignal, detectFramework, queueKey } from "../radar/scoring";
+import { scoreSignal, detectFramework, queueKey, isBuyerLead } from "../radar/scoring";
 import { enqueue, seenBefore, markSeen } from "../radar/queue";
 import { acquireRadarLock, releaseRadarLock } from "../radar/lock";
 import { draftOutreach, storeDraft } from "../radar/outreach";
@@ -227,6 +227,14 @@ export async function runRadar(env: Env): Promise<void> {
     for (const item of allItems) {
       try {
         if (await seenBefore(item.link, env)) { log.skipped++; continue; }
+
+        // Filter out infra (lightninglabs, l402-protocol, Fewsats) + competitors
+        // (DeepBlue/Fynx-style x402 USDC/Solana promos) before any HTTP cost.
+        if (!isBuyerLead(item.link, item.title, item.snippet ?? "")) {
+          log.skipped++;
+          await markSeen(item.link, env);
+          continue;
+        }
 
         if (item.link.includes("github.com")) {
           if (item.link.includes("/issues/")) {

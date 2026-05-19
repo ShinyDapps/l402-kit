@@ -1,5 +1,37 @@
 import type { SignalStrength, Persona, QueueKey } from "./types";
 
+/**
+ * Repos / orgs que são INFRA do próprio L402 — não compram, são vizinhos.
+ * (lightninglabs detém a spec; l402-protocol é o org; Fewsats mantém lista curada;
+ *  refined-element/l402-requests é cliente, não comprador).
+ */
+const INFRA_REPO_PATTERNS = [
+  /github\.com\/lightninglabs\//i,
+  /github\.com\/l402-protocol\//i,
+  /github\.com\/Fewsats\/awesome-/i,
+  /github\.com\/refined-element\/l402-/i,
+];
+
+/**
+ * Padrões de COMPETIDOR — posts promovendo SDK próprio de pay-per-call.
+ * Cada par precisa casar JUNTOS no texto pra evitar falso positivo.
+ */
+const COMPETITOR_PATTERNS: Array<[RegExp, RegExp]> = [
+  [/x402/i, /usdc|base|polygon|solana/i],            // DeepBlue / x402 promo
+  [/pay[- ]per[- ]call/i, /solana|usdc|base chain/i], // Fynx-class promo
+  [/we (built|are building|launched)/i, /x402/i],     // launch posts
+  [/x402[- ]native/i, /./],                           // x402-native framing
+];
+
+export function isBuyerLead(link: string, title: string, snippet: string): boolean {
+  if (INFRA_REPO_PATTERNS.some(rx => rx.test(link))) return false;
+  const text = `${title} ${snippet}`;
+  for (const [a, b] of COMPETITOR_PATTERNS) {
+    if (a.test(text) && b.test(text)) return false;
+  }
+  return true;
+}
+
 const FRAMEWORKS = [
   "express", "fastapi", "axum", "gin", "flask", "django",
   "nextjs", "hono", "actix", "nestjs", "rails", "laravel",
