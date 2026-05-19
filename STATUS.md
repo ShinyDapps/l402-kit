@@ -82,6 +82,9 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 - **README multilingual** — mencionado várias vezes, nunca feito
 - **DEV.to article** — draft pronto, não postado
 
+### 💬 DMs aguardando resposta (não re-pingar)
+- **Roland (`rolznz`, Alby dev)** — Discord, 19 Mai. Reply pós "we build competing solutions". Texto em [ROLAND_ALBY_REPLY.md](ROLAND_ALBY_REPLY.md). Re-engajar só se ele responder ou Alby lançar API monetization.
+
 ---
 
 ## Comandos úteis
