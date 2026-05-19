@@ -276,11 +276,12 @@ describe("[Resend Webhook] /api/resend-webhook em produção", () => {
 // Delta: stats.ts agora retorna emailStats + recentWaitlist.
 
 describe("[Stats] /api/stats — emailStats e waitlist", () => {
-  const DASHBOARD_SECRET = process.env.DASHBOARD_SECRET ?? "shdp_dash_mK9pL2xQwRtNvJ4eHcBfUu3YsA7dZiXo";
+  const DASHBOARD_SECRET = process.env.DASHBOARD_SECRET;
+  const itStats = DASHBOARD_SECRET ? it_live : it.skip;
 
-  it_live("retorna emailStats com campos esperados", async () => {
+  itStats("retorna emailStats com campos esperados", async () => {
     const r = await fetch(`${BASE}/api/stats`, {
-      headers: { "x-dashboard-secret": DASHBOARD_SECRET },
+      headers: { "x-dashboard-secret": DASHBOARD_SECRET! },
     });
     expect(r.status).toBe(200);
     const d = await r.json() as any;
@@ -293,17 +294,17 @@ describe("[Stats] /api/stats — emailStats e waitlist", () => {
     expect(typeof d.emailStats.complained).toBe("number");
   });
 
-  it_live("retorna recentWaitlist como array", async () => {
+  itStats("retorna recentWaitlist como array", async () => {
     const r = await fetch(`${BASE}/api/stats`, {
-      headers: { "x-dashboard-secret": DASHBOARD_SECRET },
+      headers: { "x-dashboard-secret": DASHBOARD_SECRET! },
     });
     const d = await r.json() as any;
     expect(Array.isArray(d.recentWaitlist)).toBe(true);
   });
 
-  it_live("recentWaitlist items têm campos: email, email_status, resend_id, created_at", async () => {
+  itStats("recentWaitlist items têm campos: email, email_status, resend_id, created_at", async () => {
     const r = await fetch(`${BASE}/api/stats`, {
-      headers: { "x-dashboard-secret": DASHBOARD_SECRET },
+      headers: { "x-dashboard-secret": DASHBOARD_SECRET! },
     });
     const d = await r.json() as any;
     if (d.recentWaitlist.length > 0) {

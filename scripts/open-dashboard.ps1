@@ -1,4 +1,11 @@
 # Gera o dashboard live em Temp e abre no browser
+# Secret é lido do ambiente (NUNCA hardcode aqui).
+if (-not $env:DASHBOARD_SECRET) {
+  Write-Error "DASHBOARD_SECRET não definido. Rode: `$env:DASHBOARD_SECRET='...' antes deste script."
+  exit 1
+}
+$secret = $env:DASHBOARD_SECRET
+
 $html = @'
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -67,7 +74,7 @@ $html = @'
 <div id="err" class="err"></div>
 
 <script>
-const SECRET = "shdp_dash_mK9pL2xQwRtNvJ4eHcBfUu3YsA7dZiXo";
+const SECRET = "__DASHBOARD_SECRET__";
 const API = "https://l402kit.com/api/stats";
 let allData = null;
 let activePeriod = 7;
@@ -138,6 +145,7 @@ setInterval(load, 60000);
 '@
 
 $dest = "$env:TEMP\l402-dashboard-live.html"
-$html | Out-File -FilePath $dest -Encoding utf8
+# Substitui o placeholder pelo secret real apenas no arquivo temp local (nunca commitado)
+($html -replace '__DASHBOARD_SECRET__', $secret) | Out-File -FilePath $dest -Encoding utf8
 Start-Process $dest
 Write-Host "Dashboard aberto em: $dest"

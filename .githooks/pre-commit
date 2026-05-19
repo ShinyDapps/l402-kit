@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# l402-kit secret guard — bloqueia commit se detectar credencial/token real
+# Ativar com: git config core.hooksPath .githooks
+#
+# Padrões cobertos: GitHub PATs, npm, PyPI, Cloudflare, Anthropic, OpenAI, Resend,
+# DASHBOARD_SECRET (formato hex real), private key blocks (RSA/EC/OPENSSH).
+
+set -e
+
+# Pares paralelos (regex / label) — separados por delimiter exótico ::: para evitar | dentro
+PATTERN_LIST='ghp_[A-Za-z0-9]{36,}:::GitHub PAT (classic)
+github_pat_[A-Za-z0-9_]{60,}:::GitHub PAT (fine-grained)
+npm_[A-Za-z0-9]{36,}:::npm token
+pypi-A[A-Za-z0-9_-]{50,}:::PyPI token
+cfut_[a-zA-Z0-9]{40,}:::Cloudflare API token
+sk-ant-[A-Za-z0-9_-]{40,}:::Anthropic API key
+sk-proj-[A-Za-z0-9_-]{40,}:::OpenAI API key (proj)
+re_[A-Za-z0-9]{30,}:::Resend API key
+shdp_dash_[a-f0-9]{16,}:::DASHBOARD_SECRET (real, hex)
+-----BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY-----:::Private key block'
+
+FAIL=0
+
+while IFS= read -r -d '' file; do
+  # skip binary diffs
+  if ! git diff --cached --numstat -- "$file" | grep -qE '^[0-9]+	[0-9]+	'; then
+    continue
+  fi
+  content=$(git show ":$file" 2>/dev/null || true)
+  [ -z "$content" ] && continue
+
+  while IFS= read -r line; do
+    regex="${line%%:::*}"
+    label="${line##*:::}"
+    if echo "$content" | grep -qE "$regex" 2>/dev/null; then
+      hit=$(echo "$content" | grep -oE "$regex" 2>/dev/null | head -1)
+      # ignore obvious placeholders/examples
+      if echo "$hit" | grep -qiE "(example|placeholder|xxx|your|replace|a1b2c3d4e5f6|__SECRET__|__TOKEN__|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)"; then
+        continue
+      fi
+      echo "❌ SECRET LEAK BLOCKED in $file: $label" >&2
+      echo "   Match: $hit" >&2
+      FAIL=1
+    fi
+  done <<< "$PATTERN_LIST"
+done < <(git diff --cached --name-only -z --diff-filter=ACMR)
+
+if [ "$FAIL" -eq 1 ]; then
+  echo "" >&2
+  echo "Pre-commit guard rejeitou. Opções:" >&2
+  echo "  1. Remover o segredo do diff (use env var em vez disso)" >&2
+  echo "  2. Se for falso positivo legítimo, bypass: git commit --no-verify (use com cuidado)" >&2
+  exit 1
+fi
+
+exit 0

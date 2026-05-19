@@ -49,3 +49,7 @@ vscode-extension/*.vsix
 
 # test coverage reports
 coverage/
+/.private/
+
+# secret scanning safety (drafts movidos pra .private/ apos leak audit 2026-05-19)
+.private/
