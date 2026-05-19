@@ -27,13 +27,39 @@ keywords = ["blink_api_key", "BLINK_API_KEY"]
 [allowlist]
 description = "Falsos positivos documentados"
 regexes = [
-  '''shdp_dash_a1b2c3d4e5f6\.\.\.''',                  # placeholder em docs/guides/dashboard.mdx
-  '''shdp_dash_mK9pL2xQwRtNvJ4eHcBfUu3YsA7dZiXo''',    # secret REVOGADO 2026-05-19 (presente em git history)
-  '''ghp_X[A-Za-z0-9]{36}''',                          # smoke test pattern
-  '''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa''',          # smoke test fixture
+  '''shdp_dash_a1b2c3d4e5f6\.\.\.''',                       # placeholder em docs/guides/dashboard.mdx
+  '''shdp_dash_mK9pL2xQwRtNvJ4eHcBfUu3YsA7dZiXo''',         # secret REVOGADO 2026-05-19
+  '''ghp_X[A-Za-z0-9]{36}''',                               # smoke test pattern
+  '''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa''',               # smoke test fixture
+  '''__DASHBOARD_SECRET__''',                               # placeholder em open-dashboard.ps1
+  '''test-dashboard-secret''',                              # test fixture admin-dashboard.test.ts
+  '''test-secret''',                                        # test fixture radar.admin/synthesis tests
+  '''whsec_dGVzdHNlY3JldGZvcnVuaXR0ZXN0czEyMzQ1Njc4''',     # test webhook secret (base64 of "testsecretforunittests12345678")
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',         # SUPABASE_ANON_KEY placeholder em .env.example (truncado)
+  '''secp256k1''',                                          # nome de algoritmo em test names, falso positivo de high-entropy rule
+  '''BLINK_WEBHOOK_SECRET\s*[:=]\s*["\\']whsec_test''',     # test fixture pattern
 ]
 paths = [
   '''docs/.*/guides/dashboard\.mdx''',
   '''\.gitleaks\.toml''',
   '''\.githooks/pre-commit''',
+  '''\.env\.example''',                                     # template, todos valores sao placeholders
+  '''.*/__tests__/.*''',                                    # tests usam fixtures sinteticos
+  '''.*\.test\.ts''',                                       # idem
+  '''.*\.test\.py''',                                       # idem
+  '''.*_test\.go''',                                        # idem
+  '''.*\.test\.rs''',                                       # idem
+  '''cloudflare/src/__tests__/.*''',
+  '''SECURITY\.md''',                                       # documenta secret revogado (intentional)
+  '''STATUS\.md''',                                         # mesma razao
+  '''AGENTS\.md''',                                         # mesma razao
+  '''HANDBOOK\.md''',                                       # mesma razao
+]
+stopwords = [
+  "test",
+  "example",
+  "placeholder",
+  "fixture",
+  "fake",
+  "dummy",
 ]
