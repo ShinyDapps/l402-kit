@@ -2878,6 +2878,90 @@ initLanguageSelector();
 initTooltips();
 initWalletPrefs();
 
+/* === A/B test: hero copy variants (English-only audience) ============== */
+(function() {
+  var VARIANTS = {
+    A: {
+      title: 'Your API earns Bitcoin<br>from <span class="tt" data-tt="api">AI agents<sup class="tt-btn">ⓘ</sup></span>. <span>Three lines of code.</span>',
+      subtitle: 'No Stripe. No account. Settles in 1 second. ' +
+                'AI agents discover, pay, and consume your endpoint natively over Lightning.',
+    },
+    B: {
+      title: 'Make your API <span>pay-per-call</span>.<br>In <span class="tt" data-tt="lightning">sats<sup class="tt-btn">ⓘ</sup></span>. <span>Settles in 1 second.</span>',
+      subtitle: '3 lines of middleware turns any endpoint into a metered, agent-payable service. ' +
+                'TypeScript, Python, Go, Rust.',
+    },
+    C: {
+      title: 'Give your <span class="tt" data-tt="api">API<sup class="tt-btn">ⓘ</sup></span> a Bitcoin price.<br><span>AI agents pay automatically.</span>',
+      subtitle: 'No Stripe. No account. Open the door to the 11,000+ AI agents already paying ' +
+                'over Lightning every day. 3 lines of code.',
+    },
+  };
+
+  function pickVariant() {
+    var saved = localStorage.getItem('ab_hero_variant');
+    if (saved && VARIANTS[saved]) return saved;
+    var keys = Object.keys(VARIANTS);
+    var pick = keys[Math.floor(Math.random() * keys.length)];
+    try { localStorage.setItem('ab_hero_variant', pick); } catch (_) {}
+    return pick;
+  }
+
+  var sendEvent = function(event) {
+    try {
+      var body = JSON.stringify({ variant: window.__abVariant, event: event });
+      // sendBeacon is fire-and-forget, doesn't block navigation on link clicks
+      if (navigator.sendBeacon) {
+        var blob = new Blob([body], { type: 'application/json' });
+        navigator.sendBeacon('/api/ab-event', blob);
+      } else {
+        fetch('/api/ab-event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true });
+      }
+    } catch (_) { /* never let analytics break the page */ }
+  };
+
+  function applyAbVariant(lang) {
+    // Only A/B test the English audience — other locales keep i18n copy.
+    if (lang !== 'en') return;
+    var v = window.__abVariant || pickVariant();
+    window.__abVariant = v;
+    var copy = VARIANTS[v];
+    var titleEl = document.getElementById('heroTitle');
+    var subEl   = document.getElementById('heroSubtitle');
+    if (titleEl) titleEl.innerHTML = copy.title;
+    if (subEl)   subEl.textContent  = copy.subtitle.replace(/\s+/g, ' ');
+    // Mark hero with data attribute for CSS hooks / debugging
+    var hero = document.querySelector('.hero');
+    if (hero) hero.setAttribute('data-ab', v);
+  }
+
+  // Wrap applyLanguage so the variant reapplies whenever the user switches locale.
+  if (typeof window.applyLanguage === 'function') {
+    var orig = window.applyLanguage;
+    window.applyLanguage = function(lang) { orig(lang); applyAbVariant(lang); };
+  }
+
+  // Current pageload — figure out the lang the i18n script just settled on.
+  var currentLang = localStorage.getItem('l402_lang') || 'en';
+  applyAbVariant(currentLang);
+
+  // Fire the view event once per pageload (only when variant applied = EN audience).
+  if (window.__abVariant) sendEvent('view');
+
+  // Wire click tracking.
+  document.addEventListener('click', function(e) {
+    if (!window.__abVariant) return;
+    var t = e.target;
+    while (t && t !== document.body) {
+      if (t.id === 'installBtn') { sendEvent('click_install'); return; }
+      if (t.id === 'heroDocsLink' || t.id === 'navStartLink') { sendEvent('click_docs'); return; }
+      if (t.getAttribute && t.getAttribute('data-ab-demo')) { sendEvent('click_demo'); return; }
+      t = t.parentNode;
+    }
+  }, true);
+})();
+/* === end A/B test ====================================================== */
+
 // Live BTC price
 // Show loading state immediately
 ['strip-btc-price','strip-sat-usd','strip-sat100-usd','strip-sat1k-usd','strip-sat1m-usd'].forEach(id => {

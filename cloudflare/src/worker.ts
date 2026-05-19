@@ -21,6 +21,7 @@ import { sweepTransitWallet } from "./api/sweep";
 import { handleLawnEvents } from "./api/lawn-events";
 import { handleMcpHttp } from "./api/mcp-http";
 import { handleActivity } from "./api/activity";
+import { handleAbEvent, handleAbStats } from "./api/ab-test";
 import { handleVerity } from "./verity/index";
 import { runVerityHeartbeat } from "./verity/cron/heartbeat";
 import { runFiscalAgent } from "./verity/cron/fiscal";
@@ -387,6 +388,8 @@ export default {
       else if (path === "/api/lawn-events")    res = await handleLawnEvents(request, env);
       else if (path === "/api/mcp" || path === "/api/mcp/") res = await handleMcpHttp(request, env);
       else if (path === "/api/activity")        res = await handleActivity(request, env);
+      else if (path === "/api/ab-event")        res = await handleAbEvent(request, env);
+      else if (path === "/api/ab-stats")        res = await handleAbStats(request, env);
       else if (path.startsWith("/api/verity"))  res = await handleVerity(request, env);
       else if (path.startsWith("/docs"))       return handleDocsRedirect(request);
       else res = new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
