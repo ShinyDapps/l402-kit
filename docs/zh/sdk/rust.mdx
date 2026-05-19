@@ -13,7 +13,7 @@ cargo add l402kit
 
 ```toml
 [dependencies]
-l402kit = "1.8"
+l402kit = "1.9"
 ```
 
 **环境要求**：Rust 1.75+，Tokio 异步运行时
@@ -151,7 +151,7 @@ axum-middleware = ["dep:axum", "dep:reqwest", "dep:http"]
 禁用 `axum-middleware` 可在不依赖 axum 或 reqwest 的情况下，仅使用核心验证函数：
 
 ```toml
-l402kit = { version = "1.6", default-features = false }
+l402kit = { version = "1.9", default-features = false }
 ```
 
 ---
