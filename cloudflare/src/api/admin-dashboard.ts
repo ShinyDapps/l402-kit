@@ -141,6 +141,77 @@ export async function handleAdminData(req: Request, env: Env): Promise<Response>
   });
 }
 
+// ─── GET /admin/feed — 24h observation timeline ──────────────────────────────
+
+type FeedEvent = { ts: string; type: "radar_run" | "fiscal_close" | "lead_acted" | "alert"; summary: string; details?: unknown };
+
+export async function handleAdminFeed(req: Request, env: Env): Promise<Response> {
+  if (!(await isAuthed(req, env))) return json({ error: "Unauthorized" }, 401);
+
+  const events: FeedEvent[] = [];
+
+  // RADAR hourly logs — last 24h
+  const now = Date.now();
+  const radarReads = await Promise.all(
+    Array.from({ length: 24 }, (_, h) => {
+      const ts = new Date(now - h * 3_600_000).toISOString().slice(0, 13);
+      return env.demo_preimages.get(`verity_radar:log:${ts}`).then(raw => ({ ts, raw }));
+    }),
+  );
+  for (const { raw } of radarReads) {
+    if (!raw) continue;
+    const log = safeJson<{ ts?: string; found?: number; queued?: number; skipped?: number; errors?: number }>(raw);
+    if (!log || !log.ts) continue;
+    events.push({
+      ts: log.ts,
+      type: "radar_run",
+      summary: `RADAR · ${log.found ?? 0} found · ${log.queued ?? 0} queued · ${log.skipped ?? 0} skipped${log.errors ? ` · ${log.errors} errors` : ""}`,
+      details: log,
+    });
+  }
+
+  // Fiscal — today + yesterday
+  const todayD = new Date(now).toISOString().slice(0, 10);
+  const yesterdayD = new Date(now - 86_400_000).toISOString().slice(0, 10);
+  for (const date of [todayD, yesterdayD]) {
+    const raw = await env.demo_preimages.get(`verity_fiscal:${date}`);
+    if (!raw) continue;
+    const f = safeJson<{ date?: string; net_sats?: number; gross_sats?: number; calls?: number }>(raw);
+    if (!f) continue;
+    events.push({
+      ts: `${date}T23:59:59.999Z`,
+      type: "fiscal_close",
+      summary: `Fiscal ${date} · net ${f.net_sats ?? 0} sats · ${f.calls ?? 0} calls`,
+      details: f,
+    });
+  }
+
+  // Acted leads (humans dismissed via dashboard) — list KV prefix
+  try {
+    const list = await env.demo_preimages.list({ prefix: "verity_radar:acted:", limit: 100 });
+    for (const k of list.keys) {
+      const raw = await env.demo_preimages.get(k.name);
+      if (!raw) continue;
+      const a = safeJson<{ url?: string; date?: string }>(raw);
+      if (!a || !a.date) continue;
+      if (now - new Date(a.date).getTime() > 86_400_000) continue; // last 24h only
+      events.push({
+        ts: a.date,
+        type: "lead_acted",
+        summary: `Humano encerrou lead${a.url ? ` · ${shortUrl(a.url)}` : ""}`,
+        details: a,
+      });
+    }
+  } catch { /* list unsupported in some KV stubs */ }
+
+  events.sort((a, b) => (a.ts < b.ts ? 1 : -1));
+  return json({ events });
+}
+
+function shortUrl(u: string): string {
+  try { const p = new URL(u); return p.host + p.pathname.slice(0, 40); } catch { return u.slice(0, 60); }
+}
+
 // ─── GET /admin — HTML (login form or dashboard) ─────────────────────────────
 
 export async function handleAdminDashboard(req: Request, env: Env): Promise<Response> {
@@ -229,6 +300,11 @@ function dashboardHtml(): string {
   .item a{color:var(--orange);text-decoration:none}
   .item a:hover{text-decoration:underline}
   .item .snippet{color:var(--mute);font-size:12px;margin-top:4px}
+  .item.event{padding:6px 0;font-size:13px}
+  .item.event .label{font-size:10px;margin-bottom:0}
+  details.draft{margin-top:6px}
+  details.draft summary{cursor:pointer;color:var(--violet);font-size:12px;outline:none}
+  details.draft pre{background:#0a0a0a;border:1px solid var(--line);padding:10px;border-radius:4px;font-size:11px;color:var(--text);overflow-x:auto;white-space:pre-wrap;margin:6px 0}
   .btn{display:inline-block;background:transparent;border:1px solid var(--line);color:var(--mute);padding:4px 10px;border-radius:4px;font:11px ui-monospace,monospace;cursor:pointer;margin-top:6px;margin-right:4px}
   .btn:hover{border-color:var(--orange);color:var(--orange)}
   .badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;text-transform:uppercase;margin-left:6px}
@@ -255,8 +331,8 @@ function dashboardHtml(): string {
 </section>
 
 <section>
-  <h2>Observação — o que VERITY está fazendo</h2>
-  <div id="observation"><div class="empty">Em breve: feed combinado RADAR + fiscal + pricing.</div></div>
+  <h2>Observação — últimas 24h</h2>
+  <div id="observation"><div class="empty">Loading…</div></div>
 </section>
 
 <p class="footer-note">VERITY decide sozinha. Você só intervém quando ela pede ou quando algo trava.</p>
@@ -264,11 +340,29 @@ function dashboardHtml(): string {
 <script>
 async function load(){
   try {
-    const r = await fetch('/admin/data');
-    if (r.status === 401){ location.reload(); return; }
-    const d = await r.json();
+    const [rd, rf] = await Promise.all([fetch('/admin/data'), fetch('/admin/feed')]);
+    if (rd.status === 401 || rf.status === 401){ location.reload(); return; }
+    const [d, f] = await Promise.all([rd.json(), rf.json()]);
     render(d);
+    renderFeed(f.events || []);
   } catch(e){ /* silent */ }
+}
+
+function renderFeed(events){
+  const el = document.getElementById('observation');
+  if (!events.length){ el.innerHTML = '<div class="empty">VERITY ainda não fez nada nas últimas 24h.</div>'; return; }
+  let html = '';
+  for (const e of events){
+    const t = new Date(e.ts);
+    const hh = String(t.getUTCHours()).padStart(2,'0');
+    const mm = String(t.getUTCMinutes()).padStart(2,'0');
+    const dot = e.type === 'radar_run' ? '🛰' : e.type === 'fiscal_close' ? '💰' : e.type === 'lead_acted' ? '✔' : '⚠';
+    html += '<div class="item event">' +
+      '<div class="label">' + dot + ' ' + escape(e.type) + ' · ' + hh + ':' + mm + ' UTC</div>' +
+      '<div>' + escape(e.summary) + '</div>' +
+      '</div>';
+  }
+  el.innerHTML = html;
 }
 
 function fmt(n){ return n == null ? '—' : Number(n).toLocaleString('en-US'); }
@@ -313,6 +407,24 @@ function render(d){
 }
 
 function escape(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function ago(ts){
+  if (!ts) return '?';
+  const sec = Math.floor((Date.now() - new Date(ts).getTime())/1000);
+  if (sec < 60) return sec + 's ago';
+  if (sec < 3600) return Math.floor(sec/60) + 'm ago';
+  if (sec < 86400) return Math.floor(sec/3600) + 'h ago';
+  return Math.floor(sec/86400) + 'd ago';
+}
+
+async function copyDraft(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  if (!pre) return;
+  await navigator.clipboard.writeText(pre.textContent || '');
+  const old = btn.textContent;
+  btn.textContent = 'copied';
+  setTimeout(()=>{ btn.textContent = old; }, 1500);
+}
 
 async function clearAlert(key){
   await fetch('/api/verity/admin/alerts', { method:'DELETE', headers:{'Content-Type':'application/json','x-dashboard-secret': prompt('Confirm with DASHBOARD_SECRET:') || ''}, body: JSON.stringify({ key }) });

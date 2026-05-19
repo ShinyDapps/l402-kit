@@ -16,6 +16,7 @@ import {
   handleAdminLogin,
   handleAdminLogout,
   handleAdminData,
+  handleAdminFeed,
   verifySessionCookie,
   signSessionCookie,
 } from "../api/admin-dashboard";
@@ -198,5 +199,62 @@ describe("GET /admin/data", () => {
     expect(data.action_queue).toBeDefined();
     expect(data.action_queue.hot_leads.length).toBeGreaterThanOrEqual(1);
     expect(data.action_queue.alerts.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ─── GET /admin/feed — 24h observation timeline ──────────────────────────────
+
+describe("GET /admin/feed", () => {
+  it("returns 401 without cookie", async () => {
+    const res = await handleAdminFeed(req("/admin/feed"), makeEnv());
+    expect(res.status).toBe(401);
+  });
+
+  it("aggregates RADAR + fiscal + acted leads into a chronological feed", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const yesterday = new Date(now.getTime() - 86_400_000).toISOString().slice(0, 10);
+    const hourTs = now.toISOString().slice(0, 13); // YYYY-MM-DDTHH
+    const prevHour = new Date(now.getTime() - 3_600_000).toISOString().slice(0, 13);
+
+    const kv = makeKV({
+      // RADAR hourly logs
+      [`verity_radar:log:${hourTs}`]: JSON.stringify({ ts: now.toISOString(), found: 12, queued: 3, skipped: 9, errors: 0 }),
+      [`verity_radar:log:${prevHour}`]: JSON.stringify({ ts: new Date(now.getTime() - 3_600_000).toISOString(), found: 8, queued: 1, skipped: 7, errors: 0 }),
+      // Fiscal daily
+      [`verity_fiscal:${today}`]: JSON.stringify({ date: today, net_sats: 1200, calls: 7 }),
+      [`verity_fiscal:${yesterday}`]: JSON.stringify({ date: yesterday, net_sats: 800, calls: 4 }),
+      // Acted leads (humans dismissed)
+      "verity_radar:acted:abc123": JSON.stringify({ url: "https://github.com/foo/bar", date: new Date(now.getTime() - 1_800_000).toISOString() }),
+    });
+
+    const res = await handleAdminFeed(
+      req("/admin/feed", { headers: { Cookie: `admin_session=${cookie}` } }),
+      makeEnv(kv),
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json() as { events: Array<{ ts: string; type: string; summary: string }> };
+    expect(Array.isArray(data.events)).toBe(true);
+    // Should include radar runs, fiscal closes, acted leads
+    const types = new Set(data.events.map(e => e.type));
+    expect(types.has("radar_run")).toBe(true);
+    expect(types.has("fiscal_close")).toBe(true);
+    expect(types.has("lead_acted")).toBe(true);
+    // Sorted descending by ts
+    for (let i = 1; i < data.events.length; i++) {
+      expect(data.events[i - 1].ts >= data.events[i].ts).toBe(true);
+    }
+  });
+
+  it("returns empty events array when KV is bare", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const res = await handleAdminFeed(
+      req("/admin/feed", { headers: { Cookie: `admin_session=${cookie}` } }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json() as { events: unknown[] };
+    expect(data.events).toEqual([]);
   });
 });
