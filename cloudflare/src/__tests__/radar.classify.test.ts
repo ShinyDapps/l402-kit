@@ -32,6 +32,50 @@ describe("isBuyerLead — infra rejection", () => {
   });
 });
 
+describe("isBuyerLead — fiat gateway rejection", () => {
+  it("rejects Payflow Pro credit card questions", () => {
+    expect(isBuyerLead(
+      "https://stackoverflow.com/questions/34090919/how-do-i-charge-a-stored-credit-card-with-the-payflow-pro-api",
+      "How do I charge a stored credit card with the payflow pro API?",
+      "I'm using the Payflow Pro API to charge stored credit cards",
+    )).toBe(false);
+  });
+
+  it("rejects Stripe subscription billing posts", () => {
+    expect(isBuyerLead(
+      "https://example.com/billing-with-stripe",
+      "Setting up Stripe subscription billing for your API",
+      "Use Stripe to charge credit card and handle invoicing per call",
+    )).toBe(false);
+  });
+
+  it("rejects PayPal API credit card processing", () => {
+    expect(isBuyerLead(
+      "https://example.com/paypal",
+      "PayPal API integration",
+      "Charge stored credit card via PayPal REST API",
+    )).toBe(false);
+  });
+});
+
+describe("isBuyerLead — Bitcoin L2 competitor rejection", () => {
+  it("rejects PingPay on Rootstock", () => {
+    expect(isBuyerLead(
+      "https://rootstock.hashnode.dev/pingpay-pay-per-call-apis-on-rootstock",
+      "Pay Per Call APIs with PingPay on Rootstock",
+      "PingPay enables pay-per-call APIs on the Rootstock blockchain",
+    )).toBe(false);
+  });
+
+  it("rejects Rootstock pay-per-call generally", () => {
+    expect(isBuyerLead(
+      "https://example.com/rsk",
+      "Pay-per-call on Rootstock",
+      "Build pay per call APIs using RBTC on Rootstock",
+    )).toBe(false);
+  });
+});
+
 describe("isBuyerLead — competitor rejection", () => {
   it("rejects x402 USDC promo posts (DeepBlue pattern)", () => {
     expect(isBuyerLead(

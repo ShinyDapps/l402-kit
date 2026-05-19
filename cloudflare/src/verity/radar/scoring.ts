@@ -18,15 +18,28 @@ const INFRA_REPO_PATTERNS = [
  */
 const COMPETITOR_PATTERNS: Array<[RegExp, RegExp]> = [
   [/x402/i, /usdc|base|polygon|solana/i],            // DeepBlue / x402 promo
-  [/pay[- ]per[- ]call/i, /solana|usdc|base chain/i], // Fynx-class promo
+  [/pay[- ]per[- ]call/i, /solana|usdc|base chain|rootstock|rbtc/i], // Fynx + Rootstock/PingPay
   [/we (built|are building|launched)/i, /x402/i],     // launch posts
   [/x402[- ]native/i, /./],                           // x402-native framing
+  [/pingpay/i, /./],                                  // PingPay (Rootstock)
+];
+
+/**
+ * Fiat payment gateways — quando aparecem como CONTEXTO do "pay per call",
+ * a pergunta é sobre cartão de crédito tradicional, não Lightning.
+ */
+const FIAT_GATEWAY_PATTERNS: Array<[RegExp, RegExp]> = [
+  [/payflow|paypal/i, /api|credit card|stored card/i],
+  [/stripe|braintree|adyen/i, /credit card|subscription|invoicing/i],
 ];
 
 export function isBuyerLead(link: string, title: string, snippet: string): boolean {
   if (INFRA_REPO_PATTERNS.some(rx => rx.test(link))) return false;
   const text = `${title} ${snippet}`;
   for (const [a, b] of COMPETITOR_PATTERNS) {
+    if (a.test(text) && b.test(text)) return false;
+  }
+  for (const [a, b] of FIAT_GATEWAY_PATTERNS) {
     if (a.test(text) && b.test(text)) return false;
   }
   return true;
