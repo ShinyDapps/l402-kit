@@ -17,6 +17,7 @@ import {
   handleAdminLogout,
   handleAdminData,
   handleAdminFeed,
+  handleAdminTreasury,
   verifySessionCookie,
   signSessionCookie,
 } from "../api/admin-dashboard";
@@ -256,5 +257,65 @@ describe("GET /admin/feed", () => {
     expect(res.status).toBe(200);
     const data = await res.json() as { events: unknown[] };
     expect(data.events).toEqual([]);
+  });
+});
+
+// ─── GET /admin/treasury — 30d fiscal timeline ───────────────────────────────
+
+describe("GET /admin/treasury", () => {
+  it("returns 401 without cookie", async () => {
+    const res = await handleAdminTreasury(req("/admin/treasury"), makeEnv());
+    expect(res.status).toBe(401);
+  });
+
+  it("aggregates 30 days of fiscal data with totals + sparkline", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const now = Date.now();
+    const initial: Record<string, string> = {};
+    // Populate 5 days of fiscal reports (gross > cogs so net positive)
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(now - i * 86_400_000).toISOString().slice(0, 10);
+      initial[`verity_fiscal:${d}`] = JSON.stringify({
+        date: d,
+        gross_sats: 1000 + i * 100,
+        cogs_sats: 200,
+        net_sats: 800 + i * 100,
+        calls: 5 + i,
+      });
+    }
+    const kv = makeKV(initial);
+
+    const res = await handleAdminTreasury(
+      req("/admin/treasury", { headers: { Cookie: `admin_session=${cookie}` } }),
+      makeEnv(kv),
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json() as {
+      days: Array<{ date: string; net_sats: number }>;
+      totals: { net_sats: number; gross_sats: number; cogs_sats: number; calls: number };
+      sparkline: number[];
+    };
+    expect(data.days.length).toBe(30); // always 30 slots
+    expect(data.totals.net_sats).toBe(800 + 900 + 1000 + 1100 + 1200);
+    expect(data.totals.calls).toBe(5 + 6 + 7 + 8 + 9);
+    expect(data.sparkline.length).toBe(30);
+    // Days are oldest → newest so sparkline can be plotted left-to-right
+    expect(data.days[0].date < data.days[29].date).toBe(true);
+  });
+
+  it("fills missing days with zeros (no fiscal report yet)", async () => {
+    const cookie = await signSessionCookie(SECRET, Date.now() + 60_000);
+    const res = await handleAdminTreasury(
+      req("/admin/treasury", { headers: { Cookie: `admin_session=${cookie}` } }),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json() as {
+      days: Array<{ date: string; net_sats: number }>;
+      totals: { net_sats: number };
+    };
+    expect(data.days.length).toBe(30);
+    expect(data.totals.net_sats).toBe(0);
+    expect(data.days.every(d => d.net_sats === 0)).toBe(true);
   });
 });

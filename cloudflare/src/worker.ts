@@ -16,7 +16,7 @@ import { handleProSubscribe } from "./api/pro-subscribe";
 import { handleRegister, handleApis } from "./api/registry";
 import { handleCheckout } from "./api/checkout";
 import { handleDashboard } from "./api/dashboard";
-import { handleAdminDashboard, handleAdminLogin, handleAdminLogout, handleAdminData, handleAdminFeed } from "./api/admin-dashboard";
+import { handleAdminDashboard, handleAdminLogin, handleAdminLogout, handleAdminData, handleAdminFeed, handleAdminTreasury } from "./api/admin-dashboard";
 import { handleWhitepaperExtended } from "./api/whitepaper";
 import { sweepTransitWallet } from "./api/sweep";
 import { handleLawnEvents } from "./api/lawn-events";
@@ -389,6 +389,7 @@ export default {
       else if (path === "/admin/logout")         res = await handleAdminLogout(request);
       else if (path === "/admin/data")           res = await handleAdminData(request, env);
       else if (path === "/admin/feed")           res = await handleAdminFeed(request, env);
+      else if (path === "/admin/treasury")       res = await handleAdminTreasury(request, env);
       else if (path === "/admin" || path === "/admin/") res = await handleAdminDashboard(request, env);
       else if (path === "/whitepaper-extended") res = await handleWhitepaperExtended(request, env);
       else if (path === "/api/lawn-events")    res = await handleLawnEvents(request, env);

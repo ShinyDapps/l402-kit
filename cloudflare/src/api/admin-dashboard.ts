@@ -212,6 +212,48 @@ function shortUrl(u: string): string {
   try { const p = new URL(u); return p.host + p.pathname.slice(0, 40); } catch { return u.slice(0, 60); }
 }
 
+// ─── GET /admin/treasury — 30d fiscal timeline ───────────────────────────────
+
+type FiscalDay = { date: string; gross_sats: number; cogs_sats: number; net_sats: number; calls: number };
+
+export async function handleAdminTreasury(req: Request, env: Env): Promise<Response> {
+  if (!(await isAuthed(req, env))) return json({ error: "Unauthorized" }, 401);
+
+  const now = Date.now();
+  // Build 30 day slots, oldest first
+  const slots = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(now - (29 - i) * 86_400_000).toISOString().slice(0, 10);
+    return d;
+  });
+
+  const reads = await Promise.all(
+    slots.map(d => env.demo_preimages.get(`verity_fiscal:${d}`).then(raw => ({ date: d, raw }))),
+  );
+
+  const days: FiscalDay[] = reads.map(({ date, raw }) => {
+    const f = safeJson<Partial<FiscalDay>>(raw);
+    return {
+      date,
+      gross_sats: f?.gross_sats ?? 0,
+      cogs_sats: f?.cogs_sats ?? 0,
+      net_sats: f?.net_sats ?? 0,
+      calls: f?.calls ?? 0,
+    };
+  });
+
+  const totals = days.reduce(
+    (acc, d) => ({
+      gross_sats: acc.gross_sats + d.gross_sats,
+      cogs_sats: acc.cogs_sats + d.cogs_sats,
+      net_sats: acc.net_sats + d.net_sats,
+      calls: acc.calls + d.calls,
+    }),
+    { gross_sats: 0, cogs_sats: 0, net_sats: 0, calls: 0 },
+  );
+
+  return json({ days, totals, sparkline: days.map(d => d.net_sats) });
+}
+
 // ─── GET /admin — HTML (login form or dashboard) ─────────────────────────────
 
 export async function handleAdminDashboard(req: Request, env: Env): Promise<Response> {
@@ -305,6 +347,9 @@ function dashboardHtml(): string {
   details.draft{margin-top:6px}
   details.draft summary{cursor:pointer;color:var(--violet);font-size:12px;outline:none}
   details.draft pre{background:#0a0a0a;border:1px solid var(--line);padding:10px;border-radius:4px;font-size:11px;color:var(--text);overflow-x:auto;white-space:pre-wrap;margin:6px 0}
+  .treasury-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:12px}
+  .treasury-grid b{font-size:18px;color:var(--green)}
+  .sparkline{display:block;width:100%;height:40px;margin-top:4px}
   .btn{display:inline-block;background:transparent;border:1px solid var(--line);color:var(--mute);padding:4px 10px;border-radius:4px;font:11px ui-monospace,monospace;cursor:pointer;margin-top:6px;margin-right:4px}
   .btn:hover{border-color:var(--orange);color:var(--orange)}
   .badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;text-transform:uppercase;margin-left:6px}
@@ -331,6 +376,11 @@ function dashboardHtml(): string {
 </section>
 
 <section>
+  <h2>Treasury · 30d</h2>
+  <div id="treasury"><div class="empty">Loading…</div></div>
+</section>
+
+<section>
   <h2>Observação — últimas 24h</h2>
   <div id="observation"><div class="empty">Loading…</div></div>
 </section>
@@ -340,12 +390,37 @@ function dashboardHtml(): string {
 <script>
 async function load(){
   try {
-    const [rd, rf] = await Promise.all([fetch('/admin/data'), fetch('/admin/feed')]);
-    if (rd.status === 401 || rf.status === 401){ location.reload(); return; }
-    const [d, f] = await Promise.all([rd.json(), rf.json()]);
+    const [rd, rf, rt] = await Promise.all([fetch('/admin/data'), fetch('/admin/feed'), fetch('/admin/treasury')]);
+    if (rd.status === 401 || rf.status === 401 || rt.status === 401){ location.reload(); return; }
+    const [d, f, t] = await Promise.all([rd.json(), rf.json(), rt.json()]);
     render(d);
     renderFeed(f.events || []);
+    renderTreasury(t);
   } catch(e){ /* silent */ }
+}
+
+function renderTreasury(t){
+  const el = document.getElementById('treasury');
+  if (!t || !t.days){ el.innerHTML = '<div class="empty">No data.</div>'; return; }
+  const max = Math.max(1, ...t.sparkline);
+  const w = 600, h = 40;
+  const points = t.sparkline.map((v,i) => {
+    const x = (i / (t.sparkline.length - 1)) * w;
+    const y = h - (v / max) * h;
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  const ratio = t.totals.gross_sats > 0 ? Math.round((t.totals.net_sats / t.totals.gross_sats) * 100) : 0;
+  el.innerHTML =
+    '<div class="treasury-grid">' +
+      '<div><div class="label">Net 30d</div><b>' + fmt(t.totals.net_sats) + '</b> sats</div>' +
+      '<div><div class="label">Gross 30d</div><b>' + fmt(t.totals.gross_sats) + '</b> sats</div>' +
+      '<div><div class="label">COGS 30d</div><b>' + fmt(t.totals.cogs_sats) + '</b> sats</div>' +
+      '<div><div class="label">Calls 30d</div><b>' + fmt(t.totals.calls) + '</b></div>' +
+      '<div><div class="label">Margem</div><b>' + ratio + '</b>%</div>' +
+    '</div>' +
+    '<svg class="sparkline" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+      '<polyline fill="none" stroke="#2ddc6e" stroke-width="1.5" points="' + points + '"/>' +
+    '</svg>';
 }
 
 function renderFeed(events){
