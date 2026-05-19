@@ -106,6 +106,47 @@ async function isOpenGitHubIssue(link: string, pat?: string): Promise<boolean> {
   return data.state === "open";
 }
 
+// Reject abandoned/empty repos: <5 stars AND last push > 180 days ago.
+// Plain github.com/owner/repo URLs (no /issues/, no /pull/) hit this path.
+async function isLiveRepo(link: string, pat?: string): Promise<boolean> {
+  const match = link.match(/github\.com\/([^/]+)\/([^/]+?)(?:[/?#]|$)/);
+  if (!match) return true;
+  if (link.includes("/issues/") || link.includes("/pull/")) return true;
+
+  const [, owner, repo] = match;
+  const cleanRepo = repo.replace(/\.git$/, "");
+  if (!owner || !cleanRepo || owner === "marketplace") return true;
+
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github.v3+json",
+    "User-Agent": "VERITY-RADAR/1.0",
+  };
+  if (pat) headers.Authorization = `Bearer ${pat}`;
+
+  const r = await fetch(
+    `https://api.github.com/repos/${owner}/${cleanRepo}`,
+    { headers, signal: AbortSignal.timeout(5_000) },
+  ).catch(() => null);
+
+  if (!r?.ok) return true; // 404/rate limit → don't block (avoid false negatives)
+  const data = await r.json() as {
+    stargazers_count?: number;
+    pushed_at?: string;
+    archived?: boolean;
+    disabled?: boolean;
+  };
+
+  if (data.archived || data.disabled) return false;
+
+  const stars = data.stargazers_count ?? 0;
+  const pushedAt = data.pushed_at ? new Date(data.pushed_at).getTime() : 0;
+  const daysSincePush = pushedAt ? (Date.now() - pushedAt) / 86_400_000 : Infinity;
+
+  // Dead: <5 stars AND no push in >180 days
+  if (stars < 5 && daysSincePush > 180) return false;
+  return true;
+}
+
 // ─── Email notification ───────────────────────────────────────────────────────
 
 async function notifyHotLead(lead: Lead, draft: string | null, env: Env): Promise<void> {
@@ -187,12 +228,21 @@ export async function runRadar(env: Env): Promise<void> {
       try {
         if (await seenBefore(item.link, env)) { log.skipped++; continue; }
 
-        if (item.link.includes("github.com") && item.link.includes("/issues/")) {
-          const open = await isOpenGitHubIssue(item.link, env.GITHUB_PAT);
-          if (!open) {
-            log.skipped++;
-            await markSeen(item.link, env);
-            continue;
+        if (item.link.includes("github.com")) {
+          if (item.link.includes("/issues/")) {
+            const open = await isOpenGitHubIssue(item.link, env.GITHUB_PAT);
+            if (!open) {
+              log.skipped++;
+              await markSeen(item.link, env);
+              continue;
+            }
+          } else {
+            const alive = await isLiveRepo(item.link, env.GITHUB_PAT);
+            if (!alive) {
+              log.skipped++;
+              await markSeen(item.link, env);
+              continue;
+            }
           }
         }
 
