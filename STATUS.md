@@ -90,6 +90,20 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 
 ---
 
+## Glama MCP score (2026-05-19)
+
+`l402-kit-mcp` em https://glama.ai/mcp/servers/ShinyDapps/l402-kit/score:
+- Profile completion: **100%** ✅
+- Server Coherence / Tool Definition Quality / License: **A** ✅
+- Maintenance: **B** ← último gap
+  - CI failing → **fixado def1b88, agora green**
+  - "No commit activity data available" → provavelmente Glama OAuth permissions ou aguardando re-sync (Glama re-sincroniza pelo menos 1x/dia)
+- Tools `l402_fetch`/`l402_balance`/`l402_set_budget`/`l402_spending_report`: todos A (4.6-4.7/5.0)
+
+**Próximo:** clicar "Sync Server" no [admin Glama](https://glama.ai/mcp/servers/ShinyDapps/l402-kit/admin) (logado como ShinyDapps) ou esperar 24h pro daily auto-sync detectar CI green. Maintenance deve subir pra A.
+
+---
+
 ## Live Demo (deployado 2026-05-19)
 
 Section interativa entre hero e "How it works" (`#liveDemo`). Visitante escolhe um serviço VERITY (btc-price/worldstate/search/domain-intel) e clica Run → faz fetch real, mostra HTTP 402 + macaroon + invoice + JSON body. Zero pagamento (so mostra o challenge). CORS já aberto no worker.
