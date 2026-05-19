@@ -1,0 +1,60 @@
+{
+  // Hide noise from the file explorer without touching the real filesystem.
+  // What stays visible: docs at root, source dirs, configs that tooling needs.
+  // What's hidden: build artifacts, gitignored dirs, hidden meta files, IDE caches.
+  //
+  // To temporarily reveal something hidden, toggle "Files: Exclude" in the
+  // VS Code command palette (Ctrl+Shift+P → "Preferences: Open Settings (UI)").
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/node_modules": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.venv": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/target": true,
+    "**/.wrangler": true,
+    "**/.next": true,
+    "**/.cache": true,
+    "**/.private": true,
+    "**/.cargo": true,
+    "**/.husky": true,
+    "**/.claude": true,
+    "**/phoenixd": true,
+    "**/supabase/.temp": true,
+    "**/*.log": true
+  },
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/target": true,
+    "**/.private": true,
+    "**/phoenixd": true,
+    "**/package-lock.json": true,
+    "**/Cargo.lock": true,
+    "**/go.sum": true
+  },
+
+  // Auto-format on save where supported
+  "editor.formatOnSave": false,
+
+  // TS server: use workspace TypeScript
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // Better defaults for this repo
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  // Lang-specific
+  "[typescript]": { "editor.tabSize": 2 },
+  "[python]": { "editor.tabSize": 4 },
+  "[rust]": { "editor.tabSize": 4 },
+  "[go]": { "editor.insertSpaces": false }
+}
