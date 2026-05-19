@@ -1,13 +1,13 @@
 # l402-kit — Live Status
 
 > **Purpose:** snapshot vivo do projeto para retomar contexto rápido. Atualizar a cada sessão significativa.
-> **Last updated:** 2026-05-19 (sessão completa: /admin dashboard + RADAR isBuyerLead + queries SERPER diversificadas + **SDK security parity 1.9.1 Py/Rust/Go**)
+> **Last updated:** 2026-05-19 noite (sessão completa: /admin dashboard + RADAR isBuyerLead + queries SERPER diversificadas + SDK security parity 1.9.1 + **SDK feature parity 1.10.0 cross-lang (LAW-N adapter Py/Rust/Go)** + GH Actions release matrix ATIVA)
 
 ---
 
 ## TL;DR
 
-`l402-kit@1.9.0` shipou em 12 Mai com LAW-N + RADAR + 11 serviços VERITY. Tudo deployado, 0 CVEs, git limpo, infra estável. **Distribuição: 11/11 VERITY services listadas em 402index.io em 19 Mai (Alby Hub features 402index.io na landing deles).** Bottleneck atual é tração comercial (0 revenue, drafts não postados), não produto nem visibilidade técnica.
+`l402-kit@1.10.0` cross-lang (TS/Py/Rust/Go) shipou em 19 Mai com LAW-N adapter equalizado nos 4 SDKs + GH Actions release matrix ativa + `/admin` dashboard live. RADAR refinado (`isBuyerLead()` filtra competidores cripto/fiat gateways; queries SERPER diversificadas além de github.com). Tudo deployado, 0 CVEs, git limpo. **Distribuição: 11/11 VERITY services listadas em 402index.io (Alby Hub features 402index.io).** Bottleneck atual é tração comercial (0 revenue, Show HN não postado), não produto nem visibilidade técnica.
 
 ---
 
@@ -19,7 +19,7 @@
 | PyPI `l402kit` | https://pypi.org/project/l402kit | **1.10.0** | ✅ LAW-N adapter Python + build_wallet ergonomics 19 Mai |
 | crates.io `l402kit` | https://crates.io/crates/l402kit | **1.10.0** | ✅ LAW-N adapter Rust (feature `lawn-adapter`) 19 Mai |
 | Go module | github.com/shinydapps/l402-kit/go | **v1.10.0** | ✅ LAW-N adapter Go (`CreateLawNAdapter`). Tag `go/v1.10.0` no proxy 5-30min |
-| VS Code Extension | ShinyDapps.shinydapps-l402 | 1.9.1 | ✅ 3 tabs: Payments / VERITY / LAW-N |
+| VS Code Extension | ShinyDapps.shinydapps-l402 | **1.9.2** | ✅ 3 tabs: Payments / VERITY (11 services) / LAW-N · published 2026-05-19 |
 | Cloudflare Worker `l402kit-api` | l402kit.com/api/* | vf28aa984 | ✅ deployed 2026-05-13 (radar evolution + alpha repricing) |
 | Docs Mintlify | docs.l402kit.com | auto-sync | ✅ EN + 10 locales × 40 pages |
 | Landing | l402kit.com | static | ✅ |
@@ -52,11 +52,13 @@
 
 Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05-19.
 
-**Filas atuais (após cleanup):**
+**Filas atuais (verificado 19 Mai noite):**
 - human_hot: 0
-- human_warm: 1 (Flutter mollie)
-- agent_hot: 0
-- agent_warm: 2 (Moesif, fetchai uAgents x402 — investigar)
+- human_warm: 1
+- agent_hot: 1
+- agent_warm: 2
+
+Último log: `found:40 queued:0 skipped:40` — dedup cache 7d ainda segurando URLs do 12/5. Cache expira ~20 Mai → próximas runs trazem leads frescos.
 
 **Alerts:** 0
 **Partners:** 0 (Anel 2 só ativa com ≥5 parceiros conhecidos)
@@ -165,7 +167,9 @@ cd cloudflare; npx wrangler deploy --config wrangler.toml
 
 # Check PRs externos
 $h = @{ Authorization = "Bearer <GITHUB_PAT>"; Accept = "application/vnd.github+json" }
-@(5585, 14, 25, 1589) | ForEach-Object { ... }  # ver project_traction.md
+# 2262 = x402-foundation/x402 (NOSSA, Zeke ativo) — monitorar DIÁRIO
+# 5585 = punkpeye/awesome-mcp-servers · 14 = Fewsats/awesome-L402 · 25 = lightninglabs/L402 · 1589 = btcpayserver-doc
+@(2262, 5585, 14, 25, 1589) | ForEach-Object { ... }  # ver project_traction.md
 
 # Ver fila RADAR
 $h = @{ "x-dashboard-secret" = "<DASHBOARD_SECRET>" }
@@ -187,13 +191,27 @@ npm test -- --testPathPattern=radar  # (radar.queue.test.ts tem TS error pré-ex
 
 ## Memória relevante (em `~/.claude/projects/c--Users-thiag-l402-kit/memory/`)
 
+**Sempre ler primeiro ao retomar:**
+- `feedback_retomada_checklist.md` — sequência canônica "como estamos" (Bloco 1-5, ~2min)
+- `MEMORY.md` — índice completo (30+ memórias)
+
+**Contexto operacional:**
 - `credentials.md` — TODOS os tokens
-- `project_l402kit.md` — visão geral
-- `project_traction.md` — PRs, drafts, YouTubers (atualizado 19 Mai)
-- `project_mindseye.md` — LAW-N / Peace (atualizado 19 Mai)
-- `project_radar.md` — RADAR system spec
-- `project_distribution_targets.md` — repos para PR
-- `feedback_secrets_powershell.md` — SEMPRE usar Bash `printf` para wrangler secrets (PS adiciona `\r\n`)
+- `project_l402kit.md` — visão geral v1.10.0
+- `project_traction.md` — PRs, drafts, YouTubers, outreach (canonical, atualizado 19 Mai)
+- `project_verity.md` — 11 serviços, reputation pricing, RADAR SDR
+- `project_radar.md` — RADAR system spec · `project_radar_classification.md` — isBuyerLead patterns
+- `project_admin_dashboard.md` — /admin board (cookie HMAC, action queue, treasury sparkline)
+- `project_sdk_parity.md` — cross-lang 1.10.0 + GH Actions release matrix
+- `project_ecosystem_players.md` — competidores (DeepBlue/Fynx/PingPay) e complementares (NÃO engajar como leads)
+- `project_x402_collaborator_zeke.md` — postura na PR #2262 (receber sem comprometer)
+- `project_mindseye.md` — LAW-N / Peace (enviado follow-up 19 Mai 23:27 BRT)
+- `reference_audit_endpoints.md` — mapa completo dos endpoints HTTP/Supabase/KV/cron
+
+**Regras de operação (feedback):**
+- `feedback_secrets_powershell.md` — SEMPRE Bash `printf` para wrangler secrets
+- `feedback_no_secrets_in_scripts.md` — NUNCA hardcodar tokens (push protection bloqueia)
+- `feedback_dm_scammer_patterns.md` — validar identidade ANTES de pitch técnico
 - `feedback_docs_update.md` — sempre atualizar /docs/*.mdx + push após mudanças
 
 ---
