@@ -143,7 +143,7 @@ def test_adapter_emits_different_request_ids_per_call():
         adapter = create_lawn_adapter(endpoint=url, secret="s")
         adapter(sample_event())
         adapter(sample_event())
-        assert capture.wait_for(2, timeout=10.0), "two POSTs should arrive"
+        assert capture.wait_for(2, timeout=5.0), "two POSTs should arrive"
 
     assert len(capture.items) == 2
     ids = {r["headers"]["X-LAW-N-Request-Id"] for r in capture.items}
@@ -159,7 +159,7 @@ def test_adapter_signature_is_stable_for_same_input():
         e["id"] = "fixed-id"  # ensure body bytes identical
         adapter(e)
         adapter(e)
-        assert capture.wait_for(2, timeout=10.0), "two POSTs should arrive"
+        assert capture.wait_for(2, timeout=5.0), "two POSTs should arrive"
 
     items = capture.items
     assert len(items) == 2

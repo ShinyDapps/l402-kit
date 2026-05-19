@@ -34,6 +34,13 @@
     "prepack": "node -e \"['lightning.js','lightning.js.map','lightning.d.ts','lightning.d.ts.map'].forEach(f=>{try{require('fs').unlinkSync('dist/'+f)}catch(_){}})\"",
     "dev": "tsc --watch",
     "test": "jest --passWithNoTests",
+    "test:all": "bash scripts/test-all.sh",
+    "test:fast": "bash scripts/test-fast.sh",
+    "test:fast:noRust": "bash scripts/test-fast.sh --skip-rust",
+    "test:py": "cd python && python -m pytest tests/ -q",
+    "test:rust": "cd rust && cargo test",
+    "test:go": "cd go && go test ./...",
+    "test:smoke": "bash tests/smoke.sh",
     "lint": "tsc --noEmit",
     "deploy:landing": "bash scripts/deploy-landing.sh",
     "smoke": "bash tests/smoke.sh"

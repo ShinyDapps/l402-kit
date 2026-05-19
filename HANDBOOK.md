@@ -242,6 +242,11 @@ cd ../go && go mod download
 | Integration smoke | `bash tests/smoke.sh` | hits prod endpoints |
 | UI audit | `bash tests/audit-ui.sh` | landing + docs |
 | Worker benchmark | `bash tests/benchmark.sh` | throughput |
+| **All 4 langs serial** | `npm run test:all` (`bash scripts/test-all.sh`) | full sweep, ~185s warm (TS 147s + Py 17s + Rust 13s + Go 8s) |
+| Per-lang shortcut | `npm run test:py` (17s) / `test:rust` (13s) / `test:go` (8s) | jump to one lang — fastest dev iteration |
+| All 4 langs "parallel" | `npm run test:fast` | use ONLY on 8+ core boxes; can flake Python timing tests under CPU contention. CI is the real parallel. |
+
+**Local dev loop tip:** if you changed only Python code, `npm run test:py` (17s) is **8x faster** than `npm test` (TS, 147s). Pick the lang you touched. CI handles the full sweep on push.
 
 **TDD invariant:** test first, code second. Tests live in `__tests__/` per language (Python uses `tests/`).
 

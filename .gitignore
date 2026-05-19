@@ -53,3 +53,8 @@ coverage/
 
 # secret scanning safety (drafts movidos pra .private/ apos leak audit 2026-05-19)
 .private/
+
+# Distribution submission logs (local audit trail, not for repo)
+*.submissions.log
+.402index-submissions.log
+.local-registry-submissions.log
