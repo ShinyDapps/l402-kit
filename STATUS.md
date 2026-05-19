@@ -90,6 +90,26 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 
 ---
 
+## A/B test hero (live desde 2026-05-19)
+
+Três variantes rotam por visitante de língua inglesa (sticky via localStorage). Não afeta PT/ES/FR/etc.
+
+| Variante | Headline |
+|---|---|
+| A | "Your API earns Bitcoin from AI agents. Three lines of code." |
+| B | "Make your API pay-per-call. In sats. Settles in 1 second." |
+| C | "Give your API a Bitcoin price. AI agents pay automatically." |
+
+Eventos rastreados via KV: `view`, `click_install`, `click_docs`, `click_demo`. Reset diário.
+
+```powershell
+# Ler estatísticas do dia
+curl -H "x-dashboard-secret: <see credentials.md>" https://l402kit.com/api/ab-stats
+# Outro dia: ?date=YYYY-MM-DD
+```
+
+---
+
 ## Comandos úteis
 
 ```powershell
