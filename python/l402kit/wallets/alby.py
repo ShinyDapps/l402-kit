@@ -1,21 +1,43 @@
-"""AlbyWallet — pays Lightning invoices via the Alby Hub REST API."""
+"""AlbyWallet — DEPRECATED. Alby shared wallet was shut down 2025-01-04.
+
+Migrate to NWC: use a Nostr Wallet Connect-compatible wallet (Alby Hub, Mutiny,
+Coinos, Phoenix, etc.) and the upcoming `NWCWallet` adapter in l402kit 1.11.
+
+For 1.10.x users with a self-hosted Alby endpoint, this class still works.
+"""
 from __future__ import annotations
+
+import warnings
 
 import httpx
 from ..client import L402Wallet
 
+_WARNED = False
+
 
 class AlbyWallet(L402Wallet):
     """
-    Pay invoices via Alby Hub (getalby.com).
-    Get your access token at: getalby.com → Settings → Access Tokens
+    DEPRECATED — Alby shared wallet API shut down 2025-01-04.
 
-    Usage:
-        from l402kit.wallets import AlbyWallet
-        wallet = AlbyWallet(os.environ["ALBY_TOKEN"])
+    Use NWC (Nostr Wallet Connect) instead. NWCWallet ships in l402kit 1.11
+    with support for Alby Hub, Mutiny, Coinos, Phoenix, and any NIP-47 wallet.
+
+    See: https://docs.l402kit.com/agent/wallets
+
+    Retained in 1.10.x for users with self-hosted Alby endpoints. Will be
+    removed in 1.11 when NWCWallet ships in Python.
     """
 
     def __init__(self, access_token: str, base_url: str = "https://api.getalby.com") -> None:
+        global _WARNED
+        if not _WARNED:
+            _WARNED = True
+            warnings.warn(
+                "AlbyWallet is deprecated — Alby shared wallet was shut down 2025-01-04. "
+                "Migrate to NWC: see https://docs.l402kit.com/agent/wallets",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self._token = access_token
         self._base = base_url.rstrip("/")
 

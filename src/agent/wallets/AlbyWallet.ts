@@ -1,8 +1,23 @@
 import type { L402Wallet } from "../../client";
 
+let DEPRECATION_WARNED = false;
+
 /**
- * AlbyWallet — pay BOLT11 invoices via Alby Hub.
- * Get credentials: your Alby Hub → Settings → Developer → Access Tokens
+ * @deprecated Alby shut down the shared wallet API on 2025-01-04. The default
+ * `https://getalby.com/api/payments` endpoint no longer responds. Use
+ * {@link NWCWallet} instead, which works with Alby Hub via NWC (NIP-47).
+ *
+ * Migration:
+ * ```ts
+ * // before:
+ * new AlbyWallet(process.env.ALBY_TOKEN!);
+ * // after — get NWC URI from Alby Hub → Settings → Connections:
+ * import { NWCWallet } from "l402-kit/agent";
+ * new NWCWallet(process.env.NWC_URI!); // install: npm install @getalby/sdk
+ * ```
+ *
+ * This class is retained for one minor release for users with self-hosted
+ * Alby endpoints. It will be removed in 1.11.
  */
 export class AlbyWallet implements L402Wallet {
   private readonly hubUrl: string;
@@ -12,6 +27,15 @@ export class AlbyWallet implements L402Wallet {
     hubUrl = "https://getalby.com",
   ) {
     this.hubUrl = hubUrl.replace(/\/$/, "");
+    if (!DEPRECATION_WARNED) {
+      DEPRECATION_WARNED = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        "[l402-kit] AlbyWallet is deprecated — Alby shared wallet was shut down 2025-01-04. " +
+          "Use NWCWallet with a NWC connection string from your wallet. " +
+          "See: https://docs.l402kit.com/agent/wallets",
+      );
+    }
   }
 
   async payInvoice(bolt11: string): Promise<{ preimage: string }> {
