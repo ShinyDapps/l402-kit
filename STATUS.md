@@ -1,7 +1,7 @@
 # l402-kit — Live Status
 
 > **Purpose:** snapshot vivo do projeto para retomar contexto rápido. Atualizar a cada sessão significativa.
-> **Last updated:** 2026-05-19 03:31 BRT (Alby benchmark + 11/11 VERITY services live em 402index.io)
+> **Last updated:** 2026-05-19 madrugada (sessão completa: 402index + A/B + live demo + RADAR seen wipe + local registry + Smithery refresh + l402-kit@1.9.1)
 
 ---
 
@@ -15,7 +15,7 @@
 
 | Camada | Onde | Versão | Estado |
 |---|---|---|---|
-| npm `l402-kit` | https://www.npmjs.com/package/l402-kit | 1.9.0 | ✅ |
+| npm `l402-kit` | https://www.npmjs.com/package/l402-kit | **1.9.1** | ✅ MCP server v1.9.1 com verity_pricing + translate + research + alpha tools, sem preços hardcoded |
 | PyPI `l402kit` | https://pypi.org/project/l402kit | 1.8.6 | ⚠️ atrasado vs npm 1.9.0 (sem LAW-N adapter Python) |
 | crates.io `l402kit` | https://crates.io/crates/l402kit | 1.8.5 | ⚠️ Rust independente, sem LAW-N |
 | Go module | github.com/shinydapps/l402-kit/go | v1.8.2 | ⚠️ Go independente, sem LAW-N |
@@ -87,6 +87,15 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 ### 💬 DMs aguardando resposta (não re-pingar)
 - **Roland (`rolznz`, Alby dev)** — Discord, 19 Mai. Reply pós "we build competing solutions". Texto em [ROLAND_ALBY_REPLY.md](ROLAND_ALBY_REPLY.md). Re-engajar só se ele responder ou Alby lançar API monetization.
 - **Moritz Kaminski (`moritz1509`, Alby browser ext)** — Discord DM, 19 Mai. Pergunta técnica narrow (`/api/payments` vs NWC), citou Roland upfront pra evitar end-run perception. Se ele responder "use NWC" → criar `AlbyNWCWallet` adapter no próximo minor. Texto em [MORITZ_ALBY_DM.md](MORITZ_ALBY_DM.md).
+
+---
+
+## Smithery refresh (em deploy 2026-05-19)
+
+- `l402-kit@1.9.1` publicado no npm (MCP server reescrito: 12 tools, sem preços hardcoded, `verity_pricing` adicionado pra dynamic pricing self-discovery)
+- `smithery.yaml` criado na raiz com displayName + description rica + iconUrl + configSchema + commandFunction (`npx -p l402-kit l402-kit-mcp`)
+- CLI publish disparado: release `8e8638a5-b846-4500-a06f-4dd79f5f7fe8`, status PENDING. Build/deploy Smithery em curso.
+- Verificar em https://smithery.ai/server/ShinyDapps/l402-kit em ~15min
 
 ---
 
