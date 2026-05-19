@@ -84,6 +84,7 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 
 ### 💬 DMs aguardando resposta (não re-pingar)
 - **Roland (`rolznz`, Alby dev)** — Discord, 19 Mai. Reply pós "we build competing solutions". Texto em [ROLAND_ALBY_REPLY.md](ROLAND_ALBY_REPLY.md). Re-engajar só se ele responder ou Alby lançar API monetization.
+- **Moritz Kaminski (`moritz1509`, Alby browser ext)** — Discord DM, 19 Mai. Pergunta técnica narrow (`/api/payments` vs NWC), citou Roland upfront pra evitar end-run perception. Se ele responder "use NWC" → criar `AlbyNWCWallet` adapter no próximo minor. Texto em [MORITZ_ALBY_DM.md](MORITZ_ALBY_DM.md).
 
 ---
 
