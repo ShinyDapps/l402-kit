@@ -10,10 +10,12 @@ L402 (HTTP 402 + Lightning Network) middleware for Go. Works with `net/http`, Ch
 
 📖 **Docs:** [l402kit.com/docs/sdk/go](https://l402kit.com/docs/sdk/go)
 
+> **Roadmap (1.11):** `NWCWallet` client-side adapter (pay L402 invoices via Nostr Wallet Connect). Already shipping in the TS SDK 1.10.1. Rust + Go + Python implementations ship together in 1.11 via the release matrix.
+
 ## Install
 
 ```bash
-go get github.com/shinydapps/l402-kit/go@v1.10.0
+go get github.com/shinydapps/l402-kit/go@v1.10.1
 ```
 
 ## Usage

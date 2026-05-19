@@ -11,6 +11,8 @@ L402 (HTTP 402 + Lightning Network) middleware for Rust. Supports **axum**.
 
 📖 **Docs:** [l402kit.com/docs/sdk/rust](https://l402kit.com/docs/sdk/rust)
 
+> **Roadmap (1.11):** `NWCWallet` client-side adapter (pay L402 invoices via Nostr Wallet Connect). Already shipping in the TS SDK 1.10.1. Rust + Go + Python implementations ship together in 1.11 via the release matrix.
+
 ## Install
 
 ```bash
