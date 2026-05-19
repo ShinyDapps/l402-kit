@@ -248,16 +248,35 @@ async function handleVerityFiscal(_req: Request, env: Env): Promise<Response> {
 
 // ─── Machine-readable service catalog ────────────────────────────────────────
 
+// Map DEFAULTS keys → public endpoint slug (matches the routes in handleVerity above).
+// Don't rely on regex: `btcprice` would stay `btcprice` (no caps to split) but route is `btc-price`.
+const SERVICE_ROUTES: Record<string, string> = {
+  search:      "search",
+  scrape:      "scrape",
+  btcprice:    "btc-price",
+  summarize:   "summarize",
+  sentiment:   "sentiment",
+  domainIntel: "domain-intel",
+  integration: "integration",
+  worldstate:  "worldstate",
+  translate:   "translate",
+  research:    "research",
+  alpha:       "alpha",
+};
+
 async function handleVerityServices(env: Env): Promise<Response> {
   const prices = await getAllPrices(env);
-  const catalog = Object.entries(DEFAULTS).map(([id, cfg]) => ({
-    id,
-    endpoint: `https://l402kit.com/api/verity/${id.replace(/([A-Z])/g, "-$1").toLowerCase()}`,
-    price_sats: prices[id] ?? cfg.base,
-    floor_sats: cfg.floor,
-    cogs_sats: cfg.cogs,
-    surge_threshold: cfg.surgeThreshold,
-  }));
+  const catalog = Object.entries(DEFAULTS).map(([id, cfg]) => {
+    const slug = SERVICE_ROUTES[id] ?? id;
+    return {
+      id: slug, // expose the public slug (btc-price, domain-intel), not internal camelCase
+      endpoint: `https://l402kit.com/api/verity/${slug}`,
+      price_sats: prices[id] ?? cfg.base,
+      floor_sats: cfg.floor,
+      cogs_sats: cfg.cogs,
+      surge_threshold: cfg.surgeThreshold,
+    };
+  });
   return json({ services: catalog, count: catalog.length, updated: new Date().toISOString() });
 }
 
