@@ -1,7 +1,7 @@
 # l402-kit — Live Status
 
 > **Purpose:** snapshot vivo do projeto para retomar contexto rápido. Atualizar a cada sessão significativa.
-> **Last updated:** 2026-05-19
+> **Last updated:** 2026-05-19 23:30 BRT
 
 ---
 
@@ -65,7 +65,7 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 
 ### 🔴 Alto impacto — não tocado faz tempo
 1. **Show HN** — draft pronto, nunca postado. Maior driver de stars/dia. Com 0 stars hoje, thread boa = 50–200 stars + newsletter Bitcoin/AI.
-2. **Email Peace** — [PEACE_STATUS_UPDATE.md](PEACE_STATUS_UPDATE.md) pronto. Bloqueio: canal de contato (email/X/Discord) não está na memória.
+2. ~~**Email Peace**~~ — ✅ **follow-up enviado 19 Mai 23:27 BRT** ([PEACE_FOLLOWUP.md](PEACE_FOLLOWUP.md)). Aguardando resposta com data do staging ingest. Re-pingar se >7 dias sem resposta.
 3. **Email Trezoitão** (38responde@proton.me) — redigido, NÃO enviado.
 
 ### 🟡 PRs externos (sem resposta há ~7 dias)
