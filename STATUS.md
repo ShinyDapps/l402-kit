@@ -1,13 +1,13 @@
 # l402-kit — Live Status
 
 > **Purpose:** snapshot vivo do projeto para retomar contexto rápido. Atualizar a cada sessão significativa.
-> **Last updated:** 2026-05-19 23:30 BRT
+> **Last updated:** 2026-05-19 03:31 BRT (Alby benchmark + 11/11 VERITY services live em 402index.io)
 
 ---
 
 ## TL;DR
 
-`l402-kit@1.9.0` shipou em 12 Mai com LAW-N + RADAR + 11 serviços VERITY. Tudo deployado, 0 CVEs, git limpo, infra estável. **Bottleneck atual é distribuição (0 revenue, 4 PRs abertos sem resposta, drafts não postados), não produto.**
+`l402-kit@1.9.0` shipou em 12 Mai com LAW-N + RADAR + 11 serviços VERITY. Tudo deployado, 0 CVEs, git limpo, infra estável. **Distribuição: 11/11 VERITY services listadas em 402index.io em 19 Mai (Alby Hub features 402index.io na landing deles).** Bottleneck atual é tração comercial (0 revenue, drafts não postados), não produto nem visibilidade técnica.
 
 ---
 
@@ -16,9 +16,11 @@
 | Camada | Onde | Versão | Estado |
 |---|---|---|---|
 | npm `l402-kit` | https://www.npmjs.com/package/l402-kit | 1.9.0 | ✅ |
-| PyPI / crates / Go | — | última | ✅ (verificar versão sync) |
+| PyPI `l402kit` | https://pypi.org/project/l402kit | 1.8.6 | ⚠️ atrasado vs npm 1.9.0 (sem LAW-N adapter Python) |
+| crates.io `l402kit` | https://crates.io/crates/l402kit | 1.8.5 | ⚠️ Rust independente, sem LAW-N |
+| Go module | github.com/shinydapps/l402-kit/go | v1.8.2 | ⚠️ Go independente, sem LAW-N |
 | VS Code Extension | ShinyDapps.shinydapps-l402 | 1.9.1 | ✅ 3 tabs: Payments / VERITY / LAW-N |
-| Cloudflare Worker `l402kit-api` | l402kit.com/api/* | v65e4e215 | ✅ deployed 2026-05-19 (RADAR fix) |
+| Cloudflare Worker `l402kit-api` | l402kit.com/api/* | vf28aa984 | ✅ deployed 2026-05-13 (radar evolution + alpha repricing) |
 | Docs Mintlify | docs.l402kit.com | auto-sync | ✅ EN + 10 locales × 40 pages |
 | Landing | l402kit.com | static | ✅ |
 | VERITY agent | l402kit.com/api/verity | — | ✅ 11 services live |
@@ -40,7 +42,7 @@
 | worldstate | `/api/verity/worldstate` | 300 sats | ✅ |
 | translate | `/api/verity/translate` | 500 sats | ✅ 11 idiomas, MDX-aware |
 | research | `/api/verity/research` | 2.000 sats | ✅ bundle search+scrape+summary |
-| alpha | `/api/verity/alpha` | 5.000 sats | ✅ |
+| alpha | `/api/verity/alpha` | 5.000 sats | ✅ (era 8k, reduzido em 13 Mai p/ destravar volume) |
 
 **Revenue hoje:** 0 sats (sem chamadas pagantes). Treasury: `shinydapps@blink.sv`.
 
@@ -64,7 +66,7 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 ## Trabalho pendente (priorizado)
 
 ### 🔴 Alto impacto — não tocado faz tempo
-1. **Show HN** — draft pronto, nunca postado. Maior driver de stars/dia. Com 0 stars hoje, thread boa = 50–200 stars + newsletter Bitcoin/AI.
+1. **Show HN** — draft pronto, nunca postado. Maior driver de stars/dia. Com 2 stars hoje, thread boa = 50–200 stars + newsletter Bitcoin/AI.
 2. ~~**Email Peace**~~ — ✅ **follow-up enviado 19 Mai 23:27 BRT** ([PEACE_FOLLOWUP.md](PEACE_FOLLOWUP.md)). Aguardando resposta com data do staging ingest. Re-pingar se >7 dias sem resposta.
 3. **Email Trezoitão** (38responde@proton.me) — redigido, NÃO enviado.
 
