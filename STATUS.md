@@ -15,7 +15,7 @@
 
 | Camada | Onde | Versão | Estado |
 |---|---|---|---|
-| npm `l402-kit` | https://www.npmjs.com/package/l402-kit | **1.9.1** (1.10.0 pending) | ⚠️ Token clássico sem `bypass 2FA` — publish bloqueado. Trocar para granular token + republish |
+| npm `l402-kit` | https://www.npmjs.com/package/l402-kit | **1.10.0** | ✅ Granular token bypass 2FA · LAW-N adapter + MCP server completo |
 | PyPI `l402kit` | https://pypi.org/project/l402kit | **1.10.0** | ✅ LAW-N adapter Python + build_wallet ergonomics 19 Mai |
 | crates.io `l402kit` | https://crates.io/crates/l402kit | **1.10.0** | ✅ LAW-N adapter Rust (feature `lawn-adapter`) 19 Mai |
 | Go module | github.com/shinydapps/l402-kit/go | **v1.10.0** | ✅ LAW-N adapter Go (`CreateLawNAdapter`). Tag `go/v1.10.0` no proxy 5-30min |
