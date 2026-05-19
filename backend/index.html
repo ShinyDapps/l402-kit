@@ -493,6 +493,39 @@ footer a:hover { color: var(--orange); text-decoration: none; }
 .pg-step-p { animation:lfd-lbl-go .15s ease 2.0s forwards, lfd-lbl-done .15s ease 3.1s forwards; }
 .pg-step-o { animation:lfd-lbl-done .15s ease 4.4s forwards; }
 .pg-tagline { text-align:center;font-size:11px;color:#2a3a5a;font-family:'Fira Code',monospace;margin-top:10px;letter-spacing:.5px; }
+
+/* === LIVE DEMO — interactive 402 fetcher ============================ */
+.live-demo { max-width:900px; margin:0 auto; padding:80px 24px 60px; text-align:center; }
+.live-demo .eyebrow { display:inline-block; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--orange); font-weight:700; margin-bottom:14px; }
+.live-demo h2 { font-size:clamp(28px,4vw,42px); font-weight:800; letter-spacing:-1px; margin-bottom:14px; line-height:1.15; }
+.live-demo > p { color:var(--muted); font-size:16px; max-width:620px; margin:0 auto 28px; line-height:1.5; }
+.live-controls { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:24px; }
+.live-select { background:#101010; border:1px solid #2a2a2a; color:#e5e5e5; padding:12px 16px; border-radius:10px; font-family:'SF Mono','Fira Code',monospace; font-size:14px; min-width:300px; cursor:pointer; }
+.live-select:focus { outline:none; border-color:var(--orange); }
+.live-btn { padding:12px 28px !important; font-size:14px !important; cursor:pointer; }
+.live-btn:disabled { opacity:.55; cursor:wait; }
+.live-terminal { background:#0a0a0a; border:1px solid #1f1f1f; border-radius:12px; padding:20px 24px; text-align:left; font-family:'SF Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:1.65; overflow-x:auto; box-shadow:0 0 0 1px rgba(247,147,26,0.06), 0 12px 40px rgba(0,0,0,0.35); }
+.live-prompt { display:flex; gap:10px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #1a1a1a; }
+.live-line-prompt { color:var(--orange); font-weight:700; flex-shrink:0; }
+.live-line-cmd { color:#d8d8d8; word-break:break-all; }
+.live-output { white-space:pre-wrap; word-break:break-all; min-height:90px; color:#bbb; }
+.live-output .status-402 { color:#ff9a3d; font-weight:700; }
+.live-output .status-200 { color:#2ddc6e; font-weight:700; }
+.live-output .status-err { color:#ff6b35; font-weight:700; }
+.live-output .hdr-key { color:#888; }
+.live-output .hdr-val { color:#d4d4d4; }
+.live-output .macaroon { color:#b89dff; }
+.live-output .invoice { color:#f7931a; }
+.live-output .json { color:#9fd8e8; }
+.live-output .dim { color:#666; }
+.live-footnote { color:var(--muted); font-size:13px; margin-top:24px; max-width:620px; margin-left:auto; margin-right:auto; line-height:1.55; }
+.live-footnote code { background:#1a1a1a; padding:2px 7px; border-radius:5px; font-size:12px; color:#d8d8d8; }
+@media (max-width:600px) {
+  .live-controls { flex-direction:column; }
+  .live-select { min-width:auto; width:100%; }
+  .live-btn { width:100%; }
+}
+/* === end live demo ================================================= */
 @media(max-width:600px){.pg-wrap{margin:0 0 32px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha384-Izc791esqyEy3BEIC42q7jbE0AaOkACziN+dyyXgYeDmpeMCLz0xA+xYN3aCd5zz" crossorigin="anonymous"></script>
@@ -609,6 +642,97 @@ footer a:hover { color: var(--orange); text-decoration: none; }
   </div>
 
 </section><hr class="section-sep">
+
+<!-- === LIVE DEMO — interactive 402 fetcher (real VERITY response) === -->
+<section class="live-demo" id="liveDemo">
+  <span class="eyebrow">Try it live</span>
+  <h2>A real 402 response.<br>From a real API.</h2>
+  <p>Hit <strong>VERITY</strong> — an autonomous AI agent earning sats on l402-kit at <code style="color:var(--orange);background:#1a1a1a;padding:1px 6px;border-radius:4px;font-size:14px">l402kit.com/api/verity</code>. You'll get the actual Lightning invoice and macaroon. No payment needed to see them.</p>
+
+  <div class="live-controls">
+    <select id="liveDemoSvc" class="live-select" aria-label="Pick a VERITY service">
+      <option value="btc-price">btc-price · 100 sats</option>
+      <option value="worldstate">worldstate · 300 sats</option>
+      <option value="search?q=bitcoin">search · 500 sats</option>
+      <option value="domain-intel?domain=example.com">domain-intel · 2,000 sats</option>
+    </select>
+    <button id="liveDemoBtn" class="btn-primary live-btn" data-ab-demo="1" type="button">Run →</button>
+  </div>
+
+  <div class="live-terminal">
+    <div class="live-prompt">
+      <span class="live-line-prompt">$</span>
+      <span class="live-line-cmd" id="liveCmd">curl https://l402kit.com/api/verity/btc-price</span>
+    </div>
+    <div class="live-output" id="liveOutput"><span class="dim">Click <strong>Run →</strong> to see VERITY's live 402 response. Macaroon and invoice will be real and valid.</span></div>
+  </div>
+
+  <p class="live-footnote">An AI agent would pay this invoice over Lightning, then retry with <code>Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;</code> to get the data. That's the entire L402 protocol — and three lines of code with l402-kit.</p>
+</section>
+
+<script>
+(function() {
+  var btn = document.getElementById('liveDemoBtn');
+  var sel = document.getElementById('liveDemoSvc');
+  var out = document.getElementById('liveOutput');
+  var cmd = document.getElementById('liveCmd');
+  if (!btn || !sel || !out || !cmd) return;
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function updateCmd() { cmd.textContent = 'curl https://l402kit.com/api/verity/' + sel.value; }
+  sel.addEventListener('change', updateCmd);
+  updateCmd();
+
+  btn.addEventListener('click', function() {
+    var svc = sel.value;
+    var url = '/api/verity/' + svc;
+    out.innerHTML = '<span class="dim">→ fetching ' + esc(url) + ' ...</span>';
+    btn.disabled = true;
+    var prevLabel = btn.textContent;
+    btn.textContent = '...';
+
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function(r) {
+        return r.text().then(function(text) { return { r: r, text: text }; });
+      })
+      .then(function(o) {
+        var r = o.r, text = o.text, body = null;
+        try { body = JSON.parse(text); } catch (_) {}
+        var statusClass = r.status === 402 ? 'status-402' : (r.status === 200 ? 'status-200' : 'status-err');
+        var statusText  = r.status === 402 ? 'Payment Required' : (r.statusText || '');
+        var mac = body && body.macaroon ? body.macaroon : '';
+        var inv = body && body.invoice  ? body.invoice  : '';
+
+        var html  = '<span class="' + statusClass + '">HTTP/1.1 ' + r.status + ' ' + esc(statusText) + '</span>\n';
+        if (mac || inv) {
+          html += '<span class="hdr-key">www-authenticate:</span> <span class="hdr-val">L402</span>\n';
+          if (mac) html += '  <span class="hdr-key">macaroon=</span><span class="macaroon">"' + esc(mac.slice(0, 56)) + '…"</span>\n';
+          if (inv) html += '  <span class="hdr-key">invoice=</span><span class="invoice">"' + esc(inv.slice(0, 56)) + '…"</span>\n';
+        }
+        html += '\n';
+        if (body) {
+          html += '<span class="json">' + esc(JSON.stringify(body, null, 2)) + '</span>';
+        } else {
+          html += '<span class="hdr-val">' + esc(text.slice(0, 800)) + '</span>';
+        }
+        html += '\n\n<span class="dim">━ An AI agent would now pay the invoice and retry. ━</span>';
+        out.innerHTML = html;
+      })
+      .catch(function(e) {
+        out.innerHTML = '<span class="status-err">Error: ' + esc(e && e.message ? e.message : String(e)) + '</span>';
+      })
+      .then(function() {
+        btn.disabled = false;
+        btn.textContent = 'Run again →';
+      });
+  });
+})();
+</script>
+<hr class="section-sep">
 
 <section class="flow" id="how">
   <span class="eyebrow">How it works</span>

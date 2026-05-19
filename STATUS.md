@@ -90,6 +90,14 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 
 ---
 
+## Live Demo (deployado 2026-05-19)
+
+Section interativa entre hero e "How it works" (`#liveDemo`). Visitante escolhe um serviço VERITY (btc-price/worldstate/search/domain-intel) e clica Run → faz fetch real, mostra HTTP 402 + macaroon + invoice + JSON body. Zero pagamento (so mostra o challenge). CORS já aberto no worker.
+
+Click em "Run" dispara `click_demo` no A/B tracker (via `data-ab-demo="1"`).
+
+---
+
 ## A/B test hero (live desde 2026-05-19)
 
 Três variantes rotam por visitante de língua inglesa (sticky via localStorage). Não afeta PT/ES/FR/etc.
