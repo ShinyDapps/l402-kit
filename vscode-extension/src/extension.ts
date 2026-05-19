@@ -19,7 +19,7 @@ const I18N: Record<string, Record<string, string>> = {
   en: {
     title: "⚡ ShinyDapps Payments", totalPayments: "Total Payments",
     tabPayments: "Payments", tabVerity: "VERITY", tabActivity: "Activity",
-    verityTitle: "VERITY Services", veritySubtitle: "9 autonomous services · paid in sats · dynamic pricing",
+    verityTitle: "VERITY Services", veritySubtitle: "11 autonomous services · paid in sats · dynamic pricing",
     verityCallBtn: "Call →", verityDocsBtn: "Docs",
     activityTitle: "LAW-N Activity", activityEmpty: "No activity yet.",
     activityAgent: "Agent", activityEvent: "Event", activitySats: "Sats", activityTime: "Time",
@@ -39,7 +39,7 @@ const I18N: Record<string, Record<string, string>> = {
   pt: {
     title: "⚡ Pagamentos ShinyDapps", totalPayments: "Total de Pagamentos",
     tabPayments: "Pagamentos", tabVerity: "VERITY", tabActivity: "Atividade",
-    verityTitle: "Serviços VERITY", veritySubtitle: "9 serviços autônomos · pagos em sats · preço dinâmico",
+    verityTitle: "Serviços VERITY", veritySubtitle: "11 serviços autônomos · pagos em sats · preço dinâmico",
     verityCallBtn: "Chamar →", verityDocsBtn: "Docs",
     activityTitle: "Atividade LAW-N", activityEmpty: "Sem atividade ainda.",
     activityAgent: "Agente", activityEvent: "Evento", activitySats: "Sats", activityTime: "Hora",
@@ -59,7 +59,7 @@ const I18N: Record<string, Record<string, string>> = {
   es: {
     title: "⚡ Pagos ShinyDapps", totalPayments: "Total de Pagos",
     tabPayments: "Pagos", tabVerity: "VERITY", tabActivity: "Actividad",
-    verityTitle: "Servicios VERITY", veritySubtitle: "9 servicios autónomos · pago en sats · precio dinámico",
+    verityTitle: "Servicios VERITY", veritySubtitle: "11 servicios autónomos · pago en sats · precio dinámico",
     verityCallBtn: "Llamar →", verityDocsBtn: "Docs",
     activityTitle: "Actividad LAW-N", activityEmpty: "Sin actividad aún.",
     activityAgent: "Agente", activityEvent: "Evento", activitySats: "Sats", activityTime: "Hora",
@@ -79,7 +79,7 @@ const I18N: Record<string, Record<string, string>> = {
   zh: {
     title: "⚡ ShinyDapps 收款", totalPayments: "总付款次数",
     tabPayments: "收款", tabVerity: "VERITY", tabActivity: "活动",
-    verityTitle: "VERITY 服务", veritySubtitle: "9个自主服务 · 以sats支付 · 动态定价",
+    verityTitle: "VERITY 服务", veritySubtitle: "11个自主服务 · 以sats支付 · 动态定价",
     verityCallBtn: "调用 →", verityDocsBtn: "文档",
     activityTitle: "LAW-N 活动", activityEmpty: "暂无活动。",
     activityAgent: "代理", activityEvent: "事件", activitySats: "Sats", activityTime: "时间",
@@ -99,7 +99,7 @@ const I18N: Record<string, Record<string, string>> = {
   ja: {
     title: "⚡ ShinyDapps 支払い", totalPayments: "総支払い数",
     tabPayments: "支払い", tabVerity: "VERITY", tabActivity: "アクティビティ",
-    verityTitle: "VERITYサービス", veritySubtitle: "9つの自律サービス · satsで支払い · 動的価格",
+    verityTitle: "VERITYサービス", veritySubtitle: "11つの自律サービス · satsで支払い · 動的価格",
     verityCallBtn: "呼び出す →", verityDocsBtn: "ドキュメント",
     activityTitle: "LAW-Nアクティビティ", activityEmpty: "まだアクティビティなし。",
     activityAgent: "エージェント", activityEvent: "イベント", activitySats: "Sats", activityTime: "時刻",
@@ -119,7 +119,7 @@ const I18N: Record<string, Record<string, string>> = {
   fr: {
     title: "⚡ Paiements ShinyDapps", totalPayments: "Total Paiements",
     tabPayments: "Paiements", tabVerity: "VERITY", tabActivity: "Activité",
-    verityTitle: "Services VERITY", veritySubtitle: "9 services autonomes · payés en sats · prix dynamique",
+    verityTitle: "Services VERITY", veritySubtitle: "11 services autonomes · payés en sats · prix dynamique",
     verityCallBtn: "Appeler →", verityDocsBtn: "Docs",
     activityTitle: "Activité LAW-N", activityEmpty: "Aucune activité pour l'instant.",
     activityAgent: "Agent", activityEvent: "Événement", activitySats: "Sats", activityTime: "Heure",
@@ -139,7 +139,7 @@ const I18N: Record<string, Record<string, string>> = {
   de: {
     title: "⚡ ShinyDapps Zahlungen", totalPayments: "Zahlungen gesamt",
     tabPayments: "Zahlungen", tabVerity: "VERITY", tabActivity: "Aktivität",
-    verityTitle: "VERITY-Dienste", veritySubtitle: "9 autonome Dienste · in Sats bezahlt · dynamische Preise",
+    verityTitle: "VERITY-Dienste", veritySubtitle: "11 autonome Dienste · in Sats bezahlt · dynamische Preise",
     verityCallBtn: "Aufrufen →", verityDocsBtn: "Docs",
     activityTitle: "LAW-N-Aktivität", activityEmpty: "Noch keine Aktivität.",
     activityAgent: "Agent", activityEvent: "Ereignis", activitySats: "Sats", activityTime: "Zeit",
@@ -159,7 +159,7 @@ const I18N: Record<string, Record<string, string>> = {
   ru: {
     title: "⚡ Платежи ShinyDapps", totalPayments: "Всего платежей",
     tabPayments: "Платежи", tabVerity: "VERITY", tabActivity: "Активность",
-    verityTitle: "Сервисы VERITY", veritySubtitle: "9 автономных сервисов · оплата в сатошах · динамические цены",
+    verityTitle: "Сервисы VERITY", veritySubtitle: "11 автономных сервисов · оплата в сатошах · динамические цены",
     verityCallBtn: "Вызвать →", verityDocsBtn: "Доки",
     activityTitle: "Активность LAW-N", activityEmpty: "Активности пока нет.",
     activityAgent: "Агент", activityEvent: "Событие", activitySats: "Сат.", activityTime: "Время",
@@ -179,7 +179,7 @@ const I18N: Record<string, Record<string, string>> = {
   hi: {
     title: "⚡ ShinyDapps भुगतान", totalPayments: "कुल भुगतान",
     tabPayments: "भुगतान", tabVerity: "VERITY", tabActivity: "गतिविधि",
-    verityTitle: "VERITY सेवाएं", veritySubtitle: "9 स्वायत्त सेवाएं · sats में भुगतान · गतिशील मूल्य",
+    verityTitle: "VERITY सेवाएं", veritySubtitle: "11 स्वायत्त सेवाएं · sats में भुगतान · गतिशील मूल्य",
     verityCallBtn: "कॉल करें →", verityDocsBtn: "डॉक्स",
     activityTitle: "LAW-N गतिविधि", activityEmpty: "अभी कोई गतिविधि नहीं।",
     activityAgent: "एजेंट", activityEvent: "इवेंट", activitySats: "Sats", activityTime: "समय",
@@ -199,7 +199,7 @@ const I18N: Record<string, Record<string, string>> = {
   ar: {
     title: "⚡ مدفوعات ShinyDapps", totalPayments: "إجمالي المدفوعات",
     tabPayments: "المدفوعات", tabVerity: "VERITY", tabActivity: "النشاط",
-    verityTitle: "خدمات VERITY", veritySubtitle: "9 خدمات مستقلة · الدفع بـ sats · تسعير ديناميكي",
+    verityTitle: "خدمات VERITY", veritySubtitle: "11 خدمات مستقلة · الدفع بـ sats · تسعير ديناميكي",
     verityCallBtn: "استدعاء →", verityDocsBtn: "وثائق",
     activityTitle: "نشاط LAW-N", activityEmpty: "لا يوجد نشاط بعد.",
     activityAgent: "وكيل", activityEvent: "حدث", activitySats: "Sats", activityTime: "وقت",
@@ -219,7 +219,7 @@ const I18N: Record<string, Record<string, string>> = {
   it: {
     title: "⚡ Pagamenti ShinyDapps", totalPayments: "Pagamenti Totali",
     tabPayments: "Pagamenti", tabVerity: "VERITY", tabActivity: "Attività",
-    verityTitle: "Servizi VERITY", veritySubtitle: "9 servizi autonomi · pagati in sats · prezzi dinamici",
+    verityTitle: "Servizi VERITY", veritySubtitle: "11 servizi autonomi · pagati in sats · prezzi dinamici",
     verityCallBtn: "Chiama →", verityDocsBtn: "Docs",
     activityTitle: "Attività LAW-N", activityEmpty: "Nessuna attività ancora.",
     activityAgent: "Agente", activityEvent: "Evento", activitySats: "Sats", activityTime: "Ora",
