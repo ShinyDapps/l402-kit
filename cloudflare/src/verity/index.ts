@@ -180,8 +180,24 @@ async function handleVerityAdmin(req: Request, env: Env): Promise<Response> {
     return json({ queues, hot_with_drafts: hotWithDrafts, stats: { total_queued: totalQueued, hot_total: hotTotal, warm_total: warmTotal }, partners: { count: partners.length, ring_active: partnerRingActive }, log });
   }
 
+  // DELETE /api/verity/admin/radar/seen — wipe entire seen-URL cache so RADAR
+  // re-discovers leads that were skipped within the TTL window.
+  if (req.method === "DELETE" && adminPath === "radar/seen") {
+    let deleted = 0;
+    let cursor: string | undefined;
+    do {
+      const list = await env.demo_preimages.list({ prefix: "verity_radar:seen:", cursor, limit: 1000 });
+      for (const k of list.keys) {
+        await env.demo_preimages.delete(k.name);
+        deleted++;
+      }
+      cursor = list.list_complete ? undefined : list.cursor;
+    } while (cursor);
+    return json({ deleted, prefix: "verity_radar:seen:" });
+  }
+
   // DELETE /api/verity/admin/radar/lead — remove lead from queue (acted on it)
-  if (req.method === "DELETE" && adminPath.startsWith("radar")) {
+  if (req.method === "DELETE" && adminPath === "radar/lead") {
     const body = await req.json().catch(() => ({})) as { queue?: string; url?: string };
     const QUEUE_MAP: Record<string, QueueKey> = {
       human_hot:  "verity_radar:pending:human:hot",
