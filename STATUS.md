@@ -69,6 +69,7 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 3. **Email Trezoitão** (38responde@proton.me) — redigido, NÃO enviado.
 
 ### 🟡 PRs externos (sem resposta há ~7 dias)
+- [**x402-foundation/x402 #2262** (NOSSA, draft)](https://github.com/x402-foundation/x402/pull/2262) — Zeke (zekebuilds-lab) deu 4 reviews técnicas; respondemos 19 Mai ([comment](https://github.com/x402-foundation/x402/pull/2262#issuecomment-4483836907)) com postura de "receber sem comprometer". Aguardando: (a) cross_server_invoice test em TS, (b) flag se interface NWC precisa ajuste. **Monitorar diariamente** — colaborador sério, publicou `@powforge/l402-verify@0.1.0` (35 testes MIT) e `@powforge/x402-lightning` (NWC adapter buyer-side)
 - [awesome-mcp-servers #5585](https://github.com/punkpeye/awesome-mcp-servers/pull/5585) — requirements atendidos, ping ~2 Jun se nada
 - [awesome-L402 #14](https://github.com/Fewsats/awesome-L402/pull/14) — positiveblue inativo
 - [lightninglabs/L402 #25](https://github.com/lightninglabs/L402/pull/25) — simplificar descrição (era muito promocional)
