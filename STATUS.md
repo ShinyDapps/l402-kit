@@ -1,7 +1,9 @@
 # l402-kit — Live Status
 
 > **Purpose:** snapshot vivo do projeto para retomar contexto rápido. Atualizar a cada sessão significativa.
-> **Last updated:** 2026-05-19 noite (sessão completa: /admin dashboard + RADAR isBuyerLead + queries SERPER diversificadas + SDK security parity 1.9.1 + **SDK feature parity 1.10.0 cross-lang (LAW-N adapter Py/Rust/Go)** + GH Actions release matrix ATIVA)
+> **Last updated:** 2026-05-19 noite (audit profundo + RETOMADA.md + OUTREACH_TWITCH.md + Telegram pack atualizado com grupos verificados)
+>
+> **Para retomar contexto rápido:** [`RETOMADA.md`](RETOMADA.md) — sequência canônica de 5 blocos paralelos (~5min total).
 
 ---
 
