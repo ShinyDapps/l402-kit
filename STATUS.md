@@ -71,7 +71,7 @@ Cron a cada 30min. 5 anéis ativos. Filtro de repos mortos adicionado em 2026-05
 
 ### 🔴 Alto impacto — não tocado faz tempo
 1. **Show HN** — draft pronto, nunca postado. Maior driver de stars/dia. Com 2 stars hoje, thread boa = 50–200 stars + newsletter Bitcoin/AI.
-2. ~~**Email Peace**~~ — ✅ **follow-up enviado 19 Mai 23:27 BRT** ([PEACE_FOLLOWUP.md](PEACE_FOLLOWUP.md)). Aguardando resposta com data do staging ingest. Re-pingar se >7 dias sem resposta.
+2. ~~**Email Peace**~~ — ✅ **Peace respondeu 2x (20 Mai + 26 Mai)**. Alinhamento técnico fechado: Option B (live VERITY/RADAR multi-agent stream) confirmado. Promessa: "ping quando staging ingest stable". Resposta draftada em [.private/strategy/PEACE_REPLY_2026-05-27.md] — agradecimento + update 1.10.1 cross-lang + oferta de fixture file pra normalization offline. **NÃO COBRAR.** Peace se desculpou pela demora, está engajado.
 3. **Email Trezoitão** (38responde@proton.me) — redigido, NÃO enviado.
 
 ### 🟡 PRs externos (sem resposta há ~7 dias)
