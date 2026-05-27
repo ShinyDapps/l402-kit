@@ -42,6 +42,8 @@ backend/
 .dev.vars*
 !.dev.vars.example
 !.env.example
+# wrangler dry-run output (build artifact, ephemeral)
+cloudflare/tmp/
 
 # vscode extension build artifacts
 vscode-extension/out/

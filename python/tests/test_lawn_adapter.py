@@ -74,6 +74,26 @@ def fake_lawn_server():
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     port = server.server_address[1]
+
+    # Warm-up via real HTTP: blocks until serve_forever is in the accept loop AND
+    # ensures the first response cycle is hot. Without this, the first POST after
+    # a fresh server start can race the accept loop under CPU contention.
+    # We expect HTTP 501 (BaseHTTPRequestHandler default for unsupported method) —
+    # any HTTP response = server is fully ready.
+    import urllib.request
+    import urllib.error
+    import time as _time
+    warm_url = f"http://127.0.0.1:{port}/__warmup"
+    deadline = _time.monotonic() + 2.0
+    while _time.monotonic() < deadline:
+        try:
+            urllib.request.urlopen(warm_url, timeout=0.2)
+            break
+        except urllib.error.HTTPError:
+            break  # got HTTP-level response = server ready
+        except (urllib.error.URLError, OSError):
+            _time.sleep(0.01)
+
     try:
         yield f"http://127.0.0.1:{port}/ingest/events", capture
     finally:
