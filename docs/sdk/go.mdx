@@ -1,12 +1,12 @@
 ---
 title: Go SDK
-description: Complete reference for the l402-kit Go SDK — net/http middleware for Bitcoin Lightning pay-per-call APIs.
+description: Complete reference for the l402-kit Go SDK Â— net/http middleware for Bitcoin Lightning pay-per-call APIs.
 ---
 
 ## Installation
 
 ```bash
-go get github.com/shinydapps/l402-kit/go@v1.10.0
+go get github.com/shinydapps/l402-kit/go@v1.10.1
 ```
 
 **Requirements**: Go 1.21+
@@ -75,7 +75,7 @@ mux.Handle("/api/data", l402.Middleware(l402.Options{
 |---|---|---|---|
 | `PriceSats` | `int` | **required** | Price per call in satoshis |
 | `Lightning` | `LightningProvider` | **required** | Your Lightning backend (use `NewBlinkProvider`) |
-| `OnPayment` | `func(L402Token, int)` | — | Callback fired after each verified payment |
+| `OnPayment` | `func(L402Token, int)` | Â— | Callback fired after each verified payment |
 
 ---
 
@@ -133,9 +133,9 @@ mux.Handle("/api/data", l402.Middleware(l402.Options{
 
 ## Verification
 
-`SHA256(preimage) == paymentHash` is verified locally in memory — **sub-millisecond, no network call** on the hot path. Token expiry (`exp` field in the macaroon) is checked in the same operation.
+`SHA256(preimage) == paymentHash` is verified locally in memory Â— **sub-millisecond, no network call** on the hot path. Token expiry (`exp` field in the macaroon) is checked in the same operation.
 
-The replay guard uses an in-memory map by default (safe for a single process). For multi-instance deployments, use a shared store (Redis or similar) — which adds a **5–50 ms** round-trip per verified request.
+The replay guard uses an in-memory map by default (safe for a single process). For multi-instance deployments, use a shared store (Redis or similar) Â— which adds a **5Â–50 ms** round-trip per verified request.
 
 ---
 
@@ -164,7 +164,7 @@ r.Handle("/api/data", l402.Middleware(l402.Options{
 
 | Status | Meaning |
 |---|---|
-| `402` | No payment token — pay the invoice |
+| `402` | No payment token Â— pay the invoice |
 | `401` | Invalid token or expired macaroon |
 | `401` | Replayed token (preimage already used) |
 
@@ -175,7 +175,7 @@ r.Handle("/api/data", l402.Middleware(l402.Options{
 ```bash
 go run main.go
 
-# Test — triggers 402
+# Test Â— triggers 402
 curl http://localhost:8080/api/data
 
 # Pay invoice, then:
