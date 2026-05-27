@@ -198,10 +198,46 @@ function handleL402Json(): Response {
   });
 }
 
+function handleGlamaJson(): Response {
+  // /.well-known/glama.json — used by Glama to claim ownership of the connector
+  // listing at https://glama.ai/mcp/connectors. Mirror of the repo's glama.json
+  // plus remote MCP transport metadata so Glama can list us as a "Remote MCP"
+  // server callable directly via HTTP (not just stdio via npm).
+  return new Response(JSON.stringify({
+    $schema: "https://glama.ai/mcp/schemas/server.json",
+    maintainers: ["ThiagoDataEngineer", "ShinyDapps"],
+    name: "l402-kit-mcp",
+    description: "MCP server that enables AI agents to autonomously pay for and call L402-protected APIs using Bitcoin Lightning. 12 tools across two layers: generic L402 client + 11 VERITY paid services.",
+    icon: "https://l402kit.com/logo/dark.svg",
+    categories: ["cryptocurrency", "autonomous-agents", "payments", "api"],
+    homepage: "https://l402kit.com",
+    repository: "https://github.com/ShinyDapps/l402-kit",
+    documentation: "https://docs.l402kit.com/agent/mcp",
+    license: "MIT",
+    keywords: ["l402", "lightning", "bitcoin", "payments", "mcp", "ai-agents", "api-monetization"],
+    installation: {
+      npm: { package: "l402-kit", command: "npx l402-kit-mcp" },
+    },
+    // Remote MCP transport — for listing in glama.ai/mcp/connectors
+    transport: {
+      type: "streamable-http",
+      endpoint: "https://l402kit.com/api/mcp",
+    },
+    env: {
+      BLINK_API_KEY:    { description: "Blink wallet API key (free at blink.sv)", required: false },
+      BLINK_WALLET_ID:  { description: "Blink BTC wallet ID", required: false },
+      ALBY_TOKEN:       { description: "Alby NWC alternative to Blink", required: false },
+      BUDGET_SATS:      { description: "Max sats per session (default: 2000)", required: false, default: "2000" },
+    },
+  }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 function handleMcpJson(): Response {
   return new Response(JSON.stringify({
     name: "l402-kit",
-    version: "1.8.6",
+    version: "1.10.1",
     description: "MCP server that lets AI agents call L402-protected APIs autonomously via Bitcoin Lightning. Includes 11 VERITY paid tools (search, scrape, BTC price, summarize, sentiment, domain intel, integration, world state, translate, research, alpha).",
     publisher: "ShinyDapps",
     homepage: "https://l402kit.com",
@@ -367,6 +403,7 @@ export default {
       else if (path === "/.well-known/agent.json")  res = handleAgentJson();
       else if (path === "/.well-known/l402.json")   res = handleL402Json();
       else if (path === "/.well-known/mcp.json")    res = handleMcpJson();
+      else if (path === "/.well-known/glama.json")  res = handleGlamaJson();
       else if (path === "/.well-known/mcp/server-card.json") res = handleServerCard();
       else if (path === "/.well-known/402index-verify.txt") res = new Response("a2c9992b0c01d527d16443f0cc7406b39a8893cbca0a30caae34d637a8603c8c", { headers: { "Content-Type": "text/plain" } });
       else if (path.startsWith("/.well-known/lnurlp/")) res = await handleLnurlp(request, env);

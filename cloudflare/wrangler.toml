@@ -64,6 +64,10 @@ pattern = "l402kit.com/.well-known/mcp.json"
 zone_name = "l402kit.com"
 
 [[routes]]
+pattern = "l402kit.com/.well-known/glama.json"
+zone_name = "l402kit.com"
+
+[[routes]]
 pattern = "l402kit.com/.well-known/mcp/*"
 zone_name = "l402kit.com"
 
